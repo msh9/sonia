@@ -71,6 +71,7 @@ public class SoniaInterface extends Frame implements WindowListener, ActionListe
   private Font msgFont;
   private Font errorFont;
   private String codeDate = "09/15/04";
+  private String version = "1.1";
 
   public SoniaInterface(SoniaController theController)
   {
@@ -84,7 +85,7 @@ public class SoniaInterface extends Frame implements WindowListener, ActionListe
     PauseButton = new Button("Pause");
     MovieButton = new Button("Export Movie ...");
     SaveButton = new Button("Save to File...");
-    StatusText = new TextArea("   Welcome to SoNIA  (code date "+codeDate+")\n"+
+    StatusText = new TextArea("   Welcome to SoNIA "+version+" (code date "+codeDate+")\n"+
                               "   Please view the README and SoNIAWriteup for instructions\n"+
                               "   Questions/bugs to skyebend@stanford.edu",
                               5,50,TextArea.SCROLLBARS_NONE);
