@@ -1136,7 +1136,7 @@ public class DotSonParser implements Parser
         int indexB = ((Integer)nodeHeaderMap.get("BlueRGB")).intValue();
         try
         {
-          red = Float.parseFloat(rowArray[indexB]);
+          blue = Float.parseFloat(rowArray[indexB]);
         }
         catch(NumberFormatException e)
         {
@@ -1259,7 +1259,7 @@ public class DotSonParser implements Parser
         int indexB = ((Integer)arcHeaderMap.get("BlueRGB")).intValue();
         try
         {
-          red = Float.parseFloat(rowArray[indexB]);
+          blue = Float.parseFloat(rowArray[indexB]);
         }
         catch(NumberFormatException e)
         {
