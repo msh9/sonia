@@ -58,6 +58,7 @@ import java.awt.geom.*;
  * <B>Y</B>   - ditto x
  *</P><P>
  * <B>ColorName</B> - text spcifying a color for the node, one of:<BR>
+ * <tt>
  *     <BR>Black
  *     <BR>DarkGray
  *    <BR> LightGray
@@ -70,7 +71,7 @@ import java.awt.geom.*;
  *   <BR>  Red
  *   <BR>  Yellow
  *   <BR>  Blue
- *
+ *<BR></tt>
  * Alternatively, you can specify the color using a "Red-Green-Blue" color
  * model by using the column headings:
  *</P><P>
@@ -117,39 +118,111 @@ import java.awt.geom.*;
  *</P>
  *
  * Example:
- * <BR>NodeId	Label	StartTime	EndTime	NodeSize	NodeShape	ColorName	BorderWidth	BorderColor
-* <BR>1	129473	0.0	42.0	5.0	ellipse	lightGray	1.5	black
-* <BR>2	129047	0.0	42.0	5.0	rect	gray	1.5	black
-* <BR>3	132996	0.0	42.0	5.0	ellipse	lightGray	1.5	black
-* <BR>4	145242	0.0	42.0	5.0	ellipse	gray	1.5	black
-* <BR>5	127535	0.0	42.0	5.0	ellipse	lightGray	1.5	black
-* <BR>6	127319	0.0	42.0	5.0	rect	lightGray	1.5	black
-* <BR>7	129801	0.0	42.0	5.0	ellipse	darkGray	1.5	black
-* <BR>8	104456	0.0	42.0	5.0	ellipse	lightGray	1.5	black
-* <BR>FromId	ToId	StartTime	EndTime	ArcWeight	ArcWidth	ColorName
-* <BR>24	1	0.135	0.135	0.2	1.6	black
-* <BR>24	2	0.135	0.135	0.2	1.6	black
-* <BR>24	4	0.135	0.135	0.2	1.6	black
-* <BR>24	3	0.135	0.135	0.2	1.6	black
-* <BR>24	6	0.135	0.135	0.2	1.6	black
-* <BR>24	5	0.135	0.135	0.2	1.6	black
-* <BR>24	7	0.135	0.135	0.2	1.6	black
-* <BR>24	9	0.135	0.135	0.2	1.6	black
-* <BR>24	8	0.135	0.135	0.2	1.6	black
-* <BR>24	11	0.135	0.135	0.2	1.6	black
-* <BR>24	10	0.135	0.135	0.2	1.6	black
-* <BR>24	12	0.135	0.135	0.2	1.6	black
-* <BR>16	25	3.514	3.514	0.2	1.6	black
-* <BR>16	26	3.514	3.514	0.2	1.6	black
-* <BR>16	27	3.514	3.514	0.2	1.6	black
-* <BR>24	1	3.649	3.649	0.2	1.6	black
-* <BR>24	2	3.649	3.649	0.2	1.6	black
-* <BR>24	4	3.649	3.649	0.2	1.6	black
-* <BR>24	3	3.649	3.649	0.2	1.6	black
-* <BR>24	6	3.649	3.649	0.2	1.6	black
-* <BR>24	5	3.649	3.649	0.2	1.6	black
-* <BR>24	7	3.649	3.649	0.2	1.6	black
-* <BR>24	9	3.649	3.649	0.2	1.6	black
+ * <tt>
+ * //optional comments proceeded by double backslash
+ *  <table border=0>
+ * 	<tr>
+ * 		<td>NodeId</td> <td>Label</td> <td>StartTime</td> <td>EndTime</td> <td>NodeSize</td> <td>NodeShape</td> <td>ColorName</td> <td>BorderWidth</td> <td>BorderColor</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>1</td> <td>129473</td> <td>0.0</td> <td>42.0</td> <td>5.0</td> <td>ellipse</td> <td>lightGray</td> <td>1.5</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>2</td> <td>129047</td> <td>0.0</td> <td>42.0</td> <td>5.0</td> <td>rect</td> <td>gray</td> <td>1.5</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>3</td> <td>132996</td> <td>0.0</td> <td>42.0</td> <td>5.0</td> <td>ellipse</td> <td>lightGray</td> <td>1.5</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>4</td> <td>145242</td> <td>0.0</td> <td>42.0</td> <td>5.0</td> <td>ellipse</td> <td>gray</td> <td>1.5</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>5</td> <td>127535</td> <td>0.0</td> <td>42.0</td> <td>5.0</td> <td>ellipse</td> <td>lightGray</td> <td>1.5</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>6</td> <td>127319</td> <td>0.0</td> <td>42.0</td> <td>5.0</td> <td>rect</td> <td>lightGray</td> <td>1.5</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>7</td> <td>129801</td> <td>0.0</td> <td>42.0</td> <td>5.0</td> <td>ellipse</td> <td>darkGray</td> <td>1.5</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>8</td> <td>104456</td> <td>0.0</td> <td>42.0</td> <td>5.0</td> <td>ellipse</td> <td>lightGray</td> <td>1.5</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>FromId</td> <td>ToId</td> <td>StartTime</td> <td>EndTime</td> <td>ArcWeight</td> <td>ArcWidth</td> <td>ColorName</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>24</td> <td>1</td> <td>0.135</td> <td>0.135</td> <td>0.2</td> <td>1.6</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>24</td> <td>2</td> <td>0.135</td> <td>0.135</td> <td>0.2</td> <td>1.6</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>24</td> <td>4</td> <td>0.135</td> <td>0.135</td> <td>0.2</td> <td>1.6</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>24</td> <td>3</td> <td>0.135</td> <td>0.135</td> <td>0.2</td> <td>1.6</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>24</td> <td>6</td> <td>0.135</td> <td>0.135</td> <td>0.2</td> <td>1.6</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>24</td> <td>5</td> <td>0.135</td> <td>0.135</td> <td>0.2</td> <td>1.6</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>24</td> <td>7</td> <td>0.135</td> <td>0.135</td> <td>0.2</td> <td>1.6</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>24</td> <td>9</td> <td>0.135</td> <td>0.135</td> <td>0.2</td> <td>1.6</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>24</td> <td>8</td> <td>0.135</td> <td>0.135</td> <td>0.2</td> <td>1.6</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>24</td> <td>11</td> <td>0.135</td> <td>0.135</td> <td>0.2</td> <td>1.6</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>24</td> <td>10</td> <td>0.135</td> <td>0.135</td> <td>0.2</td> <td>1.6</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>24</td> <td>12</td> <td>0.135</td> <td>0.135</td> <td>0.2</td> <td>1.6</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>16</td> <td>25</td> <td>3.514</td> <td>3.514</td> <td>0.2</td> <td>1.6</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>16</td> <td>26</td> <td>3.514</td> <td>3.514</td> <td>0.2</td> <td>1.6</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>16</td> <td>27</td> <td>3.514</td> <td>3.514</td> <td>0.2</td> <td>1.6</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>24</td> <td>1</td> <td>3.649</td> <td>3.649</td> <td>0.2</td> <td>1.6</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>24</td> <td>2</td> <td>3.649</td> <td>3.649</td> <td>0.2</td> <td>1.6</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>24</td> <td>4</td> <td>3.649</td> <td>3.649</td> <td>0.2</td> <td>1.6</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>24</td> <td>3</td> <td>3.649</td> <td>3.649</td> <td>0.2</td> <td>1.6</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>24</td> <td>6</td> <td>3.649</td> <td>3.649</td> <td>0.2</td> <td>1.6</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>24</td> <td>5</td> <td>3.649</td> <td>3.649</td> <td>0.2</td> <td>1.6</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>24</td> <td>7</td> <td>3.649</td> <td>3.649</td> <td>0.2</td> <td>1.6</td> <td>black</td>
+ * 	</tr>
+ * 	<tr>
+ * 		<td>24</td> <td>9</td> <td>3.649</td> <td>3.649</td> <td>0.2</td> <td>1.6</td> <td>black</td>
+ * 	</tr>
+ * </table>
+*
+* <\tt>
  */
 public class DotSonParser implements Parser
 {

@@ -63,17 +63,19 @@ import java.awt.event.*;
 * (all of which, with the exception of color,  are currently ignored by SoNIA),
 * and finally the time information enclosed in square brackets [].  Within the
 * brackets, "-" is used to divide lower and upper limit of interval, "," is used
-* to separate intervals, and "*" means infinity.  Pajek only allows integer times.
+* to separate intervals, and "*" means infinity.  Pajek only allows integer times,
+* SoNIA will read in decimal times (1.52) from .net files, but this will make the
+* file incompatible with Pajek. See the note on the .net concept of time below.
 *<BR><BR>
 * Example:
-* <BR><BR><CODE>
-* *Vertices 3
-* 1 "a" c blue [5-10,12-14]
-* 2 "b" c red [1-3,7]
-* 3 "e" c green [4-*]
-* *Edges
-* 1 2 1 c gray [7]
-* 1 3 1 [6-8]</CODE>
+* <BR><BR><tt>
+* *Vertices 3<BR>
+* 1 "a" c blue [5-10,12-14]<BR>
+* 2 "b" c red [1-3,7]<BR>
+* 3 "e" c green [4-*]<BR>
+* *Edges<BR>
+* 1 2 1 c gray [7]<BR>
+* 1 3 1 [6-8]</tt><BR>
 <BR><BR>
 * Vertex 'a' is active from times 5 to 10, and 12 to 14.  Vertex 'b' is active
 * in times 1 to 3 and in time 7.  Vertex 'e' is active from time 4 on.  Lines
@@ -85,9 +87,26 @@ import java.awt.event.*;
 * end with the time information in square brackets.  SoNIA does not have
 * undirected edges, so when edge records are encountered, one arc will be
 * created in each direction.
-
-*
-* @version $Revision: 1.1.1.1 $ $Date: 2004-09-18 18:45:04 $
+* <BR><BR>
+* <big>Note on .net's concept of time</big><BR>
+* Pajek uses an integer/interval concept of time, SoNIA uses a continous concept
+* of time, so there can be some confusion when interperting integer time coordinates
+* from .net files.  When numbers are used discretely, they refer to a chunk of time rather than
+* to a point in time.  For example, 1 refers to the 1st chunk, 2 to the 2nd, etc.
+*  This is very straight forward, but some confusion comes up when we want to
+* describe an interval.   Does "1 to 2" mean 1 and 2?  Does "from 1996 to 1997"
+* mean "all of 1996 and 1997" (two years), or just "from the beginning of 1996
+* to the beginning 1997" (one year).  If we are using discrete intervals, "1 to
+* 2" means two units of time, where in the continuous approach, 1 to 2 could
+* either mean 1.0 to 2.0 (one unit of time) or 1.0 to 2.99 (very close to two
+* units of time).  In SoNIA it is possible (and necessary) to work with both
+* kinds of time, but in order to combine them in ways which allow for a
+* meaningful visualization, it is crucial to be clear about which mode is used
+* by various kinds of data and how they relate to the underlying network.  Which
+* is why the .net parser throws up the dialog to ask "parse times as integers."
+* If this is set to true, the end times will all have 0.99999 added to them, so
+* that the interval 1-2 will become 1.0-2.99999 instead of 1.0 to 2.0.
+* @version $Revision: 1.2 $ $Date: 2004-09-20 04:33:56 $
 * @author Skye Bender-deMoll e-mail skyebend@santafe.edu
 */
 public class DotNetParser extends Object implements Parser, ActionListener
