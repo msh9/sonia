@@ -106,7 +106,7 @@ public class SoniaController
   {
     Date seedDate = new Date();
     //kludge here 'cause millisecond value of date is too large for int
-    int rngSeed = (int)((double)seedDate.getTime() - 1050960000000.0);
+    int rngSeed = (int)Math.round((double)seedDate.getTime() - 1050960000000.0);
     if (args.length > 0)
     {
       //if it was set from command line, use that value  as a seed
@@ -394,7 +394,10 @@ public String getOutputFile(String suggestName, String msg)
   */
  public int getUniformRand(int from, int to)
  {
-   return Uniform.staticNextIntFromTo(from,to);
+     
+     
+     int returnInt = randomUni.nextIntFromTo(from,to);
+   return returnInt;
  }
 
  /**
@@ -406,7 +409,8 @@ public String getOutputFile(String suggestName, String msg)
   */
  public double getUniformRand(double from, double to)
  {
-   return Uniform.staticNextDoubleFromTo(from,to);
+     double returnDouble = randomUni.nextDoubleFromTo(from,to);
+   return returnDouble;
  }
 
  /**
