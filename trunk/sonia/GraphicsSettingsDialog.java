@@ -103,7 +103,8 @@ public class GraphicsSettingsDialog
   private TextField WindowWidth;
   private Label WindowHeightLabel;
   private TextField WindowHeight;
-
+  private Checkbox FlashNew;
+  private TextField FlashDuration;
   private Checkbox HideNodes;
   private Checkbox HideArcs;
 
@@ -136,7 +137,7 @@ public class GraphicsSettingsDialog
     ShowArrows = new Checkbox("Show arrowheads",true);
     ShowLabels = new Checkbox("Show labels",true);
     ShowIds = new Checkbox("Show node Ids",false);
-
+    
     //NodeLabelGroup
 
     ShowStats = new Checkbox("Show stats",true);
@@ -147,7 +148,8 @@ public class GraphicsSettingsDialog
     WindowWidthLabel = new Label("Layout Width");
     WindowHeight = new TextField(engine.getDisplayHeight()+"",4);
     WindowWidth = new TextField(engine.getDisplayWidth()+"", 4);
-
+    FlashNew = new Checkbox("Flash new events",false);
+    FlashDuration = new TextField("0.1",4);
     HideNodes = new Checkbox("Hide Nodes", false);
     HideArcs = new Checkbox("Hide Arcs",false);
 
@@ -174,13 +176,18 @@ public class GraphicsSettingsDialog
   c.gridx=0;c.gridy=3;c.gridwidth=2;c.gridheight=1;c.weightx=0;c.weighty=0;
    graphicsDialog.add(GhostSlice,c);
    c.gridx=0;c.gridy=4;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(WindowWidthLabel, c);
+   graphicsDialog.add(FlashNew,c);
    c.gridx=1;c.gridy=4;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(WindowWidth, c);
+   graphicsDialog.add(FlashDuration,c);
    c.gridx=0;c.gridy=5;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(WindowHeightLabel, c);
+   graphicsDialog.add(WindowWidthLabel, c);
    c.gridx=1;c.gridy=5;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
+   graphicsDialog.add(WindowWidth, c);
+   c.gridx=0;c.gridy=6;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
+   graphicsDialog.add(WindowHeightLabel, c);
+   c.gridx=1;c.gridy=6;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
    graphicsDialog.add(WindowHeight,c);
+   
 
    // node options
    c.gridx=2;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
@@ -254,6 +261,8 @@ public class GraphicsSettingsDialog
     canvas.setShowId(ShowIds.getState());
     canvas.setShowStats(ShowStats.getState());
     canvas.setGhostSlice(GhostSlice.getState());
+    canvas.setFlashNew(FlashNew.getState());
+    canvas.setFlashDuration(Double.parseDouble(FlashDuration.getText()));
     canvas.setNodeScaleFact(Float.parseFloat(NodeScaleFactorField.getText()));
     canvas.setHideArcs(HideArcs.getState());
     canvas.setHideNodes(HideNodes.getState());

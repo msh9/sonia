@@ -55,6 +55,9 @@ public class ArcAttribute implements NetworkEvent
  boolean isNegitive = false;
  private int fromNodeId;
  private int toNodeId;
+ private boolean flashArc = false;  //if it should be flashed when it is drawn
+ private Color flashColor = Color.YELLOW;
+ private float flashFactor = 4.0f; //how large to expand new events when they are flashed
  //coords not stored here so that they can be accessed more quickly
   //transparency???
 // private float transparencey = 0.7f;
@@ -106,6 +109,7 @@ public class ArcAttribute implements NetworkEvent
  public void paint(Graphics2D graphics, SoniaCanvas canvas, double fromX, double fromY,
                    double toX, double toY)
  {
+    
    //check if drawing arc
    if (!canvas.isHideArcs())
    {
@@ -113,18 +117,33 @@ public class ArcAttribute implements NetworkEvent
      float dashSkip = 0.0f;
      float dashLength = 2.0f;
      float drawWidth = (float)arcWidth*canvas.getArcWidthFact();
+  
+     
      if (isNegitive)
      {
        dashSkip = drawWidth;
        dashLength = 2.0f * drawWidth;
      }
      float[] dash = {dashLength,dashSkip};
-     graphics.setStroke(new BasicStroke(drawWidth,BasicStroke.CAP_BUTT,BasicStroke.JOIN_MITER,
-                                        1.0f,dash,0.0f));
+     BasicStroke linewidth = new BasicStroke(drawWidth,BasicStroke.CAP_BUTT,BasicStroke.JOIN_MITER,
+                                        1.0f,dash,0.0f);
+     graphics.setStroke(linewidth);
      graphics.setColor(arcColor);
      //should correct for width of node (and length of arrow?)
      arc.setLine(fromX,fromY,toX,toY);
      graphics.draw(arc);
+     
+       //if it has never been drawn, than draww it very large so it will show
+     if (flashArc)
+     {
+         graphics.setStroke(new BasicStroke(drawWidth+flashFactor,BasicStroke.CAP_BUTT,BasicStroke.JOIN_MITER,
+                                        1.0f,dash,0.0f));
+         graphics.setColor(flashColor);
+         graphics.draw(arc);
+         flashArc = false; //so we only draw once, even if stay on same slice..?
+         graphics.setStroke(linewidth);
+     }
+     
      //should turn off dashing
      dashSkip = 0.0f;
 
@@ -147,6 +166,8 @@ public class ArcAttribute implements NetworkEvent
        {
          lineAngle += Math.PI;
        }
+       try
+       {
        //tip of arrow
        headPath.moveTo((float)toX, (float)toY);
        //one wedge
@@ -158,6 +179,12 @@ public class ArcAttribute implements NetworkEvent
        //back to top
        headPath.closePath();
        graphics.fill(headPath);
+       }
+       catch (IllegalPathStateException e)
+       {
+           System.out.println("Arrow Drawing error: x:"+toX+" y:"+toY);
+           e.printStackTrace();
+       }
 
      }//end draw arcs
    }
@@ -171,7 +198,9 @@ public class ArcAttribute implements NetworkEvent
      float labelY = (float)(fromY + (toY-fromY)/2);
      graphics.drawString(arcLabel,labelX,labelY);
    }
+
    //detecting other arcs to same nodes to curve..
+   
  }
 
  /**
@@ -377,5 +406,14 @@ public class ArcAttribute implements NetworkEvent
   public void setEndTime(double time)
   {
     endTime = time;
+  }
+  
+  /**
+   * sets flashArc to true, so the next time the arc is drawn it will be flashed.
+   * after drawning, sets back to false so it only flashes once
+   */
+  public void flash()
+  {
+      flashArc = true;
   }
 }

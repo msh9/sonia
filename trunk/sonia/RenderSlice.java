@@ -46,6 +46,7 @@ public class RenderSlice
   private Vector nodeEvents;
   private Vector arcEvents;
   private NumberFormat formater;
+  private double flashWindow = 0.1;
 
 
   /**
@@ -127,6 +128,19 @@ public class RenderSlice
     for (int i=0;i<arcEvents.size();i++)
     {
       arc = (ArcAttribute)arcEvents.get(i);
+      //check if we should flash it
+      if (canvas.isFlashNew())
+      {
+          //
+          double flashStart = arc.getObsTime();
+          double flashEnd = flashStart+canvas.getFlashDuration();
+          //flash if it is within the interval
+          if(((flashStart >= sliceStart) & (flashStart < sliceEnd))
+         | ((flashStart <= sliceStart) & (flashEnd > sliceEnd)))
+          {
+              arc.flash();
+          }       
+      }
       //correct for id ofset 0 -> 1
       fromId = arc.getFromNodeId()-1;
       toId = arc.getToNodeId()-1;
@@ -161,6 +175,18 @@ public class RenderSlice
   for (int i=0;i<nodeEvents.size();i++)
     {
       NodeAttribute node = (NodeAttribute)nodeEvents.get(i);
+      if (canvas.isFlashNew())
+      {
+          //
+          double flashStart = node.getObsTime();
+          double flashEnd = flashStart+canvas.getFlashDuration();
+          //flash if it is within the interval
+          if(((flashStart >= sliceStart) & (flashStart < sliceEnd))
+         | ((flashStart <= sliceStart) & (flashEnd > sliceEnd)))
+          {
+              node.flash();
+          }         
+      }
       int index = node.getNodeId()-1;
       node.paint(graphics,canvas,xCoords[index]+left,yCoords[index]+top);
     }

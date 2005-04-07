@@ -49,11 +49,13 @@ public class SoniaCanvas extends Canvas
   private boolean showArcWeights = false;
   private boolean showArcLabels = false;
   private boolean ghostSlice = false;
+  private boolean flashNewEvents = false;
   private float arcWidthFact = 1.0f;
   private float arcTransVal = 0.5f;
   private float nodeScaleFact = 1.0f;
   private boolean hideNodes = false;
   private boolean hideArcs = false;
+  private double flashDuration = 1.0;
 
   /**
    * Does the actual job of rendering the network, and maintains the graphics
@@ -234,6 +236,30 @@ public class SoniaCanvas extends Canvas
       ghostImage = null;
     }
   }
+  public void setFlashNew(boolean value) 
+  {
+          flashNewEvents = value;
+  }
+  /**
+   * indicates if "new" events should be "flashed" (graphically hilited) in the 
+   * display.  new events are defined by their start time and flash duration
+   */
+  public boolean isFlashNew()
+  {
+      return flashNewEvents;
+  }
+  /**
+   * how long (in data time) flashed events should be drawn as flashed events
+   */
+  public void setFlashDuration(double duration)
+  {
+      flashDuration = duration;
+  }
+  public double getFlashDuration()
+  {
+      return flashDuration;
+  }
+  
   public boolean isShowLabels()
   {
     return showLabels;

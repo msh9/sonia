@@ -56,6 +56,9 @@ public class NodeAttribute implements NetworkEvent{
   private double obsXCoord = 0.0;  //originaly observed cordinates
   private double obsYCoord = 0.0;
   private String origFileLoc = "";  //name and line in file that created it
+  private Color flashColor = Color.YELLOW;
+  private boolean flashNode = false;  //if it should be flashed when it is drawn
+  private float flashFactor = 4.0f; //how large to expand new events when they are flashed
   //coords not stored here so that they can be accessed more quickly
   //transparency???
 
@@ -100,6 +103,15 @@ public class NodeAttribute implements NetworkEvent{
       //set node color
       graphics.setColor(nodeColor);
       graphics.fill(nodeShape);
+            //if it has never been drawn, than draww it very large so it will show
+     if (flashNode)
+     {
+         nodeShape.setFrame((xCoord - (nodeDrawSize+flashFactor)/2.0),
+                         (yCoord - (nodeDrawSize+flashFactor)/2.0),(nodeDrawSize+flashFactor),(nodeDrawSize+flashFactor));;
+         graphics.setColor(flashColor);
+         graphics.draw(nodeShape);
+         flashNode = false; //so we only draw once, even if stay on same slice..?
+     }
     }
     //rough label
     if (canvas.isShowLabels() | canvas.isShowId())
@@ -217,6 +229,11 @@ public class NodeAttribute implements NetworkEvent{
   {
     return nodeShape;
   }
+  public void flash()
+  {
+      flashNode = true;
+  }
+  
   public void setNodeShape(RectangularShape s)
   {
     nodeShape = s;
