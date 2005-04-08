@@ -34,7 +34,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
    * Takes a list, creates a dialog presenting the user with a list view of all the objects on it,
    * and returns the one chosen by the user
    */
-public class ListPicker
+public class ListPicker extends Object
 {
   private Dialog dialog;
   private Button OK;

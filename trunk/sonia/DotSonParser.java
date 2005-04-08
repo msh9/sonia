@@ -238,37 +238,14 @@ public class DotSonParser implements Parser
   private HashMap nodeHeaderMap;   //holds associateion between column labels and index
   private HashMap arcHeaderMap;   //holds associateion between column labels and index
   private HashMap alphaIdMap; //holds association between non-numeric ids and numeric ids
+  private ArrayList unknownHeaders; //holds list of unrecognized column headers
   private boolean alphaId = false;  //true if alphaIds are being used
   private int currentLineNum = 0;
   private String originalFile;   //path and name of the file it was loaded from
   private String infoString= "";
   
   //defualt colum name mappings
-  private String NODEID_STR = "NodeId";
-  private String ALPHAID_STR =   "AlphaId";
-  private String NODESTARTIME_STR =   "StartTime";
-private String NODEENDTIME_STR = "EndTime";
-private String X_STR = "X";
-private String Y_STR = "Y";
-private String LABEL_STR = "Label";
-private String NODESIZE_STR = "NodeSize";
-private String NODESHAPE_STR = "NodeShape";
-
-  private String ARCSTARTIME_STR =   "StartTime";
-private String ARCENDTIME_STR = "EndTime";
-private String FROMID_STR = "FromId";
-private String TOID_STR = "ToId";
-private String ARCWEIGHT_STR = "ArcWeight";
-private String ARCWIDTH_STR = "ArcWidth";
-private String COLORNAME_STR = "ColorName";
-private String REDRGB_STR = "RedRGB";
-private String GREENRGB_STR = "GreenRGB";
-private String BLUERGB_STR = "BlueRGB";
-private String LABELCOLOR_STR = "LabelColor";
-private String BORDERCOLOR_STR = "BorderColor";
-private String BORDERWIDTH_STR = "BorderWidth";
-
-
+  private ColumnMap colMap = new ColumnMap();
 
   //control vars
   private boolean startAsEnd = false;
@@ -318,9 +295,16 @@ private String BORDERWIDTH_STR = "BorderWidth";
     }
 
      //first uncommented line should be the node column headings startin gwith "NODEID"
-    if (line.startsWith(NODEID_STR) | line.startsWith("AlphaId"))
+    if (line.startsWith(colMap.NODE_ID) | line.startsWith(colMap.NODE_ID))
     {
       parseNodeColHeader(line);
+      if (unknownHeaders.size() > 0)
+      {
+          //debug
+          System.out.println("unknown column headers:"+unknownHeaders);
+          AttributeMapperDialog assignAtter = new AttributeMapperDialog(colMap,unknownHeaders);
+          
+      }
       line = reader.readLine();
     }
     else //otherwise, throw error
@@ -334,7 +318,7 @@ private String BORDERWIDTH_STR = "BorderWidth";
     while (line != null)
     {
       //check if we've gotten to arcs yet
-      if(line.startsWith("FromId") )
+      if(line.startsWith(colMap.FROM_ID) )
       {
         break;
       }
@@ -350,7 +334,7 @@ private String BORDERWIDTH_STR = "BorderWidth";
     //WHAT ABOUT TRALING \n or \r  ?
     if (line != null)
     {
-      if (line.startsWith("FromId") )
+      if (line.startsWith(colMap.FROM_ID) )
       {
         parseArcColHeader(line);
         line = reader.readLine();
@@ -383,7 +367,9 @@ private String BORDERWIDTH_STR = "BorderWidth";
   private void parseNodeColHeader(String header)
       throws IOException
   {
-
+      //make a list of all the unrecognized column headings
+    unknownHeaders = new ArrayList();
+    ArrayList knownHeadings = colMap.getMapValues();
     //tokenize the string
     StringTokenizer headerTokens = new StringTokenizer(header,"\t");
     int numCols = headerTokens.countTokens();
@@ -392,6 +378,12 @@ private String BORDERWIDTH_STR = "BorderWidth";
     for (int n=0;n<numCols ;n++ )
     {
         String colName = headerTokens.nextToken();
+        //make a list of the unrecognized headings
+      if(!knownHeadings.contains(colName))
+      {
+            unknownHeaders.add(colName);
+      }
+        //check for duplicates
       if (nodeHeaderMap.containsKey(colName))
       {
         String error = "Node column header cannot contain multiple entries for "+colName;
@@ -403,17 +395,19 @@ private String BORDERWIDTH_STR = "BorderWidth";
       }
     }
     //check if numeric or alphanumeric ids are used
-    if (nodeHeaderMap.containsKey("AlphaId") & nodeHeaderMap.containsKey(NODEID_STR))
+    if (nodeHeaderMap.containsKey(colMap.ALPHA_ID) & nodeHeaderMap.containsKey(colMap.NODE_ID))
     {
       String error = "Node column headings cannot contain both \"AlphaID\" and \"NodeId\".";
       throw(new IOException(error));
     }
-    else if (nodeHeaderMap.containsKey("AlphaId"))
+    else if (nodeHeaderMap.containsKey(colMap.ALPHA_ID))
     {
       //we are using alpha ids
       alphaId = true;
       alphaIdMap = new HashMap();
     }
+    
+    
   }
 
   /**
@@ -495,9 +489,9 @@ private String BORDERWIDTH_STR = "BorderWidth";
     throws IOException
   {
     double startTime = 0.0;
-    if (nodeHeaderMap.containsKey("StartTime"))
+    if (nodeHeaderMap.containsKey(colMap.NODE_STARTIME))
     {
-      int index = ((Integer)nodeHeaderMap.get("StartTime")).intValue();
+      int index = ((Integer)nodeHeaderMap.get(colMap.NODE_STARTIME)).intValue();
       try
       {
         startTime = Double.parseDouble(rowArray[index]);
@@ -505,7 +499,7 @@ private String BORDERWIDTH_STR = "BorderWidth";
       catch (NumberFormatException doubleParseEx)
       {
         String error = "Line "+reader.getLineNumber()+
-                       " Unable to parse node start time:"+
+                       " Unable to parse node start time from column"+colMap.NODE_STARTIME+":"+
                        rowArray[index];
         throw(new IOException(error));
       }
@@ -527,9 +521,9 @@ private String BORDERWIDTH_STR = "BorderWidth";
     throws IOException
   {
     double endTime = Double.POSITIVE_INFINITY;
-    if (nodeHeaderMap.containsKey("EndTime"))
+    if (nodeHeaderMap.containsKey(colMap.NODE_ENDTIME))
     {
-      int index = ((Integer)nodeHeaderMap.get("EndTime")).intValue();
+      int index = ((Integer)nodeHeaderMap.get(colMap.NODE_ENDTIME)).intValue();
       try
       {
         endTime = Double.parseDouble(rowArray[index]);
@@ -537,7 +531,7 @@ private String BORDERWIDTH_STR = "BorderWidth";
       catch (NumberFormatException doubleParseEx)
       {
         String error = "Line "+reader.getLineNumber()+
-                       " Unable to parse node end time:"+
+                       " Unable to parse node end time from column"+colMap.NODE_ENDTIME+":"+
                        rowArray[index];
         throw(new IOException(error));
       }
@@ -563,9 +557,9 @@ private String BORDERWIDTH_STR = "BorderWidth";
     double xCoord = 0.0;
     if (parseCoords)
     {
-      if (nodeHeaderMap.containsKey("X"))
+      if (nodeHeaderMap.containsKey(colMap.NODE_X_COORD))
       {
-        int index = ((Integer)nodeHeaderMap.get("X")).intValue();
+        int index = ((Integer)nodeHeaderMap.get(colMap.NODE_X_COORD)).intValue();
         try
         {
           xCoord = Double.parseDouble(rowArray[index]);
@@ -574,7 +568,7 @@ private String BORDERWIDTH_STR = "BorderWidth";
         catch (NumberFormatException doubleParseEx)
         {
           String error = "Line "+reader.getLineNumber()+
-                         " Unable to parse X coordinate:"+
+                         " Unable to parse X coordinate from column"+colMap.NODE_X_COORD+":"+
                        rowArray[index];
           throw(new IOException(error));
         }
@@ -597,9 +591,9 @@ private String BORDERWIDTH_STR = "BorderWidth";
    double yCoord = 0.0;
    if (parseCoords)
    {
-     if (nodeHeaderMap.containsKey("Y"))
+     if (nodeHeaderMap.containsKey(colMap.NODE_Y_COORD))
      {
-       int index = ((Integer)nodeHeaderMap.get("Y")).intValue();
+       int index = ((Integer)nodeHeaderMap.get(colMap.NODE_Y_COORD)).intValue();
        try
        {
          yCoord = Double.parseDouble(rowArray[index]);
@@ -608,7 +602,7 @@ private String BORDERWIDTH_STR = "BorderWidth";
        catch (NumberFormatException doubleParseEx)
        {
          String error = "Line"+reader.getLineNumber()+
-                        " Unable to parse Y coordinate:"+
+                        " Unable to parse Y coordinate from column"+colMap.NODE_Y_COORD+":"+
                        rowArray[index];
          throw(new IOException(error));
        }
@@ -628,9 +622,9 @@ private String BORDERWIDTH_STR = "BorderWidth";
   {
     //should use id if no label?
     String label ="";
-    if (nodeHeaderMap.containsKey("Label"))
+    if (nodeHeaderMap.containsKey(colMap.NODE_LABEL))
    {
-      int index = ((Integer)nodeHeaderMap.get("Label")).intValue();
+      int index = ((Integer)nodeHeaderMap.get(colMap.NODE_LABEL)).intValue();
       label = rowArray[index];
       //strip of quotes if there are any
       if (label.startsWith("\"") | label.startsWith("\'"))
@@ -657,9 +651,9 @@ private String BORDERWIDTH_STR = "BorderWidth";
     throws IOException
   {
     double size = 10;  //size is in pixels
-    if (nodeHeaderMap.containsKey("NodeSize"))
+    if (nodeHeaderMap.containsKey(colMap.NODE_SIZE))
     {
-      int index = ((Integer)nodeHeaderMap.get("NodeSize")).intValue();
+      int index = ((Integer)nodeHeaderMap.get(colMap.NODE_SIZE)).intValue();
       //try to parse node ID from row
       try
       {
@@ -667,7 +661,7 @@ private String BORDERWIDTH_STR = "BorderWidth";
       }
       catch (NumberFormatException e)
       {
-        String error = "Unable to parse NodeSize on line "+reader.getLineNumber()+
+        String error = "Unable to parse node size from column"+colMap.NODE_SIZE+" on line "+reader.getLineNumber()+
                        " : "+rowArray[index];
         throw(new IOException(error));
       }
@@ -697,9 +691,9 @@ private String BORDERWIDTH_STR = "BorderWidth";
     //should be changed to some other shape classes that has more members
     //and many more shapes included
     RectangularShape shape;
-    if (nodeHeaderMap.containsKey("NodeShape"))
+    if (nodeHeaderMap.containsKey(colMap.NODE_SHAPE))
     {
-      int index = ((Integer)nodeHeaderMap.get("NodeShape")).intValue();
+      int index = ((Integer)nodeHeaderMap.get(colMap.NODE_SHAPE)).intValue();
       //try to parse node ID from row
       if (rowArray[index].equalsIgnoreCase("square") | rowArray[index].equalsIgnoreCase("rect"))
       {
@@ -711,7 +705,8 @@ private String BORDERWIDTH_STR = "BorderWidth";
       }
       else
       {
-        String error = "Unable to parse NodeShape \""+rowArray[index]+"\" on line "+
+        String error = "Unable to parse NodeShape \""+rowArray[index]+"\" from column"+
+                colMap.NODE_SHAPE+" on line "+
                        reader.getLineNumber()+"\n"+
                        "currently, shape must be \"square\" or \"circle\"";
         throw(new IOException(error));
@@ -739,9 +734,9 @@ private String BORDERWIDTH_STR = "BorderWidth";
       throws IOException
   {
     int nodeID = -1;
-    if (nodeHeaderMap.containsKey(NODEID_STR))
+    if (nodeHeaderMap.containsKey(colMap.NODE_ID))
     {
-      int index = ((Integer)nodeHeaderMap.get(NODEID_STR)).intValue();
+      int index = ((Integer)nodeHeaderMap.get(colMap.NODE_ID)).intValue();
       //try to parse node ID from row
       try
       {
@@ -749,7 +744,8 @@ private String BORDERWIDTH_STR = "BorderWidth";
         //check to make sure id not less or equal to zero
         if (nodeID <= 0)
         {
-          String error = "Unable to parse NodeId on line "+reader.getLineNumber()+"\n"+
+          String error = "Unable to parse NodeId on line "+reader.getLineNumber()+
+                  " column"+colMap.NODE_ID+"\n"+
                        "Numeric node ids must be integers greater than zero";
         throw(new IOException(error));
         }
@@ -763,17 +759,18 @@ private String BORDERWIDTH_STR = "BorderWidth";
       }
       catch (NumberFormatException e)
       {
-        String error = "Unable to parse NodeId on line "+reader.getLineNumber()+"\n"+
+        String error = "Unable to parse NodeId on line "+reader.getLineNumber()+
+                " column"+colMap.NODE_ID+"\n"+
                        "When using numeric ids, each node line must begin with an integer id, followd by a tab";
         throw(new IOException(error));
       }
     }
-    else if (nodeHeaderMap.containsKey("AlphaId"))
+    else if (nodeHeaderMap.containsKey(colMap.ALPHA_ID))
     {
   // used to parse node ids if non-numeric node and arc ids are being used.  If
   // node id exists, uses that value.  If does not exist, creates the next id
   // and adds it to the alphaIdMap.  So does not check values
-      int index = ((Integer)nodeHeaderMap.get("AlphaId")).intValue();
+      int index = ((Integer)nodeHeaderMap.get(colMap.ALPHA_ID)).intValue();
       String stringID = (String)rowArray[index];
       //check if id exists for the string id
       if (alphaIdMap.containsKey(stringID))
@@ -855,9 +852,9 @@ private String BORDERWIDTH_STR = "BorderWidth";
       throws IOException
   {
     int fromId = -1;
-    if (arcHeaderMap.containsKey("FromId"))
+    if (arcHeaderMap.containsKey(colMap.FROM_ID))
     {
-      int index = ((Integer)arcHeaderMap.get("FromId")).intValue();
+      int index = ((Integer)arcHeaderMap.get(colMap.FROM_ID)).intValue();
       //check if alpha or numeric ids
       if (alphaId)
       {
@@ -871,7 +868,8 @@ private String BORDERWIDTH_STR = "BorderWidth";
         }
         else
         {
-          String error = "Unable to link FromId on line "+reader.getLineNumber()+"\n"+
+          String error = "Unable to link FromId on line "+reader.getLineNumber()+
+                  "column "+colMap.FROM_ID+"\n"+
                            "There is no AlphaID (node) corresponding to FromID "+stringID;
             throw(new IOException(error));
         }
@@ -888,7 +886,8 @@ private String BORDERWIDTH_STR = "BorderWidth";
           //make sure there is a corresponding ID
           if (!idSet.contains(ID))
           {
-            String error = "Unable to link FromId on line "+reader.getLineNumber()+"\n"+
+            String error = "Unable to link FromId on line "+reader.getLineNumber()+
+                    "column "+colMap.FROM_ID+"\n"+
                            "There is no NodeId corresponding to FromID "+fromId;
             throw(new IOException(error));
           }
@@ -896,7 +895,8 @@ private String BORDERWIDTH_STR = "BorderWidth";
         }
         catch (NumberFormatException e)
         {
-          String error = "Unable to parse FromId on line "+reader.getLineNumber()+"\n"+
+          String error = "Unable to parse FromId on line "+reader.getLineNumber()+"" +
+                  "column "+colMap.FROM_ID+"\n"+
                          "When using numeric ids, each arc line must have an integer Id for the orginating node";
           throw(new IOException(error));
         }
@@ -924,9 +924,9 @@ private String BORDERWIDTH_STR = "BorderWidth";
     throws IOException
 {
   int toId = -1;
-  if (arcHeaderMap.containsKey("ToId"))
+  if (arcHeaderMap.containsKey(colMap.TO_ID))
   {
-    int index = ((Integer)arcHeaderMap.get("ToId")).intValue();
+    int index = ((Integer)arcHeaderMap.get(colMap.TO_ID)).intValue();
     //check if alpha or numeric ids
     if (alphaId)
     {
@@ -940,7 +940,8 @@ private String BORDERWIDTH_STR = "BorderWidth";
       }
       else
       {
-        String error = "Unable to link ToId on line "+reader.getLineNumber()+"\n"+
+        String error = "Unable to link ToId on line "+reader.getLineNumber()+
+                "column "+colMap.TO_ID+"\n"+
                        "There is no AlphaID (node) corresponding to ToId "+stringID;
         throw(new IOException(error));
       }
@@ -956,7 +957,8 @@ private String BORDERWIDTH_STR = "BorderWidth";
         //make sure there is a corresponding ID
         if (!idSet.contains(ID))
         {
-          String error = "Unable to link ToId on line "+reader.getLineNumber()+"\n"+
+          String error = "Unable to link ToId on line "+reader.getLineNumber()+
+                  "column "+colMap.TO_ID+"\n"+
                          "There is no NodeId corresponding to ToId "+toId;
           throw(new IOException(error));
         }
@@ -964,7 +966,8 @@ private String BORDERWIDTH_STR = "BorderWidth";
       }
       catch (NumberFormatException e)
       {
-        String error = "Unable to parse ToId on line "+reader.getLineNumber()+"\n"+
+        String error = "Unable to parse ToId on line "+reader.getLineNumber()+
+                "column "+colMap.TO_ID+"\n"+
                        "When using numeric ids, each arc line must have an integer toId for the destination node";
         throw(new IOException(error));
       }
@@ -983,9 +986,9 @@ private String BORDERWIDTH_STR = "BorderWidth";
       throws IOException
   {
     double weight = 1;
-    if (arcHeaderMap.containsKey("ArcWeight"))
+    if (arcHeaderMap.containsKey(colMap.ARC_WEIGHT))
     {
-      int index = ((Integer)arcHeaderMap.get("ArcWeight")).intValue();
+      int index = ((Integer)arcHeaderMap.get(colMap.ARC_WEIGHT)).intValue();
       //try to parse node ID from row
       try
       {
@@ -993,7 +996,7 @@ private String BORDERWIDTH_STR = "BorderWidth";
       }
       catch (NumberFormatException doubleParseEx)
       {
-        String error = "Line "+reader.getLineNumber()+
+        String error = "Line "+reader.getLineNumber()+"column "+colMap.ARC_WEIGHT+
                        " Unable to parse ArcWeight:"+rowArray[index];
         throw(new IOException(error));
       }
@@ -1005,9 +1008,9 @@ private String BORDERWIDTH_STR = "BorderWidth";
       throws IOException
   {
     double width = 1;
-    if (arcHeaderMap.containsKey("ArcWidth"))
+    if (arcHeaderMap.containsKey(colMap.ARC_WIDTH))
     {
-      int index = ((Integer)arcHeaderMap.get("ArcWidth")).intValue();
+      int index = ((Integer)arcHeaderMap.get(colMap.ARC_WIDTH)).intValue();
       //try to parse node ID from row
       try
       {
@@ -1015,7 +1018,7 @@ private String BORDERWIDTH_STR = "BorderWidth";
       }
       catch (NumberFormatException doubleParseEx)
       {
-        String error = "Line "+reader.getLineNumber()+
+        String error = "Line "+reader.getLineNumber()+"column "+colMap.ARC_WIDTH+
                        " Unable to parse ArcWidth:"+rowArray[index];
         throw(new IOException(error));
       }
@@ -1027,16 +1030,16 @@ private String BORDERWIDTH_STR = "BorderWidth";
     throws IOException
   {
     double startTime = 0.0;
-    if (arcHeaderMap.containsKey("StartTime"))
+    if (arcHeaderMap.containsKey(colMap.ARC_STARTIME))
     {
-      int index = ((Integer)arcHeaderMap.get("StartTime")).intValue();
+      int index = ((Integer)arcHeaderMap.get(colMap.ARC_STARTIME)).intValue();
       try
       {
         startTime = Double.parseDouble(rowArray[index]);
       }
       catch (NumberFormatException doubleParseEx)
       {
-        String error = "Line "+reader.getLineNumber()+
+        String error = "Line "+reader.getLineNumber()+"column "+colMap.ARC_STARTIME+
                        " Unable to parse arc start time:"+
                        rowArray[index];
         throw(new IOException(error));
@@ -1049,16 +1052,16 @@ private String BORDERWIDTH_STR = "BorderWidth";
     throws IOException
   {
     double endTime = Double.POSITIVE_INFINITY;
-    if (arcHeaderMap.containsKey("EndTime"))
+    if (arcHeaderMap.containsKey(colMap.ARC_ENDTIME))
     {
-      int index = ((Integer)arcHeaderMap.get("EndTime")).intValue();
+      int index = ((Integer)arcHeaderMap.get(colMap.ARC_ENDTIME)).intValue();
       try
       {
         endTime = Double.parseDouble(rowArray[index]);
       }
       catch (NumberFormatException doubleParseEx)
       {
-        String error = "Line "+reader.getLineNumber()+
+        String error = "Line "+reader.getLineNumber()+"column "+colMap.ARC_ENDTIME+
                        " Unable to parse arc end time:"+
                        rowArray[index];
         throw(new IOException(error));
@@ -1097,9 +1100,9 @@ private String BORDERWIDTH_STR = "BorderWidth";
     Color theColor = Color.white;
     //figure out if and how color is specified
     int index;
-    if (nodeHeaderMap.containsKey("ColorName"))
+    if (nodeHeaderMap.containsKey(colMap.NODE_COLOR_NAME))
     {
-      index = ((Integer)nodeHeaderMap.get("ColorName")).intValue();
+      index = ((Integer)nodeHeaderMap.get(colMap.NODE_COLOR_NAME)).intValue();
       theColor = parseColorName(rowArray[index]);
     }
     else
@@ -1109,48 +1112,48 @@ private String BORDERWIDTH_STR = "BorderWidth";
       float green = 0.0f;
       float blue = 0.0f;
       //check for red
-      if (nodeHeaderMap.containsKey("RedRGB"))
+      if (nodeHeaderMap.containsKey(colMap.NODE_RED_RGB))
       {
-        int indexR = ((Integer)nodeHeaderMap.get("RedRGB")).intValue();
+        int indexR = ((Integer)nodeHeaderMap.get(colMap.NODE_RED_RGB)).intValue();
         try
         {
           red = Float.parseFloat(rowArray[indexR]);
         }
         catch(NumberFormatException e)
         {
-          String error = "Line "+reader.getLineNumber()+
+          String error = "Line "+reader.getLineNumber()+"column "+colMap.NODE_RED_RGB+
                          " Unable to parse RedRGB value:"+
                          rowArray[indexR];
           throw(new IOException(error));
         }
       }
       //check for green
-      if (nodeHeaderMap.containsKey("GreenRGB"))
+      if (nodeHeaderMap.containsKey(colMap.NODE_GREEN_RGB))
       {
-        int indexG = ((Integer)nodeHeaderMap.get("GreenRGB")).intValue();
+        int indexG = ((Integer)nodeHeaderMap.get(colMap.NODE_GREEN_RGB)).intValue();
         try
         {
           green = Float.parseFloat(rowArray[indexG]);
         }
         catch(NumberFormatException e)
         {
-          String error = "Line "+reader.getLineNumber()+
+          String error = "Line "+reader.getLineNumber()+"column "+colMap.NODE_GREEN_RGB+
                          " Unable to parse GreenRGB value:"+
                          rowArray[indexG];
           throw(new IOException(error));
         }
       }
       //check for blue
-      if (nodeHeaderMap.containsKey("BlueRGB"))
+      if (nodeHeaderMap.containsKey(colMap.NODE_BLUE_RGB))
       {
-        int indexB = ((Integer)nodeHeaderMap.get("BlueRGB")).intValue();
+        int indexB = ((Integer)nodeHeaderMap.get(colMap.NODE_BLUE_RGB)).intValue();
         try
         {
           blue = Float.parseFloat(rowArray[indexB]);
         }
         catch(NumberFormatException e)
         {
-          String error = "Line "+reader.getLineNumber()+
+          String error = "Line "+reader.getLineNumber()+"column "+colMap.NODE_BLUE_RGB+
                          " Unable to parse BlueRGB value:"+
                          rowArray[indexB];
           throw(new IOException(error));
@@ -1170,9 +1173,9 @@ private String BORDERWIDTH_STR = "BorderWidth";
     Color theColor = Color.blue;
     //figure out if and how color is specified
     int index;
-    if (nodeHeaderMap.containsKey("LabelColor"))
+    if (nodeHeaderMap.containsKey(colMap.NODE_LABEL_COLOR_NAME))
     {
-      index = ((Integer)nodeHeaderMap.get("LabelColor")).intValue();
+      index = ((Integer)nodeHeaderMap.get(colMap.NODE_LABEL_COLOR_NAME)).intValue();
       theColor = parseColorName(rowArray[index]);
     }
     return theColor;
@@ -1184,9 +1187,9 @@ private String BORDERWIDTH_STR = "BorderWidth";
     Color theColor = Color.black;
     //figure out if and how color is specified
     int index;
-    if (nodeHeaderMap.containsKey("BorderColor"))
+    if (nodeHeaderMap.containsKey(colMap.NODE_BORDER_COLOR_NAME))
     {
-      index = ((Integer)nodeHeaderMap.get("BorderColor")).intValue();
+      index = ((Integer)nodeHeaderMap.get(colMap.NODE_BORDER_COLOR_NAME)).intValue();
       theColor = parseColorName(rowArray[index]);
     }
     return theColor;
@@ -1197,16 +1200,16 @@ private String BORDERWIDTH_STR = "BorderWidth";
   {
     double width = 1;
     int index;
-    if (nodeHeaderMap.containsKey("BorderWidth"))
+    if (nodeHeaderMap.containsKey(colMap.NODE_BORDER_WIDTH))
     {
-      index = ((Integer)nodeHeaderMap.get("BorderWidth")).intValue();
+      index = ((Integer)nodeHeaderMap.get(colMap.NODE_BORDER_WIDTH)).intValue();
       try
       {
       width = Double.parseDouble(rowArray[index]);
       }
       catch (NumberFormatException doubleParseEx)
       {
-        String error = "Line "+reader.getLineNumber()+
+        String error = "Line "+reader.getLineNumber()+"column "+colMap.NODE_BORDER_WIDTH+
                        " Unable to parse BorderWidth:"+rowArray[index];
         throw(new IOException(error));
       }
@@ -1220,9 +1223,9 @@ private String BORDERWIDTH_STR = "BorderWidth";
     Color theColor = Color.gray;
     //figure out if and how color is specified
     int index;
-    if (arcHeaderMap.containsKey("ColorName"))
+    if (arcHeaderMap.containsKey(colMap.ARC_COLOR_NAME))
     {
-      index = ((Integer)arcHeaderMap.get("ColorName")).intValue();
+      index = ((Integer)arcHeaderMap.get(colMap.ARC_COLOR_NAME)).intValue();
       theColor = parseColorName(rowArray[index]);
     }
     else
@@ -1232,48 +1235,48 @@ private String BORDERWIDTH_STR = "BorderWidth";
       float green = 0.0f;
       float blue = 0.0f;
       //check for red
-      if (arcHeaderMap.containsKey("RedRGB"))
+      if (arcHeaderMap.containsKey(colMap.ARC_RED_RGB))
       {
-        int indexR = ((Integer)arcHeaderMap.get("RedRGB")).intValue();
+        int indexR = ((Integer)arcHeaderMap.get(colMap.ARC_RED_RGB)).intValue();
         try
         {
           red = Float.parseFloat(rowArray[indexR]);
         }
         catch(NumberFormatException e)
         {
-          String error = "Line "+reader.getLineNumber()+
+          String error = "Line "+reader.getLineNumber()+"column "+colMap.ARC_RED_RGB+
                          " Unable to parse RedRGB value:"+
                          rowArray[indexR];
           throw(new IOException(error));
         }
       }
       //check for green
-      if (arcHeaderMap.containsKey("GreenRGB"))
+      if (arcHeaderMap.containsKey(colMap.ARC_GREEN_RGB))
       {
-        int indexG = ((Integer)arcHeaderMap.get("GreenRGB")).intValue();
+        int indexG = ((Integer)arcHeaderMap.get(colMap.ARC_GREEN_RGB)).intValue();
         try
         {
           green = Float.parseFloat(rowArray[indexG]);
         }
         catch(NumberFormatException e)
         {
-          String error = "Line "+reader.getLineNumber()+
+          String error = "Line "+reader.getLineNumber()+"column "+colMap.ARC_GREEN_RGB+
                          " Unable to parse GreenRGB value:"+
                          rowArray[indexG];
           throw(new IOException(error));
         }
       }
       //check for blue
-      if (arcHeaderMap.containsKey("BlueRGB"))
+      if (arcHeaderMap.containsKey(colMap.ARC_BLUE_RGB))
       {
-        int indexB = ((Integer)arcHeaderMap.get("BlueRGB")).intValue();
+        int indexB = ((Integer)arcHeaderMap.get(colMap.ARC_BLUE_RGB)).intValue();
         try
         {
           blue = Float.parseFloat(rowArray[indexB]);
         }
         catch(NumberFormatException e)
         {
-          String error = "Line "+reader.getLineNumber()+
+          String error = "Line "+reader.getLineNumber()+"column "+colMap.ARC_BLUE_RGB+
                          " Unable to parse BlueRGB value:"+
                          rowArray[indexB];
           throw(new IOException(error));
