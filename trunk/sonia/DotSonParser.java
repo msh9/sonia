@@ -226,34 +226,7 @@ import java.awt.geom.*;
  */
 public class DotSonParser implements Parser
 {
-  //THESE SHOULD CHANGE TO BE DEFAULTS
-  //NODES
-  /*
-  private int nodeIdCol;
-  private int nodelabelCol;
-  private int nodeLabelColorCol;
-  private int nodeLabelSizeCol;
-  private int nodeSizeCol;
-  private int nodeShapeCol;
-  private int nodeColorCol;
-  private int nodeTransCol;
-  private int nodeBorderWidthCol;
-  private int nodeBorderColorCol;
-  private int nodeXCoordCol;
-  private int nodeYCoordCol;
-  private int nodeStartTimeCol;
-  private int nodeEndTimeCol;
-  //ARCS
-  private int arcFromIdCol;
-  private int arcToIdCol;
-  private int arcWeightCol;
-  private int arcWidthCol;
-  private int arcColorCol;
-  private int arcTransCol;
-  private int arcLabelCol;
-  arcStartTimeCol
-  arcEndTimeCol
-*/
+
   //vars for returned vals
   private LineNumberReader reader;
   private Vector nodeList;
@@ -269,6 +242,33 @@ public class DotSonParser implements Parser
   private int currentLineNum = 0;
   private String originalFile;   //path and name of the file it was loaded from
   private String infoString= "";
+  
+  //defualt colum name mappings
+  private String NODEID_STR = "NodeId";
+  private String ALPHAID_STR =   "AlphaId";
+  private String NODESTARTIME_STR =   "StartTime";
+private String NODEENDTIME_STR = "EndTime";
+private String X_STR = "X";
+private String Y_STR = "Y";
+private String LABEL_STR = "Label";
+private String NODESIZE_STR = "NodeSize";
+private String NODESHAPE_STR = "NodeShape";
+
+  private String ARCSTARTIME_STR =   "StartTime";
+private String ARCENDTIME_STR = "EndTime";
+private String FROMID_STR = "FromId";
+private String TOID_STR = "ToId";
+private String ARCWEIGHT_STR = "ArcWeight";
+private String ARCWIDTH_STR = "ArcWidth";
+private String COLORNAME_STR = "ColorName";
+private String REDRGB_STR = "RedRGB";
+private String GREENRGB_STR = "GreenRGB";
+private String BLUERGB_STR = "BlueRGB";
+private String LABELCOLOR_STR = "LabelColor";
+private String BORDERCOLOR_STR = "BorderColor";
+private String BORDERWIDTH_STR = "BorderWidth";
+
+
 
   //control vars
   private boolean startAsEnd = false;
@@ -318,7 +318,7 @@ public class DotSonParser implements Parser
     }
 
      //first uncommented line should be the node column headings startin gwith "NODEID"
-    if (line.startsWith("NodeId") | line.startsWith("AlphaId"))
+    if (line.startsWith(NODEID_STR) | line.startsWith("AlphaId"))
     {
       parseNodeColHeader(line);
       line = reader.readLine();
@@ -338,6 +338,7 @@ public class DotSonParser implements Parser
       {
         break;
       }
+      //should add a continue to allow more comments in the body...
       parseNodeRow(line);
       line = reader.readLine();
     }
@@ -390,10 +391,19 @@ public class DotSonParser implements Parser
     //copy cols into map
     for (int n=0;n<numCols ;n++ )
     {
-      nodeHeaderMap.put(headerTokens.nextToken(),new Integer(n));
+        String colName = headerTokens.nextToken();
+      if (nodeHeaderMap.containsKey(colName))
+      {
+        String error = "Node column header cannot contain multiple entries for "+colName;
+      throw(new IOException(error));    
+      }
+      else
+      {
+        nodeHeaderMap.put(colName,new Integer(n));
+      }
     }
     //check if numeric or alphanumeric ids are used
-    if (nodeHeaderMap.containsKey("AlphaId") & nodeHeaderMap.containsKey("NodeId"))
+    if (nodeHeaderMap.containsKey("AlphaId") & nodeHeaderMap.containsKey(NODEID_STR))
     {
       String error = "Node column headings cannot contain both \"AlphaID\" and \"NodeId\".";
       throw(new IOException(error));
@@ -729,9 +739,9 @@ public class DotSonParser implements Parser
       throws IOException
   {
     int nodeID = -1;
-    if (nodeHeaderMap.containsKey("NodeId"))
+    if (nodeHeaderMap.containsKey(NODEID_STR))
     {
-      int index = ((Integer)nodeHeaderMap.get("NodeId")).intValue();
+      int index = ((Integer)nodeHeaderMap.get(NODEID_STR)).intValue();
       //try to parse node ID from row
       try
       {
@@ -1367,9 +1377,8 @@ public class DotSonParser implements Parser
    }
    return theColor;
   }
-
-
-
+//for remapping columns
+  
 //accessor methods--------------------------
   public int getMaxNumNodes()
   {

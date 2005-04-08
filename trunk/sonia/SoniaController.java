@@ -56,7 +56,7 @@ public class SoniaController
   private Font textFont;  //the font for the GUIs
 
   private String fileName = "network001";
-  private String currentPath;
+  private String currentPath = "";
   private boolean combineSameNames = true;
   private boolean fileLoaded = false;
   private boolean paused = false;
@@ -79,12 +79,26 @@ public class SoniaController
     ui = new SoniaInterface(this);
     networks = new ArrayList();//to hold nets
     engines = new ArrayList();
-    //setup random numbers
-    randomUni = new Uniform(0.0,1.0,rngSeed);
-    //debug
     log("Log of SoNIA session beginning "
             + DateFormat.getDateTimeInstance().format(new Date()));
-    log("Random number generator seeded with "+rngSeed);
+    //setup random numbers
+    try 
+    {
+      randomUni = new Uniform(0.0,1.0,rngSeed);
+      log("Random number generator seeded with "+rngSeed);
+    }
+    catch (NoClassDefFoundError e)
+    {
+        //this probably means the colt library is not installed
+            System.out.println("ERROR: unable to locate: "+e.getMessage());
+        if (e.getMessage().contains("cern"))
+        {
+            ui.showError("Error launching SoNIA:\n"+
+                    "It seems that SoNIA is unable to locate the Colt numerics package," +
+                    " have you placed colt.jar file in the directory with SoNIA?");            
+        }
+        log("ERROR: unable to initialize random number generator"); 
+    } 
   }
 
   /**
@@ -100,19 +114,41 @@ public class SoniaController
      * so that, if the same sequence of commands is followed, the same layout
      * will result. The first entry in the log file is the seed for the random number
      * generator.
-     * @param args the arguments (rng seed) when started from the command line
+   * It is also possible to pass a file name to load as an argument, to facilitate
+   * launching sonia from another program.
+   * <BE>The possible arguments are:<BR>
+     * seed:<some integer>   example: "seed:32342347892"<BR>
+     * file:<fileNameAndPath>   example:  "file:/home/sonia/input.son"
+   *
+     * @param args the arguments to parse when started from the command line
    */
   public static void main (String[] args)
   {
     Date seedDate = new Date();
     //kludge here 'cause millisecond value of date is too large for int
     int rngSeed = (int)Math.round((double)seedDate.getTime() - 1050960000000.0);
-    if (args.length > 0)
+    String inFile = "";
+    for(int i=0; i<args.length; i++)
     {
-      //if it was set from command line, use that value  as a seed
-      rngSeed = Integer.parseInt(args[0]);
+      String arg = args[i];
+      //look at the arguments passed on the command line
+      //if there is "seed:9809283434" use it as the random seed
+      if (arg.startsWith("seed:"))
+      {
+        rngSeed = Integer.parseInt(arg.substring(5));
+      }
+      //if there is "file:<filenameand path>"try to load the file
+      if (arg.startsWith("file:"))
+      {
+          inFile = arg.substring(5);
+      }
     }
     SoniaController sonia = new SoniaController(rngSeed);
+    //if a file has been passed on the command line, load it
+    if (!inFile.equals(""))
+    {
+        sonia.loadFile(inFile);
+    }
   }
 
   /**
@@ -166,7 +202,13 @@ public class SoniaController
    //check before discarding existing netDataStructure
    String inFile = ui.getInputFileName(fileName, "Choose file to import from");
    //need to CHECK FOR CANCEL BETTER
-   if (inFile != null)
+   loadFile(inFile);
+   
+ }
+ 
+ private void loadFile(String inFile)
+ {
+     if (inFile != null)
    {
      fileName = inFile;
      //eventually need to figure out or ask for filetype for corret parser

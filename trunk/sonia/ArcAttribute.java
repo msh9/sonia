@@ -166,7 +166,7 @@ public class ArcAttribute implements NetworkEvent
        {
          lineAngle += Math.PI;
        }
-       try
+       try  //for concurrency problems on dual processor machines...
        {
        //tip of arrow
        headPath.moveTo((float)toX, (float)toY);
