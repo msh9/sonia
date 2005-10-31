@@ -56,7 +56,7 @@ public class NodeAttribute implements NetworkEvent{
   private double obsXCoord = 0.0;  //originaly observed cordinates
   private double obsYCoord = 0.0;
   private String origFileLoc = "";  //name and line in file that created it
-  private Color flashColor = Color.YELLOW;
+  private Color flashColor = Color.yellow;
   private boolean flashNode = false;  //if it should be flashed when it is drawn
   private float flashFactor = 4.0f; //how large to expand new events when they are flashed
   //coords not stored here so that they can be accessed more quickly
