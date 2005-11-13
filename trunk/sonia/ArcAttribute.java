@@ -56,7 +56,7 @@ public class ArcAttribute implements NetworkEvent
  private int fromNodeId;
  private int toNodeId;
  private boolean flashArc = false;  //if it should be flashed when it is drawn
- private Color flashColor = Color.YELLOW;
+ private Color flashColor = Color.yellow;
  private float flashFactor = 4.0f; //how large to expand new events when they are flashed
  //coords not stored here so that they can be accessed more quickly
   //transparency???

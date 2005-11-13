@@ -46,7 +46,7 @@ public class RenderSlice
   private Vector nodeEvents;
   private Vector arcEvents;
   private NumberFormat formater;
-  private double flashWindow = 0.1;
+  //private double flashWindow = 0.1;
 
 
   /**
