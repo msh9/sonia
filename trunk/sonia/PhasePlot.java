@@ -139,6 +139,19 @@ public class PhasePlot extends Frame implements WindowListener,
 
     double sliceDuration = settings.getSliceDuration();
     double sliceDelta = settings.getSliceDelta();
+    //check for infinate values
+    //debug
+    System.out.println("start,end "+plotStart+" "+plotEnd);
+    if (plotStart == Double.NEGATIVE_INFINITY
+    		|
+    		plotEnd == Double.POSITIVE_INFINITY)
+    {
+    	graph.setColor(Color.red);
+        graph.drawString("Cannot display phase plot with infinate start or end",sidePad,xAxis-30);
+        return;
+    }
+    
+    
     double dataOffset = plotStart;
     double yStep = (double)plotHeight / (double)events.size();
     double scaleFactor = (double)plotWidth / (plotEnd-plotStart);
