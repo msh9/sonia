@@ -527,5 +527,15 @@ public String getOutputFile(String suggestName, String msg)
  {
    return textFont;
  }
+ 
+ /**
+  * Checks if there are any NetworkDataStructures store in an array
+  * @return true if there is at least one layout created
+  */
+ public boolean hasNetworks()
+ {
+	 if (networks.size() > 0) return true;
+	 return false;
+ }
 
 }
