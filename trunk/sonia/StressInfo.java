@@ -9,6 +9,9 @@ import java.awt.Graphics2D;
 import java.util.*;
 import java.text.NumberFormat;
 
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
 
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>
@@ -97,7 +100,10 @@ public class StressInfo extends Frame implements WindowListener
 {
   private SoniaController control;
   private SoniaLayoutEngine engine;
-  private Canvas plotArea;
+  //private Canvas plotArea;
+  private JLabel plotArea = new StressPlot();
+  private JPanel mainPanel = new JPanel(new BorderLayout());
+  private JLabel stressVale = new JLabel("Stress:");
   private int pad = 20;
 
   private NumberFormat  formater;
@@ -129,13 +135,17 @@ public class StressInfo extends Frame implements WindowListener
   {
     control = cont;
     engine = eng;
-    this.setFont(control.getFont());
-    plotArea = new Canvas();
-    GridBagLayout layout = new GridBagLayout();
-    setLayout(layout);
-    GridBagConstraints c = new GridBagConstraints();
-    c.gridx=0;c.gridy=0;c.gridwidth=5;c.gridheight=5;c.weightx=1;c.weighty=1;
-    add(plotArea,c);
+    plotArea.setFont(control.getFont());
+   // plotArea = new Canvas();
+//    GridBagLayout layout = new GridBagLayout();
+//    setLayout(layout);
+//    GridBagConstraints c = new GridBagConstraints();
+//    c.gridx=0;c.gridy=0;c.gridwidth=5;c.gridheight=5;c.weightx=1;c.weighty=1;
+    stressVale.setBackground(Color.darkGray);
+    plotArea.setBackground(Color.darkGray);
+    mainPanel.add(plotArea,BorderLayout.CENTER);
+    mainPanel.add(stressVale,BorderLayout.SOUTH);
+    this.add(mainPanel);
 
     //number formating
     formater = NumberFormat.getInstance(Locale.ENGLISH);
@@ -283,19 +293,20 @@ public class StressInfo extends Frame implements WindowListener
     return avg;
   }
 
-
-  public void paint(Graphics graphics)
+class StressPlot extends JLabel
+{
+  public void paintComponent(Graphics graphics)
   {
     int titleBarPad = (this.getInsets()).top;
     Graphics2D g = (Graphics2D)graphics;
     g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                        RenderingHints.VALUE_ANTIALIAS_ON);
     //calc the screen dimensions for the plot
-    xPlotMax = getWidth() - pad;
+    xPlotMax = plotArea.getWidth() - pad;
     xPlotMin = pad;
     xPlotRange = xPlotMax - xPlotMin;
-    yPlotMax = getHeight()-pad;
-    yPlotMin = getInsets().top+pad;
+    yPlotMax = plotArea.getHeight()-pad;
+    yPlotMin = plotArea.getInsets().top+pad;
     yPlotRange = yPlotMax-yPlotMin;
 
     double xScale = xPlotRange / xDataRange;
@@ -321,9 +332,11 @@ public class StressInfo extends Frame implements WindowListener
                yPlotMax - (int)Math.round(xDataMax * yScale));
 
     //stressValue
-    g.setColor(Color.blue);
-    g.drawString("Stlice "+engine.getCurrentSliceNum()+" Stress: "
-                 +formater.format(calcStress()),titleBarPad+10,32);
+//    g.setColor(Color.blue);
+//    g.drawString("Stlice "+engine.getCurrentSliceNum()+" Stress: "
+//                 +formater.format(calcStress()),titleBarPad+10,32);
+    stressVale.setText("Slice "+engine.getCurrentSliceNum()+" Stress: "
+                 +formater.format(calcStress()));
 
     //plot the points
 
@@ -339,6 +352,7 @@ public class StressInfo extends Frame implements WindowListener
     }
 
   }
+}
 
   //window listeners-------
 
