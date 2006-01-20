@@ -91,13 +91,13 @@ public class SoniaController
     {
         //this probably means the colt library is not installed
             System.out.println("ERROR: unable to locate: "+e.getMessage());
-        if (e.getMessage().contains("cern"))
-        {
+     //   if (e.getMessage().matches("cern"))
+      //  {
             ui.showError("Error launching SoNIA:\n"+
                     "It seems that SoNIA is unable to locate the Colt numerics package," +
                     " have you placed colt.jar file in the directory with SoNIA?");            
-        }
-        log("ERROR: unable to initialize random number generator"); 
+      //  }
+        log("ERROR: unable to initialize random number generator: "+e.getMessage()); 
     } 
   }
 
