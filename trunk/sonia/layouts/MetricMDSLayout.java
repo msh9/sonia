@@ -1,10 +1,16 @@
-package sonia;
+package sonia.layouts;
 
 import java.util.*;
 import java.lang.Math;
+
+import sonia.ApplySettingsDialog;
+import sonia.LayoutSlice;
+import sonia.NetLayout;
+import sonia.NetUtils;
+import sonia.SoniaController;
+import sonia.SoniaLayoutEngine;
+import sonia.Subnet;
 import cern.colt.matrix.DoubleMatrix2D;
-import cern.colt.matrix.impl.SparseDoubleMatrix2D;
-import cern.colt.matrix.impl.DenseDoubleMatrix1D;
 import cern.colt.matrix.impl.*;
 import cern.colt.matrix.linalg.SingularValueDecomposition;
 

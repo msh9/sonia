@@ -1,12 +1,17 @@
 package sonia;
 
 import java.awt.*;
-import java.awt.Graphics2D;
 import java.awt.geom.*;
 import java.awt.event.*;
 import cern.colt.list.ObjectArrayList;
 import java.util.*;
 import java.text.NumberFormat;
+
+import javax.swing.JCheckBox;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>
@@ -53,12 +58,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
    * will slow animation somewhat.
    *
    */
-public class PhasePlot extends Frame implements WindowListener,
+public class PhasePlot extends ExportableFrame implements WindowListener,
     MouseMotionListener,MouseListener
 {
-  private Canvas drawArea;
-  private Checkbox sortBox;
-  private TextField MouseTime;
+ // private Canvas drawArea;
+  private JPanel drawArea;
+  private JCheckBox sortBox;
+  private JTextField MouseTime;
 
   private SoniaLayoutEngine engine;
   private NetDataStructure data;
@@ -100,9 +106,10 @@ public class PhasePlot extends Frame implements WindowListener,
       formater.setMinimumFractionDigits(3);;
 
     //make the gui
-    drawArea = new Canvas();
-    sortBox = new Checkbox("Sort Events",eventsSorted);
-    MouseTime = new TextField(40);
+    //drawArea = new Canvas();
+      drawArea = new JPanel();
+    sortBox = new JCheckBox("Sort Events",eventsSorted);
+    MouseTime = new JTextField(40);
     MouseTime.setBackground(Color.lightGray);
     MouseTime.setEditable(false);
 
@@ -199,7 +206,7 @@ public class PhasePlot extends Frame implements WindowListener,
     }
 
     //check if events should be set up in time order
-    if (sortBox.getState())
+    if (sortBox.isSelected())
     {
       //sort them if they arn't already
       if (!eventsSorted)
@@ -303,8 +310,17 @@ public class PhasePlot extends Frame implements WindowListener,
     Graphics2D graph = (Graphics2D)g;
     plotData(graph);
   }
+  
+  
+/**
+ * specifies which component should be exported, in this case just the graph window
+ */
+  protected JComponent getGraphicContent() {
+	// TODO Auto-generated method stub
+	return drawArea;
+}
 
-  //figures out which slice the mouse is over
+//figures out which slice the mouse is over
   private int getSliceIndexFromTime(double time)
   {
     int sliceIndex = -1;

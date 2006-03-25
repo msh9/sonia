@@ -43,15 +43,19 @@ public class SoniaCanvas extends Canvas
   private boolean antiAlias = true;
   private boolean showStats = true;
   private boolean showLabels = true;
+  private float showLabelsVal = 10.0f;
   private boolean showID = false;
+  private float showIdsVal = 10.0f;
   private boolean showArrows = true;
   private boolean arcTrans = true;
+  private boolean nodeTrans = true;
   private boolean showArcWeights = false;
   private boolean showArcLabels = false;
   private boolean ghostSlice = false;
   private boolean flashNewEvents = false;
   private float arcWidthFact = 1.0f;
   private float arcTransVal = 0.5f;
+  private float nodeTransVal = 0.5f;
   private float nodeScaleFact = 1.0f;
   private boolean hideNodes = false;
   private boolean hideArcs = false;
@@ -268,6 +272,14 @@ public class SoniaCanvas extends Canvas
   {
     showLabels = onOff;
   }
+  public float getShowLabelsVal()
+  {
+    return showLabelsVal;
+  }
+  public void setShowLabelsVal(float thresh)
+  {
+    showLabelsVal = thresh;
+  }
   public boolean isShowId()
   {
     return showID;
@@ -275,6 +287,14 @@ public class SoniaCanvas extends Canvas
   public void setShowId(boolean onOff)
   {
     showID = onOff;
+  }
+  public float getShowIdsVal()
+  {
+    return showIdsVal;
+  }
+  public void setShowIdsVal(float thresh)
+  {
+    showIdsVal = thresh;
   }
   public boolean isShowStats()
   {
@@ -288,17 +308,33 @@ public class SoniaCanvas extends Canvas
   {
     return arcTrans;
   }
+  public boolean isNodeTrans()
+  {
+    return nodeTrans;
+  }
   public void setArcTrans(boolean onOff)
   {
     arcTrans = onOff;
+  }
+  public void setNodeTrans(boolean onOff)
+  {
+    nodeTrans = onOff;
   }
   public float getArcTransVal()
   {
     return arcTransVal;
   }
+  public float getNodeTransVal()
+  {
+    return nodeTransVal;
+  }
   public void setArcTransVal(float trans)
   {
     arcTransVal = trans;
+  }
+  public void setNodeTransVal(float trans)
+  {
+    nodeTransVal = trans;
   }
   public float getArcWidthFact()
   {

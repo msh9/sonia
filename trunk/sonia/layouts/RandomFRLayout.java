@@ -1,7 +1,15 @@
-package sonia;
+package sonia.layouts;
 
 import java.util.*;
 import java.lang.Math;
+
+import sonia.ApplySettingsDialog;
+import sonia.CoolingSchedule;
+import sonia.LayoutSlice;
+import sonia.LayoutUtils;
+import sonia.NetLayout;
+import sonia.SoniaController;
+import sonia.SoniaLayoutEngine;
 import jal.INT.Modification;
 
 //mport javax.swing.SwingUtilities;

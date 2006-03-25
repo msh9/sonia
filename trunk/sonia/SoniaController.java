@@ -31,6 +31,11 @@ import java.text.*;
 import java.io.*;
 import java.util.*;
 import java.awt.color.*;
+
+import javax.swing.UIManager;
+import javax.swing.plaf.metal.MetalLookAndFeel;
+import javax.swing.plaf.metal.MetalTheme;
+
 import cern.jet.random.Uniform;
 import cern.colt.matrix.impl.SparseDoubleMatrix2D;
 
@@ -124,6 +129,12 @@ public class SoniaController
    */
   public static void main (String[] args)
   {
+	  //set the look and feel so it will appear the same on all platforms
+	  try {
+	        UIManager.setLookAndFeel(
+	        		UIManager.getCrossPlatformLookAndFeelClassName());
+	    } catch (Exception e) {System.out.println(e); }
+	    
     Date seedDate = new Date();
     //kludge here 'cause millisecond value of date is too large for int
     int rngSeed = (int)Math.round((double)seedDate.getTime() - 1050960000000.0);

@@ -31,31 +31,47 @@ import java.io.*;
 import java.util.*;
 import java.awt.color.*;
 
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+
 /**
  * Semi-independent window that logs all actions of a session for repeatability
  * includes ability to write contents out to text file independently
  */
 
-public class LogWindow extends Frame implements ActionListener, WindowListener
+public class LogWindow extends JFrame implements ActionListener, WindowListener
 {
 
+
+	private static final long serialVersionUID = -1218915476685752230L;
+	
 private SoniaController control;
  //instantiate window objects so they can be refered to
- private TextArea LogText;
- private Button WriteLogFile;
+ private JTextArea LogText;
+ private JButton WriteLogFile;
+ private JScrollPane scroller;
 
  public LogWindow(SoniaController theController)
  {
    control = theController;
 
-   //make new font to help keep layouts consitant across platforms
-    Font textFont = new Font("Monospaced ",Font.PLAIN,10);
-    this.setFont(textFont);
+   //make new font for the log window
+   Font textFont = new Font("Monospaced ",Font.PLAIN,10);
+   
 
    //create layout objects
-   LogText = new TextArea(14,50);
+   LogText = new JTextArea(14,30);
    LogText.setBackground(Color.white);
-   WriteLogFile = new Button("Write Log to File...");
+   LogText.setFont(textFont);
+   JPanel scrollPanel = new JPanel();
+   scrollPanel.add(LogText);
+   scroller = new JScrollPane(scrollPanel);
+  
+
+   WriteLogFile = new JButton("Write Log to File...");
    WriteLogFile.setFont(control.getFont());
 
    //LAYOUT
@@ -66,9 +82,9 @@ private SoniaController control;
 
    // add components to the layout GBlayout using constraints
    //buttons
-   c.gridx=0;c.gridy=0;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.1;
-   add(LogText,c);
-   c.gridx=0;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.1;
+   c.gridx=0;c.gridy=0;c.gridwidth=1;c.gridheight=1;c.weightx=1;c.weighty=1;c.fill=c.BOTH;
+   add(scroller,c);
+   c.gridx=0;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.1;c.fill=c.NONE;
    add(WriteLogFile,c);
 
    //add action listeners for button clicks

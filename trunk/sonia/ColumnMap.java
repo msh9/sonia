@@ -64,6 +64,8 @@ public class ColumnMap extends Object {
 	public String NODE_GREEN_RGB = "GreenRGB";
 
 	public String NODE_BLUE_RGB = "BlueRGB";
+        
+        public String NODE_ICON_URL = "IconURL";
 
 	public String ARC_STARTIME = "StartTime";
 

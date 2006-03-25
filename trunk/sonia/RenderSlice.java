@@ -167,13 +167,21 @@ public class RenderSlice
 
     }
 
-  //set transparency back to solid
-  graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER));
-
+  // check settings before node transparency
+  if (canvas.isNodeTrans())
+  {
+      graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
+          canvas.getNodeTransVal()));
+  }
+  else
+  {
+      graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER));
+  }
+      
   //NODE EVENT LOOP
   //then do nodes (so nodes are on top)
   for (int i=0;i<nodeEvents.size();i++)
-    {
+  {
       NodeAttribute node = (NodeAttribute)nodeEvents.get(i);
       if (canvas.isFlashNew())
       {

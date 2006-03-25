@@ -7,6 +7,15 @@ import java.text.*;
 import java.util.*;
 import java.awt.color.*;
 
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JTextArea;
+import javax.swing.UIManager;
+import javax.swing.border.TitledBorder;
+import javax.swing.plaf.FontUIResource;
+
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>
  * <p>Description:Animates layouts of time-based networks
@@ -58,57 +67,61 @@ import java.awt.color.*;
  * </P>
  */
 
-public class SoniaInterface extends Frame implements WindowListener,
+public class SoniaInterface extends ExportableFrame implements WindowListener,
 		ActionListener
 // ItemListener
 {
 	private SoniaController control;
 
 	// instantiate window objects so they can be refered to
-	private Label Credits;
+	private JLabel Credits;
 
-	private Button LoadButton;
+	private JButton LoadButton;
 
-	private Button LayoutButton;
+	private JButton LayoutButton;
 
-	private Button PauseButton;
+	private JButton PauseButton;
 
-	private Button MovieButton;
+	private JButton MovieButton;
 
-	private Button SaveButton;
+	private JButton SaveButton;
 
-	private TextArea StatusText;
+	private JTextArea StatusText;
 
 	private Font msgFont;
 
 	private Font errorFont;
 
-	private String codeDate = "09/15/04";
+	private String codeDate = "2006-03-19";
 
-	private String version = "1.1";
+	private String version = "1.1.3";
 
 	public SoniaInterface(SoniaController theController) {
 		control = theController;
+		changeAllFonts(new FontUIResource(control.getFont()));
 
-		this.setFont(control.getFont());
 		// create layout objects
-		Credits = new Label("SoNIA is free for non-comercial, non-military use");
-		LoadButton = new Button("Load Files...");
-		LayoutButton = new Button("Create Layout...");
-		PauseButton = new Button("Pause");
-		MovieButton = new Button("Export Movie ...");
-		SaveButton = new Button("Save to File...");
-		StatusText = new TextArea(
+		Credits = new JLabel("SoNIA is free for non-comercial, non-military use");
+		LoadButton = new JButton("Load Files...");
+		LayoutButton = new JButton("Create Layout...");
+		PauseButton = new JButton("Pause");
+		MovieButton = new JButton("Export Movie ...");
+		SaveButton = new JButton("Save to File...");
+		StatusText = new JTextArea(
 				"   Welcome to SoNIA "
 						+ version
 						+ " (code date "
 						+ codeDate
 						+ ")\n"
 						+ "   Please view the README and SoNIAWriteup for instructions\n"
-						+ "   Questions/bugs to skyebend@stanford.edu", 5, 50,
-				TextArea.SCROLLBARS_NONE);
+						+ "   Questions/bugs to skyebend@stanford.edu", 5, 50);
 		StatusText.setBackground(Color.white);
 		StatusText.setEditable(false);
+		StatusText.setBorder(new TitledBorder("Status:"));
+		StatusText.setLineWrap(true);
+		StatusText.setWrapStyleWord(true);
+		StatusText.setColumns(30);
+
 
 		// LAYOUT
 		GridBagLayout layout = new GridBagLayout();
@@ -122,8 +135,8 @@ public class SoniaInterface extends Frame implements WindowListener,
 		c.gridy = 0;
 		c.gridwidth = 4;
 		c.gridheight = 1;
-		c.weightx = 0.1;
-		c.weighty = 0.1;
+		c.weightx = 1;
+		c.weighty = 1;
 		add(StatusText, c);
 		c.gridx = 0;
 		c.gridy = 1;
@@ -176,7 +189,7 @@ public class SoniaInterface extends Frame implements WindowListener,
 		MovieButton.addActionListener(this);
 
 		addWindowListener(this);
-		setBackground(Color.lightGray);
+	//	setBackground(Color.lightGray);
 
 		// construct frame
 		this.setSize(350, 250);
@@ -185,6 +198,15 @@ public class SoniaInterface extends Frame implements WindowListener,
 		LoadButton.requestFocus();
 		this.repaint();
 	}
+	
+	
+
+//	protected JComponent getGraphicContent() {
+//		// TODO Auto-generated method stub
+//		return super.getGraphicContent();
+//	}
+
+
 
 	/**
 	 * Displays the passed text as a message in the status window
@@ -298,6 +320,20 @@ public class SoniaInterface extends Frame implements WindowListener,
 		}
 
 	}
+	
+	private static void changeAllFonts (FontUIResource f)
+	{
+	    //
+	    // sets the default font for all Swing components.
+	    
+	    Enumeration keys = UIManager.getDefaults().keys();
+	    while (keys.hasMoreElements()) {
+	      Object key = keys.nextElement();
+	      Object value = UIManager.get (key);
+	      if (value instanceof javax.swing.plaf.FontUIResource)
+	        UIManager.put (key, f);
+	      }
+	    }  
 
 	public void windowActivated(WindowEvent evt) {
 	}

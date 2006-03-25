@@ -2,6 +2,7 @@ package sonia;
 
 import java.io.*;
 import java.util.*;
+import java.net.*;
 import java.awt.Color;
 import java.awt.geom.*;
 
@@ -294,8 +295,8 @@ public class DotSonParser implements Parser
       line = reader.readLine();
     }
 
-     //first uncommented line should be the node column headings startin gwith "NODEID"
-    if (line.startsWith(colMap.NODE_ID) | line.startsWith(colMap.NODE_ID))
+     //first uncommented line should be the node column headings starting with "NODEID"
+    if (line.startsWith(colMap.NODE_ID) | line.startsWith(colMap.ALPHA_ID))
     {
       parseNodeColHeader(line);
       if (unknownHeaders.size() > 0)
@@ -321,10 +322,17 @@ public class DotSonParser implements Parser
       if(line.startsWith(colMap.FROM_ID) )
       {
         break;
+      } 
+      else if (line.startsWith("//"))
+      {
+        infoString+= line+"\n";
+        line = reader.readLine();
+      } 
+      else 
+      {
+        parseNodeRow(line);
+        line = reader.readLine();
       }
-      //should add a continue to allow more comments in the body...
-      parseNodeRow(line);
-      line = reader.readLine();
     }
     //NEED TO MAKE SURE ALL NODES ARE PRESENT AND ACCOUNTED FOR
     //(no gaps in ID range which will mess up the matrix)
@@ -350,8 +358,16 @@ public class DotSonParser implements Parser
     //parse arcs until EOF or
     while (line != null)
     {
-      parseArcRow(line);
-      line = reader.readLine();
+      if (line.startsWith("//"))
+      {
+        infoString+= line+"\n";
+        line = reader.readLine();
+      } 
+      else
+      {
+        parseArcRow(line);
+        line = reader.readLine();
+      }
     }
     //include edges?
 
@@ -466,6 +482,14 @@ public class DotSonParser implements Parser
       node.setBorderColor(parseBorderColor(rowArray));
       node.setLabelColor(parseLabelColor(rowArray));
       node.setBorderWidth(parseBorderWidth(rowArray));
+      try  //url may be invalid, problem creating icon, or network unreachable
+      {
+    	  node.setIconURL(parseIconURL(rowArray));
+      } catch (Exception e)
+      {
+    	  String error = "Unable to create icon for node: Line "+reader.getLineNumber()+" Error:"+e.getMessage();
+    	  throw(new IOException(error));
+      }
       nodeList.add(node);
     }
     else   //the row is too short
@@ -1209,7 +1233,7 @@ public class DotSonParser implements Parser
       }
       catch (NumberFormatException doubleParseEx)
       {
-        String error = "Line "+reader.getLineNumber()+"column "+colMap.NODE_BORDER_WIDTH+
+        String error = "Line "+reader.getLineNumber()+" column "+colMap.NODE_BORDER_WIDTH+
                        " Unable to parse BorderWidth:"+rowArray[index];
         throw(new IOException(error));
       }
@@ -1217,6 +1241,33 @@ public class DotSonParser implements Parser
     return width;
   }
 
+    private URL parseIconURL(String[] rowArray)
+    throws IOException
+  {
+    URL url = null;
+    int index;
+    
+    if (nodeHeaderMap.containsKey(colMap.NODE_ICON_URL))
+    {
+      index = ((Integer)nodeHeaderMap.get(colMap.NODE_ICON_URL)).intValue();
+      // "null" string indicates no image URL provided, otherwise check for a proper URL
+      if (!(rowArray[index].equals("null")))
+      {
+        try
+        {
+            url = new URL(rowArray[index]);
+        }
+        catch (MalformedURLException urlParseEx)
+        {
+            String error = "Line "+reader.getLineNumber()+" column "+colMap.NODE_ICON_URL+
+                       " Unable to parse IconURL: "+rowArray[index];
+            throw(new IOException(error));
+        }
+      }
+    }
+    return url;
+  }
+    
   private Color parseArcColor(String[] rowArray)
       throws IOException
   {

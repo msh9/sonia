@@ -4,6 +4,13 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.HashMap;
 import java.util.ArrayList;
+
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JTextField;
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>
  * <p>Description:Animates layouts of time-based networks
@@ -35,7 +42,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 public class ApplySettingsDialog implements ActionListener
 {
-  private Dialog settingsDialog;
+  private JDialog settingsDialog;
   private SoniaLayoutEngine engine;
   private SoniaController control;
   private NetLayout layoutAlgorithm;
@@ -43,53 +50,55 @@ public class ApplySettingsDialog implements ActionListener
 
   //container dynamically added layout elements
   private ArrayList propComponents = new ArrayList();
-  private Label PropertiesLabel;
+  private JLabel PropertiesLabel;
 
   //layout elements
-  private Label SliceInfoLabel; //shows the laytout info, type of layout
+  private JLabel SliceInfoLabel; //shows the laytout info, type of layout
 
-  private Label StartCoordLabel;
-  private CheckboxGroup StartCoords = new CheckboxGroup();
-  private Checkbox FromOrigFile;
-  private Checkbox Randomize;
-  private Checkbox Circle;
-  private Checkbox FromPrevSlice;
-  private Checkbox Current;
+  private JLabel StartCoordLabel;
+  private ButtonGroup StartCoords = new ButtonGroup();
+  private JCheckBox FromOrigFile;
+  private JCheckBox Randomize;
+  private JCheckBox Circle;
+  private JCheckBox FromPrevSlice;
+  private JCheckBox Current;
 
-  private Label IsolatesLabel;
-  private CheckboxGroup Isolates = new CheckboxGroup();
-  private Checkbox Ignore;
-  private Checkbox PinToEdge;
-  private Checkbox PinToCircle;
-  private Checkbox UseOrigCoords;
-  private Checkbox PinPrevious;
+  private JLabel IsolatesLabel;
+  private ButtonGroup Isolates = new ButtonGroup();
+  private JCheckBox Ignore;
+  private JCheckBox PinToEdge;
+  private JCheckBox PinToCircle;
+  private JCheckBox UseOrigCoords;
+  private JCheckBox PinPrevious;
 
-  private Label InterpLabel;
-  private Checkbox Average;
-  private Label PrevLabel;
-  private Label FutureLabel;
-  private TextField PrevField;
-  private TextField FutureField;
+  /**
+  private JLabel InterpLabel;
+  private JCheckBox Average;
+  private JLabel PrevLabel;
+  private JLabel FutureLabel;
+  private JTextField PrevField;
+  private JTextField FutureField;
+  **/
 
-  private Label CoolingLabel;
-  private Checkbox CurrentCooling;
-  private Checkbox Repaint;
-  private TextField RepaintN;
+  private JLabel CoolingLabel;
+  private JCheckBox CurrentCooling;
+  private JCheckBox Repaint;
+  private JTextField RepaintN;
 
-  private Label DisplayLabel;
-  private Checkbox CircleRestrict;
-  private Checkbox Recenter;
-  private Checkbox EndRecenter;
-  private Checkbox EndBarycenter;
-  private Checkbox Rescale;
-  private Checkbox IsolateExclude;
+  private JLabel DisplayLabel;
+  private JCheckBox CircleRestrict;
+  private JCheckBox Recenter;
+  private JCheckBox EndRecenter;
+  private JCheckBox EndBarycenter;
+  private JCheckBox Rescale;
+  private JCheckBox IsolateExclude;
 
 
 
-  private Button Apply;
-  private Button Cancel;
-  private Button MultiApply;
-  private Checkbox ErrorStop;
+  private JButton Apply;
+  private JButton Cancel;
+  private JButton MultiApply;
+  private JCheckBox ErrorStop;
 
   //static convience fields
   public static int ORIG_FILE = 0;
@@ -120,59 +129,72 @@ public class ApplySettingsDialog implements ActionListener
     control = cont;
     engine = eng;
     layoutAlgorithm = layoutAlg;
-    settingsDialog = new Dialog(owner,layoutAlgorithm.getLayoutType()+" Settings",true);
+    settingsDialog = new JDialog(owner,layoutAlgorithm.getLayoutType()+" Settings",true);
     settingsDialog.setFont(control.getFont());
-    SliceInfoLabel = new Label("Apply "+layoutAlgorithm.getLayoutType()+" to slice# "
+    SliceInfoLabel = new JLabel("Apply "+layoutAlgorithm.getLayoutType()+" to slice# "
                                +engine.getCurrentSliceNum()+" ["+
                                engine.getCurrentSlice().getSliceStart()+
                                "-"+engine.getCurrentSlice().getSliceEnd()+
                                "]");
-    StartCoordLabel = new Label("Starting Coordinates");
-    FromOrigFile = new Checkbox("From original file",StartCoords,false);
-    Randomize= new Checkbox("Randomize",StartCoords,true);
-    Circle= new Checkbox("Circular",StartCoords,false);
-    FromPrevSlice = new Checkbox("From previous slice",StartCoords,false);
-    Current = new Checkbox("From current coords",StartCoords,false);
+    StartCoordLabel = new JLabel("Starting Coordinates");
+    FromOrigFile = new JCheckBox("From original file",false);
+    StartCoords.add(FromOrigFile);
+    Randomize= new JCheckBox("Randomize",true);
+    StartCoords.add(Randomize);
+    Circle= new JCheckBox("Circular",false);
+    StartCoords.add(Circle);
+    FromPrevSlice = new JCheckBox("From previous slice",false);
+    StartCoords.add(FromPrevSlice);
+    Current = new JCheckBox("From current coords",false);
+    StartCoords.add(Current);
+    
 
-    IsolatesLabel = new Label("Position Isolates");
-    Ignore = new Checkbox("Ignore",Isolates,true);
-    PinToEdge= new Checkbox("Pin to edge",Isolates,false);
-    PinToCircle = new Checkbox("Pin to Circle",Isolates,false);
-    UseOrigCoords = new Checkbox("Use coords from org. file",Isolates,false);
-    PinPrevious = new Checkbox("Pin to previous",Isolates,false);
+    IsolatesLabel = new JLabel("Position Isolates");
+    Ignore = new JCheckBox("Ignore",true);
+    Isolates.add(Ignore);
+    PinToEdge= new JCheckBox("Pin to edge",false);
+    Isolates.add(PinToEdge);
+    PinToCircle = new JCheckBox("Pin to Circle",false);
+    Isolates.add(PinToCircle);
+    UseOrigCoords = new JCheckBox("Use coords from org. file",false);
+    Isolates.add(UseOrigCoords);
+    PinPrevious = new JCheckBox("Pin to previous",false);
+    Isolates.add(PinPrevious);
 
-    InterpLabel = new Label("Coordinate Interpolation");
-    Average = new Checkbox("Avg. of slices",false);
-    PrevLabel = new Label("previous");
-    FutureLabel = new Label("future");
-    PrevField = new TextField("0",2);
-    FutureField = new TextField("0",2);
+    /**
+    InterpLabel = new JLabel("Coordinate Interpolation");
+    Average = new JCheckBox("Avg. of slices",false);
+    PrevLabel = new JLabel("previous");
+    FutureLabel = new JLabel("future");
+    PrevField = new JTextField("0",2);
+    FutureField = new JTextField("0",2);
+    **/
 
-    CoolingLabel = new Label("Iteration Control");
-    CurrentCooling = new Checkbox("Use current cooling schedule",true);
-    Repaint = new Checkbox("Repaint on Nth layout pass",false);
-    RepaintN = new TextField("1",2);
+    CoolingLabel = new JLabel("Iteration Control");
+    CurrentCooling = new JCheckBox("Use current cooling schedule",true);
+    Repaint = new JCheckBox("Repaint on Nth layout pass",false);
+    RepaintN = new JTextField("1",2);
     //add maxes passes field and (pI control)
 
-    DisplayLabel = new Label("Transformations");
+    DisplayLabel = new JLabel("Transformations");
 
-    Recenter = new Checkbox("Recenter during layout",false);
-    EndRecenter = new Checkbox("Recenter when finished",true);
-    EndBarycenter = new Checkbox("Barycenter when finished",false);
-    Rescale = new Checkbox("Rescale layout when finished",false);
-    IsolateExclude = new Checkbox("Exclude Isolates in transform",false);
+    Recenter = new JCheckBox("Recenter during layout",false);
+    EndRecenter = new JCheckBox("Recenter when finished",true);
+    EndBarycenter = new JCheckBox("Barycenter when finished",false);
+    Rescale = new JCheckBox("Rescale layout when finished",false);
+    IsolateExclude = new JCheckBox("Exclude Isolates in transform",false);
 
-    CircleRestrict = new Checkbox("Restrict to bounding circle",false);
+    CircleRestrict = new JCheckBox("Restrict to bounding circle",false);
 
 
-    Apply = new Button("Apply");
-    Cancel = new Button("Cancel");
-    MultiApply = new Button("Apply to Remaining");
-    ErrorStop = new Checkbox("Stop on Layout Errors");
+    Apply = new JButton("Apply");
+    Cancel = new JButton("Cancel");
+    MultiApply = new JButton("Apply to Remaining");
+    ErrorStop = new JCheckBox("Stop on Layout Errors");
 
     //get any addl components layouts might want to add...
     layoutAlgorithm.setupLayoutProperties(this);
-    PropertiesLabel = new Label("Algorithm-Specific Properties");
+    PropertiesLabel = new JLabel("Algorithm-Specific Properties");
 
     GridBagLayout layout = new GridBagLayout();
     settingsDialog.setLayout(layout);
@@ -302,7 +324,7 @@ public class ApplySettingsDialog implements ActionListener
    */
   public void showDialog()
   {
-    settingsDialog.show();
+    settingsDialog.setVisible(true);
     Apply.requestFocus();
   }
 
@@ -315,8 +337,8 @@ public class ApplySettingsDialog implements ActionListener
   public void addLayoutProperty(String name, double value)
   {
     //make new GUI objects
-    Label PropLabel = new Label(name);
-    TextField PropField = new TextField(value+"",3);
+    JLabel PropLabel = new JLabel(name);
+    JTextField PropField = new JTextField(value+"",3);
     PropField.setName(name);
     //add the pair to the Hashmap
     layoutProperties.put(name, PropField);
@@ -337,7 +359,7 @@ public class ApplySettingsDialog implements ActionListener
     if (layoutProperties.keySet().contains(name))
     {
       //get the corresponding text field
-      TextField propField = (TextField)layoutProperties.get(name);
+      JTextField propField = (JTextField)layoutProperties.get(name);
       //set its text to the value
       propField.setText(value+"");
     }
@@ -360,7 +382,7 @@ public class ApplySettingsDialog implements ActionListener
     if (layoutProperties.keySet().contains(name))
     {
       //find the component with matching name
-      TextField propField = (TextField)layoutProperties.get(name);
+      JTextField propField = (JTextField)layoutProperties.get(name);
       value = Double.parseDouble(propField.getText());
     }
     else
@@ -400,19 +422,19 @@ public class ApplySettingsDialog implements ActionListener
   public int getStartCoordCode()
   {
     int returnInt;
-    if (StartCoords.getSelectedCheckbox().equals(FromPrevSlice))
+    if (FromPrevSlice.isSelected())
     {
       returnInt = PREV_SLICE;
     }
-    else if (StartCoords.getSelectedCheckbox().equals(Circle))
+    else if (Circle.isSelected())
     {
       returnInt = CIRCLE;
     }
-    else if (StartCoords.getSelectedCheckbox().equals(FromOrigFile))
+    else if (FromOrigFile.isSelected())
     {
       returnInt = ORIG_FILE;
     }
-    else if (StartCoords.getSelectedCheckbox().equals(Current))
+    else if (Current.isSelected())
     {
       returnInt = CURRENT;
     }
@@ -433,19 +455,19 @@ public class ApplySettingsDialog implements ActionListener
   public int getIsolatesCode()
   {
     int returnInt = IGNORE;
-    if (Isolates.getSelectedCheckbox().equals(PinToCircle))
+    if (PinToCircle.isSelected())
     {
       returnInt = PIN_CIRCLE;
     }
-    else if (Isolates.getSelectedCheckbox().equals(PinToEdge))
+    else if (PinToEdge.isSelected())
     {
       returnInt = PIN_EDGE;
     }
-    else if (Isolates.getSelectedCheckbox().equals(UseOrigCoords))
+    else if (UseOrigCoords.isSelected())
     {
       returnInt = PIN_ORIG;
     }
-    else if (Isolates.getSelectedCheckbox().equals(PinPrevious))
+    else if (PinPrevious.isSelected())
     {
       returnInt = PIN_PREVIOUS;
     }
@@ -457,7 +479,7 @@ public class ApplySettingsDialog implements ActionListener
    */
   public boolean isRescale()
   {
-    return Rescale.getState();
+    return Rescale.isSelected();
   }
 
   /**
@@ -466,7 +488,7 @@ public class ApplySettingsDialog implements ActionListener
    */
   public boolean isIsolateExclude()
   {
-    return IsolateExclude.getState();
+    return IsolateExclude.isSelected();
   }
 
   /**
@@ -475,7 +497,7 @@ public class ApplySettingsDialog implements ActionListener
    */
   public boolean isCircleRestrict()
   {
-    return CircleRestrict.getState();
+    return CircleRestrict.isSelected();
   }
 
   /**
@@ -484,7 +506,7 @@ public class ApplySettingsDialog implements ActionListener
    */
   public boolean isRecenter()
   {
-    return Recenter.getState();
+    return Recenter.isSelected();
   }
 
   /**
@@ -492,7 +514,7 @@ public class ApplySettingsDialog implements ActionListener
    */
   public boolean isEndRecenter()
  {
-   return EndRecenter.getState();
+   return EndRecenter.isSelected();
   }
 
   /**
@@ -501,7 +523,7 @@ public class ApplySettingsDialog implements ActionListener
 
   public boolean isEndBarycenter()
   {
-    return EndBarycenter.getState();
+    return EndBarycenter.isSelected();
   }
 
   /**
@@ -509,7 +531,7 @@ public class ApplySettingsDialog implements ActionListener
    */
   public boolean isRepaint()
   {
-    return Repaint.getState();
+    return Repaint.isSelected();
   }
 
   /**
@@ -518,7 +540,7 @@ public class ApplySettingsDialog implements ActionListener
    */
   public boolean isStopOnError()
   {
-    return ErrorStop.getState();
+    return ErrorStop.isSelected();
   }
 
   /**
@@ -598,7 +620,7 @@ public class ApplySettingsDialog implements ActionListener
   {
     if(evt.getSource().equals(Cancel))
     {
-      settingsDialog.hide();
+      settingsDialog.setVisible(false);
     }
     else
     {
@@ -609,12 +631,12 @@ public class ApplySettingsDialog implements ActionListener
       if (evt.getSource().equals(Apply))
       {
         engine.applyLayoutTo(engine.getCurrentSlice());
-        settingsDialog.hide();
+        settingsDialog.setVisible(false);
       }
       else if(evt.getSource().equals(MultiApply))
       {
         engine.applyLayoutToRemaining();
-        settingsDialog.hide();
+        settingsDialog.setVisible(false);
       }
     }
   }

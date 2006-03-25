@@ -9,6 +9,7 @@ import java.awt.Graphics2D;
 import java.util.*;
 import java.text.NumberFormat;
 
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
@@ -96,7 +97,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  * </P>
  */
 
-public class StressInfo extends Frame implements WindowListener
+public class StressInfo extends JFrame implements WindowListener
 {
   private SoniaController control;
   private SoniaLayoutEngine engine;
@@ -145,7 +146,7 @@ public class StressInfo extends Frame implements WindowListener
     plotArea.setBackground(Color.darkGray);
     mainPanel.add(plotArea,BorderLayout.CENTER);
     mainPanel.add(stressVale,BorderLayout.SOUTH);
-    this.add(mainPanel);
+     add(mainPanel);
 
     //number formating
     formater = NumberFormat.getInstance(Locale.ENGLISH);

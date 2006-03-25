@@ -1,11 +1,19 @@
 package sonia;
 
 import java.awt.*;
-import java.awt.Graphics2D;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.text.DecimalFormat;
 import java.util.StringTokenizer;
+
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.border.TitledBorder;
+
 import cern.colt.list.DoubleArrayList;
 
 /**
@@ -47,7 +55,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  * impact the running of the plot in real time.
  *
  */
-public class CoolingSchedule extends Frame implements MouseListener,
+public class CoolingSchedule extends ExportableFrame implements MouseListener,
     MouseMotionListener,ActionListener,WindowListener
 {
   private NetLayout layout;
@@ -67,10 +75,11 @@ public class CoolingSchedule extends Frame implements MouseListener,
   private double[] convergeValues;
   private int numConvergeValues = -1;
 
-  private Button Set;
-  private Canvas filler;
-  private Label MaxPassLabel;
-  private TextField MaxPassField;
+  private JButton Set;
+ // private Canvas filler;
+  private CoolingPlot plot;
+ // private JLabel MaxPassLabel;
+  private JTextField MaxPassField;
 
   //should also provide constructor with list of points
   /**
@@ -105,6 +114,8 @@ public class CoolingSchedule extends Frame implements MouseListener,
     ctlValuesToScreenPoints();
   }
   */
+  
+  
 
   /**
    * creates the gui, creating the layout, adding components, etc.  Adds button
@@ -113,34 +124,40 @@ public class CoolingSchedule extends Frame implements MouseListener,
     private void makeGUI()
     {
       //set up fonts for labels
-      Font textFont = new Font("SanSerif",Font.PLAIN,10);
-      this.setFont(textFont);
+    //  Font textFont = new Font("SanSerif",Font.PLAIN,10);
+    //  this.setFont(textFont);
 
-    MaxPassField = new TextField(maxPasses+"",3);
-    MaxPassLabel = new Label("Max. Passes");
+    MaxPassField = new JTextField(maxPasses+"",8);
+    MaxPassField.setBorder(new TitledBorder("Max. Passes"));
+   // MaxPassLabel = new JLabel("Max. Passes");
   //  OptDistField = new TextField(optDistance+"",3);
   //  OptDistLabel = new Label("Optimum Distance");
-    Set = new Button("Values...");
+    Set = new JButton("Values...");
 
     Set.addActionListener(this);
     this.addWindowListener(this);
-    filler = new Canvas();
+   // filler = new Canvas();
+    plot = new CoolingPlot();
+  //  plot.setBorder(new TitledBorder("cooling plot"));
 
     GridBagLayout layout = new GridBagLayout();
     this.setLayout(layout);
     GridBagConstraints c = new GridBagConstraints();
-    c.gridx=0;c.gridy=0;c.gridwidth=5;c.gridheight=5;c.weightx=1;c.weighty=1;
-    this.add(filler,c);
-    c.gridx=3;c.gridy=5;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
-    c.anchor=c.EAST;
-    this.add(MaxPassLabel,c);
-    c.anchor=c.WEST;
-    c.gridx=4;c.gridy=5;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
+    c.gridx=0;c.gridy=0;c.gridwidth=2;c.gridheight=1;c.weightx=1;c.weighty=1;
+    c.fill=c.BOTH;
+  //  this.add(filler,c);
+    this.add(plot,c);
+    c.fill=c.NONE;
+   // c.gridx=0;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
+   // c.anchor=c.EAST;
+  //  this.add(MaxPassLabel,c);
+   // c.anchor=c.WEST;
+    c.gridx=0;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.1;
     this.add(MaxPassField,c);
-    c.gridx=5;c.gridy=5;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
+    c.gridx=1;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.1;
     this.add(Set,c);
 
-    this.addMouseMotionListener(this);
+    plot.addMouseMotionListener(this);
     this.addMouseListener(this);
     MaxPassField.addActionListener(this);
 
@@ -393,8 +410,8 @@ public class CoolingSchedule extends Frame implements MouseListener,
    maxPasses = Integer.parseInt(MaxPassField.getText());
    // optDistance = Double.parseDouble(OptDistField.getText());
     //figure out the area which will actually be used to draw the graph
-    graphWidth = this.getWidth() - (2*pad);
-    graphHeight = this.getHeight() - this.getInsets().top - (2*pad) - 35;
+    graphWidth = plot.getWidth();// - (2*pad);
+    graphHeight = plot.getHeight();// - this.getInsets().top - (2*pad) - 35;
 
     //calculate initial positions for the points
     for (int i=0; i<bendPoints; i++)
@@ -422,86 +439,181 @@ public class CoolingSchedule extends Frame implements MouseListener,
   }
 
   /**
-   * Paints the plot data and information to the passed graphics context. First,
-   * axes and labels are drawn, then the conrol line segments and points, the
-   * current pass value, the current pass value and y value and the convergance points.
-   * @param g the graphics context the plot will be drawn on.
+   * implements the plot as a Swing component
+   * @author skyebend
+   *
    */
-  public void paint(Graphics g)
+  private class CoolingPlot extends JPanel
   {
+	  /**
+	   * Paints the plot data and information to the passed graphics context. First,
+	   * axes and labels are drawn, then the conrol line segments and points, the
+	   * current pass value, the current pass value and y value and the convergance points.
+	   * @param g the graphics context the plot will be drawn on.
+	   */
+	  public void paintComponent(Graphics g)
+	  {
 
-    Graphics2D graphics = (Graphics2D)g;
-    graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                             RenderingHints.VALUE_ANTIALIAS_ON);
-    graphics.setStroke(new BasicStroke(1.5f));
-    //draw axes and their labels
-    graphics.setColor(Color.darkGray);
-    //x axis
-    graphics.drawLine(pad,(graphHeight+pad+getInsets().top),
-                      (graphWidth+pad),graphHeight+pad+getInsets().top);
-    graphics.drawString(""+maxPasses,
-                        graphWidth-20,graphHeight+pad+getInsets().top+10);
-    //y axis
-    graphics.drawLine(pad,(graphHeight+pad+getInsets().top),
-                      pad,pad+getInsets().top);
-    graphics.drawString("1.0 ("+maxYvalue+")",pad+3,pad+getInsets().top+3);
+		//check that the values for calcing the plot are current
+		  graphHeight = this.getHeight();
+		  graphWidth = this.getWidth();
+		  ctlValuesToScreenPoints();
+		  
+	    Graphics2D graphics = (Graphics2D)g;
+	    graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+	                             RenderingHints.VALUE_ANTIALIAS_ON);
+	    graphics.setStroke(new BasicStroke(1.5f));
+	    //draw axes and their labels
+	    graphics.setColor(Color.darkGray);
+	    //x axis
+	    graphics.drawLine(pad,(graphHeight+pad+getInsets().top),
+	                      (graphWidth+pad),graphHeight+pad+getInsets().top);
+	    graphics.drawString(""+maxPasses,
+	                        graphWidth-20,graphHeight+pad+getInsets().top+10);
+	    //y axis
+	    graphics.drawLine(pad,(graphHeight+pad+getInsets().top),
+	                      pad,pad+getInsets().top);
+	    graphics.drawString("1.0 ("+maxYvalue+")",pad+3,pad+getInsets().top+3);
 
-    //draw line segments and points
-    graphics.setColor(Color.white);
-    for (int i=0; i<bendPoints-1;i++)
-    {
-      graphics.drawLine(pointsX[i],pointsY[i],pointsX[i+1],pointsY[i+1]);
-    }
-    //startpoint
-    graphics.setColor(Color.green);
-    graphics.drawOval(pointsX[0]-2,pointsY[0]-2,5,5);
-    //rest of the points
-    graphics.setColor(Color.darkGray);
-    for (int i=1; i<bendPoints-1;i++)
-    {
-      graphics.drawOval(pointsX[i]-2,pointsY[i]-2,5,5);
-      //also draw the pass value of the point at the bottom of the graph
-      String passVal = (int)Math.round(ctlValues[i][0])+"";
-      graphics.drawString(passVal,pointsX[i]-2,graphHeight+pad+getInsets().top+10);
-    }
-    //endPoint
-    graphics.setColor(Color.red);
-    graphics.drawOval(pointsX[bendPoints-1]-2,pointsY[bendPoints-1]-2,5,5);
-    graphics.drawString("end:"+getMaxUsrPasses(),
-                        pointsX[bendPoints-1]-2,pointsY[bendPoints-1]+10);
-    //draw the value lines if set
+	    //draw line segments and points
+	    graphics.setColor(Color.white);
+	    for (int i=0; i<bendPoints-1;i++)
+	    {
+	      graphics.drawLine(pointsX[i],pointsY[i],pointsX[i+1],pointsY[i+1]);
+	    }
+	    //startpoint
+	    graphics.setColor(Color.green);
+	    graphics.drawOval(pointsX[0]-2,pointsY[0]-2,5,5);
+	    //rest of the points
+	    graphics.setColor(Color.darkGray);
+	    for (int i=1; i<bendPoints-1;i++)
+	    {
+	      graphics.drawOval(pointsX[i]-2,pointsY[i]-2,5,5);
+	      //also draw the pass value of the point at the bottom of the graph
+	      String passVal = (int)Math.round(ctlValues[i][0])+"";
+	      graphics.drawString(passVal,pointsX[i]-2,graphHeight+pad+getInsets().top+10);
+	    }
+	    //endPoint
+	    graphics.setColor(Color.red);
+	    graphics.drawOval(pointsX[bendPoints-1]-2,pointsY[bendPoints-1]-2,5,5);
+	    graphics.drawString("end:"+getMaxUsrPasses(),
+	                        pointsX[bendPoints-1]-2,pointsY[bendPoints-1]+10);
+	    //draw the value lines if set
 
-    if (lastYvalue >= 0)
-    {
-      graphics.setColor(Color.red);
-    graphics.drawLine(pad,lastYvalue,
-                      (graphWidth+pad),lastYvalue);
-    }
-    if (lastPassValue >= 0)
-    {
-      graphics.setColor(Color.blue);
-    graphics.drawLine(lastPassValue,(graphHeight+pad+getInsets().top),
-                      lastPassValue,pad+getInsets().top);
-    }
-    //do convergance plot
-    graphics.setColor(Color.green);
-    for (int i = 0;i<numConvergeValues ;i++ )
-    {
-      //rescale the value to fit, assume max and min values of 100
-            //and shift so that 0 will be in middle of the graph
-      double rescaleFact = graphHeight/20;
-      int plotVal =graphHeight+getInsets().top+pad
-                  -(int)Math.round((convergePlot[i]*rescaleFact));
-      int plotX = (int)Math.round(((double)i / (double)maxPasses)
-                                * (graphWidth))+pad;
-      graphics.drawRect(plotX,plotVal,1,1);
+	    if (lastYvalue >= 0)
+	    {
+	      graphics.setColor(Color.red);
+	    graphics.drawLine(pad,lastYvalue,
+	                      (graphWidth+pad),lastYvalue);
+	    }
+	    if (lastPassValue >= 0)
+	    {
+	      graphics.setColor(Color.blue);
+	    graphics.drawLine(lastPassValue,(graphHeight+pad+getInsets().top),
+	                      lastPassValue,pad+getInsets().top);
+	    }
+	    //do convergance plot
+	    graphics.setColor(Color.green);
+	    for (int i = 0;i<numConvergeValues ;i++ )
+	    {
+	      //rescale the value to fit, assume max and min values of 100
+	            //and shift so that 0 will be in middle of the graph
+	      double rescaleFact = graphHeight/20;
+	      int plotVal =graphHeight+getInsets().top+pad
+	                  -(int)Math.round((convergePlot[i]*rescaleFact));
+	      int plotX = (int)Math.round(((double)i / (double)maxPasses)
+	                                * (graphWidth))+pad;
+	      graphics.drawRect(plotX,plotVal,1,1);
 
-    }
+	    }
 
-        graphics.setColor(Color.red);
-    this.invalidate();
+	        graphics.setColor(Color.red);
+	    this.invalidate();
 
+	  }
   }
+  
+//  /**
+//   * Paints the plot data and information to the passed graphics context. First,
+//   * axes and labels are drawn, then the conrol line segments and points, the
+//   * current pass value, the current pass value and y value and the convergance points.
+//   * @param g the graphics context the plot will be drawn on.
+//   */
+//  public void paint(Graphics g)
+//  {
+//
+//    Graphics2D graphics = (Graphics2D)g;
+//    graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+//                             RenderingHints.VALUE_ANTIALIAS_ON);
+//    graphics.setStroke(new BasicStroke(1.5f));
+//    //draw axes and their labels
+//    graphics.setColor(Color.darkGray);
+//    //x axis
+//    graphics.drawLine(pad,(graphHeight+pad+getInsets().top),
+//                      (graphWidth+pad),graphHeight+pad+getInsets().top);
+//    graphics.drawString(""+maxPasses,
+//                        graphWidth-20,graphHeight+pad+getInsets().top+10);
+//    //y axis
+//    graphics.drawLine(pad,(graphHeight+pad+getInsets().top),
+//                      pad,pad+getInsets().top);
+//    graphics.drawString("1.0 ("+maxYvalue+")",pad+3,pad+getInsets().top+3);
+//
+//    //draw line segments and points
+//    graphics.setColor(Color.white);
+//    for (int i=0; i<bendPoints-1;i++)
+//    {
+//      graphics.drawLine(pointsX[i],pointsY[i],pointsX[i+1],pointsY[i+1]);
+//    }
+//    //startpoint
+//    graphics.setColor(Color.green);
+//    graphics.drawOval(pointsX[0]-2,pointsY[0]-2,5,5);
+//    //rest of the points
+//    graphics.setColor(Color.darkGray);
+//    for (int i=1; i<bendPoints-1;i++)
+//    {
+//      graphics.drawOval(pointsX[i]-2,pointsY[i]-2,5,5);
+//      //also draw the pass value of the point at the bottom of the graph
+//      String passVal = (int)Math.round(ctlValues[i][0])+"";
+//      graphics.drawString(passVal,pointsX[i]-2,graphHeight+pad+getInsets().top+10);
+//    }
+//    //endPoint
+//    graphics.setColor(Color.red);
+//    graphics.drawOval(pointsX[bendPoints-1]-2,pointsY[bendPoints-1]-2,5,5);
+//    graphics.drawString("end:"+getMaxUsrPasses(),
+//                        pointsX[bendPoints-1]-2,pointsY[bendPoints-1]+10);
+//    //draw the value lines if set
+//
+//    if (lastYvalue >= 0)
+//    {
+//      graphics.setColor(Color.red);
+//    graphics.drawLine(pad,lastYvalue,
+//                      (graphWidth+pad),lastYvalue);
+//    }
+//    if (lastPassValue >= 0)
+//    {
+//      graphics.setColor(Color.blue);
+//    graphics.drawLine(lastPassValue,(graphHeight+pad+getInsets().top),
+//                      lastPassValue,pad+getInsets().top);
+//    }
+//    //do convergance plot
+//    graphics.setColor(Color.green);
+//    for (int i = 0;i<numConvergeValues ;i++ )
+//    {
+//      //rescale the value to fit, assume max and min values of 100
+//            //and shift so that 0 will be in middle of the graph
+//      double rescaleFact = graphHeight/20;
+//      int plotVal =graphHeight+getInsets().top+pad
+//                  -(int)Math.round((convergePlot[i]*rescaleFact));
+//      int plotX = (int)Math.round(((double)i / (double)maxPasses)
+//                                * (graphWidth))+pad;
+//      graphics.drawRect(plotX,plotVal,1,1);
+//
+//    }
+//
+//        graphics.setColor(Color.red);
+//    this.invalidate();
+//
+//  }
 
   /**
    * figure out if the mouse is over a control point and return the number
@@ -663,6 +775,14 @@ public class CoolingSchedule extends Frame implements MouseListener,
   {
     return maxYvalue;
   }
+
+  /**
+   * returns only the plot part of the window
+   */
+protected JComponent getGraphicContent() {
+
+	return plot;
+}
 
 
 

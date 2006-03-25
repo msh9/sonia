@@ -1,4 +1,10 @@
-package sonia;
+package sonia.layouts;
+
+import sonia.ApplySettingsDialog;
+import sonia.LayoutSlice;
+import sonia.NetLayout;
+import sonia.SoniaController;
+import sonia.SoniaLayoutEngine;
 
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>

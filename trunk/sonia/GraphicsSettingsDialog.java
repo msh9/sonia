@@ -3,6 +3,12 @@ package sonia;
 import java.awt.*;
 import java.awt.event.*;
 
+import javax.swing.ButtonGroup;
+import javax.swing.JCheckBox;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JTextField;
+
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>
  * <p>Description:Animates layouts of time-based networks
@@ -75,38 +81,42 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 public class GraphicsSettingsDialog
 {
-  private Dialog graphicsDialog;
+  private JDialog graphicsDialog;
   private SoniaLayoutEngine engine;
   private SoniaController control;
   private SoniaCanvas canvas;
 
-  private Label GeneralLabel;
-  private Label ArcsLabel;
-  private Label NodesLabel;
-  private Checkbox AntiAlias;
-  private Checkbox ArcTrans;
-  private TextField ArcTransField;
-  private Label ArcWidthFactorLabel;
-  private TextField ArcWidthFactorField;
-  private Label NodeScaleFactorLabel;
-  private TextField NodeScaleFactorField;
-  private Checkbox ShowArcWeights; //should rename as "show layout weights"
-  private Checkbox ShowArcLabels;
-  private Checkbox ShowArrows;
-  private CheckboxGroup NodeLabelGroup;
-  private Checkbox ShowLabels;
-  private Checkbox ShowIds;
-  private Checkbox ShowStats;
-  private Checkbox ShowAxes;
-  private Checkbox GhostSlice;
-  private Label WindowWidthLabel;
-  private TextField WindowWidth;
-  private Label WindowHeightLabel;
+  private JLabel GeneralLabel;
+  private JLabel ArcsLabel;
+  private JLabel NodesLabel;
+  private JCheckBox AntiAlias;
+  private JCheckBox ArcTrans;
+  private JTextField ArcTransField;
+  private JCheckBox NodeTrans;       // node transparency enable
+  private JTextField NodeTransField;  // node transparency value
+  private JLabel ArcWidthFactorLabel;
+  private JTextField ArcWidthFactorField;
+  private JLabel NodeScaleFactorLabel;
+  private JTextField NodeScaleFactorField;
+  private JCheckBox ShowArcWeights; //should rename as "show layout weights"
+  private JCheckBox ShowArcLabels;
+  private JCheckBox ShowArrows;
+  private ButtonGroup NodeLabelGroup;
+  private JCheckBox ShowLabels;
+  private JTextField ShowLabelsField;  // show labels based on node size
+  private JCheckBox ShowIds;
+  private JTextField ShowIdsField;  // show ID's based on node size
+  private JCheckBox ShowStats;
+  private JCheckBox ShowAxes;
+  private JCheckBox GhostSlice;
+  private JLabel WindowWidthLabel;
+  private JTextField WindowWidth;
+  private JLabel WindowHeightLabel;
   private TextField WindowHeight;
-  private Checkbox FlashNew;
-  private TextField FlashDuration;
-  private Checkbox HideNodes;
-  private Checkbox HideArcs;
+  private JCheckBox FlashNew;
+  private JTextField FlashDuration;
+  private JCheckBox HideNodes;
+  private JCheckBox HideArcs;
 
   private Button OK;
 
@@ -119,39 +129,43 @@ public class GraphicsSettingsDialog
     control = cont;
     engine = eng;
     canvas = canv;
-    graphicsDialog = new Dialog(owner,"Graphics Settings",true);
+    graphicsDialog = new JDialog(owner,"Graphics Settings",true);
 
-    GeneralLabel = new Label("General Options:");
-    NodesLabel = new Label ("Node Options:");
-    ArcsLabel = new Label ("Arc Options:");
+    GeneralLabel = new JLabel("General Options:");
+    NodesLabel = new JLabel ("Node Options:");
+    ArcsLabel = new JLabel ("Arc Options:");
 
-    AntiAlias = new Checkbox("AntiAlias graphics (slower)",true);
-    ArcTrans = new Checkbox("Arc transparency",true);
-    ArcTransField = new TextField("0.5",3);
-    ArcWidthFactorLabel = new Label("Arc width factor");
-    ArcWidthFactorField = new TextField("1.0",3);
-    NodeScaleFactorLabel = new Label("Node scale factor");
-    NodeScaleFactorField = new TextField("1.0",3);
-    ShowArcWeights = new Checkbox("Show arc weights",false);
-    ShowArcLabels = new Checkbox("Show Arc Labels",false);
-    ShowArrows = new Checkbox("Show arrowheads",true);
-    ShowLabels = new Checkbox("Show labels",true);
-    ShowIds = new Checkbox("Show node Ids",false);
+    AntiAlias = new JCheckBox("AntiAlias graphics (slower)",true);
+    ArcTrans = new JCheckBox("Arc transparency",true);
+    ArcTransField = new JTextField("0.5",3);
+    NodeTrans = new JCheckBox("Node transparency",true);
+    NodeTransField = new JTextField("0.5",3);
+    ArcWidthFactorLabel = new JLabel("Arc width factor");
+    ArcWidthFactorField = new JTextField("1.0",3);
+    NodeScaleFactorLabel = new JLabel("Node scale factor");
+    NodeScaleFactorField = new JTextField("1.0",3);
+    ShowArcWeights = new JCheckBox("Show arc weights",false);
+    ShowArcLabels = new JCheckBox("Show Arc Labels",false);
+    ShowArrows = new JCheckBox("Show arrowheads",true);
+    ShowLabels = new JCheckBox("Show labels",true);
+    ShowLabelsField = new JTextField("10.0",3);
+    ShowIds = new JCheckBox("Show node Ids",false);
+    ShowIdsField = new JTextField("10.0",3);
     
     //NodeLabelGroup
 
-    ShowStats = new Checkbox("Show stats",true);
-    ShowAxes = new Checkbox("Show Axes",false);
-    GhostSlice = new Checkbox("Ghost previous slice");
+    ShowStats = new JCheckBox("Show stats",true);
+    ShowAxes = new JCheckBox("Show Axes",false);
+    GhostSlice = new JCheckBox("Ghost previous slice");
 
-    WindowHeightLabel = new Label("Layout Height");
-    WindowWidthLabel = new Label("Layout Width");
+    WindowHeightLabel = new JLabel("Layout Height");
+    WindowWidthLabel = new JLabel("Layout Width");
     WindowHeight = new TextField(engine.getDisplayHeight()+"",4);
-    WindowWidth = new TextField(engine.getDisplayWidth()+"", 4);
-    FlashNew = new Checkbox("Flash new events",false);
-    FlashDuration = new TextField("0.1",4);
-    HideNodes = new Checkbox("Hide Nodes", false);
-    HideArcs = new Checkbox("Hide Arcs",false);
+    WindowWidth = new JTextField(engine.getDisplayWidth()+"", 4);
+    FlashNew = new JCheckBox("Flash new events",false);
+    FlashDuration = new JTextField("0.1",4);
+    HideNodes = new JCheckBox("Hide Nodes", false);
+    HideArcs = new JCheckBox("Hide Arcs",false);
 
     OK = new Button("OK");
 
@@ -194,12 +208,23 @@ public class GraphicsSettingsDialog
    graphicsDialog.add(NodeScaleFactorLabel,c);
    c.gridx=3;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
    graphicsDialog.add(NodeScaleFactorField,c);
-   c.gridx=2;c.gridy=2;c.gridwidth=2;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(ShowLabels,c);
+   
+   c.gridx=2;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
+   graphicsDialog.add(NodeTrans,c);
+   c.gridx=3;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
+   graphicsDialog.add(NodeTransField,c);
+   
    c.gridx=2;c.gridy=3;c.gridwidth=2;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(ShowIds,c);
+   graphicsDialog.add(ShowLabels,c);
+   c.gridx=3;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
+   graphicsDialog.add(ShowLabelsField,c);
    c.gridx=2;c.gridy=4;c.gridwidth=2;c.gridheight=1;c.weightx=0;c.weighty=0;
+   graphicsDialog.add(ShowIds,c);
+   c.gridx=3;c.gridy=4;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
+   graphicsDialog.add(ShowIdsField,c);
+   c.gridx=2;c.gridy=5;c.gridwidth=2;c.gridheight=1;c.weightx=0;c.weighty=0;
    graphicsDialog.add(HideNodes,c);
+   
    // arc options
    c.gridx=4;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
    graphicsDialog.add(ArcTrans,c);
@@ -250,25 +275,29 @@ public class GraphicsSettingsDialog
    */
   public void applySettings()
   {
-    canvas.setAntiAlias(AntiAlias.getState());
-    canvas.setArcTrans(ArcTrans.getState());
+    canvas.setAntiAlias(AntiAlias.isSelected());
+    canvas.setArcTrans(ArcTrans.isSelected());
     canvas.setArcTransVal(Float.parseFloat(ArcTransField.getText()));
+    canvas.setNodeTrans(NodeTrans.isSelected());
+    canvas.setNodeTransVal(Float.parseFloat(NodeTransField.getText()));
     canvas.setArcWidthFact(Float.parseFloat(ArcWidthFactorField.getText()));
-    canvas.setShowArrows(ShowArrows.getState());
-    canvas.setShowArcWeights(ShowArcWeights.getState());
-    canvas.setShowArcLabels(ShowArcLabels.getState());
-    canvas.setShowLabels(ShowLabels.getState());
-    canvas.setShowId(ShowIds.getState());
-    canvas.setShowStats(ShowStats.getState());
-    canvas.setGhostSlice(GhostSlice.getState());
-    canvas.setFlashNew(FlashNew.getState());
+    canvas.setShowArrows(ShowArrows.isSelected());
+    canvas.setShowArcWeights(ShowArcWeights.isSelected());
+    canvas.setShowArcLabels(ShowArcLabels.isSelected());
+    canvas.setShowLabels(ShowLabels.isSelected());
+    canvas.setShowLabelsVal(Float.parseFloat(ShowLabelsField.getText()));
+    canvas.setShowId(ShowIds.isSelected());
+    canvas.setShowIdsVal(Float.parseFloat(ShowIdsField.getText()));
+    canvas.setShowStats(ShowStats.isSelected());
+    canvas.setGhostSlice(GhostSlice.isSelected());
+    canvas.setFlashNew(FlashNew.isSelected());
     canvas.setFlashDuration(Double.parseDouble(FlashDuration.getText()));
     canvas.setNodeScaleFact(Float.parseFloat(NodeScaleFactorField.getText()));
-    canvas.setHideArcs(HideArcs.getState());
-    canvas.setHideNodes(HideNodes.getState());
+    canvas.setHideArcs(HideArcs.isSelected());
+    canvas.setHideNodes(HideNodes.isSelected());
     engine.setDisplayWidth(Integer.parseInt(WindowWidth.getText()));
     engine.setDisplayHeight(Integer.parseInt(WindowHeight.getText()));
-    graphicsDialog.hide();
+    graphicsDialog.setVisible(false);
     canvas.repaint();
   }
 }

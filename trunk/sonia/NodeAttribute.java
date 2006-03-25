@@ -1,8 +1,14 @@
 package sonia;
 
+import javax.swing.*;
+
 import java.awt.Graphics2D;
 import java.awt.*;
 import java.awt.geom.*;
+import java.awt.image.*;
+import java.net.*;
+import javax.imageio.*;
+
 
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>
@@ -62,6 +68,11 @@ public class NodeAttribute implements NetworkEvent{
   //coords not stored here so that they can be accessed more quickly
   //transparency???
 
+  // use image for node shape (can be in addition to square or circle shape defined by nodeShape)
+  private URL iconURL;
+  private ImageIcon icon = null; 
+
+  
   public NodeAttribute(int id)
   {
     nodeId = id;
@@ -87,32 +98,44 @@ public class NodeAttribute implements NetworkEvent{
                     double yCoord)
   {
     double nodeDrawSize = 0.0;
+    
     //check if drawing node
     if (!canvas.isHideNodes())
     {
       nodeDrawSize = nodeSize * canvas.getNodeScaleFact();
-      graphics.setColor(borderColor);
 
       //changes size and shape of node by repositioning and scaling the rectacular
       //frame enclosing it
       nodeShape.setFrame((xCoord - nodeDrawSize/2.0),
                          (yCoord - nodeDrawSize/2.0),nodeDrawSize,nodeDrawSize);
-      //set border color and draw it
+      //set border color/width and draw it
+      graphics.setColor(borderColor);
       graphics.setStroke(borderStroke);
       graphics.draw(nodeShape);
-      //set node color
       graphics.setColor(nodeColor);
       graphics.fill(nodeShape);
-            //if it has never been drawn, than draww it very large so it will show
-     if (flashNode)
-     {
+      
+      //if it has never been drawn, than draww it very large so it will show
+      if (flashNode)
+      {
          nodeShape.setFrame((xCoord - (nodeDrawSize+flashFactor)/2.0),
                          (yCoord - (nodeDrawSize+flashFactor)/2.0),(nodeDrawSize+flashFactor),(nodeDrawSize+flashFactor));;
          graphics.setColor(flashColor);
          graphics.draw(nodeShape);
          flashNode = false; //so we only draw once, even if stay on same slice..?
-     }
+      }
+      
+      // drawing image for Node
+      if (icon != null)
+      {
+         int xc = (int)xCoord - (int)nodeDrawSize/2;
+         int yc = (int)yCoord - (int)nodeDrawSize/2;
+         graphics.drawImage(icon.getImage(), xc, yc, (int)nodeDrawSize, (int)nodeDrawSize, null);
+      }
+      // end draw image
+            
     }
+    
     //rough label
     if (canvas.isShowLabels() | canvas.isShowId())
     {
@@ -120,19 +143,19 @@ public class NodeAttribute implements NetworkEvent{
       graphics.setColor(labelColor);
       Font originalFont = graphics.getFont();
       graphics.setFont(originalFont.deriveFont(labelSize));
-      if (canvas.isShowId())
+      if (canvas.isShowId() && (nodeSize >= canvas.getShowLabelsVal()))
       {
         printLabel = printLabel+nodeId;
         //if both are on, show with a ":" seperator
-        if (canvas.isShowLabels())
+        if (canvas.isShowLabels() && (nodeSize >= canvas.getShowIdsVal()))
         {
           printLabel = printLabel+":";
         }
       }
-      if (canvas.isShowLabels())
-        {
+      if (canvas.isShowLabels() && (nodeSize >= canvas.getShowLabelsVal()))
+      {
           printLabel = printLabel+nodeLabel;
-        }
+      }
       graphics.drawString(printLabel, (float)(xCoord+(nodeDrawSize/2.0)+2.0),
                           (float)(yCoord+labelSize/2.0));
     }
@@ -229,14 +252,32 @@ public class NodeAttribute implements NetworkEvent{
   {
     return nodeShape;
   }
+  public URL getIconURL()
+  {
+    return iconURL;
+  }
   public void flash()
   {
       flashNode = true;
   }
-  
   public void setNodeShape(RectangularShape s)
   {
     nodeShape = s;
+  }
+  /**
+   * thows exception if unable to find or create the icon specified by the url
+   * @param url
+   * @throws Exception
+   */
+  public void setIconURL(URL url) throws Exception
+  {
+    iconURL = url;
+    if (iconURL != null)
+    {
+        icon = new ImageIcon(iconURL);
+
+        //System.out.println("iconURL:"+iconURL.toString()+"\n");
+    }
   }
   public void setNodeSize(double size)
   {
