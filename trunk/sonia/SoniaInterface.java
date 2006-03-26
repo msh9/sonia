@@ -67,7 +67,7 @@ import javax.swing.plaf.FontUIResource;
  * </P>
  */
 
-public class SoniaInterface extends ExportableFrame implements WindowListener,
+public class SoniaInterface extends JFrame implements WindowListener,
 		ActionListener
 // ItemListener
 {

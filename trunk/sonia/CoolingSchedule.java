@@ -12,7 +12,10 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.border.Border;
+import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.plaf.basic.BasicBorders;
 
 import cern.colt.list.DoubleArrayList;
 
@@ -138,12 +141,12 @@ public class CoolingSchedule extends ExportableFrame implements MouseListener,
     this.addWindowListener(this);
    // filler = new Canvas();
     plot = new CoolingPlot();
-  //  plot.setBorder(new TitledBorder("cooling plot"));
+    plot.setBorder(new TitledBorder(""));
 
     GridBagLayout layout = new GridBagLayout();
     this.setLayout(layout);
     GridBagConstraints c = new GridBagConstraints();
-    c.gridx=0;c.gridy=0;c.gridwidth=2;c.gridheight=1;c.weightx=1;c.weighty=1;
+    c.gridx=0;c.gridy=0;c.gridwidth=1;c.gridheight=2;c.weightx=1;c.weighty=1;
     c.fill=c.BOTH;
   //  this.add(filler,c);
     this.add(plot,c);
@@ -152,16 +155,16 @@ public class CoolingSchedule extends ExportableFrame implements MouseListener,
    // c.anchor=c.EAST;
   //  this.add(MaxPassLabel,c);
    // c.anchor=c.WEST;
-    c.gridx=0;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.1;
+    c.gridx=1;c.gridy=0;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.1;
     this.add(MaxPassField,c);
     c.gridx=1;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.1;
     this.add(Set,c);
 
     plot.addMouseMotionListener(this);
-    this.addMouseListener(this);
+    plot.addMouseListener(this);
     MaxPassField.addActionListener(this);
 
-    this.setBackground(Color.lightGray);
+    //this.setBackground(Color.lightGray);
     this.setSize(480,150);
     this.setTitle("Schedule");
     this.setLocation(360,480);
@@ -195,15 +198,15 @@ public class CoolingSchedule extends ExportableFrame implements MouseListener,
     double rawHeight = (double)((pointsY[index+1]-pointsY[index])
                                 * (passX-pointsX[index]))/
                         (double)(pointsX[index+1]-pointsX[index])
-                        +(pointsY[index]-pad-getInsets().top);
+                        +(pointsY[index]-pad);
 
     tempFactor = (maxYvalue/(double)graphHeight) * ((double)graphHeight-rawHeight);
     //clear the plot
-    this.repaint();
+    //this.repaint();
     //draw the point on the plot to show it was done
-    Graphics g = this.getGraphics();
+    Graphics g = plot.getGraphics();
     g.setColor(Color.red);
-    g.drawRect(passX,(int)(rawHeight+pad+getInsets().top),2,2);
+    g.drawRect(passX,(int)(rawHeight+pad),2,2);
     return tempFactor;
 
   }
@@ -304,7 +307,7 @@ public class CoolingSchedule extends ExportableFrame implements MouseListener,
    */
   public void showYValue(double value)
   {
-    int plotValue = graphHeight - (int)Math.round((value/maxYvalue)*graphHeight)+getInsets().top+pad;
+    int plotValue = graphHeight - (int)Math.round((value/maxYvalue)*graphHeight)+pad;
     //draw a horizontal line at the plot value
     lastYvalue = plotValue;
     repaint();
@@ -355,7 +358,7 @@ public class CoolingSchedule extends ExportableFrame implements MouseListener,
       //figure out what x,y coords should be based on graph width and height
       screenX = (int)Math.round((ctlValues[i][0] / (double)maxPasses)
                                 * (graphWidth))+pad;
-      screenY = (int)Math.round(((1-ctlValues[i][1])/maxYvalue)*graphHeight)+getInsets().top+pad;
+      screenY = (int)Math.round(((1-ctlValues[i][1])/maxYvalue)*graphHeight)+pad;
       pointsX[i] = screenX;
       pointsY[i] = screenY;
     }
@@ -375,7 +378,7 @@ public class CoolingSchedule extends ExportableFrame implements MouseListener,
      //figure out what x,y coords should be based on graph width and height
      ctlValues[i][0] = Math.round((double)(pointsX[i]-pad)/(double)graphWidth
                                   * (double)maxPasses);
-     yValue = (double)(pointsY[i]-(getInsets().top+pad))
+     yValue = (double)(pointsY[i]-pad)
        /(double)graphHeight;
      //strange hack to make sure they only have 2 significant digits
        //multiply by 10, round, divide by ten
@@ -410,15 +413,15 @@ public class CoolingSchedule extends ExportableFrame implements MouseListener,
    maxPasses = Integer.parseInt(MaxPassField.getText());
    // optDistance = Double.parseDouble(OptDistField.getText());
     //figure out the area which will actually be used to draw the graph
-    graphWidth = plot.getWidth();// - (2*pad);
-    graphHeight = plot.getHeight();// - this.getInsets().top - (2*pad) - 35;
+    graphWidth = plot.getWidth() - (2*pad);
+    graphHeight = plot.getHeight() - (2*pad+10);
 
     //calculate initial positions for the points
     for (int i=0; i<bendPoints; i++)
     {
       pointsX[i] = (int)Math.round(i * ((double)graphWidth /
                                         ((double)bendPoints - 1)))+pad;
-      pointsY[i] = getInsets().top+pad + (int)Math.round(i *
+      pointsY[i] = +pad + (int)Math.round(i *
           ((double)graphHeight/((double)bendPoints - 1)));
     }
     lastPassValue = -1;
@@ -453,27 +456,28 @@ public class CoolingSchedule extends ExportableFrame implements MouseListener,
 	   */
 	  public void paintComponent(Graphics g)
 	  {
-
+		  super.paintComponent(g);
 		//check that the values for calcing the plot are current
-		  graphHeight = this.getHeight();
-		  graphWidth = this.getWidth();
+		  graphWidth = plot.getWidth() - (2*pad);
+		  graphHeight = plot.getHeight()- (2*pad+g.getFontMetrics().getHeight());
 		  ctlValuesToScreenPoints();
 		  
 	    Graphics2D graphics = (Graphics2D)g;
+	 //   graphics.clearRect(0,0,super.getWidth(),super.getHeight());
 	    graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
 	                             RenderingHints.VALUE_ANTIALIAS_ON);
 	    graphics.setStroke(new BasicStroke(1.5f));
 	    //draw axes and their labels
 	    graphics.setColor(Color.darkGray);
 	    //x axis
-	    graphics.drawLine(pad,(graphHeight+pad+getInsets().top),
-	                      (graphWidth+pad),graphHeight+pad+getInsets().top);
+	    graphics.drawLine(pad,(graphHeight+pad),
+	                      (graphWidth+pad),graphHeight+pad);
 	    graphics.drawString(""+maxPasses,
-	                        graphWidth-20,graphHeight+pad+getInsets().top+10);
+	                        graphWidth-20,graphHeight+pad+10);
 	    //y axis
-	    graphics.drawLine(pad,(graphHeight+pad+getInsets().top),
-	                      pad,pad+getInsets().top);
-	    graphics.drawString("1.0 ("+maxYvalue+")",pad+3,pad+getInsets().top+3);
+	    graphics.drawLine(pad,(graphHeight+pad),
+	                      pad,pad);
+	    graphics.drawString("1.0 ("+maxYvalue+")",pad+3,pad+3);
 
 	    //draw line segments and points
 	    graphics.setColor(Color.white);
@@ -491,7 +495,7 @@ public class CoolingSchedule extends ExportableFrame implements MouseListener,
 	      graphics.drawOval(pointsX[i]-2,pointsY[i]-2,5,5);
 	      //also draw the pass value of the point at the bottom of the graph
 	      String passVal = (int)Math.round(ctlValues[i][0])+"";
-	      graphics.drawString(passVal,pointsX[i]-2,graphHeight+pad+getInsets().top+10);
+	      graphics.drawString(passVal,pointsX[i]-2,graphHeight+pad+10);
 	    }
 	    //endPoint
 	    graphics.setColor(Color.red);
@@ -509,8 +513,8 @@ public class CoolingSchedule extends ExportableFrame implements MouseListener,
 	    if (lastPassValue >= 0)
 	    {
 	      graphics.setColor(Color.blue);
-	    graphics.drawLine(lastPassValue,(graphHeight+pad+getInsets().top),
-	                      lastPassValue,pad+getInsets().top);
+	    graphics.drawLine(lastPassValue,(graphHeight+pad),
+	                      lastPassValue,pad);
 	    }
 	    //do convergance plot
 	    graphics.setColor(Color.green);
@@ -519,7 +523,7 @@ public class CoolingSchedule extends ExportableFrame implements MouseListener,
 	      //rescale the value to fit, assume max and min values of 100
 	            //and shift so that 0 will be in middle of the graph
 	      double rescaleFact = graphHeight/20;
-	      int plotVal =graphHeight+getInsets().top+pad
+	      int plotVal =graphHeight+pad
 	                  -(int)Math.round((convergePlot[i]*rescaleFact));
 	      int plotX = (int)Math.round(((double)i / (double)maxPasses)
 	                                * (graphWidth))+pad;
@@ -661,9 +665,9 @@ public class CoolingSchedule extends ExportableFrame implements MouseListener,
         pointsX[selectedIndex] = e.getX();
         pointsY[selectedIndex] = e.getY();
       }
-      Graphics g = this.getGraphics();
-      this.getGraphics().clearRect(0,0,getWidth(),getHeight());
-      paint(g);
+     // Graphics g = this.getGraphics();
+    // plot.getGraphics().clearRect(plot.getX(),plot.getY(),plot.getWidth(),plot.getHeight());
+      plot.repaint();
       //g.setColor(Color.white);
       //g.drawString(e.getX()+","+e.getY(),e.getX(),e.getY());
 

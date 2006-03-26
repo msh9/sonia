@@ -21,7 +21,12 @@ import javax.swing.RepaintManager;
 
 /**
  * 
- * Creates a frame with a menu item for exporting or printing graphic content
+ * Creates a frame with a menu item for exporting or printing graphic content.
+ * Any window that needs the ability to export or print graphcis only needs to
+ * extend this class rather than JFrame and overide the getGraphicContent()
+ * method to specify exacatly what component to export. (otherwise whole frame
+ * will export) Uses the FreeHep library for graphics export and some code from
+ * the GUESS package
  */
 
 public class ExportableFrame extends JFrame {
@@ -30,12 +35,10 @@ public class ExportableFrame extends JFrame {
 
 	private JMenu exportMenu;
 
-	private JMenuItem print;
-
 	public ExportableFrame() {
 		super();
 		menuBar = new JMenuBar();
-		exportMenu = new JMenu("Image");
+		exportMenu = new JMenu("Export");
 		// add an action to show the printing option
 		exportMenu.add(new AbstractAction("Print...") {
 			public void actionPerformed(ActionEvent arg0) {
@@ -77,7 +80,8 @@ public class ExportableFrame extends JFrame {
 			} catch (PrinterException e) {
 				System.out.println("printing error:");
 				e.printStackTrace();
-				//TODO: need a way to report printing errors properly with dialog!
+				// TODO: need a way to report printing errors properly with
+				// dialog!
 			}
 		}
 	}
@@ -113,7 +117,6 @@ public class ExportableFrame extends JFrame {
 			}
 		}
 
-	
 	}
 
 	/**
@@ -126,10 +129,11 @@ public class ExportableFrame extends JFrame {
 		disableDoubleBuffering(compToPrint);
 		compToPrint.repaint();
 		HEPDialog exportDialog = new HEPDialog("SoNIA");
-		exportDialog.showHEPDialog(this,"Chose file format for export",compToPrint,"NetworkPic");
+		exportDialog.showHEPDialog(this, "Chose file format for export",
+				compToPrint, "NetworkPic");
 		enableDoubleBuffering(compToPrint);
 	}
-	
+
 	protected void disableDoubleBuffering(JComponent comp) {
 		RepaintManager currentManager = RepaintManager.currentManager(comp);
 		currentManager.setDoubleBufferingEnabled(false);
