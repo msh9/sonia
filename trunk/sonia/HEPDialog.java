@@ -37,7 +37,7 @@ import org.freehep.graphicsio.swf.SWFExportFileType;
  * 
  * @author tonyj, modified by eytan adar for GUESS, modified by skybend for
  *         sonia
- * @version $Id: HEPDialog.java,v 1.1 2006-03-25 06:21:15 skyebend Exp $
+ * @version $Id: HEPDialog.java,v 1.2 2006-04-06 17:52:36 skyebend Exp $
  */
 public class HEPDialog extends JOptionPane {
 	private static final String rootKey = HEPDialog.class.getName();
@@ -472,14 +472,15 @@ public class HEPDialog extends JOptionPane {
 		// }
 
 		File f = new File(fileName);
-		if (f.exists()) {
-			int ok = JOptionPane.showConfirmDialog(this,
-					"Replace existing file?");
-			if (ok != JOptionPane.OK_OPTION)
-				return false;
-		}
+//		if (f.exists()) {
+//			int ok = JOptionPane.showConfirmDialog(this,
+//					"Replace existing file?");
+//			if (ok != JOptionPane.OK_OPTION)
+//				return false;
+//		}
 		// debug
 		System.out.println("Exporting file:" + f);
+		//TODO: add way to comunicate this export message to controller
 		t.exportToFile(f, component, this, props, creator);
 		props.put(SAVE_AS_FILE, fileName);
 		props.put(SAVE_AS_TYPE, currentType().getFileFilter().getDescription());

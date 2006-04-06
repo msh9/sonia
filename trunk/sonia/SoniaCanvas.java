@@ -2,6 +2,9 @@ package sonia;
 
 import java.awt.*;
 
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
 
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>
@@ -28,12 +31,12 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-public class SoniaCanvas extends Canvas
+public class SoniaCanvas extends JPanel
 {
   private SoniaLayoutEngine engine;
   private LayoutWindow display;
   private RenderSlice lastRender = null;
-  private Image offScreen;
+  //private Image offScreen;
   private Image ghostImage = null;
   private int drawWidth;
   private int drawHeight;
@@ -72,8 +75,8 @@ public class SoniaCanvas extends Canvas
 
     drawWidth = engine.getDisplayWidth();
     drawHeight = engine.getDisplayHeight();
-    this.setBackground(Color.white);
-    offScreen = createImage(drawWidth, drawHeight);
+  //  this.setBackground(Color.white);
+  //  offScreen = createImage(drawWidth, drawHeight);
   }
   public void setRenderSlice(RenderSlice slice)
   {
@@ -86,16 +89,18 @@ public class SoniaCanvas extends Canvas
    * actually redraw the network.  Hopefully this will save time on renders..
    * @param g  - Graphics object to draw the screen buffer on
    */
-  public void paint(Graphics g)
+  public void paintComponent(Graphics g)
   {
+	  super.paintComponent(g);
+//    if(offScreen == null)
+//    {
+//      drawWidth = engine.getDisplayWidth();
+//      drawHeight = engine.getDisplayHeight();
+//      offScreen = createImage(drawWidth, drawHeight);
+//    }
+//    g.drawImage(offScreen, 0, 0, null);
 
-    if(offScreen == null)
-    {
-      drawWidth = engine.getDisplayWidth();
-      drawHeight = engine.getDisplayHeight();
-      offScreen = createImage(drawWidth, drawHeight);
-    }
-    g.drawImage(offScreen, 0, 0, null);
+	  updateDisplay(g,ghostSlice);
   }
 
 //need a much faster way of doing this, using the BufferdImage class,
@@ -113,26 +118,28 @@ public class SoniaCanvas extends Canvas
    */
   public void updateDisplay(Graphics g,boolean includeGhost)
   {
-    leftInset = display.getInsets().left;
-    topInset = display.getInsets().top;
+	 
+   // leftInset = getInsets();
+   // topInset = display.getInsets().top;
     pad = engine.getPad();
-    this.setBackground(Color.white);
+	 // super.paintComponent(g);
     //check if the window has changed size
     if ((drawWidth != engine.getDisplayWidth()) |
     (drawHeight != engine.getDisplayHeight()))
     {
       drawWidth = engine.getDisplayWidth();
       drawHeight = engine.getDisplayHeight();
-      offScreen = createImage(drawWidth, drawHeight);
+   //   offScreen = createImage(drawWidth, drawHeight);
     }
     //if image is missing or window has changed size,
     //make image for double buffering
-    if(offScreen == null)
-    {
-         offScreen = createImage(drawWidth, drawHeight);
-    }
+//    if(offScreen == null)
+//    {
+//         offScreen = createImage(drawWidth, drawHeight);
+//    }
     //get offscreen graphics andcast to Graphics2D
-    Graphics2D graphics = (Graphics2D)offScreen.getGraphics();
+  //  Graphics2D graphics = (Graphics2D)offScreen.getGraphics();
+    Graphics2D graphics = (Graphics2D)g;
     // check settings, and then set aliasing
     if (antiAlias)
     {
@@ -147,8 +154,9 @@ public class SoniaCanvas extends Canvas
     //take care of menubar or other items which might cover layout
    //graphics.translate(leftInset+pad,topInset+pad);
     //draw the network to the offscreen image
-    //draw a blank background
-    graphics.clearRect(0,0,drawWidth,drawHeight);
+    //draw a blank background with the specified background color
+    graphics.setColor(getBackground());
+    graphics.fillRect(0,0,drawWidth,drawHeight);
     //if ghosting is on, draw the ghost slice
     if (ghostSlice & includeGhost)
     {
@@ -166,7 +174,7 @@ public class SoniaCanvas extends Canvas
     {
       lastRender.paint(graphics,this);
     }
-    g.drawImage(offScreen, 0, 0, null);
+   // g.drawImage(offScreen, 0, 0, null);
 
   }
 

@@ -116,7 +116,7 @@ public class SoniaMovieMaker extends Frame implements StdQTConstants, Errors
        this.add("Center",QCanvas);
        this.setBackground(Color.black);
        this.setLocation(300,300);
-       this.setSize(width,height+engine.getTopInset());
+       this.setSize(width,height);
        this.setTitle("Exporting movie to "+outFile.getName()+" ...");
         this.show();
 
@@ -144,9 +144,9 @@ public class SoniaMovieMaker extends Frame implements StdQTConstants, Errors
         int size = QTImage.getMaxCompressionSize (quickDraw,
             clipRect,
             8,//quickDraw.getPixMap().getPixelSize(),  the color depth
-            codecLowQuality,   //recomended quality
+            codecHighQuality,   //recomended quality
             kAnimationCodecType,
-            CodecComponent.anyCodec);   //the compressor
+            CodecComponent.bestFidelityCodec);   //the compressor
         imageHandle = new QTHandle (size, true);
         imageHandle.lock();
         compressedImage = RawEncodedImage.fromQTHandle(imageHandle);
@@ -154,9 +154,10 @@ public class SoniaMovieMaker extends Frame implements StdQTConstants, Errors
                                        clipRect,
                                        8,//quickDraw.getPixMap().getPixelSize(),
                                        kAnimationCodecType,
-                                       CodecComponent.bestCompressionCodec,
-                                       codecLowQuality,
-                                       codecLowQuality,
+                                     //  CodecComponent.bestCompressionCodec,
+                                       CodecComponent.bestFidelityCodec,
+                                       codecHighQuality,
+                                       codecHighQuality,
                                        numFrames,	//1 key frame
                                        null, //cTab,
                                        0);
@@ -202,7 +203,7 @@ public class SoniaMovieMaker extends Frame implements StdQTConstants, Errors
    vidMedia.addSample (imageHandle,
                        0, // dataOffset,
                        info.getDataSize(),
-                       60, // frameDuration, 60/600 = 1/10 of a second, desired time per frame
+                       engine.getFrameDelay(), // frameDuration in 600ths of seconds, 60/600 = 1/10 of a second, desired time per frame
                        desc,
                        1, // one sample
                        (isKeyFrame ? 0 : mediaSampleNotSync)); // no flags

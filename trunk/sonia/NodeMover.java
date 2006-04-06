@@ -11,6 +11,8 @@ import java.awt.Frame;
 import cern.colt.list.IntArrayList;
 import java.util.Vector;
 
+import javax.swing.JComponent;
+
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>
  * <p>Description:Animates layouts of time-based networks
@@ -46,7 +48,7 @@ public class NodeMover implements MouseListener,MouseMotionListener
 {
   private SoniaController control;
   private SoniaLayoutEngine engine;
-  private Frame frame;
+  private JComponent  frame;
   private LayoutSlice slice;
   private double[] xCoords;
   private double[] yCoords;
@@ -59,7 +61,7 @@ public class NodeMover implements MouseListener,MouseMotionListener
   private int left;
   private int top;
 
-  public NodeMover(SoniaController cont, SoniaLayoutEngine eng, Frame frm)
+  public NodeMover(SoniaController cont, SoniaLayoutEngine eng, JComponent frm)
   {
     control = cont;
     engine = eng;
@@ -181,6 +183,7 @@ public class NodeMover implements MouseListener,MouseMotionListener
 
   private void hiliteSelected()
   {
+	  //TODO: hiliting is broken for node mover
     Graphics2D graphics = (Graphics2D)frame.getGraphics();
     graphics.setColor(Color.black);
     graphics.setXORMode(Color.white);

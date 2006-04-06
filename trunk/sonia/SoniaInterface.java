@@ -115,7 +115,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 						+ ")\n"
 						+ "   Please view the README and SoNIAWriteup for instructions\n"
 						+ "   Questions/bugs to skyebend@stanford.edu", 5, 50);
-		StatusText.setBackground(Color.white);
+		//StatusText.setBackground(Color.white);
 		StatusText.setEditable(false);
 		StatusText.setBorder(new TitledBorder("Status:"));
 		StatusText.setLineWrap(true);
@@ -137,7 +137,9 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		c.gridheight = 1;
 		c.weightx = 1;
 		c.weighty = 1;
+		c.fill = c.BOTH;
 		add(StatusText, c);
+		c.fill = c.NONE;
 		c.gridx = 0;
 		c.gridy = 1;
 		c.gridwidth = 1;

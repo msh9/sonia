@@ -6,6 +6,15 @@ import java.text.*;
 import java.util.*;
 import java.awt.geom.*;
 
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.plaf.basic.BasicBorders;
+
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>
  * <p>Description:Animates layouts of time-based networks
@@ -92,7 +101,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
    *
    * <BR><BR>
    */
-public class LayoutWindow extends Frame implements WindowListener,
+public class LayoutWindow extends ExportableFrame implements WindowListener,
     ActionListener
 
 {
@@ -104,28 +113,30 @@ public class LayoutWindow extends Frame implements WindowListener,
 
 
   private SoniaCanvas LayoutArea;
-  private Button ApplyLayout;
-  private Button ReApply;
-  private Button Stress;
-  private Button Stability;
-  private Button PhasePlot;
-  private Button NextSlice;
-  private Button PrevSlice;
-  private Button PlayAll;
-  private Button Pause;
-  private Button ViewOptions;
-  private Button MoveNodes;
+  private JPanel controlPanel;
+  private JButton ApplyLayout;
+  private JButton ReApply;
+  private JButton Stress;
+  private JButton Stability;
+  private JButton PhasePlot;
+  private JButton NextSlice;
+  private JButton PrevSlice;
+  private JButton PlayAll;
+  private JButton Pause;
+  private JButton ViewOptions;
+  private JButton MoveNodes;
 
-  private Label NumInterpLabel;
-  private TextField NumInterps;
+ // private JLabel NumInterpLabel;
+  private JTextField NumInterps;
+  private JTextField frameDelay;
  // private Button ViewNodes;
 
-  private TextField RenderTime;
-  private TextField RenderDuration;
-  private Label RenderLabel;
-  private Label DurationLabel;
-  private TextField LayoutNum;
-  private Label LayoutLabel;
+  private JTextField RenderTime;
+  private JTextField RenderDuration;
+ // private JLabel RenderLabel;
+ // private JLabel DurationLabel;
+  private JTextField LayoutNum;
+ // private JLabel LayoutLabel;
 
   private boolean movingNodes = false;
   private boolean isTransitionActive = false; //indicates if a thread is animating
@@ -149,85 +160,105 @@ public class LayoutWindow extends Frame implements WindowListener,
     engine = layoutEng;
 
 
-    this.setFont(controller.getFont());
+   // this.setFont(controller.getFont());
     //create layout objects
+    controlPanel = new JPanel();
+    controlPanel.setBorder(new EtchedBorder());
+    ApplyLayout = new JButton("Apply Layout..");
+    ReApply = new JButton("Re-Apply");
+    Stress = new JButton("Stress");
+    PhasePlot = new JButton("PhasePlot");
+    Stability = new JButton("Stability");
+    NextSlice = new JButton(">|");
+    PrevSlice = new JButton("|<");
+    PlayAll = new JButton(">");
+    Pause = new JButton("||");
+    ViewOptions = new JButton("View Options..");
+    MoveNodes = new JButton("Move Nodes");
 
-    ApplyLayout = new Button("Apply Layout..");
-    ReApply = new Button("Re-Apply");
-    Stress = new Button("Stress");
-    PhasePlot = new Button("PhasePlot");
-    Stability = new Button("Stability");
-    NextSlice = new Button(">|");
-    PrevSlice = new Button("|<");
-    PlayAll = new Button(">");
-    Pause = new Button("||");
-    ViewOptions = new Button("View Options..");
-    MoveNodes = new Button("Move Nodes");
-
-    RenderTime = new TextField("0",8);
-    RenderDuration = new TextField("0.1",3);
-    RenderLabel = new Label("display time:",Label.RIGHT);
-    DurationLabel = new Label("duration:",Label.RIGHT);
-    LayoutNum = new TextField("0",3);
-    LayoutLabel = new Label("Layout (slice) #:");
+    RenderTime = new JTextField("0",8);
+    RenderTime.setBorder(new TitledBorder("render time"));
+    RenderDuration = new JTextField("0.1",5);
+    RenderDuration.setBorder(new TitledBorder("duration:"));
+  //  RenderLabel = new JLabel("display time:",Label.RIGHT);
+  //  DurationLabel = new JLabel("duration:",Label.RIGHT);
+    LayoutNum = new JTextField("0",8);
+    LayoutNum.setBorder(new TitledBorder("Layout (slice) #:"));
+ //   LayoutLabel = new JLabel("Layout (slice) #:");
     LayoutArea = new SoniaCanvas(engine,this);
+    LayoutArea.setBackground(Color.WHITE);
+
 
     //set up graphics settings dialog
     graphicsSettings = new GraphicsSettingsDialog(Control,engine,this,LayoutArea);
 
-    NumInterpLabel = new Label("num. interp frames");
-    NumInterps = new TextField("10",2);
+  //  NumInterpLabel = new JLabel("num. interp frames");
+    NumInterps = new JTextField("10",5);
+    NumInterps.setBorder(new TitledBorder("num. interp frames"));
+    frameDelay = new JTextField("30",5);
+    frameDelay.setBorder(new TitledBorder("frame delay"));
+    
     //LAYOUT
-    GridBagLayout layout = new GridBagLayout();
-    this.setLayout(layout);
-    GridBagConstraints c = new GridBagConstraints();
-    c.insets = new Insets(0,2,0,2);
+    this.setLayout(new BorderLayout());
 
     // add components to the layout GBlayout using constraints
+  //set up top level components
+//  c.gridx=0;c.gridy=0;c.gridwidth=7;c.gridheight=1;c.weightx=1;c.weighty=1;
+    //  c.fill=c.BOTH;
+      add(LayoutArea,BorderLayout.CENTER);
+      add(controlPanel, BorderLayout.SOUTH);
+      
+      GridBagLayout layout = new GridBagLayout();
+      controlPanel.setLayout(layout);
+      GridBagConstraints c = new GridBagConstraints();
+      c.insets = new Insets(0,2,0,2);
+   // c.fill=c.NONE;
+    
     //buttons
-    c.gridx=0;c.gridy=0;c.gridwidth=5;c.gridheight=1;c.weightx=10;c.weighty=10;
-    add(LayoutArea,c);
-    c.gridx=0;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=0.5;c.weighty=0.1;
-    add(ApplyLayout,c);
-    c.gridx=0;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=0.5;c.weighty=0.1;
-    add(ReApply,c);
-    c.gridx=2;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=0.5;c.weighty=0.1;
-    add(Stress,c);
-    c.gridx=1;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=0.5;c.weighty=0.1;
+    c.gridx=0;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=0.5;c.weighty=0.0;
+    controlPanel. add(ApplyLayout,c);
+    c.gridx=0;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=0.5;c.weighty=0.0;
+    controlPanel.add(ReApply,c);
+    c.gridx=2;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=0.5;c.weighty=0.0;
+    controlPanel. add(Stress,c);
+    c.gridx=1;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=0.5;c.weighty=0.0;
     //add(Stability,c);
-    c.gridx=3;c.gridy=1;c.gridwidth=2;c.gridheight=1;c.weightx=0.5;c.weighty=0.1;
-    add(PhasePlot,c);
-    c.gridx=5;c.gridy=1;c.gridwidth=2;c.gridheight=1;c.weightx=0.5;c.weighty=0.1;
-    add(ViewOptions,c);
-    c.gridx=0;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.5;c.weighty=0.1;
-    add(MoveNodes,c);
+    c.gridx=3;c.gridy=1;c.gridwidth=2;c.gridheight=1;c.weightx=0.5;c.weighty=0.0;
+    controlPanel. add(PhasePlot,c);
+    c.gridx=5;c.gridy=1;c.gridwidth=2;c.gridheight=1;c.weightx=0.5;c.weighty=0.0;
+    controlPanel.add(ViewOptions,c);
+    c.gridx=0;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.5;c.weighty=0.0;
+    controlPanel.add(MoveNodes,c);
     //buttons and controls
-    c.gridx=1;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.1;
-    add(LayoutLabel,c);
-    c.gridx=2;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.1;
-    add(LayoutNum,c);
-    c.gridx=3;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.1;
-    add(PrevSlice,c);
-    c.gridx=4;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.1;
-    add(NextSlice,c);
-    c.gridx=5;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.1;
-    add(Pause,c);
-    c.gridx=6;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.1;
-    add(PlayAll,c);
+  //  c.gridx=1;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
+  //  add(LayoutLabel,c);
+    c.gridx=2;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
+    controlPanel.add(LayoutNum,c);
+    c.gridx=3;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
+    controlPanel.add(PrevSlice,c);
+    c.gridx=4;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
+    controlPanel.add(NextSlice,c);
+    c.gridx=5;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
+    controlPanel.add(Pause,c);
+    c.gridx=6;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
+    controlPanel.add(PlayAll,c);
 
-    c.gridx=1;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.1;
-    add(RenderLabel,c);
-    c.gridx=2;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.1;
-    add(RenderTime,c);
-    c.gridx=3;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.1;
-    add(DurationLabel,c);
-    c.gridx=4;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.1;
-    add(RenderDuration,c);
-    c.gridx=5;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.1;
-    add(NumInterpLabel,c);
-    c.gridx=6;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.1;
-    add(NumInterps,c);
-
+   // c.gridx=1;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
+    //add(RenderLabel,c);
+    c.gridx=2;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
+    controlPanel.add(RenderTime,c);
+   // c.gridx=3;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
+   // add(DurationLabel,c);
+    c.gridx=3;c.gridy=3;c.gridwidth=2;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
+    controlPanel.add(RenderDuration,c);
+    //c.gridx=5;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
+   // add(NumInterpLabel,c);
+    c.gridx=5;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
+    controlPanel.add(NumInterps,c);
+    c.gridx=6;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
+    controlPanel.add(frameDelay,c);
+    
+  
 
     //add action listeners for button clicks
     ApplyLayout.addActionListener(this);
@@ -250,7 +281,7 @@ public class LayoutWindow extends Frame implements WindowListener,
 
     addWindowListener(this);
 
-    this.setBackground(Color.lightGray);
+   // this.setBackground(Color.lightGray);
     this.setSize(initWidth,initHeight);
     this.setTitle(engine.toString());
     this.setLocation(360,0);
@@ -261,7 +292,18 @@ public class LayoutWindow extends Frame implements WindowListener,
 
 
 
-  //ACTION LISTENER  //figures out what user did and calls apropriate method
+  /**
+   * returns just the layout area with the network
+   * @return
+   */
+  protected JComponent getGraphicContent() {
+	return LayoutArea;
+}
+
+
+
+
+//ACTION LISTENER  //figures out what user did and calls apropriate method
   /**
    * Queries the event to determine which button was clicked, and calls the
    * corresponding method.  Some methods check to make sure there is no active
@@ -534,7 +576,7 @@ public class LayoutWindow extends Frame implements WindowListener,
    {
      movingNodes = true;
      //mover will add itself to layout as a mouse motion listener
-     mover = new NodeMover(Control,engine,this);
+     mover = new NodeMover(Control,engine,LayoutArea);
      MoveNodes.setLabel("Stop Moving");
    }
    else
@@ -633,6 +675,8 @@ public class LayoutWindow extends Frame implements WindowListener,
     LayoutArea.saveImageForGhost();
     //check if should do interpolation
     engine.setInterpFrames(Integer.parseInt(NumInterps.getText()));
+    //check the frame delay
+    engine.setFrameDelay(Integer.parseInt(frameDelay.getText()));
      if (engine.getInterpFrames()>0)
      {
       //do the render slices for animation
@@ -683,6 +727,15 @@ public class LayoutWindow extends Frame implements WindowListener,
           //update the display
           updateDisplay();
         }
+        //now the rendering is going to fast, so we have to slow it down
+     
+			try {
+				Thread.sleep(engine.getFrameDelay());
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        
 
       }
       LayoutNum.setText(""+engine.getCurrentSliceNum());
@@ -731,20 +784,39 @@ public class LayoutWindow extends Frame implements WindowListener,
   {
     //asks the canvas to actually redraw the network, instead of just refreshing
     //the old image
-    Graphics graph = this.getGraphics();
-    LayoutArea.updateDisplay(graph,true);
+  //  Graphics graph = LayoutArea.getGraphics();
+   // LayoutArea.updateDisplay(graph,true);
+   // LayoutArea.paintComponent(graph);
+	  LayoutArea.repaint();
     //try to make it updage the controls on mac
+  }
+  
+  /**
+   * gets the width of the display used to draw the network
+   * @return width of display component in pixels
+   */
+  public int getDisplayWidth()
+  {
+	  return LayoutArea.getWidth();
+  }
+  /**
+   * gets the height of the display used to draw the network
+   * @return height of display component in pixels
+   */
+  public int getDisplayHeight()
+  {
+	  return LayoutArea.getHeight();
   }
 
   /**
    * repaints the cached image of the last time the network was drawn to the screen
    * and hopefully the rest of the gui components
    */
-  public void paint(Graphics g)
-  {
-    //this will just redraw the old image of the network to same time
-    LayoutArea.paint(g);
-  }
+//  public void paint(Graphics g)
+//  {
+//    //this will just redraw the old image of the network to same time
+//    LayoutArea.paint(g);
+//  }
 
 
 /*

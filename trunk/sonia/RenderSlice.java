@@ -206,10 +206,10 @@ public class RenderSlice
 
       graphics.setColor(Color.gray);
 
-      graphics.drawString("slice:"+layoutEngine.getCurrentSliceNum()+
-                          " time:"+formater.format(sliceStart)+
+      graphics.drawString("        slice:"+layoutEngine.getCurrentSliceNum()+
+                          "  time:"+formater.format(sliceStart)+
                           "-"+formater.format(sliceEnd),5,10);
-      graphics.drawString(" layout:"+layoutEngine.getLayoutInfo(),5,20);
+    //  graphics.drawString(" layout:"+layoutEngine.getLayoutInfo(),5,20);
     }
   }
 

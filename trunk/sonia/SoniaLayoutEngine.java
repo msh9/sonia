@@ -60,6 +60,7 @@ public class SoniaLayoutEngine
   private boolean showUpdates = false;
   private int updatesN = 0;
   private int interpFrames = 0;
+  private int frameDelay = 30;  //how long to wait after each frame, in milliseconds
   private int currentSlice;
   private double[] currentXcoords;
   private double[] currentYcoords;
@@ -616,7 +617,7 @@ public class SoniaLayoutEngine
     int width = dispInitWidth;
     if (display !=null)
     {
-      width = display.getWidth();
+      width = display.getDisplayWidth();
     }
     return width;
   }
@@ -645,7 +646,7 @@ public class SoniaLayoutEngine
     int height = dispInitHeight;
     if (display !=null)
     {
-      height = display.getHeight() - bottomPad;
+      height = display.getDisplayHeight();
     }
     return height;
   }
@@ -721,14 +722,14 @@ public class SoniaLayoutEngine
    */
   public int getTopPad()
   {
-    return display.getInsets().top+pad;
+    return pad;
   }
   /**
    * how far from the left edge of the window to start the layout coordinate origin.
    */
   public int getLeftPad()
   {
-    return display.getInsets().left + pad;
+    return  pad;
   }
 
   /**
@@ -871,6 +872,16 @@ public class SoniaLayoutEngine
   public int getInterpFrames()
   {
     return interpFrames;
+  }
+  
+  public void setFrameDelay(int miliseconds)
+  {
+	  frameDelay = miliseconds;
+  }
+  
+  public int getFrameDelay()
+  {
+	   return frameDelay;
   }
 
   /**
