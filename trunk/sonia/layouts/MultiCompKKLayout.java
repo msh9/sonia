@@ -12,6 +12,7 @@ import sonia.NetUtils;
 import sonia.SoniaController;
 import sonia.SoniaLayoutEngine;
 import sonia.Subnet;
+import cern.colt.list.IntArrayList;
 import cern.colt.matrix.impl.SparseDoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 
@@ -240,6 +241,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable
     settings.addLayoutProperty("min epsilon",1.0);
     settings.addLayoutProperty("springConst",1.0);
     settings.addLayoutProperty("cool factor",0.25);
+    settings.addLayoutProperty("comp connect value",0.0);
   }
 
   /**
@@ -280,7 +282,17 @@ public class MultiCompKKLayout implements NetLayout, Runnable
   {
     //make sure layout is restarted if if it was stopped by error
     noBreak = true;
-    //set up components
+    //test code to connect with phtom links
+    double replaceWeight = settings.getLayoutProperty("comp connect value");
+    if (replaceWeight > 0){
+    	IntArrayList includeAll = new IntArrayList(slice.getMaxNumNodes());
+    	for (int i = 0; i < slice.getMaxNumNodes(); i++) {
+			includeAll.add(i);
+		}
+    	KKLoop(new Subnet(NetUtils.getSymMaxMatrix(slice),includeAll));
+    	
+    } else {
+    //set up components to process independently
     ArrayList components = NetUtils.getComponents(NetUtils.getSymMaxMatrix(slice),true);
     Iterator compIter = components.iterator();
     while (compIter.hasNext())
@@ -289,9 +301,14 @@ public class MultiCompKKLayout implements NetLayout, Runnable
       //Run the KK algorithm independently on each of the compondnets
       if (subnet.getNumNodes() > 1)
       {
+    	  if (!noBreak)
+    	  {
+    		  break;
+    	  }
         KKLoop(subnet);
       }
 
+    }
     }
 
    engine.finishLayout(this,slice,width,height);
