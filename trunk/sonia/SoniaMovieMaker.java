@@ -3,6 +3,9 @@ package sonia;
 import java.io.*;
 import java.awt.*;
 
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+
 import quicktime.qd.*;
 import quicktime.*;
 import quicktime.std.*;
@@ -52,7 +55,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  * <BR><BR>
  * THIS PACKAGE REQUIRES THE QUICKTIME FOR JAVA LIBRARIES AVAILIBLE FORM APPLE COMPUTER
  */
-public class SoniaMovieMaker extends Frame implements StdQTConstants, Errors
+public class SoniaMovieMaker extends JFrame implements StdQTConstants, Errors
 {
   private QTImageDrawer imageDrawer;
   private QTCanvas QCanvas;
@@ -113,10 +116,14 @@ public class SoniaMovieMaker extends Frame implements StdQTConstants, Errors
 
         //frame stuff so we can visually debug
        QCanvas = new QTCanvas(QTCanvas.kInitialSize, 0.5F, 0.5F);
-       this.add("Center",QCanvas);
+       JPanel holder = new JPanel();
+       holder.setSize(width,height);
+       holder.add(QCanvas);
+       this.add(holder);
        this.setBackground(Color.black);
        this.setLocation(300,300);
-       this.setSize(width,height);
+       this.pack();
+       this.setSize(width+50,height+50);
        this.setTitle("Exporting movie to "+outFile.getName()+" ...");
         this.show();
 
