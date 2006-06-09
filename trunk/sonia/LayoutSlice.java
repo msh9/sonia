@@ -267,7 +267,7 @@ public class LayoutSlice
    */
   public double getArcCount(int i, int j)
   {
-    return arcCountMatrix.get(i,j);
+    return arcCountMatrix.getQuick(i,j);
   }
 
   //BY INDEX, NOT BY ID
@@ -280,7 +280,7 @@ public class LayoutSlice
    */
   public double getArcWeight(int iIndex, int jIndex)
   {
-    return arcsMatrix.get(iIndex,jIndex);
+    return arcsMatrix.getQuick(iIndex,jIndex);
   }
 
   /**
@@ -292,7 +292,7 @@ public class LayoutSlice
    */
   public void setArcWeight(int iIndex, int jIndex, double weight)
   {
-    arcsMatrix.set(iIndex,jIndex,weight);
+    arcsMatrix.setQuick(iIndex,jIndex,weight);
   }
 
   /**
