@@ -4,6 +4,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 import javax.swing.ButtonGroup;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -112,13 +113,13 @@ public class GraphicsSettingsDialog
   private JLabel WindowWidthLabel;
   private JTextField WindowWidth;
   private JLabel WindowHeightLabel;
-  private TextField WindowHeight;
+  private JTextField WindowHeight;
   private JCheckBox FlashNew;
   private JTextField FlashDuration;
   private JCheckBox HideNodes;
   private JCheckBox HideArcs;
 
-  private Button OK;
+  private JButton OK;
 
   /**
    * Creates the graphic settings components and sets up the display.
@@ -160,14 +161,14 @@ public class GraphicsSettingsDialog
 
     WindowHeightLabel = new JLabel("Layout Height");
     WindowWidthLabel = new JLabel("Layout Width");
-    WindowHeight = new TextField(engine.getDisplayHeight()+"",4);
+    WindowHeight = new JTextField(engine.getDisplayHeight()+"",4);
     WindowWidth = new JTextField(engine.getDisplayWidth()+"", 4);
     FlashNew = new JCheckBox("Flash new events",false);
     FlashDuration = new JTextField("0.1",4);
     HideNodes = new JCheckBox("Hide Nodes", false);
     HideArcs = new JCheckBox("Hide Arcs",false);
 
-    OK = new Button("OK");
+    OK = new JButton("OK");
 
     GridBagLayout layout = new GridBagLayout();
    graphicsDialog.setLayout(layout);
