@@ -311,7 +311,7 @@ public class DotSonParser implements Parser
     else //otherwise, throw error
     {
       String error = "Unable to locate node header on line "+reader.getLineNumber()+"\n"+
-                     " Node column headings must begin with \"NodeId\" for numeric ids or \"AlphaId\" for alphanumeric ids";
+                     " Node column headings must begin with \"NodeId\" for numeric ids or \"AlphaId\" for alphanumeric ids: "+line;
             throw(new IOException(error));
     }
     //check for eof?
@@ -319,20 +319,19 @@ public class DotSonParser implements Parser
     while (line != null)
     {
       //check if we've gotten to arcs yet
-      if(line.startsWith(colMap.FROM_ID) )
+      if(line.startsWith(colMap.FROM_ID) | line.startsWith(colMap.TO_ID) )
       {
         break;
       } 
       else if (line.startsWith("//"))
       {
         infoString+= line+"\n";
-        line = reader.readLine();
       } 
       else 
       {
         parseNodeRow(line);
-        line = reader.readLine();
       }
+      line = reader.readLine();
     }
     //NEED TO MAKE SURE ALL NODES ARE PRESENT AND ACCOUNTED FOR
     //(no gaps in ID range which will mess up the matrix)

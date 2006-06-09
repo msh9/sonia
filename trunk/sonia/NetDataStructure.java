@@ -147,6 +147,7 @@ public class NetDataStructure
   public LayoutSlice makeLayoutSlice(double sliceStart, double sliceEnd,
                                      int aggregateType)
   {
+	  
     LayoutSlice currentSlice = new LayoutSlice(maxNetSize,sliceStart,sliceEnd);
      //loop over all ARCS and sort to correct slice
      //ISOLATES!!
@@ -177,6 +178,7 @@ public class NetDataStructure
      {
        double obsTime = nodeEventArray[i].getObsTime();
        double end = nodeEventArray[i].getEndTime();
+       
 
        //include node in bin if obsTime is within interval (inclusive)
        // (will include relations of lenth shorter than interval)
@@ -199,6 +201,7 @@ public class NetDataStructure
       {
         for (int i = 0; i<maxNetSize; i++)
         {
+        	
           for (int j = 0; j<maxNetSize; j++)
           {
             if (aggregateType == AVG_TIE_VALS)
@@ -210,7 +213,7 @@ public class NetDataStructure
                 currentSlice.setArcWeight(i,j,value);
               }
             }
-          else if (aggregateType == NUM_TIES)
+            else if (aggregateType == NUM_TIES)
             {
               currentSlice.setArcWeight(i,j,currentSlice.getArcCount(i,j));
             }

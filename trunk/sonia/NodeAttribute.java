@@ -45,6 +45,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 public class NodeAttribute implements NetworkEvent{
 
+	
+ public static final Color DEFAULT_NODE_COLOR = Color.blue;
+ public static final Color DEFAULT_BORDER_COLOR = Color.black;
+ public static final Color DEFULAT_LABEL_COLOR = Color.red;
+ private static Color flashColor = Color.yellow;
+ private static float flashFactor = 4.0f; //how large to expand new events when they are flashed
   // variables instatiated with defaults
   private int nodeId;   //should never change after instantiation, used for coords
                          //smallest ID should be 1.
@@ -62,9 +68,8 @@ public class NodeAttribute implements NetworkEvent{
   private double obsXCoord = 0.0;  //originaly observed cordinates
   private double obsYCoord = 0.0;
   private String origFileLoc = "";  //name and line in file that created it
-  private Color flashColor = Color.yellow;
   private boolean flashNode = false;  //if it should be flashed when it is drawn
-  private float flashFactor = 4.0f; //how large to expand new events when they are flashed
+
   //coords not stored here so that they can be accessed more quickly
   //transparency???
 
