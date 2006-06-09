@@ -26,11 +26,17 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 import java.util.*;
+import java.awt.BasicStroke;
 import java.awt.Graphics2D;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.geom.GeneralPath;
+import java.awt.geom.IllegalPathStateException;
+import java.awt.geom.Line2D;
 import java.text.*;
+
+import cern.colt.function.IntObjectProcedure;
 
 /**
  * A bin or container for the node and arc events meeting its criteria, it draws
@@ -45,9 +51,20 @@ public class RenderSlice
   private double sliceEnd;
   private Vector nodeEvents;
   private Vector arcEvents;
-  private NumberFormat formater;
-  //private double flashWindow = 0.1;
+//sets the number of fractional digits to display
+  private static NumberFormat formater = NumberFormat.getInstance(Locale.ENGLISH);
 
+	    
+  //private double flashWindow = 0.1;
+  private Line2D arcLine = new Line2D.Double();   //the path to draw
+  private GeneralPath headPath = new GeneralPath();
+  private double arrowLength = 10;
+  private static Color flashColor = Color.yellow;
+  private static float flashFactor = 4.0f; //how large to expand new events when they are flashed
+  //a flyweight for holding the various strokes
+  private static HashMap strokeTable = new HashMap();
+
+  
 
   /**
    * Render slice is a bin holding all the objects to be renderd at a given
@@ -65,6 +82,8 @@ public class RenderSlice
     sliceEnd = endTime;
     nodeEvents = nodes;
     arcEvents = arcs;
+    formater.setMaximumFractionDigits(3);
+    formater.setMinimumFractionDigits(3);
   }
 
   public RenderSlice(SoniaLayoutEngine engine,double startTime, double endTime)
@@ -74,6 +93,8 @@ public class RenderSlice
     sliceEnd = endTime;
     nodeEvents = new Vector();
     arcEvents = new Vector();
+    formater.setMaximumFractionDigits(3);
+    formater.setMinimumFractionDigits(3);
   }
 
   public void addArcEvent(ArcAttribute arc)
@@ -100,10 +121,7 @@ public class RenderSlice
     int left = layoutEngine.getLeftPad();
     int top = layoutEngine.getTopPad();
 
-    //sets the number of fractional digits to display
-    formater = NumberFormat.getInstance(Locale.ENGLISH);
-      formater.setMaximumFractionDigits(3);
-      formater.setMinimumFractionDigits(3);
+ 
 
     //first do arcs
     //KLUDG check to not draw arcs for speed
@@ -138,7 +156,7 @@ public class RenderSlice
           if(((flashStart >= sliceStart) & (flashStart < sliceEnd))
          | ((flashStart <= sliceStart) & (flashEnd > sliceEnd)))
           {
-              arc.flash();
+              arc.setFlash(true);
           }       
       }
       //correct for id ofset 0 -> 1
@@ -148,7 +166,7 @@ public class RenderSlice
       if (!canvas.isHideArcs())
       {
         //translate coords to allow for visual insets
-        arc.paint(graphics,canvas,xCoords[fromId]+left,yCoords[fromId]+top,
+        paintArc(arc,graphics,canvas,xCoords[fromId]+left,yCoords[fromId]+top,
         xCoords[toId]+left,yCoords[toId]+top);
       }
     //CHECK IF WEIGHT LABELS ARE TO BE DRAWN !Not the same as arc labels!
@@ -212,6 +230,116 @@ public class RenderSlice
     //  graphics.drawString(" layout:"+layoutEngine.getLayoutInfo(),5,20);
     }
   }
+  
+  private BasicStroke getStrokeForWidth(float width, boolean isNegitive){
+	  if (isNegitive){
+		  width = width*-1;
+	  }
+	  Float key = Float.valueOf(width);
+	  if (strokeTable.containsKey(key)){
+		  //return the stroke already made for this width
+		  return (BasicStroke)strokeTable.get(key);
+	  }
+	  else {
+	//do the dashing
+		 float dashSkip = 0.0f;
+		 float dashLength = 2.0f;
+		 
+		 if (isNegitive){
+		    dashSkip = width;
+		    dashLength = 2.0f * width;
+		 }
+		 float[] dash = {dashLength,dashSkip};
+		  BasicStroke newStroke = new BasicStroke(width,BasicStroke.CAP_BUTT,BasicStroke.JOIN_MITER,
+                  1.0f,dash,0.0f);
+		  strokeTable.put(key,newStroke);
+		  return newStroke;
+	  }
+  }
+  
+  private void paintArc(ArcAttribute arc, Graphics2D graphics, SoniaCanvas canvas, 
+		  double fromX, double fromY,double toX, double toY)
+{
+  //check if drawing arc
+  if (!canvas.isHideArcs())
+  {
+   
+    float drawWidth = (float)arc.getArcWidth()*canvas.getArcWidthFact();
+ 
+    
+
+    graphics.setStroke(getStrokeForWidth(drawWidth,arc.isNegitive()));
+    graphics.setColor(arc.getArcColor());
+    //should correct for width of node (and length of arrow?)
+    arcLine.setLine(fromX,fromY,toX,toY);
+    graphics.draw(arcLine);
+    
+      //if it has never been drawn, than draww it very large so it will show
+    if (arc.shouldFlash())
+    {
+        graphics.setStroke(getStrokeForWidth(drawWidth+flashFactor,arc.isNegitive()));
+        graphics.setColor(flashColor);
+        graphics.draw(arcLine);
+        arc.setFlash(false); //so we only draw once, even if stay on same slice..?
+    }
+    
+    //should turn off dashing
+   // dashSkip = 0.0f;
+
+    // CHECK IF ARROWS ARE TO BE DRAWN
+    if (canvas.isShowArrows())
+    {
+
+      //reset the arrowhead path and make arrowhead
+      headPath.reset();
+      double arrowSize = arrowLength+drawWidth;
+      double xDiff = (fromX - toX);
+      double yDiff = (fromY - toY);
+      double lineAngle = Math.atan((xDiff) / (yDiff));
+      //trap cases where xDiff and yDiff are zero to stop strange PRException onPC
+      if (Double.isNaN(lineAngle))
+      {
+        lineAngle = 0.0;
+      }
+      if (yDiff < 0)  //rotate by 180
+      {
+        lineAngle += Math.PI;
+      }
+      try  //for concurrency problems on dual processor machines...
+      {
+      //tip of arrow
+      headPath.moveTo((float)toX, (float)toY);
+      //one wedge
+      headPath.lineTo((float)(toX + (arrowSize * Math.sin(lineAngle-0.3))),
+                      (float)(toY + (arrowSize * Math.cos(lineAngle-0.3))));
+      //other wedge
+      headPath.lineTo((float)(toX + (arrowSize * Math.sin(lineAngle+0.3))),
+                      (float)(toY + (arrowSize * Math.cos(lineAngle+0.3))));
+      //back to top
+      headPath.closePath();
+      graphics.fill(headPath);
+      }
+      catch (IllegalPathStateException e)
+      {
+          System.out.println("Arrow Drawing error: x:"+toX+" y:"+toY);
+          e.printStackTrace();
+      }
+
+    }//end draw arcs
+  }
+  //CHECK IF LABELS ARE TO BE DRAWN
+  if (canvas.isShowArcLabels())
+  {
+    graphics.setColor(arc.getLabelColor());
+    Font originalFont = graphics.getFont();
+    graphics.setFont(originalFont.deriveFont(arc.getLabelSize()));
+    float labelX = (float)(fromX+ (toX-fromX)/2);
+    float labelY = (float)(fromY + (toY-fromY)/2);
+    graphics.drawString(arc.getArcLabel(),labelX,labelY);
+  }
+
+  //detecting other arcs to same nodes to curve..
+}
 
   //accessors (not allowed to set in case objects would be at wrong time)
   public double getSliceStart()

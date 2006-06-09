@@ -39,6 +39,7 @@ import java.awt.*;
  */
 public class ArcAttribute implements NetworkEvent
 {
+	
   // variables instatiated with defaults
  private double obsTime = 3.2;  //when this observation was made
  private double endTime = Double.POSITIVE_INFINITY;  //when arc disapears
@@ -46,18 +47,16 @@ public class ArcAttribute implements NetworkEvent
  private Color labelColor = Color.darkGray;
  private float labelSize = 8f;
  private Color arcColor = Color.darkGray;
- private Line2D arc = new Line2D.Double();   //the path to draw
- private GeneralPath headPath = new GeneralPath();
+ //private Line2D arc = new Line2D.Double();   //the path to draw
+// private GeneralPath headPath = new GeneralPath();
  //private Color arrowColor = Color.lightGray;
  private double arcWidth = 1.0;
  private double arcWeight = 1.0;
- private double arrowLength = 10;
- boolean isNegitive = false;
+ private boolean isNegitive = false;
  private int fromNodeId;
  private int toNodeId;
  private boolean flashArc = false;  //if it should be flashed when it is drawn
- private Color flashColor = Color.yellow;
- private float flashFactor = 4.0f; //how large to expand new events when they are flashed
+
  //coords not stored here so that they can be accessed more quickly
   //transparency???
 // private float transparencey = 0.7f;
@@ -106,102 +105,102 @@ public class ArcAttribute implements NetworkEvent
    * @param toX the X of the end node
    * @param toY the Y of the end node
    */
- public void paint(Graphics2D graphics, SoniaCanvas canvas, double fromX, double fromY,
-                   double toX, double toY)
- {
+ //public void paint(Graphics2D graphics, SoniaCanvas canvas, double fromX, double fromY,
+//                   double toX, double toY)
+// {
     
-   //check if drawing arc
-   if (!canvas.isHideArcs())
-   {
-     //do the dashing
-     float dashSkip = 0.0f;
-     float dashLength = 2.0f;
-     float drawWidth = (float)arcWidth*canvas.getArcWidthFact();
-  
-     
-     if (isNegitive)
-     {
-       dashSkip = drawWidth;
-       dashLength = 2.0f * drawWidth;
-     }
-     float[] dash = {dashLength,dashSkip};
-     BasicStroke linewidth = new BasicStroke(drawWidth,BasicStroke.CAP_BUTT,BasicStroke.JOIN_MITER,
-                                        1.0f,dash,0.0f);
-     graphics.setStroke(linewidth);
-     graphics.setColor(arcColor);
-     //should correct for width of node (and length of arrow?)
-     arc.setLine(fromX,fromY,toX,toY);
-     graphics.draw(arc);
-     
-       //if it has never been drawn, than draww it very large so it will show
-     if (flashArc)
-     {
-         graphics.setStroke(new BasicStroke(drawWidth+flashFactor,BasicStroke.CAP_BUTT,BasicStroke.JOIN_MITER,
-                                        1.0f,dash,0.0f));
-         graphics.setColor(flashColor);
-         graphics.draw(arc);
-         flashArc = false; //so we only draw once, even if stay on same slice..?
-         graphics.setStroke(linewidth);
-     }
-     
-     //should turn off dashing
-     dashSkip = 0.0f;
-
-     // CHECK IF ARROWS ARE TO BE DRAWN
-     if (canvas.isShowArrows())
-     {
-
-       //reset the arrowhead path and make arrowhead
-       headPath.reset();
-       double arrowSize = arrowLength+drawWidth;
-       double xDiff = (fromX - toX);
-       double yDiff = (fromY - toY);
-       double lineAngle = Math.atan((xDiff) / (yDiff));
-       //trap cases where xDiff and yDiff are zero to stop strange PRException onPC
-       if (Double.isNaN(lineAngle))
-       {
-         lineAngle = 0.0;
-       }
-       if (yDiff < 0)  //rotate by 180
-       {
-         lineAngle += Math.PI;
-       }
-       try  //for concurrency problems on dual processor machines...
-       {
-       //tip of arrow
-       headPath.moveTo((float)toX, (float)toY);
-       //one wedge
-       headPath.lineTo((float)(toX + (arrowSize * Math.sin(lineAngle-0.3))),
-                       (float)(toY + (arrowSize * Math.cos(lineAngle-0.3))));
-       //other wedge
-       headPath.lineTo((float)(toX + (arrowSize * Math.sin(lineAngle+0.3))),
-                       (float)(toY + (arrowSize * Math.cos(lineAngle+0.3))));
-       //back to top
-       headPath.closePath();
-       graphics.fill(headPath);
-       }
-       catch (IllegalPathStateException e)
-       {
-           System.out.println("Arrow Drawing error: x:"+toX+" y:"+toY);
-           e.printStackTrace();
-       }
-
-     }//end draw arcs
-   }
-   //CHECK IF LABELS ARE TO BE DRAWN
-   if (canvas.isShowArcLabels())
-   {
-     graphics.setColor(labelColor);
-     Font originalFont = graphics.getFont();
-     graphics.setFont(originalFont.deriveFont(labelSize));
-     float labelX = (float)(fromX+ (toX-fromX)/2);
-     float labelY = (float)(fromY + (toY-fromY)/2);
-     graphics.drawString(arcLabel,labelX,labelY);
-   }
-
-   //detecting other arcs to same nodes to curve..
+//   //check if drawing arc
+//   if (!canvas.isHideArcs())
+//   {
+//     //do the dashing
+//     float dashSkip = 0.0f;
+//     float dashLength = 2.0f;
+//     float drawWidth = (float)arcWidth*canvas.getArcWidthFact();
+//  
+//     
+//     if (isNegitive)
+//     {
+//       dashSkip = drawWidth;
+//       dashLength = 2.0f * drawWidth;
+//     }
+//     float[] dash = {dashLength,dashSkip};
+//     BasicStroke linewidth = new BasicStroke(drawWidth,BasicStroke.CAP_BUTT,BasicStroke.JOIN_MITER,
+//                                        1.0f,dash,0.0f);
+//     graphics.setStroke(linewidth);
+//     graphics.setColor(arcColor);
+//     //should correct for width of node (and length of arrow?)
+//     arc.setLine(fromX,fromY,toX,toY);
+//     graphics.draw(arc);
+//     
+//       //if it has never been drawn, than draww it very large so it will show
+//     if (flashArc)
+//     {
+//         graphics.setStroke(new BasicStroke(drawWidth+flashFactor,BasicStroke.CAP_BUTT,BasicStroke.JOIN_MITER,
+//                                        1.0f,dash,0.0f));
+//         graphics.setColor(flashColor);
+//         graphics.draw(arc);
+//         flashArc = false; //so we only draw once, even if stay on same slice..?
+//         graphics.setStroke(linewidth);
+//     }
+//     
+//     //should turn off dashing
+//     dashSkip = 0.0f;
+//
+//     // CHECK IF ARROWS ARE TO BE DRAWN
+//     if (canvas.isShowArrows())
+//     {
+//
+//       //reset the arrowhead path and make arrowhead
+//       headPath.reset();
+//       double arrowSize = arrowLength+drawWidth;
+//       double xDiff = (fromX - toX);
+//       double yDiff = (fromY - toY);
+//       double lineAngle = Math.atan((xDiff) / (yDiff));
+//       //trap cases where xDiff and yDiff are zero to stop strange PRException onPC
+//       if (Double.isNaN(lineAngle))
+//       {
+//         lineAngle = 0.0;
+//       }
+//       if (yDiff < 0)  //rotate by 180
+//       {
+//         lineAngle += Math.PI;
+//       }
+//       try  //for concurrency problems on dual processor machines...
+//       {
+//       //tip of arrow
+//       headPath.moveTo((float)toX, (float)toY);
+//       //one wedge
+//       headPath.lineTo((float)(toX + (arrowSize * Math.sin(lineAngle-0.3))),
+//                       (float)(toY + (arrowSize * Math.cos(lineAngle-0.3))));
+//       //other wedge
+//       headPath.lineTo((float)(toX + (arrowSize * Math.sin(lineAngle+0.3))),
+//                       (float)(toY + (arrowSize * Math.cos(lineAngle+0.3))));
+//       //back to top
+//       headPath.closePath();
+//       graphics.fill(headPath);
+//       }
+//       catch (IllegalPathStateException e)
+//       {
+//           System.out.println("Arrow Drawing error: x:"+toX+" y:"+toY);
+//           e.printStackTrace();
+//       }
+//
+//     }//end draw arcs
+//   }
+//   //CHECK IF LABELS ARE TO BE DRAWN
+//   if (canvas.isShowArcLabels())
+//   {
+//     graphics.setColor(labelColor);
+//     Font originalFont = graphics.getFont();
+//     graphics.setFont(originalFont.deriveFont(labelSize));
+//     float labelX = (float)(fromX+ (toX-fromX)/2);
+//     float labelY = (float)(fromY + (toY-fromY)/2);
+//     graphics.drawString(arcLabel,labelX,labelY);
+//   }
+//
+//   //detecting other arcs to same nodes to curve..
    
- }
+ //}
 
  /**
   * compares start times for list sorting. returns -1 if start timve of evt
@@ -412,8 +411,21 @@ public class ArcAttribute implements NetworkEvent
    * sets flashArc to true, so the next time the arc is drawn it will be flashed.
    * after drawning, sets back to false so it only flashes once
    */
-  public void flash()
+  public void setFlash(boolean flash)
   {
-      flashArc = true;
+      flashArc = flash;
   }
+  
+  /**
+   * indicates if this arc should be hilited/flashed in the display when it is drawn.  
+   * @return
+   */
+  public boolean shouldFlash()
+  {
+	  return flashArc;
+  }
+
+public boolean isNegitive() {
+	return isNegitive;
+}
 }
