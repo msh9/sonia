@@ -99,8 +99,8 @@ public class SoniaController
      //   if (e.getMessage().matches("cern"))
       //  {
             ui.showError("Error launching SoNIA:\n"+
-                    "It seems that SoNIA is unable to locate the Colt numerics package," +
-                    " have you placed colt.jar file in the directory with SoNIA?");            
+                    "It seems that SoNIA is unable to locate the external library" +
+                    e.getMessage());            
       //  }
         log("ERROR: unable to initialize random number generator: "+e.getMessage()); 
     } 
@@ -217,7 +217,7 @@ public class SoniaController
    
  }
  
- private void loadFile(String inFile)
+ public void loadFile(String inFile)
  {
      if (inFile != null)
    {
@@ -228,6 +228,9 @@ public class SoniaController
      if (fileName.endsWith(".son"))
      {
        parser = new DotSonParser();
+     }
+     else if (fileName.endsWith(".dl")){
+    	 parser = new DLParser();
      }
      //otherwise, try the DotNetParser
      else

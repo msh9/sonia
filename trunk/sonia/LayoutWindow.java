@@ -101,6 +101,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
    *
    * <BR><BR>
    */
+
+//TODO: need to fix the window size scaling issues for layouts and for movie export
 public class LayoutWindow extends ExportableFrame implements WindowListener,
     ActionListener
 
@@ -133,6 +135,7 @@ public class LayoutWindow extends ExportableFrame implements WindowListener,
 
   private JTextField RenderTime;
   private JTextField RenderDuration;
+  private JTextField renderOffset;
  // private JLabel RenderLabel;
  // private JLabel DurationLabel;
   private JTextField LayoutNum;
@@ -178,12 +181,16 @@ public class LayoutWindow extends ExportableFrame implements WindowListener,
 
     RenderTime = new JTextField("0",8);
     RenderTime.setBorder(new TitledBorder("render time"));
+    RenderTime.setToolTipText("Start of current render time bin");
     RenderDuration = new JTextField("0.1",5);
     RenderDuration.setBorder(new TitledBorder("duration:"));
-  //  RenderLabel = new JLabel("display time:",Label.RIGHT);
-  //  DurationLabel = new JLabel("duration:",Label.RIGHT);
+    RenderDuration.setToolTipText("Size of time bin used for viewing");
+    renderOffset = new JTextField("0",5);
+    renderOffset.setBorder(new TitledBorder("offset"));
+    renderOffset.setToolTipText("position of render start within slice");
     LayoutNum = new JTextField("0",8);
     LayoutNum.setBorder(new TitledBorder("Layout (slice) #:"));
+    LayoutNum.setToolTipText("Index of slices used for coordinates");
  //   LayoutLabel = new JLabel("Layout (slice) #:");
     LayoutArea = new SoniaCanvas(engine,this);
     LayoutArea.setBackground(Color.WHITE);
@@ -195,8 +202,10 @@ public class LayoutWindow extends ExportableFrame implements WindowListener,
   //  NumInterpLabel = new JLabel("num. interp frames");
     NumInterps = new JTextField("10",5);
     NumInterps.setBorder(new TitledBorder("num. interp frames"));
+    NumInterps.setToolTipText("How many in-between frames to use in transition");
     frameDelay = new JTextField("30",5);
     frameDelay.setBorder(new TitledBorder("frame delay"));
+    frameDelay.setToolTipText("How long to wait between frames");
     
     //LAYOUT
     this.setLayout(new BorderLayout());
@@ -249,10 +258,10 @@ public class LayoutWindow extends ExportableFrame implements WindowListener,
     controlPanel.add(RenderTime,c);
    // c.gridx=3;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
    // add(DurationLabel,c);
-    c.gridx=3;c.gridy=3;c.gridwidth=2;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
+    c.gridx=3;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
     controlPanel.add(RenderDuration,c);
-    //c.gridx=5;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
-   // add(NumInterpLabel,c);
+    c.gridx=4;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
+    controlPanel.add(renderOffset,c);
     c.gridx=5;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
     controlPanel.add(NumInterps,c);
     c.gridx=6;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
@@ -677,6 +686,8 @@ public class LayoutWindow extends ExportableFrame implements WindowListener,
     engine.setInterpFrames(Integer.parseInt(NumInterps.getText()));
     //check the frame delay
     engine.setFrameDelay(Integer.parseInt(frameDelay.getText()));
+    //check render offset
+    engine.setRenderOffset(Float.parseFloat(renderOffset.getText()));
      if (engine.getInterpFrames()>0)
      {
       //do the render slices for animation
@@ -695,6 +706,7 @@ public class LayoutWindow extends ExportableFrame implements WindowListener,
       double time = nowSlice.getSliceStart();
       //figure out how much time each step will be
       double delta = (newSlice.getSliceStart()-time) / engine.getInterpFrames();
+      double offset = (newSlice.getSliceEnd()-newSlice.getSliceStart()) * engine.getRenderOffset();
       //figure out the "width" of the render window
       //double duration = nowSlice.getSliceEnd()-time;
       //RenderDuration.setText(""+duration);
@@ -709,13 +721,13 @@ public class LayoutWindow extends ExportableFrame implements WindowListener,
            break;
         }
 
-        time = nowSlice.getSliceStart() + i*delta;
+        time = nowSlice.getSliceStart()+offset + i*delta;
         //render is a moving window the same width as the slice,
         //we see edges as they are added to the front
         LayoutArea.setRenderSlice(engine.getRenderSlice(time,(time + duration)));
         RenderTime.setText(""+time);
         //make the engine figure out the coord
-        engine.interpCoords(nowSlice,newSlice,time);
+        engine.interpCoords(nowSlice,newSlice,time-offset);
 
        //check if we are recording a movie
         if (movie !=null)
@@ -806,6 +818,22 @@ public class LayoutWindow extends ExportableFrame implements WindowListener,
   public int getDisplayHeight()
   {
 	  return LayoutArea.getHeight();
+  }
+  
+  /**
+   * sets the pixel dimensions of the component used to plot the network,
+   * tries to adjust the frame size to match
+   * @param width
+   * @param height
+   */
+  public void setDisplaySize(int width,int height)
+  {
+  	//get the difference between existing layout size and frame size
+   	int widthDif = this.getWidth()-LayoutArea.getWidth();
+   	int heightDif = this.getHeight()-LayoutArea.getHeight();
+	  LayoutArea.setSize(width,height);
+	  this.setSize(width+widthDif,height+heightDif);
+	  this.validate();
   }
 
   /**

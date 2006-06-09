@@ -61,6 +61,7 @@ public class SoniaLayoutEngine
   private int updatesN = 0;
   private int interpFrames = 0;
   private int frameDelay = 30;  //how long to wait after each frame, in milliseconds
+  private float renderOffset =0; //position of start of render relitive to slice
   private int currentSlice;
   private double[] currentXcoords;
   private double[] currentYcoords;
@@ -632,8 +633,7 @@ public class SoniaLayoutEngine
     //check for non negitivge
     if (width > 0)
     {
-      display.setSize(width, display.getHeight());
-      display.doLayout();
+      display.setDisplaySize(width, display.getDisplayHeight());
     }
   }
 
@@ -662,8 +662,7 @@ public class SoniaLayoutEngine
     //check for non negitivge
     if (height > 0)
     {
-      display.setSize(display.getWidth(), height + bottomPad);
-      display.doLayout();
+      display.setDisplaySize(display.getDisplayWidth(), height);
     }
   }
 
@@ -677,8 +676,7 @@ public class SoniaLayoutEngine
     int width = dispInitWidth;
     if (display !=null)
     {
-      width = display.getWidth() - display.getInsets().left
-            - display.getInsets().right - (2*pad);
+      width = display.getDisplayWidth()  - (2*pad);
     }
     return width;
   }
@@ -694,8 +692,7 @@ public class SoniaLayoutEngine
     int height = dispInitHeight;
     if (display !=null)
     {
-      height = display.getHeight() - display.getInsets().top
-             - display.getInsets().bottom - bottomPad - (2*pad);
+      height = display.getDisplayHeight() - (2*pad);
     }
     return height;
   }
@@ -882,6 +879,20 @@ public class SoniaLayoutEngine
   public int getFrameDelay()
   {
 	   return frameDelay;
+  }
+  
+  /**
+   * sets to range 0 - 1
+   * @param offset
+   */
+  public void setRenderOffset(float offset)
+  {
+	  renderOffset = Math.min(Math.max(offset,0),1);
+  }
+  
+  public float getRenderOffset()
+  {
+	  return renderOffset;
   }
 
   /**
