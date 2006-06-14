@@ -44,4 +44,9 @@ public class RBridge {
 	    }
 	    return sonia;
 	}
+	
+	public void passNetwork(Object net)
+	{
+		System.out.println(net.toString());
+	}
 }

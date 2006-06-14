@@ -280,10 +280,12 @@ public class NetUtils
 
     for (int i = 0; i < nNodes; i++)
     {
+    	
       checkedNodes.clear();
       priorityList.clear();
       nodeQueue.clear();
       //find paths to all nodes connected to i
+      //set distance to self as 0, and add to list
       distMatrix.setQuick(i ,i, 0.0);
       checkedNodes.add(i);
       priorityList.add(0.0);
@@ -292,7 +294,7 @@ public class NetUtils
       {
         //find node on fringe with smallest priority value
         double fringeNodePrior = Double.POSITIVE_INFINITY;
-        int fringeNodeIndex = Integer.MAX_VALUE;
+        int fringeNodeIndex = 0;//Integer.MAX_VALUE;
         for (int n = 0; n < priorityList.size(); n++)
         {
           if (priorityList.getQuick(n) < fringeNodePrior)
