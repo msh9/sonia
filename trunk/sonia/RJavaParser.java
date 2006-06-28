@@ -1,6 +1,8 @@
 package sonia;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -23,7 +25,10 @@ public class RJavaParser implements Parser {
 	  private boolean isHyperGraph = false;
 	  private boolean hasLoops = false;
 	  private boolean isMultiplex = false;
-	  private boolean isBipartie = false;
+	  private boolean isBipartite = false;
+	  private HashMap galTagMap;
+	  int maxNodes = 0;
+	  int numEdges = 0;
 	  
 
 	/**
@@ -32,15 +37,16 @@ public class RJavaParser implements Parser {
 	 * "val" : Vertex Attribute List,  "iel" : In Edge List,  "oel", Out Edge List.
 	 */
 	public void parseNetwork(String netString) throws IOException {
-		StringTokenizer linekonizer = new StringTokenizer(netString,"\n"); 
 		try {
-			String mel = linekonizer.nextToken();
-			String gal = linekonizer.nextToken();
-			String val = linekonizer.nextToken();
-			String iel = linekonizer.nextToken();
-			String oel = linekonizer.nextToken();
+			Vector mainElements = parseList(netString);
+			String mel = (String)mainElements.get(0);
+			String gal = (String)mainElements.get(1);
+			String val = (String)mainElements.get(2);
+			String iel = (String)mainElements.get(3);
+			String oel = (String)mainElements.get(4);
 			
 			parseGal(gal);
+
 			
 		} catch (Exception e) {
 			String error = "Unable to parse text representation of R network object: "+
@@ -50,10 +56,44 @@ public class RJavaParser implements Parser {
 
 	}
 	
-	private void parseGal(String gal) throws IOException{
-		// debug, throw exception so we can see it
-		throw (new IOException(gal));
+	/**
+	 * puts the elements of gal into map by variable names
+	 *  gal = list(n = 10, mnext = 46, directed = TRUE,     hyper = FALSE, loops = FALS
+E, multiple = FALSE, bipartite = FALSE)
+	 * @param gal
+	 * @throws Exception
+	 */
+	private void parseGal(String gal) throws Exception{
+		galTagMap = new HashMap();
+		//should start with "gal = list(..."
+		if (!gal.startsWith("gal = ")){
+			throw new Exception("Graph Attribute List does not start with 'gal = '");
+		}
+		Vector attributeTokens = parseList(gal.substring(6));
+		//put all the name = value pairs into a map
+		for (int i = 0; i < attributeTokens.size(); i++) {
+			String tag = (String)attributeTokens.get(i);
+			galTagMap.put(tag.substring(0, tag.indexOf("=")-1).trim(), tag
+					.substring(tag.indexOf("=")+1).trim());
+		}
+		maxNodes = Integer.parseInt((String)galTagMap.get("n"));
+		numEdges =Integer.parseInt((String)galTagMap.get("mnext"))-1;
+		isDirected = parseRBoolIsTrue((String)galTagMap.get("directed"));
+		isHyperGraph = parseRBoolIsTrue((String)galTagMap.get("hyper"));
+		hasLoops = parseRBoolIsTrue((String)galTagMap.get("loops"));
+		isMultiplex = parseRBoolIsTrue((String)galTagMap.get("multiple"));
+		isBipartite = parseRBoolIsTrue((String)galTagMap.get("bipartite"));
+		
 	}
+	
+	/*
+	 * takes an R-style boolean (T TRUE F FALSE) and evaluates it 
+	 */
+	private boolean parseRBoolIsTrue(String bool)
+	{
+		return (bool.equals("T") | bool.equals("TRUE"));
+	}
+	
 	
 	/**
 	 * returns a vector with the elments at the first level of the passed list
@@ -66,18 +106,32 @@ public class RJavaParser implements Parser {
 		//check if it really is a list
 		if (!list.startsWith("list(")) return null;
 		//strip off the outside () wrappers
-		list = list.substring(4,list.length() -1 );
+		list = list.substring(5,list.length() -1 );
 		//items are delimted by ",", but not if inside ()
+		//so scan accross the string, breaking at each "," but ignore if open
+		int chunkStart = 0;
+		int chunkEnd = 0;
+		int openParen = 0;
 		
-		int openIndex = list.indexOf("(");
-		int openCount = 1;
-		int closeIndex = -1;
-		int closeCount = 0;
 		//find the first (
 		//count ( and ) until find matich )
-		while (openCount > closeCount){
-			
+		while (chunkEnd < list.length()){
+			String checkChar = list.substring(chunkEnd,chunkEnd+1);
+			if (checkChar.equals(",")){
+				if (openParen == 0){  //ignore the comma if it is inside parens
+				  listContents.add(list.substring(chunkStart,chunkEnd).trim());
+				  chunkStart = chunkEnd+1;  //need to remove the comma?
+				}
+			} else if (checkChar.equals("(") || checkChar.equals("[")){
+				openParen ++;
+			}
+			else if (checkChar.equals(")") || checkChar.equals("]")){
+				openParen --;
+
+			}
+			chunkEnd ++;
 		}
+		listContents.add(list.substring(chunkStart,chunkEnd).trim());
 		
 		return listContents;
 	}

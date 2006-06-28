@@ -6,6 +6,8 @@ import javax.swing.UIManager;
 
 public class RBridge {
 	
+	SoniaController soniaCont = null;
+	
 	public RBridge(){
 		
 	}
@@ -21,6 +23,7 @@ public class RBridge {
 	    //kludge here 'cause millisecond value of date is too large for int
 	    int rngSeed = (int)Math.round((double)seedDate.getTime() - 1050960000000.0);
 	    String inFile = "";
+	    String networkData = "";
 	    for(int i=0; i<args.length; i++)
 	    {
 	      String arg = args[i];
@@ -35,6 +38,9 @@ public class RBridge {
 	      {
 	          inFile = arg.substring(5);
 	      }
+	      if  (arg.startsWith("network:")){
+	    	  networkData = arg.substring(8);
+	      }
 	    }
 	    SoniaController sonia = new SoniaController(rngSeed);
 	    //if a file has been passed on the command line, load it
@@ -42,11 +48,19 @@ public class RBridge {
 	    {
 	        sonia.loadFile(inFile);
 	    }
+	    else if (!networkData.equals(""))
+	    {
+	    	sonia.loadData(networkData);
+	    }
+	    soniaCont = sonia;
 	    return sonia;
 	}
 	
-	public void passNetwork(Object net)
+	public void passNetwork(String netData)
 	{
-		System.out.println(net.toString());
+		if (soniaCont == null){
+			getSoniaController(new String[]{});
+		}
+		soniaCont.loadData(netData);
 	}
 }

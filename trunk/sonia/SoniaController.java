@@ -139,6 +139,7 @@ public class SoniaController
     //kludge here 'cause millisecond value of date is too large for int
     int rngSeed = (int)Math.round((double)seedDate.getTime() - 1050960000000.0);
     String inFile = "";
+    String networkData = "";
     for(int i=0; i<args.length; i++)
     {
       String arg = args[i];
@@ -153,12 +154,19 @@ public class SoniaController
       {
           inFile = arg.substring(5);
       }
+      if  (arg.startsWith("network:")){
+    	  networkData = arg.substring(8);
+      }
+      
     }
     SoniaController sonia = new SoniaController(rngSeed);
     //if a file has been passed on the command line, load it
     if (!inFile.equals(""))
     {
         sonia.loadFile(inFile);
+    } else if (!networkData.equals(""))
+    {
+    	sonia.loadData(networkData);
     }
   }
 
@@ -253,26 +261,57 @@ public class SoniaController
        //CHECK IF PARSING WAS SUCCESFULL
      if (fileLoaded)
      {
-       networkData = new NetDataStructure(this,inFile,parser.getNumNodeEvents(),
-           parser.getNumArcEvents(),parser.getMaxNumNodes());
-       //load data from parser into net data
-       networkData.addNodeEvents(parser.getNodeList());
-       networkData.addArcEvents(parser.getArcList());
-       networkData.setNetInfo(parser.getNetInfo());
-       //print details out to log
-       log("loaded network from "+currentPath+inFile+
-           "\nparser used:"+parser.getParserInfo()+
-       "\n"+parser.getNumNodeEvents()+" node events, "+
-           parser.getNumArcEvents()+" arc events"+"\n"+
-           "smallest time value:"+networkData.getFirstTime()+"\n"+
-           "largest time value:"+networkData.getLastTime()+"\n"+
-           "number of unique nodes:"+parser.getMaxNumNodes()+"\n"+
-       "comments from file:"+networkData.getNetInfo());
-       //put it in list of loaded networks
-       networks.add(networkData);
+      setupData(inFile,parser);
      }
    }
 
+ }
+ 
+ /**
+  * command for passing raw string data to parser without reading from a file
+  * @param data  String representation of the network (for now in R format)
+  */
+ public void loadData(String data){
+	 
+	 Parser parser = new RJavaParser();
+	 try
+     {
+       parser.parseNetwork(data);
+       fileLoaded = true;
+       showStatus("Parsed network data from command line");
+     }
+     catch (IOException error)
+     {
+          showError("Unable to parse network data from command line: "+error.getMessage());
+          fileLoaded = false;
+     }
+
+       //CHECK IF PARSING WAS SUCCESFULL
+     if (fileLoaded)
+     {
+      setupData("data from R",parser);
+     }
+ }
+ 
+ private void setupData(String inFile, Parser parser)
+ {
+	 networkData = new NetDataStructure(this,inFile,parser.getNumNodeEvents(),
+	           parser.getNumArcEvents(),parser.getMaxNumNodes());
+	       //load data from parser into net data
+	       networkData.addNodeEvents(parser.getNodeList());
+	       networkData.addArcEvents(parser.getArcList());
+	       networkData.setNetInfo(parser.getNetInfo());
+	       //print details out to log
+	       log("loaded network from "+currentPath+inFile+
+	           "\nparser used:"+parser.getParserInfo()+
+	       "\n"+parser.getNumNodeEvents()+" node events, "+
+	           parser.getNumArcEvents()+" arc events"+"\n"+
+	           "smallest time value:"+networkData.getFirstTime()+"\n"+
+	           "largest time value:"+networkData.getLastTime()+"\n"+
+	           "number of unique nodes:"+parser.getMaxNumNodes()+"\n"+
+	       "comments from file:"+networkData.getNetInfo());
+	       //put it in list of loaded networks
+	       networks.add(networkData);
  }
 
  /**
