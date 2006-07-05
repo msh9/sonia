@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+import sonia.parsers.Parser;
+
 /**
  * Instead of reading a file as input, this class takes sets of arrays passed
  * in via the rJava calling methods from R

@@ -1,5 +1,4 @@
 package sonia;
-import java.util.Vector;
 
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>

@@ -203,7 +203,7 @@ public class ApplySettingsDialog implements ActionListener
     // add components to the layout GBlayout using constraints
 
     //starting coordinates
-    c.anchor = c.WEST;
+    c.anchor = GridBagConstraints.WEST;
     c.gridx=0;c.gridy=0;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
     settingsDialog.add(StartCoordLabel,c);
     c.gridx=0;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
@@ -274,7 +274,7 @@ public class ApplySettingsDialog implements ActionListener
 
 
     //slice info
-    c.anchor = c.CENTER;
+    c.anchor = GridBagConstraints.CENTER;
     c.gridx=2;c.gridy=7;c.gridwidth=3;c.gridheight=1;c.weightx=0;c.weighty=0;
     settingsDialog.add(SliceInfoLabel,c);
 
@@ -296,7 +296,7 @@ public class ApplySettingsDialog implements ActionListener
     int compIndex = 0;
     for (int i = 0; i<(propComponents.size()/2); i++)
     {
-      c.anchor = c.EAST;
+      c.anchor = GridBagConstraints.EAST;
       c.gridx=0;c.gridy=7+i;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
       settingsDialog.add((Component)propComponents.get(compIndex),c);
       compIndex+=2;
@@ -305,7 +305,7 @@ public class ApplySettingsDialog implements ActionListener
     compIndex = 1;
     for (int i = 0; i<(propComponents.size()/2); i++)
     {
-      c.anchor = c.WEST;
+      c.anchor = GridBagConstraints.WEST;
       c.gridx=1;c.gridy=7+i;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
       settingsDialog.add((Component)propComponents.get(compIndex),c);
       compIndex+=2;

@@ -1,6 +1,8 @@
 package sonia;
 
 import java.util.*;
+
+import sonia.parsers.DotNetParser;
 import cern.colt.list.IntArrayList;
 
 /**

@@ -36,6 +36,11 @@ import javax.swing.UIManager;
 import javax.swing.plaf.metal.MetalLookAndFeel;
 import javax.swing.plaf.metal.MetalTheme;
 
+import sonia.parsers.DLParser;
+import sonia.parsers.DotNetParser;
+import sonia.parsers.DotSonParser;
+import sonia.parsers.Parser;
+
 import cern.jet.random.Uniform;
 import cern.colt.matrix.impl.SparseDoubleMatrix2D;
 
@@ -337,11 +342,11 @@ public class SoniaController
   * Brings up a dialog to pick which of the layouts to export as a movie, then
   * makes a movie exporter and passes it to the layout engine.
   */
- public void exportMovie()
+ public void exportMovie(SoniaLayoutEngine engToFilm)
  {
    //NEED TOP PICK WHICH layout to export!!
-   ListPicker engPicker = new ListPicker(ui,engines,"Choose Layout to film");
-   SoniaLayoutEngine engToFilm = (SoniaLayoutEngine)engPicker.getPickedObject();
+  // ListPicker engPicker = new ListPicker(ui,engines,"Choose Layout to film");
+   //SoniaLayoutEngine engToFilm = (SoniaLayoutEngine)engPicker.getPickedObject();
    SoniaMovieMaker exporter = new SoniaMovieMaker(this,engToFilm);
    //for now, tell the engine to tell the layout...
    engToFilm.makeMovie(exporter);

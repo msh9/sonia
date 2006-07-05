@@ -1,23 +1,26 @@
 package sonia;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.util.ArrayList;
-import java.text.DecimalFormat;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.util.StringTokenizer;
 
 import javax.swing.JButton;
 import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.border.Border;
-import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.plaf.basic.BasicBorders;
-
-import cern.colt.list.DoubleArrayList;
 
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>
@@ -147,10 +150,10 @@ public class CoolingSchedule extends ExportableFrame implements MouseListener,
     this.setLayout(layout);
     GridBagConstraints c = new GridBagConstraints();
     c.gridx=0;c.gridy=0;c.gridwidth=1;c.gridheight=2;c.weightx=1;c.weighty=1;
-    c.fill=c.BOTH;
+    c.fill=GridBagConstraints.BOTH;
   //  this.add(filler,c);
     this.add(plot,c);
-    c.fill=c.NONE;
+    c.fill=GridBagConstraints.NONE;
    // c.gridx=0;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
    // c.anchor=c.EAST;
   //  this.add(MaxPassLabel,c);

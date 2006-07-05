@@ -11,6 +11,7 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
@@ -99,6 +100,8 @@ public class SoniaInterface extends JFrame implements WindowListener,
 	public SoniaInterface(SoniaController theController) {
 		control = theController;
 		changeAllFonts(new FontUIResource(control.getFont()));
+		
+		super.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
 		// create layout objects
 		Credits = new JLabel("SoNIA is free for non-comercial, non-military use");
@@ -295,14 +298,14 @@ public class SoniaInterface extends JFrame implements WindowListener,
 				showError("No networks have been created");
 			}
 			
-		} else if (evt.getSource().equals(MovieButton)) {
-			// check that network exisits?
-			if (control.hasNetworks()) {
-				// allow choosing which net to export?
-				control.exportMovie();
-			} else {
-				showError("No networks have been created");
-			}
+//		} else if (evt.getSource().equals(MovieButton)) {
+//			// check that network exisits?
+//			if (control.hasNetworks()) {
+//				// allow choosing which net to export?
+//				control.exportMovie();
+//			} else {
+//				showError("No networks have been created");
+//			}
 		}
 	}
 
@@ -313,11 +316,12 @@ public class SoniaInterface extends JFrame implements WindowListener,
 	 */
 	public void windowClosing(WindowEvent evt) {
 		// should be more gentle, ask to save and such
-		OptionPrompter saveDialog = new OptionPrompter(this,
-				"Exiting SoNIA will discard all unsaved layouts",
-				"Are you sure you want to quit SoNIA?");
-		boolean result = saveDialog.getResult();
-		if (result == true) {
+		
+		int result =  JOptionPane.showConfirmDialog(this,
+				"Exiting SoNIA will discard all unsaved layouts" 
+					," Are you sure you want to quit SoNIA?",
+					JOptionPane.OK_CANCEL_OPTION,JOptionPane.WARNING_MESSAGE);
+		if (result == 0) {
 			System.exit(0);
 		}
 

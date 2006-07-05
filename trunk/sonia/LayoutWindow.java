@@ -6,9 +6,11 @@ import java.text.*;
 import java.util.*;
 import java.awt.geom.*;
 
+import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
@@ -159,8 +161,15 @@ public class LayoutWindow extends ExportableFrame implements WindowListener,
   public LayoutWindow(SoniaController controller,SoniaLayoutEngine layoutEng,
                       int initWidth, int initHeight)
   {
+	  super.setDefaultCloseOperation(ExportableFrame.DO_NOTHING_ON_CLOSE);
     Control = controller;
     engine = layoutEng;
+    
+    exportMenu.add(new AbstractAction("Export Movie...") {
+		public void actionPerformed(ActionEvent arg0) {
+			Control.exportMovie(engine);
+		}
+	});
 
 
    // this.setFont(controller.getFont());
@@ -863,10 +872,10 @@ public class LayoutWindow extends ExportableFrame implements WindowListener,
   public void windowClosing (WindowEvent evt)
   {
     //ask if this is a good idea
-    OptionPrompter exitWarning = new OptionPrompter(this,
+    int result = JOptionPane.showConfirmDialog(this,
         "Closing this window will discard the layouts for all of its slices",
-        "Close layout without saving?");
-    if (exitWarning.getResult() == true)
+        "Close layout without saving?",JOptionPane.OK_CANCEL_OPTION,JOptionPane.WARNING_MESSAGE);
+    if (result == 0)
     {
       this.setVisible(false);
       //should make sure to kill off all compondents

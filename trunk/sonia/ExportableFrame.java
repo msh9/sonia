@@ -33,7 +33,7 @@ public class ExportableFrame extends JFrame {
 
 	protected JMenuBar menuBar;
 
-	private JMenu exportMenu;
+	protected JMenu exportMenu;
 
 	public ExportableFrame() {
 		super();
