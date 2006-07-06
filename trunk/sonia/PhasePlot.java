@@ -13,6 +13,8 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.InternalFrameEvent;
+import javax.swing.event.InternalFrameListener;
 
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>
@@ -58,8 +60,8 @@ import javax.swing.border.TitledBorder;
  * displayed will slow animation somewhat.
  * 
  */
-public class PhasePlot extends ExportableFrame implements WindowListener,
-		MouseMotionListener, MouseListener {
+public class PhasePlot extends ExportableFrame implements
+		InternalFrameListener, MouseMotionListener, MouseListener {
 	// private Canvas drawArea;
 	private PhasePlotPanel drawArea;
 
@@ -117,7 +119,7 @@ public class PhasePlot extends ExportableFrame implements WindowListener,
 		drawArea.setBorder(new TitledBorder("Timline view of network"));
 		sortBox = new JCheckBox("Sort Events", eventsSorted);
 		MouseTime = new JTextField(20);
-		//MouseTime.setBackground(Color.lightGray);
+		// MouseTime.setBackground(Color.lightGray);
 		MouseTime.setEditable(false);
 
 		GridBagLayout layout = new GridBagLayout();
@@ -129,9 +131,9 @@ public class PhasePlot extends ExportableFrame implements WindowListener,
 		c.gridheight = 1;
 		c.weightx = 1;
 		c.weighty = 1;
-		c.fill=c.BOTH;
+		c.fill = c.BOTH;
 		this.add(drawArea, c);
-		c.fill=c.NONE;
+		c.fill = c.NONE;
 		c.anchor = c.SOUTH;
 		c.gridx = 1;
 		c.gridy = 1;
@@ -148,17 +150,16 @@ public class PhasePlot extends ExportableFrame implements WindowListener,
 		c.weighty = 0.1;
 		this.add(MouseTime, c);
 		// add the listerners
-		this.addWindowListener(this);
+		this.addInternalFrameListener(this);
 		drawArea.addMouseMotionListener(this);
 		drawArea.addMouseListener(this);
 
-		//this.setBackground(Color.lightGray);
+		// this.setBackground(Color.lightGray);
 		this.setSize(700, 175);
 		this.setTitle("Phase Plot for " + engine.toString());
 		this.setLocation(200, 200);
 		// this.setVisible(true);
 	}
-
 
 	/**
 	 * records the start and end time so the render slice can be drawn on the
@@ -170,13 +171,11 @@ public class PhasePlot extends ExportableFrame implements WindowListener,
 		repaint();
 	}
 
-	
-
 	private class PhasePlotPanel extends JPanel {
 		public void paintComponent(Graphics g) {
 			super.paintComponent(g);
-			Graphics2D graph = (Graphics2D)g;
-			int topPad = sidePad +10;
+			Graphics2D graph = (Graphics2D) g;
+			int topPad = sidePad + 10;
 			int xAxis = this.getHeight() - xAxisPad;
 			int plotHeight = xAxis - topPad;
 			int plotWidth = this.getWidth() - (2 * sidePad);
@@ -408,28 +407,32 @@ public class PhasePlot extends ExportableFrame implements WindowListener,
 	public void mouseExited(MouseEvent event) {
 	}
 
-	// WINDOW LISTENERS windowClosing exits system when close box is clicked
-	// the rest have to be there to satisfy WindowListener
-	public void windowClosing(WindowEvent evt) {
+	public void internalFrameOpened(InternalFrameEvent e) {
+	}
+
+	public void internalFrameClosing(InternalFrameEvent e) {
+
+	}
+
+	public void internalFrameClosed(InternalFrameEvent e) {
 		engine.disposePhasePlot();
 		this.dispose();
+
 	}
 
-	public void windowActivated(WindowEvent evt) {
+	public void internalFrameIconified(InternalFrameEvent e) {
+
 	}
 
-	public void windowClosed(WindowEvent evt) {
+	public void internalFrameDeiconified(InternalFrameEvent e) {
+
 	}
 
-	public void windowDeactivated(WindowEvent evt) {
+	public void internalFrameActivated(InternalFrameEvent e) {
+
 	}
 
-	public void windowDeiconified(WindowEvent evt) {
-	}
+	public void internalFrameDeactivated(InternalFrameEvent e) {
 
-	public void windowIconified(WindowEvent evt) {
-	}
-
-	public void windowOpened(WindowEvent evt) {
 	}
 }

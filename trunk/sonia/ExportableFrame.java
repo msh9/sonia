@@ -14,6 +14,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JInternalFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -29,7 +30,7 @@ import javax.swing.RepaintManager;
  * the GUESS package
  */
 
-public class ExportableFrame extends JFrame {
+public class ExportableFrame extends JInternalFrame {
 
 	protected JMenuBar menuBar;
 
@@ -38,6 +39,7 @@ public class ExportableFrame extends JFrame {
 	public ExportableFrame() {
 		super();
 		menuBar = new JMenuBar();
+		//menuBar = super.getJMenuBar();
 		exportMenu = new JMenu("Export");
 		// add an action to show the printing option
 		exportMenu.add(new AbstractAction("Print...") {
@@ -50,9 +52,9 @@ public class ExportableFrame extends JFrame {
 				exportContent();
 			}
 		});
-
-		menuBar.add(exportMenu);
 		setJMenuBar(menuBar);
+		menuBar.add(exportMenu);
+		
 	}
 
 	/**

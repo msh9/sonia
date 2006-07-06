@@ -9,9 +9,13 @@ import java.awt.color.*;
 
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
+import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
@@ -89,22 +93,25 @@ public class SoniaInterface extends JFrame implements WindowListener,
 
 	private JTextArea StatusText;
 
+	private JDesktopPane workPane;
+
+	private JPanel menuPane;
+
 	private Font msgFont;
 
 	private Font errorFont;
 
-	private String codeDate = "2006-03-19";
 
-	private String version = "1.1.3";
 
 	public SoniaInterface(SoniaController theController) {
 		control = theController;
 		changeAllFonts(new FontUIResource(control.getFont()));
-		
+
 		super.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
 		// create layout objects
-		Credits = new JLabel("SoNIA is free for non-comercial, non-military use");
+		Credits = new JLabel(
+				"SoNIA is free for non-comercial, non-military use");
 		LoadButton = new JButton("Load Files...");
 		LayoutButton = new JButton("Create Layout...");
 		PauseButton = new JButton("Pause");
@@ -112,23 +119,29 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		SaveButton = new JButton("Save to File...");
 		StatusText = new JTextArea(
 				"   Welcome to SoNIA "
-						+ version
+						+ SoniaController.VERSION
 						+ " (code date "
-						+ codeDate
+						+ SoniaController.CODE_DATE
 						+ ")\n"
 						+ "   Please view the README and SoNIAWriteup for instructions\n"
 						+ "   Questions/bugs to skyebend@stanford.edu", 5, 50);
-		//StatusText.setBackground(Color.white);
+		// StatusText.setBackground(Color.white);
 		StatusText.setEditable(false);
 		StatusText.setBorder(new TitledBorder("Status:"));
 		StatusText.setLineWrap(true);
 		StatusText.setWrapStyleWord(true);
 		StatusText.setColumns(30);
 
+		workPane = new JDesktopPane();
+		workPane.setBorder(new TitledBorder("Layouts:"));
+		workPane.setSize(300, 250);
+		workPane.setVisible(true);
+
+		
 
 		// LAYOUT
 		GridBagLayout layout = new GridBagLayout();
-		setLayout(layout);
+		menuPane = new JPanel(layout);
 		GridBagConstraints c = new GridBagConstraints();
 		c.insets = new Insets(2, 2, 2, 2);
 
@@ -136,82 +149,100 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		// buttons
 		c.gridx = 0;
 		c.gridy = 0;
-		c.gridwidth = 4;
+		c.gridwidth = 3;
 		c.gridheight = 1;
 		c.weightx = 1;
 		c.weighty = 1;
-		c.fill = c.BOTH;
-		add(StatusText, c);
-		c.fill = c.NONE;
+		c.fill = GridBagConstraints.BOTH;
+		menuPane.add(StatusText, c);
+		c.fill = GridBagConstraints.NONE;
 		c.gridx = 0;
 		c.gridy = 1;
 		c.gridwidth = 1;
 		c.gridheight = 1;
 		c.weightx = 0.1;
 		c.weighty = 0.1;
-		add(LoadButton, c);
+		menuPane.add(LoadButton, c);
 		c.gridx = 1;
 		c.gridy = 1;
 		c.gridwidth = 1;
 		c.gridheight = 1;
 		c.weightx = 0.1;
 		c.weighty = 0.1;
-		add(LayoutButton, c);
+		menuPane.add(LayoutButton, c);
 		c.gridx = 2;
 		c.gridy = 1;
 		c.gridwidth = 1;
 		c.gridheight = 1;
 		c.weightx = 0.1;
 		c.weighty = 0.1;
-		add(PauseButton, c);
-		c.gridx = 0;
-		c.gridy = 2;
-		c.gridwidth = 1;
-		c.gridheight = 1;
-		c.weightx = 0.1;
-		c.weighty = 0.1;
-		add(MovieButton, c);
+		menuPane.add(PauseButton, c);
+//		c.gridx = 0;
+//		c.gridy = 2;
+//		c.gridwidth = 1;
+//		c.gridheight = 1;
+//		c.weightx = 0.1;
+//		c.weighty = 0.1; // movie is now a menu item on the layout window
+//		menuPane.add(MovieButton, c);
 		c.gridx = 1;
 		c.gridy = 2;
 		c.gridwidth = 1;
 		c.gridheight = 1;
 		c.weightx = 0.1;
 		c.weighty = 0.1;
-		add(SaveButton, c);
+		menuPane.add(SaveButton, c);
 		c.gridx = 0;
 		c.gridy = 3;
-		c.gridwidth = 4;
+		c.gridwidth = 3;
 		c.gridheight = 1;
-		c.weightx = 0.1;
-		c.weighty = 0.1;
-		add(Credits, c);
+		c.weightx = 1;
+		c.weighty = 1;
+		c.fill = GridBagConstraints.BOTH;
+		menuPane.add(control.getLogRef(), c);
+		
 
 		// add action listeners for button clicks
 		LoadButton.addActionListener(this);
 		LayoutButton.addActionListener(this);
 		PauseButton.addActionListener(this);
 		SaveButton.addActionListener(this);
-		MovieButton.addActionListener(this);
+		// MovieButton.addActionListener(this);
+
+		//setLayout(new BorderLayout());
+		JSplitPane jsp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,menuPane,workPane);
+		jsp.setOneTouchExpandable(true);
+		getContentPane().add(jsp);
+		//add(workPane, BorderLayout.CENTER);
+		//add(menuPane, BorderLayout.WEST);
+		//add(Credits, BorderLayout.SOUTH);
 
 		addWindowListener(this);
-	//	setBackground(Color.lightGray);
+		// setBackground(Color.lightGray);
+
+		// debug test the jinternal frame
+		//JInternalFrame frameTest = new JInternalFrame("dummy network");
+		//frameTest.setSize(300, 200);
+		//workPane.add(frameTest);
+		//frameTest.setVisible(true);
 
 		// construct frame
-		this.setSize(350, 250);
-		this.setTitle("SoNIA (Social Network Image Animator) v1.0");
+		this.setSize(800, 550);
+		this.setTitle("SoNIA (Social Network Image Animator) v"+SoniaController.VERSION);
 		this.setVisible(true);
 		LoadButton.requestFocus();
 		this.repaint();
+
 	}
-	
-	
 
-//	protected JComponent getGraphicContent() {
-//		// TODO Auto-generated method stub
-//		return super.getGraphicContent();
-//	}
+	public void addFrame(JInternalFrame toShow) {
+		toShow.setVisible(true);
+		workPane.add(toShow);
+	}
 
-
+	// protected JComponent getGraphicContent() {
+	// // TODO Auto-generated method stub
+	// return super.getGraphicContent();
+	// }
 
 	/**
 	 * Displays the passed text as a message in the status window
@@ -290,22 +321,20 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		} else if (evt.getSource().equals(SaveButton)) {
 			// check that network exisits?
 			if (control.hasNetworks()) {
-//				 allow choosing which net to export?
+				// allow choosing which net to export?
 				control.exportMatricies();
-			}
-			else
-			{
+			} else {
 				showError("No networks have been created");
 			}
-			
-//		} else if (evt.getSource().equals(MovieButton)) {
-//			// check that network exisits?
-//			if (control.hasNetworks()) {
-//				// allow choosing which net to export?
-//				control.exportMovie();
-//			} else {
-//				showError("No networks have been created");
-//			}
+
+			// } else if (evt.getSource().equals(MovieButton)) {
+			// // check that network exisits?
+			// if (control.hasNetworks()) {
+			// // allow choosing which net to export?
+			// control.exportMovie();
+			// } else {
+			// showError("No networks have been created");
+			// }
 		}
 	}
 
@@ -316,30 +345,29 @@ public class SoniaInterface extends JFrame implements WindowListener,
 	 */
 	public void windowClosing(WindowEvent evt) {
 		// should be more gentle, ask to save and such
-		
-		int result =  JOptionPane.showConfirmDialog(this,
-				"Exiting SoNIA will discard all unsaved layouts" 
-					," Are you sure you want to quit SoNIA?",
-					JOptionPane.OK_CANCEL_OPTION,JOptionPane.WARNING_MESSAGE);
+
+		int result = JOptionPane.showConfirmDialog(this,
+				"Exiting SoNIA will discard all unsaved layouts",
+				" Are you sure you want to quit SoNIA?",
+				JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 		if (result == 0) {
 			System.exit(0);
 		}
 
 	}
-	
-	private static void changeAllFonts (FontUIResource f)
-	{
-	    //
-	    // sets the default font for all Swing components.
-	    
-	    Enumeration keys = UIManager.getDefaults().keys();
-	    while (keys.hasMoreElements()) {
-	      Object key = keys.nextElement();
-	      Object value = UIManager.get (key);
-	      if (value instanceof javax.swing.plaf.FontUIResource)
-	        UIManager.put (key, f);
-	      }
-	    }  
+
+	private static void changeAllFonts(FontUIResource f) {
+		//
+		// sets the default font for all Swing components.
+
+		Enumeration keys = UIManager.getDefaults().keys();
+		while (keys.hasMoreElements()) {
+			Object key = keys.nextElement();
+			Object value = UIManager.get(key);
+			if (value instanceof javax.swing.plaf.FontUIResource)
+				UIManager.put(key, f);
+		}
+	}
 
 	public void windowActivated(WindowEvent evt) {
 	}

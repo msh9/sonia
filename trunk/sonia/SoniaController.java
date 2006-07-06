@@ -57,6 +57,9 @@ import cern.colt.matrix.impl.SparseDoubleMatrix2D;
 
 public class SoniaController
 {
+	public static final String CODE_DATE = "2006-03-19";
+
+	public static final String VERSION = "1.1.3";
   private SoniaInterface ui;
   private LogWindow log;
   private ArrayList engines; //holds engines for each layout
@@ -64,12 +67,15 @@ public class SoniaController
   private ArrayList networks;   //holds NetDataStructures for eachLayout
   private NetDataStructure networkData;
   private Font textFont;  //the font for the GUIs
+  
+  private boolean showGUI = true;
 
   private String fileName = "network001";
   private String currentPath = "";
   private boolean combineSameNames = true;
   private boolean fileLoaded = false;
   private boolean paused = false;
+  private LayoutSettings sliceSettings = null;
 
   private Uniform randomUni; //colt package mersense twister random numbers
   //NEED TO INCLUDE COLT LISCENCE AGREEMENT
@@ -136,8 +142,8 @@ public class SoniaController
   {
 	  //set the look and feel so it will appear the same on all platforms
 	  try {
-	        UIManager.setLookAndFeel(
-	        		UIManager.getCrossPlatformLookAndFeelClassName());
+	       // UIManager.setLookAndFeel(
+	        		//UIManager.getCrossPlatformLookAndFeelClassName());
 	    } catch (Exception e) {System.out.println(e); }
 	    
     Date seedDate = new Date();
@@ -145,6 +151,7 @@ public class SoniaController
     int rngSeed = (int)Math.round((double)seedDate.getTime() - 1050960000000.0);
     String inFile = "";
     String networkData = "";
+    String settingsFile = "";
     for(int i=0; i<args.length; i++)
     {
       String arg = args[i];
@@ -162,6 +169,9 @@ public class SoniaController
       if  (arg.startsWith("network:")){
     	  networkData = arg.substring(8);
       }
+      if  (arg.startsWith("settings:")){
+    	  settingsFile = arg.substring(9);
+      }
       
     }
     SoniaController sonia = new SoniaController(rngSeed);
@@ -172,6 +182,9 @@ public class SoniaController
     } else if (!networkData.equals(""))
     {
     	sonia.loadData(networkData);
+    }
+    if (!settingsFile.equals("")){
+    	sonia.loadSettings(settingsFile);
     }
   }
 
@@ -298,6 +311,25 @@ public class SoniaController
      }
  }
  
+ /**
+  * try to read in a previously saved settings file
+  * @param settingsFile
+  */
+ public void loadSettings(String settingsFile){
+	 try {
+		FileInputStream settIn = new FileInputStream(settingsFile);
+		sliceSettings = new LayoutSettings();
+		sliceSettings.load(settIn);
+		showStatus("Read layout settings from "+settingsFile);
+		log("Read layout settings from "+settingsFile);
+		createLayout();
+	} catch (FileNotFoundException e) {
+		showError("Unable to locate specified settings file: "+settingsFile +" "+e.getMessage());
+	} catch (IOException e) {
+		showError("Unable to read specified settings file: "+settingsFile +" "+e.getMessage());
+	} 
+ }
+ 
  private void setupData(String inFile, Parser parser)
  {
 	 networkData = new NetDataStructure(this,inFile,parser.getNumNodeEvents(),
@@ -328,9 +360,14 @@ public class SoniaController
    //should make sure there is some network data
    if (fileLoaded == true)
    {
+	 
      String engName = fileName+" #"+(engines.size()+1);
-     engine = new SoniaLayoutEngine(this,networkData,engName);
+     engine = new SoniaLayoutEngine(sliceSettings,this,networkData,engName);
      engines.add(engine);
+     LayoutWindow display =  new LayoutWindow(this,engine,420,400);
+     engine.setDisplay(display);
+     ui.addFrame(display);
+     
    }
    else
    {
@@ -439,6 +476,16 @@ public class SoniaController
  public void log(String text)
  {
    log.log(text);
+ }
+ 
+ /**
+  * returns a reference to the current log object (for now is a panel, but 
+  * shouldb be abstracted from UI
+  * @return
+  */
+ public LogWindow getLogRef()
+ {
+	 return log;
  }
 
  /**
@@ -595,5 +642,9 @@ public String getOutputFile(String suggestName, String msg)
 	 if (networks.size() > 0) return true;
 	 return false;
  }
+
+public boolean isShowGUI() {
+	return showGUI;
+}
 
 }

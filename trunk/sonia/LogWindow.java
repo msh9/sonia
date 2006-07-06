@@ -36,13 +36,15 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.border.TitledBorder;
 
 /**
  * Semi-independent window that logs all actions of a session for repeatability
  * includes ability to write contents out to text file independently
+ * @TODO:  Decouple logging from window
  */
 
-public class LogWindow extends JFrame implements ActionListener, WindowListener
+public class LogWindow extends JPanel implements ActionListener
 {
 
 
@@ -51,7 +53,7 @@ public class LogWindow extends JFrame implements ActionListener, WindowListener
 private SoniaController control;
  //instantiate window objects so they can be refered to
  private JTextArea LogText;
- private JButton WriteLogFile;
+ private JButton writeLogFile;
  private JScrollPane scroller;
 
  public LogWindow(SoniaController theController)
@@ -71,8 +73,10 @@ private SoniaController control;
    scroller = new JScrollPane(scrollPanel);
   
 
-   WriteLogFile = new JButton("Write Log to File...");
-   WriteLogFile.setFont(control.getFont());
+   writeLogFile = new JButton("Write Log to File...");
+   
+   
+   writeLogFile.setFont(control.getFont());
 
    //LAYOUT
    GridBagLayout layout = new GridBagLayout();
@@ -82,20 +86,19 @@ private SoniaController control;
 
    // add components to the layout GBlayout using constraints
    //buttons
-   c.gridx=0;c.gridy=0;c.gridwidth=1;c.gridheight=1;c.weightx=1;c.weighty=1;c.fill=c.BOTH;
+   c.gridx=0;c.gridy=0;c.gridwidth=1;c.gridheight=1;c.weightx=1;c.weighty=1;c.fill=GridBagConstraints.BOTH;
    add(scroller,c);
-   c.gridx=0;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.1;c.fill=c.NONE;
-   add(WriteLogFile,c);
+   c.gridx=0;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.1;c.fill=GridBagConstraints.NONE;
+   add(writeLogFile,c);
 
    //add action listeners for button clicks
-   WriteLogFile.addActionListener(this);
+   writeLogFile.addActionListener(this);
 
-   addWindowListener(this);
-   setBackground(Color.lightGray);
+   //setBackground(Color.lightGray);
 
    //construct frame
    this.setSize (350,250);
-   this.setTitle ("SoNIA Session Log");
+   this.setBorder(new TitledBorder("SoNIA Session Log"));
    this.setLocation(0,290);
    this.setVisible (true);
 
@@ -164,14 +167,4 @@ private SoniaController control;
    LogText.setCaretPosition(LogText.getText().length()-1);
  }
 
-
- //WINDOW LISTENERS windowClosing closes window when close box is clicked
-//the rest have to be there to satisfy WindowListener
-public void windowClosing (WindowEvent evt){}
-public void windowActivated(WindowEvent evt){}
-public void windowClosed(WindowEvent evt){}
-public void windowDeactivated(WindowEvent evt){}
-public void windowDeiconified(WindowEvent evt){}
-public void windowIconified(WindowEvent evt){}
- public void windowOpened(WindowEvent evt){}
 }

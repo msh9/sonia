@@ -2,14 +2,19 @@ package sonia;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
@@ -54,7 +59,7 @@ import sonia.layouts.RubBandFRLayout;
  * the ability to preview the network data and slice parameters in a
  * "phase-space" plot.
  */
-public class LayoutSettingsDialog extends JFrame implements ActionListener {
+public class LayoutSettingsDialog extends JDialog implements ActionListener {
 	// private Dialog settingsDialog;
 	private SoniaLayoutEngine engine;
 
@@ -63,6 +68,10 @@ public class LayoutSettingsDialog extends JFrame implements ActionListener {
 	private PhasePlot timePlot;
 
 	// layout elements
+	//private JOptionPane dialoger;
+	
+	private JPanel mainPanel;
+	
 	private JLabel LayoutTypeLabel;
 
 	private JComboBox LayoutType; // for choosing which kind of layout
@@ -79,12 +88,11 @@ public class LayoutSettingsDialog extends JFrame implements ActionListener {
 
 	private JComboBox SliceAggregation;
 
-	private JPanel layoutOptions; // for holding elements that are layout
-
-	// specifc
 	private JPanel sliceSettings;
 
 	private JButton OK;
+	
+	private JButton saveSettings;
 
 	private JButton Cancel;
 
@@ -104,11 +112,17 @@ public class LayoutSettingsDialog extends JFrame implements ActionListener {
 
 	private String[] aggregateNames = { "Number  of i->j ties",
 			"Avg of i->j ties", "Sum  of i->j ties" };
+	
+	private LayoutSettings settings;
 
-	public LayoutSettingsDialog(SoniaController cont, SoniaLayoutEngine eng,
+	public LayoutSettingsDialog(LayoutSettings settings, SoniaController cont, SoniaLayoutEngine eng,
 			Frame owner) {
+		super(owner,true);
 		control = cont;
 		engine = eng;
+		this.settings = settings;
+		
+		mainPanel = new JPanel();
 
 		LayoutType = new JComboBox(layoutNames);
 		LayoutType.setBorder(new TitledBorder("layout type:"));
@@ -147,11 +161,12 @@ public class LayoutSettingsDialog extends JFrame implements ActionListener {
 		OK = new JButton("Create Layout");
 		Cancel = new JButton("Cancel");
 		Plot = new JButton("Phase Plot...");
+		saveSettings = new JButton("Save Settings");
 
-		layoutOptions = new JPanel();
+		//layoutOptions = new JPanel();
 
 		GridBagLayout layout = new GridBagLayout();
-		this.setLayout(layout);
+		mainPanel.setLayout(layout);
 		GridBagConstraints c = new GridBagConstraints();
 		c.insets = new Insets(2, 5, 2, 5);
 		// add components to the layout GBlayout using constraints
@@ -164,38 +179,42 @@ public class LayoutSettingsDialog extends JFrame implements ActionListener {
 		c.weightx = 0;
 		c.weighty = 0;
 		// this.add(SliceInfoLabel,c);
-		this.add(sliceSettings, c);
+		mainPanel.add(sliceSettings, c);
 
 		c.gridx = 2;
 		c.gridy = 0;
 		c.gridwidth = 1;
 		c.gridheight = 1;
-		this.add(AnimateType, c);
+		mainPanel.add(AnimateType, c);
 		c.gridx = 3;
 		c.gridy = 0;
 		c.gridwidth = 1;
 		c.gridheight = 1;
-		this.add(SliceAggregation, c);
+		mainPanel.add(SliceAggregation, c);
 
 //layout type
 		c.gridx = 4;
 		c.gridy = 0;
 		c.gridheight = 1;
-		this.add(LayoutType, c);
+		mainPanel.add(LayoutType, c);
 		// buttons
 		c.gridx = 0;
 		c.gridy = 6;
 		c.gridheight = 1;
-		this.add(Plot, c);
+		mainPanel.add(Plot, c);
+		c.gridx = 1;
+		c.gridy = 6;
+		c.gridheight = 1;
+		mainPanel.add(saveSettings, c);
 
 		c.gridx = 6;
 		c.gridy = 4;
 		c.gridheight = 1;
-		this.add(Cancel, c);
+		mainPanel.add(Cancel, c);
 
 		c.gridx = 6;
 		c.gridy = 5;
-		this.add(OK, c);
+		mainPanel.add(OK, c);
 
 		Cancel.addActionListener(this);
 		OK.addActionListener(this);
@@ -204,8 +223,10 @@ public class LayoutSettingsDialog extends JFrame implements ActionListener {
 		SliceEnd.addActionListener(this);
 		SliceDuration.addActionListener(this);
 		SliceDelta.addActionListener(this);
+		saveSettings.addActionListener(this);
 
-		this.setBackground(Color.lightGray);
+		//this.setBackground(Color.lightGray);
+		this.add(mainPanel);
 		this.setTitle("Layout (Slicing) Settings for " + engine.toString());
 		this.setSize(800, 300);
 		// this.show();
@@ -213,8 +234,11 @@ public class LayoutSettingsDialog extends JFrame implements ActionListener {
 
 	}
 
-	public void showDialog() {
-		this.show();
+	public LayoutSettings askUserSettings() {
+		
+		//wait here for OK, which dismiss dialog and set the settings
+		this.setVisible(true);
+		return settings;
 	}
 
 	/**
@@ -241,72 +265,59 @@ public class LayoutSettingsDialog extends JFrame implements ActionListener {
 		layoutEndTime = end;
 		SliceEnd.setText(layoutEndTime + "");
 	}
+	
+	private void storeSettings()
+	{
+		if (settings == null){
+			settings = new LayoutSettings();
+		}
+//
+//		// take care of all the settings
+		settings.setProperty(LayoutSettings.LAYOUT_TYPE,(String)LayoutType.getSelectedItem());
+		settings.setProperty(LayoutSettings.ANIMATE_TYPE,(String)AnimateType.getSelectedItem());
+		settings.setProperty(LayoutSettings.SLICE_AGGREGATION,(String)SliceAggregation.getSelectedItem());
+		settings.setProperty(LayoutSettings.SLICE_START,SliceStart.getText().trim());
+		settings.setProperty(LayoutSettings.SLICE_END,SliceEnd.getText().trim());
+		settings.setProperty(LayoutSettings.SLICE_DURATION,SliceDuration.getText().trim());
+		settings.setProperty(LayoutSettings.SLICE_DELTA,SliceDelta.getText().trim());
+	}
 
 	// ACTION LISTENER //figures out what user did and calls apropriate method
 	public void actionPerformed(ActionEvent evt) {
 		if (evt.getActionCommand().equals("Create Layout")) {
-
-			// take care of all the settings
-			// make the right kinds of layout
-			NetLayout theLayout;
-			if (LayoutType.getSelectedItem().equals("circular layout")) {
-				theLayout = new CircleLayout(control, engine);
-			} else if (LayoutType.getSelectedItem().equals("FR layout")) {
-				theLayout = new FRLayout(control, engine);
-			} else if (LayoutType.getSelectedItem().equals("random FR layout")) {
-				theLayout = new RandomFRLayout(control, engine);
-			} else if (LayoutType.getSelectedItem().equals(
-					"Rubber-Band FR Layout")) {
-				theLayout = new RubBandFRLayout(control, engine);
-			} else if (LayoutType.getSelectedItem().equals(
-					"MultiComp KK Layout")) {
-				theLayout = new MultiCompKKLayout(control, engine);
-			} else if (LayoutType.getSelectedItem().equals("Moody PI layout")) {
-				theLayout = new PILayout(control, engine);
-			} else if (LayoutType.getSelectedItem().equals("MetricMDS (SVD)?")) {
-				theLayout = new MetricMDSLayout(control, engine);
-			} else {
-				theLayout = new OrigCoordLayout(control, engine);
-			}
-			// make the right kind of coordinate interpolator
-			CoordInterpolator interpolator;
-			if (AnimateType.getSelectedItem().equals("cosine animation")) {
-				interpolator = new CosineInterpolation();
-			} else {
-				interpolator = new NoInterpolation();
-				engine.setInterpFrames(0);
-			}
-
-			// figure out what kind of aggreation will be used
-			int aggregateType = 0; // sum ties
-			if (SliceAggregation.getSelectedItem().equals("Avg of i->j ties")) {
-				aggregateType = 1;
-			} else if (SliceAggregation.getSelectedItem().equals("Number  of i->j ties")) {
-				aggregateType = 2;
-			}
-
-			// tell the engine to setup (get slices from netData, etc
-			engine.setupLayout(Double.parseDouble(SliceStart.getText()), Double
-					.parseDouble(SliceEnd.getText()), Double
-					.parseDouble(SliceDuration.getText()), Double
-					.parseDouble(SliceDelta.getText()), aggregateType,
-					theLayout, interpolator);
-
-			this.hide();
-
+			storeSettings();
+			this.setVisible(false);
 			// will this distroyitself, or does it need to be explicit?
 			// this.finalize();
 		} else if (evt.getActionCommand().equals("Cancel")) {
-			this.hide();
+			this.setVisible(false);
 			if (timePlot != null) {
 				timePlot.hide();
 				timePlot = null;
 			}
 		} else if (evt.getSource().equals(Plot)) {
+			//TODO: fix phase plot from layout settings dialog
 			if (timePlot == null) {
 				engine.showPhasePlot();
 				timePlot = engine.getPhasePlot();
 			}
+		} else if (evt.getSource().equals(saveSettings)) {
+			//TODO:  create better option for choosing output dir for slice settings
+			String fileAndPath = control.getCurrentPath()+"SoniaSliceSettings.prp";
+			storeSettings();
+			try {
+				
+				FileOutputStream propsOut = new FileOutputStream(fileAndPath);
+				settings.store(propsOut,this.getTitle());
+				control.showStatus("Saved slice settings to "+fileAndPath);
+			} catch (FileNotFoundException e) {
+				control.showError("Unable to create or locate layout settings file: "+fileAndPath
+						+" "+e.getMessage());
+			} catch (IOException e) {
+				control.showError("IO error writing settings file: "+fileAndPath
+						+" "+e.getMessage());
+			}
+			
 		} else// something happend, so lets assume it was a text area and
 				// update the
 		// display
