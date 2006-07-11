@@ -113,12 +113,13 @@ public class NodeAttribute implements NetworkEvent{
       //frame enclosing it
       nodeShape.setFrame((xCoord - nodeDrawSize/2.0),
                          (yCoord - nodeDrawSize/2.0),nodeDrawSize,nodeDrawSize);
+     
+      graphics.setColor(nodeColor);
+      graphics.fill(nodeShape);
       //set border color/width and draw it
       graphics.setColor(borderColor);
       graphics.setStroke(borderStroke);
       graphics.draw(nodeShape);
-      graphics.setColor(nodeColor);
-      graphics.fill(nodeShape);
       
       //if it has never been drawn, than draww it very large so it will show
       if (flashNode)
