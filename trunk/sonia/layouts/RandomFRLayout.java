@@ -76,6 +76,7 @@ public class RandomFRLayout implements NetLayout, Runnable
     control = cont;
     engine = eng;
     schedule = new CoolingSchedule(6);
+    control.showFrame(schedule);
 
   }
 

@@ -5,6 +5,7 @@ import java.awt.event.*;
 import java.text.*;
 import java.util.*;
 import java.awt.geom.*;
+import java.beans.PropertyVetoException;
 
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
@@ -205,10 +206,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	public LayoutWindow(SoniaController controller,
 			SoniaLayoutEngine layoutEng, int initWidth, int initHeight) {
 		super.setDefaultCloseOperation(ExportableFrame.DO_NOTHING_ON_CLOSE);
-		super.setResizable(true);
-		super.setMaximizable(true);
-		super.setIconifiable(true);
-		super.setClosable(true);
+		
+		
 		Control = controller;
 		engine = layoutEng;
 
@@ -434,6 +433,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		this.setTitle(engine.toString());
 		this.setLocation(10, 10);
 		this.setVisible(true);
+		
 
 	}
 
@@ -926,32 +926,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	 * //debug System.out.println("layout window invalidated"); }
 	 */
 
-	// WINDOW LISTENERS windowClosing exits system when close box is clicked
-	// the rest have to be there to satisfy WindowListener
-	public void windowClosing(WindowEvent evt) {
 
-	}
-
-	public void windowActivated(WindowEvent evt) {
-	}
-
-	public void windowClosed(WindowEvent evt) {
-	}
-
-	public void windowDeactivated(WindowEvent evt) {
-	}
-
-	public void windowDeiconified(WindowEvent evt) {
-	}
-
-	public void windowIconified(WindowEvent evt) {
-	}
-
-	public void windowOpened(WindowEvent evt) {
-	}
-
-	public void internalFrameOpened(InternalFrameEvent e) {
-	}
 
 	public void internalFrameClosing(InternalFrameEvent e) {
 		// ask if this is a good idea
@@ -971,23 +946,6 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		}
 	}
 
-	public void internalFrameClosed(InternalFrameEvent e) {
 
-	}
-
-	public void internalFrameIconified(InternalFrameEvent e) {
-	}
-
-	public void internalFrameDeiconified(InternalFrameEvent e) {
-
-	}
-
-	public void internalFrameActivated(InternalFrameEvent e) {
-
-	}
-
-	public void internalFrameDeactivated(InternalFrameEvent e) {
-
-	}
 
 }

@@ -7,6 +7,7 @@ import java.text.*;
 import java.util.*;
 import java.awt.color.*;
 
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDesktopPane;
@@ -106,6 +107,8 @@ public class SoniaInterface extends JFrame implements WindowListener,
 	public SoniaInterface(SoniaController theController) {
 		control = theController;
 		changeAllFonts(new FontUIResource(control.getFont()));
+		 Image soniaIcon = Toolkit.getDefaultToolkit().getImage("sonia/image/soniaLogo16.jpg");
+		 super.setIconImage(soniaIcon);
 
 		super.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
@@ -227,7 +230,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 
 		// construct frame
 		this.setSize(800, 550);
-		this.setTitle("SoNIA (Social Network Image Animator) v"+SoniaController.VERSION);
+		this.setTitle("SoNIA v"+SoniaController.VERSION);
 		this.setVisible(true);
 		LoadButton.requestFocus();
 		this.repaint();
@@ -237,6 +240,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 	public void addFrame(JInternalFrame toShow) {
 		toShow.setVisible(true);
 		workPane.add(toShow);
+		workPane.getDesktopManager().activateFrame(toShow);
 	}
 
 	// protected JComponent getGraphicContent() {

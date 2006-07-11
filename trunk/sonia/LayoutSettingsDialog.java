@@ -329,18 +329,34 @@ public class LayoutSettingsDialog extends JDialog implements ActionListener {
 
 	}
 
+	/**
+	 * @deprecated use settings instead
+	 * @return
+	 */
 	public double getSliceStart() {
 		return Double.parseDouble(SliceStart.getText());
 	}
 
+	/**
+	 * @deprecated use settings instead
+	 * @return
+	 */
 	public double getSliceEnd() {
 		return Double.parseDouble(SliceEnd.getText());
 	}
 
+	/**
+	 * @deprecated use settings instead
+	 * @return
+	 */
 	public double getSliceDuration() {
 		return Double.parseDouble(SliceDuration.getText());
 	}
 
+	/**
+	 * @deprecated use settings instead
+	 * @return
+	 */
 	public double getSliceDelta() {
 		return Double.parseDouble(SliceDelta.getText());
 	}

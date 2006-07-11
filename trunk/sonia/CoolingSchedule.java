@@ -114,6 +114,10 @@ public class CoolingSchedule extends ExportableFrame implements MouseListener,
 	 *            the number of control points, should >= 2 (start and end)
 	 */
 	public CoolingSchedule(int numPoints) {
+		super.setResizable(true);
+		super.setMaximizable(true);
+		super.setIconifiable(true);
+		super.setClosable(true);
 		bendPoints = numPoints;
 		ctlValues = new double[bendPoints][2];
 		pointsX = new int[bendPoints];
@@ -822,9 +826,6 @@ public class CoolingSchedule extends ExportableFrame implements MouseListener,
 	}
 
 	public void internalFrameClosing(InternalFrameEvent e) {
-		this.setVisible(false);
-		this.dispose();
-
 	}
 
 	public void internalFrameClosed(InternalFrameEvent e) {

@@ -253,6 +253,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 		control = cont;
 		engine = eng;
 		schedule = new CoolingSchedule(2);
+		control.showFrame(schedule);
 	}
 
 	/**
@@ -274,6 +275,8 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 		settings.addLayoutProperty("springConst", 1.0);
 		settings.addLayoutProperty("cool factor", 0.25);
 		settings.addLayoutProperty("comp connect value", 0.0);
+		settings.addLayoutProperty("max passes",1000);
+		//TODO:  make layout read max passes from settings and show in cooling schedule
 	}
 
 	/**

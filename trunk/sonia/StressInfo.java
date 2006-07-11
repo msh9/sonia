@@ -2,6 +2,7 @@ package sonia;
 
 import java.awt.*;
 import java.awt.event.*;
+
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.impl.SparseDoubleMatrix2D;
 import cern.colt.list.DoubleArrayList;
@@ -12,6 +13,7 @@ import java.text.NumberFormat;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.event.InternalFrameEvent;
 
 
 /**
@@ -97,7 +99,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  * </P>
  */
 
-public class StressInfo extends JFrame implements WindowListener
+public class StressInfo extends ExportableFrame 
 {
   private SoniaController control;
   private SoniaLayoutEngine engine;
@@ -153,7 +155,6 @@ public class StressInfo extends JFrame implements WindowListener
     formater.setMaximumFractionDigits(3);
     formater.setMinimumFractionDigits(3);;
 
-    addWindowListener(this);
     setTitle("Shepard's Plot "+engine.toString());
     setBackground(Color.lightGray);
     setSize(250,250);
@@ -355,19 +356,9 @@ class StressPlot extends JLabel
   }
 }
 
-  //window listeners-------
 
-  public void windowClosing (WindowEvent evt)
-  {
-    engine.disposeStressPlot();
-    this.dispose();
-  }
-
-  public void windowActivated(WindowEvent evt){}
-  public void windowClosed(WindowEvent evt){}
-  public void windowDeactivated(WindowEvent evt){}
-  public void windowDeiconified(WindowEvent evt){}
-  public void windowIconified(WindowEvent evt){}
-  public void windowOpened(WindowEvent evt){}
+public void internalFrameClosing(InternalFrameEvent e) {
+	engine.disposeStressPlot();
+}
 
 }

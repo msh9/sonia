@@ -73,7 +73,7 @@ public class PhasePlot extends ExportableFrame implements
 
 	private NetDataStructure data;
 
-	private LayoutSettingsDialog settings;
+	private LayoutSettings settings;
 
 	private LayoutWindow currentLayout; // so it can talk to the display
 
@@ -93,14 +93,14 @@ public class PhasePlot extends ExportableFrame implements
 	private double renderEnd = -1;
 
 	public PhasePlot(SoniaLayoutEngine eng, NetDataStructure dat,
-			LayoutSettingsDialog set) {
+			LayoutSettings set) {
 		// init the data
 		engine = eng;
 		data = dat;
 		settings = set;
 		currentLayout = engine.getLayoutWindow();
-		double plotStart = settings.getSliceStart();
-		double plotEnd = settings.getSliceEnd();
+		double plotStart = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_START));
+		double plotEnd = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_END));
 		// fudge the end time to make sure things get included..
 		// DOESN'T WORK WHEN TIME EXTENDS TO INFINITY!!!
 		events = new ObjectArrayList(data.getEventsFromTo(plotStart, plotEnd)
@@ -116,11 +116,16 @@ public class PhasePlot extends ExportableFrame implements
 		// make the gui
 		// drawArea = new Canvas();
 		drawArea = new PhasePlotPanel();
-		drawArea.setBorder(new TitledBorder("Timline view of network"));
+		drawArea.setBorder(new TitledBorder("Timeline view of network"));
 		sortBox = new JCheckBox("Sort Events", eventsSorted);
 		MouseTime = new JTextField(20);
 		// MouseTime.setBackground(Color.lightGray);
 		MouseTime.setEditable(false);
+		
+		super.setResizable(true);
+		super.setMaximizable(true);
+		super.setIconifiable(true);
+		super.setClosable(true);
 
 		GridBagLayout layout = new GridBagLayout();
 		this.setLayout(layout);
@@ -179,11 +184,11 @@ public class PhasePlot extends ExportableFrame implements
 			int xAxis = this.getHeight() - xAxisPad;
 			int plotHeight = xAxis - topPad;
 			int plotWidth = this.getWidth() - (2 * sidePad);
-			double plotStart = settings.getSliceStart();
-			double plotEnd = settings.getSliceEnd();
+			double plotStart = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_START));
+			double plotEnd = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_END));
 
-			double sliceDuration = settings.getSliceDuration();
-			double sliceDelta = settings.getSliceDelta();
+			double sliceDuration = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_DURATION));
+			double sliceDelta = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_DELTA));
 			// check for infinate values
 			// debug
 			System.out.println("start,end " + plotStart + " " + plotEnd);
@@ -330,10 +335,10 @@ public class PhasePlot extends ExportableFrame implements
 	// figures out which slice the mouse is over
 	private int getSliceIndexFromTime(double time) {
 		int sliceIndex = -1;
-		double plotStart = settings.getSliceStart();
-		double plotEnd = settings.getSliceEnd();
-		double sliceDuration = settings.getSliceDuration();
-		double sliceDelta = settings.getSliceDelta();
+		double plotStart = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_START));
+		double plotEnd = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_END));
+		double sliceDuration = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_DURATION));
+		double sliceDelta = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_DELTA));
 		int numSlices = (int) Math.ceil((plotEnd - plotStart) / sliceDelta);
 		// loop over the slice intervals to see if one matches
 		// will pick the topmost (latest) slice
@@ -352,8 +357,8 @@ public class PhasePlot extends ExportableFrame implements
 	 */
 	public void mouseMoved(MouseEvent event) {
 		int mouseX = event.getX();
-		double plotStart = settings.getSliceStart();
-		double plotEnd = settings.getSliceEnd();
+		double plotStart = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_START));
+		double plotEnd = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_END));
 		int plotWidth = this.getWidth() - (2 * sidePad);
 		double dataOffset = plotStart;
 
@@ -385,8 +390,8 @@ public class PhasePlot extends ExportableFrame implements
 		// first, check to see if the layout is ready
 		if (engine.getErrorSlices() != null) {
 			int mouseX = event.getX();
-			double plotStart = settings.getSliceStart();
-			double plotEnd = settings.getSliceEnd();
+			double plotStart = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_START));
+			double plotEnd = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_END));
 			int plotWidth = this.getWidth() - (2 * sidePad);
 			double dataOffset = plotStart;
 			double scaleFactor = (double) plotWidth / (plotEnd - plotStart);
@@ -416,7 +421,6 @@ public class PhasePlot extends ExportableFrame implements
 
 	public void internalFrameClosed(InternalFrameEvent e) {
 		engine.disposePhasePlot();
-		this.dispose();
 
 	}
 

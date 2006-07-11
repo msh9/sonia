@@ -61,6 +61,8 @@ public class SoniaLayoutEngine {
 	// these
 
 	private ArrayList layoutSlices; // slices, bins of all events to be in same
+	
+	private LayoutSettings layoutSettings;
 
 	// layout
 
@@ -135,10 +137,11 @@ public class SoniaLayoutEngine {
 		control = controller;
 		netData = data;
 		engineName = name;
+		layoutSettings= settings;
 
 		// probably should ask for kind of layout here
 		if (control.isShowGUI() & (settings == null)) {
-			windowSettings = new LayoutSettingsDialog(settings, control, this,
+			windowSettings = new LayoutSettingsDialog(layoutSettings, control, this,
 					null);
 			if (settings == null) {
 				// tell the settings dialog what the start and end times for the
@@ -245,9 +248,10 @@ public class SoniaLayoutEngine {
 	public void showPhasePlot() {
 		// check if it exists
 		if (timePlot == null) {
-			timePlot = new PhasePlot(this, netData, windowSettings);
+			timePlot = new PhasePlot(this, netData, layoutSettings);
 		}
-		timePlot.show();
+		control.showFrame(timePlot);
+		//timePlot.show();
 	}
 
 	/**
@@ -530,7 +534,7 @@ public class SoniaLayoutEngine {
 			shepPlot = new StressInfo(control, this);
 		}
 		shepPlot.shepardPlot(getCurrentSlice());
-		shepPlot.show();
+		control.showFrame(shepPlot);
 	}
 
 	public void calcStability() {

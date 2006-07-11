@@ -74,7 +74,7 @@ public class KKLayout implements NetLayout, Runnable
   {
     control = cont;
     schedule = new CoolingSchedule(5);
-
+    control.showFrame(schedule);
   }
   public void setupLayoutProperties(ApplySettingsDialog settings){}
 

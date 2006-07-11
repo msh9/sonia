@@ -77,6 +77,7 @@ public class RubBandFRLayout implements NetLayout, Runnable
     control = cont;
     engine = eng;
     schedule = new CoolingSchedule(8);
+    control.showFrame(schedule);
 
   }
 

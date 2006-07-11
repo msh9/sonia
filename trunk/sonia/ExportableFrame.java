@@ -4,6 +4,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.PrintJob;
 import java.awt.event.ActionEvent;
+import java.awt.event.WindowEvent;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
@@ -18,7 +19,9 @@ import javax.swing.JInternalFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.RepaintManager;
+import javax.swing.event.InternalFrameEvent;
 
 /**
  * 
@@ -38,6 +41,10 @@ public class ExportableFrame extends JInternalFrame {
 
 	public ExportableFrame() {
 		super();
+		setResizable(true);
+		setMaximizable(true);
+		setIconifiable(true);
+		setClosable(true);
 		menuBar = new JMenuBar();
 		//menuBar = super.getJMenuBar();
 		exportMenu = new JMenu("Export");
@@ -144,6 +151,38 @@ public class ExportableFrame extends JInternalFrame {
 	protected void enableDoubleBuffering(JComponent comp) {
 		RepaintManager currentManager = RepaintManager.currentManager(comp);
 		currentManager.setDoubleBufferingEnabled(true);
+	}
+	
+	/**
+	 * sub classes should overide these internal frame methods as needed
+	 * 
+	 */
+	
+
+	public void internalFrameOpened(InternalFrameEvent e) {
+	}
+
+	public void internalFrameClosing(InternalFrameEvent e) {
+		
+	}
+
+	public void internalFrameClosed(InternalFrameEvent e) {
+
+	}
+
+	public void internalFrameIconified(InternalFrameEvent e) {
+	}
+
+	public void internalFrameDeiconified(InternalFrameEvent e) {
+
+	}
+
+	public void internalFrameActivated(InternalFrameEvent e) {
+
+	}
+
+	public void internalFrameDeactivated(InternalFrameEvent e) {
+
 	}
 
 }
