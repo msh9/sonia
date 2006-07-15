@@ -3,6 +3,7 @@ package sonia.layouts;
 import java.util.*;
 import java.lang.Math;
 
+import sonia.ApplySettings;
 import sonia.ApplySettingsDialog;
 import sonia.LayoutSlice;
 import sonia.NetLayout;
@@ -66,19 +67,16 @@ public class MetricMDSLayout implements NetLayout, Runnable
 
   private SoniaController control;
   private SoniaLayoutEngine engine;
-  private int pad = 20;
-  private int maxPasses = 500;     //maximum number of loops through the Fruch layout procedure
-    private double optDist;    //optimal distance for nodes, gets reset later in code
-      private int passes;
-
-  private boolean animate = true;       //whether to animate the transitions
-  private boolean firstLayout = true;
   private boolean noBreak = true;
   private double width;
   private double height;
   private LayoutSlice slice;
-  private ApplySettingsDialog settings;
+  private ApplySettings settings;
   private String layoutInfo = "";
+  
+  public static final String SVD_X = "SVD_XcoordCol";
+  public static final String SVD_Y = "SVD_YcoordCol";
+  public static final String ADD_NOISE = "addNoise";
 
   public MetricMDSLayout(SoniaController cont, SoniaLayoutEngine eng)
   {
@@ -88,14 +86,14 @@ public class MetricMDSLayout implements NetLayout, Runnable
 
   public void setupLayoutProperties(ApplySettingsDialog settings)
   {
-    settings.addLayoutProperty("SVD_XcoordCol",0);
-    settings.addLayoutProperty("SVD_YcoordCol",1);
-    settings.addLayoutProperty("addNoise",0);
+    settings.addLayoutProperty(SVD_X,0);
+    settings.addLayoutProperty(SVD_Y,1);
+    settings.addLayoutProperty(ADD_NOISE,0);
   }
 
 
   public void applyLayoutTo(LayoutSlice s, int w, int h,
-                            ApplySettingsDialog set)
+                            ApplySettings set)
   {
     slice = s;
     settings = set;
@@ -137,7 +135,7 @@ public class MetricMDSLayout implements NetLayout, Runnable
         engine.getMaxMatrixVal(),engine.getMinMatrixValue()));
 
     //if add noise, add small random values to distance matrix so it won't converge to tightly
-    double noiseVal = settings.getLayoutProperty("addNoise");
+    double noiseVal = Double.parseDouble(settings.getProperty(ADD_NOISE));
     if (noiseVal > 0)
     {
       double randVal;
@@ -203,8 +201,8 @@ public class MetricMDSLayout implements NetLayout, Runnable
     }
 //apprently distances now has the coordinates for points  as rows whwere cols are dims,
     //so pick first two?
-    int xCol = (int)Math.round(settings.getLayoutProperty("SVD_XcoordCol"));
-    int yCol = (int)Math.round(settings.getLayoutProperty("SVD_YcoordCol"));
+    int xCol = (int)Math.round(Double.parseDouble(settings.getProperty(SVD_X)));
+    int yCol = (int)Math.round(Double.parseDouble(settings.getProperty(SVD_Y)));
     xPos = distances.viewColumn(xCol).toArray();
     yPos = distances.viewColumn(yCol).toArray();
 
@@ -220,7 +218,7 @@ public class MetricMDSLayout implements NetLayout, Runnable
       {
         slice.setCoords(i,xPos[i],yPos[i]);
       }
-      engine.finishLayout(this,slice,width,height);
+      engine.finishLayout(settings,this,slice,width, height);
 
   }
 

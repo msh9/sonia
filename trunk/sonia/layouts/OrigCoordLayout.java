@@ -1,5 +1,6 @@
 package sonia.layouts;
 
+import sonia.ApplySettings;
 import sonia.ApplySettingsDialog;
 import sonia.LayoutSlice;
 import sonia.NetLayout;
@@ -50,9 +51,9 @@ public class OrigCoordLayout implements NetLayout
 
   public void applyLayoutTo( LayoutSlice slice,
                             int width, int height,
-                            ApplySettingsDialog settings)
+                            ApplySettings settings)
   {
-    engine.finishLayout(this,slice,width,height);
+    engine.finishLayout(settings,this,slice,width, height);
   }
   public void pause()
   {

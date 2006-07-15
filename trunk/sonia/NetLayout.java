@@ -32,7 +32,7 @@ public interface NetLayout
 {
 
   public void applyLayoutTo(LayoutSlice slice,
-                            int width, int height, ApplySettingsDialog settings);
+                            int width, int height, ApplySettings settings);
 
   /**
    * Asks the layout to add layout specific propertyName/defaultValue pairs

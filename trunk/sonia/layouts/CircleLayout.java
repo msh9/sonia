@@ -1,5 +1,6 @@
 package sonia.layouts;
 
+import sonia.ApplySettings;
 import sonia.ApplySettingsDialog;
 import sonia.LayoutSlice;
 import sonia.NetLayout;
@@ -99,14 +100,14 @@ public class CircleLayout implements NetLayout
    * @param settings the settings to use
    */
   public void applyLayoutTo(LayoutSlice slice, int width, int height,
-                            ApplySettingsDialog settings)
+                            ApplySettings settings)
       //if not use defaults, should ask for params (alpha ordering, id ordering..)
   //radius
   {
     pageWidth = (double)width;
     pageHeight = (double)height - 75; //to allow room for buttons on the bottom
     //figure out which dimesion is smaller and radius of circle to fit
-    double radius = settings.getLayoutProperty("radius");
+    double radius = Double.parseDouble(settings.getProperty("radius"));
     //put the radius as one of the params
     layoutInfo = "radius:"+radius;
     double originX = (pageWidth / 2.0);
@@ -121,7 +122,7 @@ public class CircleLayout implements NetLayout
       double y = (radius * Math.sin(2 * Math.PI * i / n));
       slice.setCoords(i,originX+x,originY+y);
     }
-    engine.finishLayout(this,slice,width,height);
+    engine.finishLayout(settings,this,slice,width, height);
 
   }
 

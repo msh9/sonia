@@ -3,6 +3,7 @@ package sonia.layouts;
 import java.util.*;
 import java.lang.Math;
 
+import sonia.ApplySettings;
 import sonia.ApplySettingsDialog;
 import sonia.CoolingSchedule;
 import sonia.LayoutSlice;
@@ -67,7 +68,7 @@ public class KKLayout implements NetLayout, Runnable
   private CoolingSchedule schedule;
   private LayoutSlice slice;
   private LayoutUtils utils;
-  private ApplySettingsDialog settings;
+  private ApplySettings settings;
   private String layoutInfo = "";
 
   public KKLayout(SoniaController cont)
@@ -79,7 +80,7 @@ public class KKLayout implements NetLayout, Runnable
   public void setupLayoutProperties(ApplySettingsDialog settings){}
 
   public void applyLayoutTo(LayoutSlice s, int w, int h,
-                            ApplySettingsDialog set)
+                            ApplySettings set)
   {
     slice = s;
     settings = set;
@@ -187,12 +188,13 @@ public class KKLayout implements NetLayout, Runnable
           }
 
           //if set to update display, update on every nth pass
-          if (settings.isRepaint() & (settings.getRepaintN() > 0)
-              & (passes % settings.getRepaintN() == 0))
+          int repaintN = Integer.parseInt(settings.getProperty(ApplySettings.LAYOUT_REPAINT_N));
+          if ((repaintN > 0)&& (passes % repaintN == 0))
           {
-            if (settings.isRecenter())
+            if (settings.getProperty(ApplySettings.RECENTER_TRANSFORM).equals(ApplySettings.RECENTER_DURING))
             {
-              utils.centerLayout(slice, (int)width, (int)height, xPos, yPos,settings.isIsolateExclude());
+              LayoutUtils.centerLayout(slice, (int)width, (int)height, xPos, yPos,
+            		  Boolean.parseBoolean(settings.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE)));
             }
             control.updateDisplays();
           }
@@ -209,7 +211,7 @@ public class KKLayout implements NetLayout, Runnable
     {
       slice.setCoords(i,xPos[i],yPos[i]);
     }
-    engine.finishLayout(this,slice,width,height);
+    engine.finishLayout(settings,this,slice,width, height);
 
   }
 

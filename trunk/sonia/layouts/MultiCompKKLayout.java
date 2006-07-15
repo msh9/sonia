@@ -3,6 +3,7 @@ package sonia.layouts;
 import java.util.*;
 import java.lang.Math;
 
+import sonia.ApplySettings;
 import sonia.ApplySettingsDialog;
 import sonia.CoolingSchedule;
 import sonia.LayoutSlice;
@@ -216,9 +217,6 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 
 	private double minEpsilon = 1; // target deltaM goal
 
-	private boolean animate = true; // whether to animate the transitions
-
-	private boolean firstLayout = true;
 
 	private boolean noBreak = true;
 
@@ -230,15 +228,19 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 
 	private LayoutSlice slice;
 
-	private LayoutUtils utils;
-
-	private ApplySettingsDialog settings;
+	private ApplySettings settings;
 
 	private String layoutInfo = "";
 
 	private double[] sliceXCoords;
 
 	private double[] sliceYCoords;
+	public static final String OPT_DIST = "optimum dist";
+	public static final String MIN_EPSI ="min epsilon";
+	public static final String SPRNG_CONST ="springConst";
+	public static final String COOL_FACT ="cool factor";
+	public static final String COMP_CONN ="comp connect value";
+	public static final String MAX_PASS ="max passes";
 
 	/**
 	 * Instantiates the layout with reference to the main SoniaController and
@@ -270,12 +272,12 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 	 *            the dialog the parameters will be added to
 	 */
 	public void setupLayoutProperties(ApplySettingsDialog settings) {
-		settings.addLayoutProperty("optimum dist", 20);
-		settings.addLayoutProperty("min epsilon", 1.0);
-		settings.addLayoutProperty("springConst", 1.0);
-		settings.addLayoutProperty("cool factor", 0.25);
-		settings.addLayoutProperty("comp connect value", 0.0);
-		settings.addLayoutProperty("max passes",1000);
+		settings.addLayoutProperty(OPT_DIST, 20);
+		settings.addLayoutProperty(MIN_EPSI, 1.0);
+		settings.addLayoutProperty(SPRNG_CONST, 1.0);
+		settings.addLayoutProperty(COOL_FACT, 0.25);
+		settings.addLayoutProperty(COMP_CONN, 0.0);
+		settings.addLayoutProperty(MAX_PASS,1000);
 		//TODO:  make layout read max passes from settings and show in cooling schedule
 	}
 
@@ -292,7 +294,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 	 *            settings dialog containing the values of the settings.
 	 */
 	public void applyLayoutTo(LayoutSlice s, int w, int h,
-			ApplySettingsDialog set) {
+			ApplySettings set) {
 		slice = s;
 		settings = set;
 		maxPasses = schedule.getMaxUsrPasses();
@@ -321,7 +323,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 		// make sure layout is restarted if if it was stopped by error
 		noBreak = true;
 		// test code to connect with phtom links
-		double replaceWeight = settings.getLayoutProperty("comp connect value");
+		double replaceWeight = Double.parseDouble(settings.getProperty(COMP_CONN));
 		if (replaceWeight > 0) {
 			IntArrayList includeAll = new IntArrayList(slice.getMaxNumNodes());
 			for (int i = 0; i < slice.getMaxNumNodes(); i++) {
@@ -377,7 +379,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 			}
 		}
 
-		engine.finishLayout(this, slice, width, height);
+		engine.finishLayout(settings, this, slice, width, height);
 
 	}
 
@@ -401,16 +403,16 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 
 		// sets up kmatrix of forces (optimal [but not always achieveable]
 		// energies?)
-		springConst = settings.getLayoutProperty("springConst");
+		springConst = Double.parseDouble(settings.getProperty(SPRNG_CONST));
 		DenseDoubleMatrix2D kMatrix = calcKMatrix(distMatrix, springConst);
 		/*
 		 * //calc desired distance between nodes double optDist =
 		 * Math.min(width, height) / Math.max(NetUtils.calcDiameter(distMatrix),
 		 * 1); //RECALCS ALLSHORTPAHS, BUT USE FOR NOW FOR COMPATIBLITY
 		 */
-		double optDist = settings.getLayoutProperty("optimum dist");
-		minEpsilon = settings.getLayoutProperty("min epsilon");
-		double coolFact = settings.getLayoutProperty("cool factor");
+		double optDist = Double.parseDouble(settings.getProperty(OPT_DIST));
+		minEpsilon = Double.parseDouble(settings.getProperty(MIN_EPSI));
+		double coolFact = Double.parseDouble(settings.getProperty(COOL_FACT));
 		// do these only apply to the last subnet run?
 		layoutInfo = layoutInfo + "\noptimum distance: " + optDist;
 		layoutInfo = layoutInfo + "\nminimum epsilon: " + minEpsilon;
@@ -421,7 +423,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 		double[] xPos = subnet.getSubsetArray(slice.getXCoords());
 		double[] yPos = subnet.getSubsetArray(slice.getYCoords());
 
-		int numEdges = slice.getTotalSliceArcs();
+		//int numEdges = slice.getTotalSliceArcs();
 
 		// calc value to start minimization from (should be based on previous?)
 		// FIGURE OUT COOLING SCHEDULE
@@ -506,8 +508,9 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 				}
 
 				// if set to update display, update on every nth pass
-				if (settings.isRepaint() & (settings.getRepaintN() > 0)
-						& (passes % settings.getRepaintN() == 0)) {
+				int repaintN = Integer.parseInt(settings.getProperty(ApplySettings.LAYOUT_REPAINT_N));
+		          if ((repaintN > 0)&& (passes % repaintN == 0))
+				{
 					// reset the appropriate values of the the slice coords to
 					// the new subnet coords
 					for (int i = 0; i < nNodes; i++) {
@@ -515,11 +518,11 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 						sliceYCoords[subnet.getNetIndex(i)] = yPos[i];
 					}
 
-					if (settings.isRecenter()) {
-						utils.centerLayout(slice, (int) width, (int) height,
-								sliceXCoords, sliceYCoords, settings
-										.isIsolateExclude());
-					}
+					 if (settings.getProperty(ApplySettings.RECENTER_TRANSFORM).equals(ApplySettings.RECENTER_DURING))
+			            {
+			              LayoutUtils.centerLayout(slice, (int)width, (int)height, xPos, yPos,
+			            		  Boolean.parseBoolean(settings.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE)));
+			            }
 					engine.updateDisplays();
 				}
 				passes++;

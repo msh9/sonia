@@ -4,6 +4,7 @@ import cern.colt.matrix.impl.*;
 import cern.colt.matrix.linalg.*;
 import java.util.*;
 
+import sonia.ApplySettings;
 import sonia.ApplySettingsDialog;
 import sonia.LayoutSlice;
 import sonia.LayoutUtils;
@@ -86,7 +87,7 @@ public class PILayout implements NetLayout, Runnable
 {
   private SoniaController control;
   private SoniaLayoutEngine engine;
-  private ApplySettingsDialog settings;
+  private ApplySettings settings;
   private int width;
   private int height;
   private LayoutSlice slice;
@@ -99,6 +100,10 @@ public class PILayout implements NetLayout, Runnable
   private double selfWeight = 1;
   private int iterations = 6;
   private int passes = 0;
+  
+  public static final String ITERS = "iterations";
+  public static final String SELF_WEIG = "selfWeight";
+  public static final String MIN_RAD = "minRadius";
 
   public PILayout(SoniaController cont, SoniaLayoutEngine eng)
   {
@@ -110,19 +115,19 @@ public class PILayout implements NetLayout, Runnable
   public void setupLayoutProperties(ApplySettingsDialog dialog)
   {
     //add layout specific vars to layot apply settings dialog
-     dialog.addLayoutProperty("iterations",6);
-     dialog.addLayoutProperty("selfWeight",1);
-     dialog.addLayoutProperty("minRadius",0.0);
+     dialog.addLayoutProperty(ITERS,6);
+     dialog.addLayoutProperty(SELF_WEIG,1);
+     dialog.addLayoutProperty(MIN_RAD,0.0);
   }
 
-  public void applyLayoutTo(LayoutSlice sl,int w, int h, ApplySettingsDialog set)
+  public void applyLayoutTo(LayoutSlice sl,int w, int h, ApplySettings set)
   {
     slice = sl;
     settings = set;
     width = w;
     height = h;
-    iterations = (int)Math.round(settings.getLayoutProperty("iterations"));
-    selfWeight = settings.getLayoutProperty("selfWeight");
+    iterations = (int)Math.round(Double.parseDouble(settings.getProperty(ITERS)));
+    selfWeight = Double.parseDouble(settings.getProperty(SELF_WEIG));
     passes = 0;
 
     //get x and y coords and into 1D matricies (vectors)
@@ -167,7 +172,7 @@ public class PILayout implements NetLayout, Runnable
 
     while ((passes < iterations) & noBreak)
     {
-      double minRad = settings.getLayoutProperty("minRadius");
+      double minRad = Double.parseDouble(settings.getProperty(MIN_RAD));
       if (minRad > 0.0)
       {
         //do PI with a constraint of a minimum radius between nodes
@@ -184,14 +189,15 @@ public class PILayout implements NetLayout, Runnable
       }
 
       //if set to update display, update on every nth pass
-      if (settings.isRepaint() & (settings.getRepaintN() > 0)
-          & (passes % settings.getRepaintN() == 0))
+      int repaintN = Integer.parseInt(settings.getProperty(ApplySettings.LAYOUT_REPAINT_N));
+      if ((repaintN > 0)&& (passes % repaintN == 0))
+	
       {
-        if (settings.isRecenter())
-        {
-          LayoutUtils.centerLayout(slice, (int)width, (int)height,
-                             xCoords.toArray(), yCoords.toArray(),settings.isIsolateExclude());
-        }
+    	  if (settings.getProperty(ApplySettings.RECENTER_TRANSFORM).equals(ApplySettings.RECENTER_DURING))
+          {
+            LayoutUtils.centerLayout(slice, (int)width, (int)height, xCoords.toArray(), yCoords.toArray(),
+          		  Boolean.parseBoolean(settings.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE)));
+          }
         //show the value one the schedule
         engine.updateDisplays();
 
@@ -200,7 +206,7 @@ public class PILayout implements NetLayout, Runnable
       //attempt to let redraws of other windows, pause, etc
       Thread.yield();
     }
-   engine.finishLayout(this,slice,width,height);
+   engine.finishLayout(settings,this,slice,width, height);
   }
 
   private void checkMinRadius(double minRad, double[] newX, double[] newY)

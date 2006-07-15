@@ -3,6 +3,7 @@ package sonia.layouts;
 import java.util.*;
 import java.lang.Math;
 
+import sonia.ApplySettings;
 import sonia.ApplySettingsDialog;
 import sonia.CoolingSchedule;
 import sonia.LayoutSlice;
@@ -133,9 +134,13 @@ public class FRLayout implements NetLayout, Runnable
   private double height;
   private CoolingSchedule schedule;
   private LayoutSlice slice;
-  private ApplySettingsDialog settings;
+  private ApplySettings settings;
   private String layoutInfo = "";
   private double[][] defaultCooling = new double[][]{};
+  
+  public static final String OPT_DIST = "optimum distance";
+  public static final String MOVE_DIST = "move distance";
+  public static final String REPEL_CUTOFF = "repel cutoff";
 
   /**
    * Configures the layout, displays a cooling schedule with default control points.
@@ -162,14 +167,14 @@ public class FRLayout implements NetLayout, Runnable
    */
   public void setupLayoutProperties(ApplySettingsDialog settings)
   {
-    settings.addLayoutProperty("optimum dist",20);
-    settings.addLayoutProperty("repel cutoff",999);
-    settings.addLayoutProperty("move dist",200);
+    settings.addLayoutProperty(OPT_DIST,20);
+    settings.addLayoutProperty(REPEL_CUTOFF,999);
+    settings.addLayoutProperty(MOVE_DIST,200);
   }
 
 
   public void applyLayoutTo(LayoutSlice s, int w, int h,
-                            ApplySettingsDialog set)
+                            ApplySettings set)
   {
     slice = s;
     settings = set;
@@ -196,11 +201,11 @@ public class FRLayout implements NetLayout, Runnable
     // calc constants
     int nNodes = subnet.getNumNodes();
 //    optDist = 0.6*Math.sqrt(((width * height) / (nNodes+1)));
-    optDist = settings.getLayoutProperty("optimum dist");
+    optDist = Double.parseDouble(settings.getProperty(OPT_DIST));
     double boundRadius = Math.min(width/2,height/2);   //radius of circle used by bounding circvle
     double centerX = width/2;
     double centerY = height/2;
-    double startTemp= settings.getLayoutProperty("move dist");  //check with cooling schedule?
+    double startTemp= Double.parseDouble(settings.getProperty(MOVE_DIST));  //check with cooling schedule?
     double temp = startTemp;
     passes = 0;
     double xDelta = 0;
@@ -315,7 +320,7 @@ public class FRLayout implements NetLayout, Runnable
           yDisp[v] = yDisp[v] / (deltaLength / temp);
         }
         //if circle restrict is enabled, make sure it doesn't leave boundding circle
-        if (settings.isCircleRestrict())
+        if (false) //TODO: this is not used, should either add the option or remove the code
         {
           //calc what the new distance from center would be
           // sqrt((Xc-Xp)^2 + (Yc-Yp)^2)
@@ -341,18 +346,19 @@ public class FRLayout implements NetLayout, Runnable
       temp = startTemp * schedule.getTempFactor(passes);
 
       //if set to update display, update on every nth pass
-      if (settings.isRepaint() & (settings.getRepaintN() > 0)
-          & (passes % settings.getRepaintN() == 0))
+      int repaintN = Integer.parseInt(settings.getProperty(ApplySettings.LAYOUT_REPAINT_N));
+      if ((repaintN > 0)&& (passes % repaintN == 0))
       {
         //need to pass coords back to slice via subnet's remaping of indexes
         for (int i=0;i<nNodes;i++ )
         {
           slice.setCoords(subnet.getNetIndex(i),xPos[i],yPos[i]);
         }
-        if (settings.isRecenter())
+        if (settings.getProperty(ApplySettings.RECENTER_TRANSFORM).equals(ApplySettings.RECENTER_DURING))
         {
           //just recenters to avg of coords
-          LayoutUtils.barycenterLayout(slice, (int)width, (int)height,settings.isIsolateExclude());
+          LayoutUtils.barycenterLayout(slice, (int)width, (int)height,
+        		  Boolean.parseBoolean(settings.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE)));
         }
         control.updateDisplays();
       }
@@ -372,7 +378,7 @@ public class FRLayout implements NetLayout, Runnable
     //calc the stress WHAT ABOUT ISOLATES?
     //layoutInfo += "stress: "+NetUtils.getStress(slice)+"\n";
 
-    engine.finishLayout(this,slice,width,height);
+    engine.finishLayout(settings,this,slice,width, height);
   }
 
 //IDEA IS TO MULTIPLAY OPT DISTANCE BY THE DESIRED EDGE LENGTH AND HOPE IT WORKS
@@ -389,7 +395,7 @@ public class FRLayout implements NetLayout, Runnable
     }
     double repelVal = (optDist*arcLength * optDist*arcLength) / dist;
     //we want to limit repulsion at cutoff, so if it is greater, set it to 0
-    if (dist > settings.getLayoutProperty("repel cutoff"))
+    if (dist > Double.parseDouble(settings.getProperty(REPEL_CUTOFF)))
     {
       repelVal = 0;
     }

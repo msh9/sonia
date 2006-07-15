@@ -131,7 +131,8 @@ public class StabilityEstimate extends Frame implements WindowListener
 
       //now redo the layout (assumes allready set to random, need to change this
       //would be nice too surpress logging
-      engine.applyLayoutToCurrent();
+      //TODO: should modify the settings so it will be random
+      engine.applyLayoutToCurrent(engine.getCurrentApplySettings());
 
     }
   }

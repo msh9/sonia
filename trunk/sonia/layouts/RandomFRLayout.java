@@ -3,6 +3,7 @@ package sonia.layouts;
 import java.util.*;
 import java.lang.Math;
 
+import sonia.ApplySettings;
 import sonia.ApplySettingsDialog;
 import sonia.CoolingSchedule;
 import sonia.LayoutSlice;
@@ -57,19 +58,20 @@ public class RandomFRLayout implements NetLayout, Runnable
 
   private SoniaController control;
   private SoniaLayoutEngine engine;
-  private int pad = 20;
   private int maxPasses = 500;     //maximum number of loops through the Fruch layout procedure
   private int passes;
   private double optDist;    //optimal distance for nodes, gets reset later in code
 
-  private boolean animate = true;       //whether to animate the transitions
   private boolean noBreak = true;
   private double width;
   private double height;
   private CoolingSchedule schedule;
   private LayoutSlice slice;
-  private ApplySettingsDialog settings;
+  private ApplySettings settings;
   private String layoutInfo = "";
+  
+  public static final String  OPT_DIST = "optimum distance";
+  public static final String  MOVE_DIST = "move distance";
 
   public RandomFRLayout(SoniaController cont, SoniaLayoutEngine eng)
   {
@@ -82,13 +84,13 @@ public class RandomFRLayout implements NetLayout, Runnable
 
   public void setupLayoutProperties(ApplySettingsDialog settings)
   {
-    settings.addLayoutProperty("optimum dist",20);
-    settings.addLayoutProperty("move dist",200);
+    settings.addLayoutProperty(OPT_DIST,20);
+    settings.addLayoutProperty(MOVE_DIST,200);
   }
 
 
   public void applyLayoutTo(LayoutSlice s, int w, int h,
-                            ApplySettingsDialog set)
+                            ApplySettings set)
   {
     slice = s;
     settings = set;
@@ -108,8 +110,8 @@ public class RandomFRLayout implements NetLayout, Runnable
     // calc constants
     int nNodes = slice.getMaxNumNodes();
     //tDist = 0.6*Math.sqrt(((width * height) / (nNodes+1)));
-    optDist = settings.getLayoutProperty("optimum dist");
-    double startTemp= settings.getLayoutProperty("move dist"); //width/10;
+    optDist = Double.parseDouble(settings.getProperty(OPT_DIST));
+    double startTemp= Double.parseDouble(settings.getProperty(MOVE_DIST)); //width/10;
     double temp = startTemp;
     passes = 0;
     double xDelta = 0;
@@ -203,14 +205,14 @@ public class RandomFRLayout implements NetLayout, Runnable
       temp = startTemp * schedule.getTempFactor(passes);
 
       //if set to update display, update on every nth pass
-      if (settings.isRepaint() & (settings.getRepaintN() > 0)
-          & (passes % settings.getRepaintN() == 0))
+      int repaintN = Integer.parseInt(settings.getProperty(ApplySettings.LAYOUT_REPAINT_N));
+      if ((repaintN > 0)&& (passes % repaintN == 0))
       {
-        if (settings.isRecenter())
-        {
-          LayoutUtils.centerLayout(slice, (int)width, (int)height, xPos, yPos,
-                                   settings.isIsolateExclude());
-        }
+    	  if (settings.getProperty(ApplySettings.RECENTER_TRANSFORM).equals(ApplySettings.RECENTER_DURING))
+          {
+            LayoutUtils.centerLayout(slice, (int)width, (int)height, xPos, yPos,
+          		  Boolean.parseBoolean(settings.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE)));
+          }
         engine.updateDisplays();
       }
       passes++;
@@ -223,7 +225,7 @@ public class RandomFRLayout implements NetLayout, Runnable
     {
       slice.setCoords(i,xPos[i],yPos[i]);
     }
-    engine.finishLayout(this,slice,width,height);
+    engine.finishLayout(settings,this,slice,width, height);
 
   }
 

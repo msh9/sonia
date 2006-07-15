@@ -706,7 +706,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		// get that slice
 		LayoutSlice currentSlice = engine.getCurrentSlice();
 		// apply layout
-		engine.applyLayoutToCurrent();
+		engine.applyLayoutToCurrent(engine.getCurrentApplySettings());
 		// Render the entire slice as one block, from start to finish
 		RenderTime.setText("" + currentSlice.getSliceStart());
 		RenderDuration.setText(""
