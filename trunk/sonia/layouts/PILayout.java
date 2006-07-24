@@ -196,7 +196,7 @@ public class PILayout implements NetLayout, Runnable
     	  if (settings.getProperty(ApplySettings.RECENTER_TRANSFORM).equals(ApplySettings.RECENTER_DURING))
           {
             LayoutUtils.centerLayout(slice, (int)width, (int)height, xCoords.toArray(), yCoords.toArray(),
-          		  Boolean.parseBoolean(settings.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE)));
+          		  Boolean.getBoolean(settings.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE)));
           }
         //show the value one the schedule
         engine.updateDisplays();

@@ -148,7 +148,7 @@ public class StressInfo extends ExportableFrame
     plotArea.setBackground(Color.darkGray);
     mainPanel.add(plotArea,BorderLayout.CENTER);
     mainPanel.add(stressVale,BorderLayout.SOUTH);
-     add(mainPanel);
+     getContentPane().add(mainPanel);
 
     //number formating
     formater = NumberFormat.getInstance(Locale.ENGLISH);

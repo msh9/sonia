@@ -99,6 +99,8 @@ public class PhasePlot extends ExportableFrame implements
 		data = dat;
 		settings = set;
 		currentLayout = engine.getLayoutWindow();
+		//debug
+		System.out.println("layoutSettings "+settings);
 		double plotStart = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_START));
 		double plotEnd = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_END));
 		// fudge the end time to make sure things get included..
@@ -128,7 +130,7 @@ public class PhasePlot extends ExportableFrame implements
 		super.setClosable(true);
 
 		GridBagLayout layout = new GridBagLayout();
-		this.setLayout(layout);
+		this.getContentPane().setLayout(layout);
 		GridBagConstraints c = new GridBagConstraints();
 		c.gridx = 0;
 		c.gridy = 0;
@@ -137,7 +139,7 @@ public class PhasePlot extends ExportableFrame implements
 		c.weightx = 1;
 		c.weighty = 1;
 		c.fill = c.BOTH;
-		this.add(drawArea, c);
+		this.getContentPane().add(drawArea, c);
 		c.fill = c.NONE;
 		c.anchor = c.SOUTH;
 		c.gridx = 1;
@@ -146,14 +148,14 @@ public class PhasePlot extends ExportableFrame implements
 		c.gridheight = 1;
 		c.weightx = 0.1;
 		c.weighty = 0.1;
-		this.add(sortBox, c);
+		this.getContentPane().add(sortBox, c);
 		c.gridx = 0;
 		c.gridy = 1;
 		c.gridwidth = 1;
 		c.gridheight = 1;
 		c.weightx = 0.1;
 		c.weighty = 0.1;
-		this.add(MouseTime, c);
+		this.getContentPane().add(MouseTime, c);
 		// add the listerners
 		this.addInternalFrameListener(this);
 		drawArea.addMouseMotionListener(this);

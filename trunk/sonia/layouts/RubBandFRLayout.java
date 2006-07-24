@@ -294,7 +294,7 @@ public class RubBandFRLayout implements NetLayout, Runnable
         {
           //just recenters to avg of coords
           LayoutUtils.barycenterLayout(slice, (int)width, (int)height,
-        		  Boolean.parseBoolean(settings.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE)));
+        		  Boolean.getBoolean(settings.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE)));
         }
         control.updateDisplays();
       }

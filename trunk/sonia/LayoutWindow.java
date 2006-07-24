@@ -263,14 +263,14 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		frameDelay.setToolTipText("How long to wait between frames");
 
 		// LAYOUT
-		this.setLayout(new BorderLayout());
+		this.getContentPane().setLayout(new BorderLayout());
 
 		// add components to the layout GBlayout using constraints
 		// set up top level components
 		// c.gridx=0;c.gridy=0;c.gridwidth=7;c.gridheight=1;c.weightx=1;c.weighty=1;
 		// c.fill=c.BOTH;
-		add(LayoutArea, BorderLayout.CENTER);
-		add(controlPanel, BorderLayout.SOUTH);
+		getContentPane().add(LayoutArea, BorderLayout.CENTER);
+		getContentPane().add(controlPanel, BorderLayout.SOUTH);
 
 		GridBagLayout layout = new GridBagLayout();
 		controlPanel.setLayout(layout);

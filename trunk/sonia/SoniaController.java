@@ -358,18 +358,32 @@ public class SoniaController {
 		if (fileLoaded == true) {
 
 			String engName = fileName + " #" + (engines.size() + 1);
+//			 probably should ask for kind of layout here
+			if (isShowGUI() & (sliceSettings == null)) {
+				LayoutSettingsDialog windowSettings = new LayoutSettingsDialog(sliceSettings, this,
+						engName, ui);
+				if (sliceSettings == null) {
+					// tell the settings dialog what the start and end times for the
+					// data
+					// are
+					windowSettings.setDataStartDefault(networkData.getFirstTime());
+					windowSettings.setDataEndDefault(networkData.getLastTime());
+				}
+				// show the dialog
+				sliceSettings = windowSettings.askUserSettings();
+			}
 			engine = new SoniaLayoutEngine(sliceSettings, this, networkData,
 					engName);
 			engines.add(engine);
-			LayoutWindow display = new LayoutWindow(this, engine, 420, 400);
+			LayoutWindow display = new LayoutWindow(this, engine, 490, 420);
 			engine.setDisplay(display);
 			ui.addFrame(display);
-			try {
-				display.setMaximum(true);
-			} catch (PropertyVetoException e) {
-				System.out.println("somebody stoped the window from expanding "
-						+ e);
-			}
+//			try {
+//				display.setMaximum(true);
+//			} catch (PropertyVetoException e) {
+//				System.out.println("somebody stoped the window from expanding "
+//						+ e);
+//			}
 
 		} else {
 			showError("Load file before creating layout");

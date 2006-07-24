@@ -8,6 +8,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 /**
@@ -118,6 +119,7 @@ public class GraphicsSettingsDialog
   private JTextField FlashDuration;
   private JCheckBox HideNodes;
   private JCheckBox HideArcs;
+  private JPanel mainpanel;
 
   private JButton OK;
 
@@ -131,6 +133,7 @@ public class GraphicsSettingsDialog
     engine = eng;
     canvas = canv;
     graphicsDialog = new JDialog(owner,"Graphics Settings",true);
+    mainpanel = new JPanel();
 
     GeneralLabel = new JLabel("General Options:");
     NodesLabel = new JLabel ("Node Options:");
@@ -171,86 +174,86 @@ public class GraphicsSettingsDialog
     OK = new JButton("OK");
 
     GridBagLayout layout = new GridBagLayout();
-   graphicsDialog.setLayout(layout);
+   mainpanel.setLayout(layout);
    GridBagConstraints c = new GridBagConstraints();
    c.insets = new Insets(2,5,2,5);
    // add components to the layout GBlayout using constraints
-   c.anchor = c.WEST;
+   c.anchor = GridBagConstraints.WEST;
    //first, the colum lables
    c.gridx=0;c.gridy=0;c.gridwidth=2;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(GeneralLabel,c);
+   mainpanel.add(GeneralLabel,c);
    c.gridx=2;c.gridy=0;c.gridwidth=2;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(NodesLabel,c);
+   mainpanel.add(NodesLabel,c);
    c.gridx=4;c.gridy=0;c.gridwidth=2;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(ArcsLabel,c);
+   mainpanel.add(ArcsLabel,c);
    //general options
    c.gridx=0;c.gridy=1;c.gridwidth=2;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(AntiAlias,c);
+   mainpanel.add(AntiAlias,c);
    c.gridx=0;c.gridy=2;c.gridwidth=2;c.gridheight=1;c.weightx=0;c.weighty=0;
-  graphicsDialog.add(ShowStats,c);
+   mainpanel.add(ShowStats,c);
   c.gridx=0;c.gridy=3;c.gridwidth=2;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(GhostSlice,c);
+  mainpanel.add(GhostSlice,c);
    c.gridx=0;c.gridy=4;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(FlashNew,c);
+   mainpanel.add(FlashNew,c);
    c.gridx=1;c.gridy=4;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(FlashDuration,c);
+   mainpanel.add(FlashDuration,c);
    c.gridx=0;c.gridy=5;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(WindowWidthLabel, c);
+   mainpanel.add(WindowWidthLabel, c);
    c.gridx=1;c.gridy=5;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(WindowWidth, c);
+   mainpanel.add(WindowWidth, c);
    c.gridx=0;c.gridy=6;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(WindowHeightLabel, c);
+   mainpanel.add(WindowHeightLabel, c);
    c.gridx=1;c.gridy=6;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(WindowHeight,c);
+   mainpanel.add(WindowHeight,c);
    
 
    // node options
    c.gridx=2;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(NodeScaleFactorLabel,c);
+   mainpanel.add(NodeScaleFactorLabel,c);
    c.gridx=3;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(NodeScaleFactorField,c);
+   mainpanel.add(NodeScaleFactorField,c);
    
    c.gridx=2;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(NodeTrans,c);
+   mainpanel.add(NodeTrans,c);
    c.gridx=3;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(NodeTransField,c);
+   mainpanel.add(NodeTransField,c);
    
    c.gridx=2;c.gridy=3;c.gridwidth=2;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(ShowLabels,c);
+   mainpanel.add(ShowLabels,c);
    c.gridx=3;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(ShowLabelsField,c);
+   mainpanel.add(ShowLabelsField,c);
    c.gridx=2;c.gridy=4;c.gridwidth=2;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(ShowIds,c);
+   mainpanel.add(ShowIds,c);
    c.gridx=3;c.gridy=4;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(ShowIdsField,c);
+   mainpanel.add(ShowIdsField,c);
    c.gridx=2;c.gridy=5;c.gridwidth=2;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(HideNodes,c);
+   mainpanel.add(HideNodes,c);
    
    // arc options
    c.gridx=4;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(ArcTrans,c);
+   mainpanel.add(ArcTrans,c);
    c.gridx=5;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(ArcTransField,c);
+   mainpanel.add(ArcTransField,c);
    c.gridx=4;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(ArcWidthFactorLabel,c);
+   mainpanel.add(ArcWidthFactorLabel,c);
    c.gridx=5;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(ArcWidthFactorField,c);
+   mainpanel.add(ArcWidthFactorField,c);
    c.gridx=4;c.gridy=3;c.gridwidth=2;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(ShowArrows,c);
+   mainpanel.add(ShowArrows,c);
    c.gridx=4;c.gridy=4;c.gridwidth=2;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(ShowArcWeights,c);
+   mainpanel.add(ShowArcWeights,c);
    c.gridx=4;c.gridy=5;c.gridwidth=2;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(HideArcs,c);
+   mainpanel.add(HideArcs,c);
 
    c.gridx=4;c.gridy=6;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(ShowArcLabels,c);
+   mainpanel.add(ShowArcLabels,c);
 
 
 
    //c.gridx=0;c.gridy=10;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
    //graphicsDialog.add(ShowAxes,c);
    c.gridx=2;c.gridy=6;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
-   graphicsDialog.add(OK,c);
+   mainpanel.add(OK,c);
 
    OK.addActionListener(new ActionListener(){
      public void actionPerformed(ActionEvent evt)
@@ -258,8 +261,8 @@ public class GraphicsSettingsDialog
        applySettings();
      }
    });
-
-   graphicsDialog.setBackground(Color.lightGray);
+graphicsDialog.getContentPane().add(mainpanel);
+  // graphicsDialog.setBackground(Color.lightGray);
    graphicsDialog.setSize(700,400);
  }
 

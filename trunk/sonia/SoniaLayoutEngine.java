@@ -139,20 +139,7 @@ public class SoniaLayoutEngine {
 		engineName = name;
 		layoutSettings = settings;
 
-		// probably should ask for kind of layout here
-		if (control.isShowGUI() & (settings == null)) {
-			windowSettings = new LayoutSettingsDialog(layoutSettings, control,
-					this, null);
-			if (settings == null) {
-				// tell the settings dialog what the start and end times for the
-				// data
-				// are
-				windowSettings.setDataStartDefault(netData.getFirstTime());
-				windowSettings.setDataEndDefault(netData.getLastTime());
-			}
-			// show the dialog
-			settings = windowSettings.askUserSettings();
-		}
+		
 		// debug
 		System.out.println("settings " + settings);
 
@@ -499,15 +486,16 @@ public class SoniaLayoutEngine {
 		if (settings.getProperty(ApplySettings.RESCALE_LAYOUT).equals(ApplySettings.RESCALE_TO_FIT)) {
 			LayoutUtils.rescalePositions(slice, (int) width, (int) height,
 					slice.getXCoords(), slice.getYCoords(), 
-					Boolean.parseBoolean(settings.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE)));
+					Boolean.getBoolean(settings.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE)));
+					
 		}
 		// check for recenter
 		if (settings.getProperty(ApplySettings.RECENTER_TRANSFORM).equals(ApplySettings.RECENTER_AFTER)) {
 			LayoutUtils.centerLayout(slice, (int) width, (int) height, 
-					Boolean.parseBoolean(settings.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE)));
+					Boolean.getBoolean(settings.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE)));
 		} else if (settings.getProperty(ApplySettings.RECENTER_TRANSFORM).equals(ApplySettings.BARYCENTER)) {
 			LayoutUtils.barycenterLayout(slice, (int) width, (int) height,
-					Boolean.parseBoolean(settings.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE)));
+					Boolean.getBoolean(settings.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE)));
 		}
 
 		// take care of isolates if necessary, otherwise ignore

@@ -235,7 +235,7 @@ public class RenderSlice
 	  if (isNegitive){
 		  width = width*-1;
 	  }
-	  Float key = Float.valueOf(width);
+	  Float key = new Float(width);
 	  if (strokeTable.containsKey(key)){
 		  //return the stroke already made for this width
 		  return (BasicStroke)strokeTable.get(key);

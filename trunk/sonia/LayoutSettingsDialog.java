@@ -61,7 +61,7 @@ import sonia.layouts.RubBandFRLayout;
  */
 public class LayoutSettingsDialog extends JDialog implements ActionListener {
 	// private Dialog settingsDialog;
-	private SoniaLayoutEngine engine;
+	//private SoniaLayoutEngine engine;
 
 	private SoniaController control;
 
@@ -115,11 +115,11 @@ public class LayoutSettingsDialog extends JDialog implements ActionListener {
 	
 	private LayoutSettings settings;
 
-	public LayoutSettingsDialog(LayoutSettings settings, SoniaController cont, SoniaLayoutEngine eng,
+	public LayoutSettingsDialog(LayoutSettings settings, SoniaController cont, String msg,
 			Frame owner) {
 		super(owner,true);
 		control = cont;
-		engine = eng;
+		//engine = eng;
 		this.settings = settings;
 		
 		mainPanel = new JPanel();
@@ -226,8 +226,8 @@ public class LayoutSettingsDialog extends JDialog implements ActionListener {
 		saveSettings.addActionListener(this);
 
 		//this.setBackground(Color.lightGray);
-		this.add(mainPanel);
-		this.setTitle("Layout (Slicing) Settings for " + engine.toString());
+		this.getContentPane().add(mainPanel);
+		this.setTitle("Layout (Slicing) Settings for " + msg);
 		this.setSize(800, 300);
 		// this.show();
 		OK.requestFocus();
@@ -298,8 +298,8 @@ public class LayoutSettingsDialog extends JDialog implements ActionListener {
 		} else if (evt.getSource().equals(Plot)) {
 			//TODO: fix phase plot from layout settings dialog
 			if (timePlot == null) {
-				engine.showPhasePlot();
-				timePlot = engine.getPhasePlot();
+			//	engine.showPhasePlot();
+			//	timePlot = engine.getPhasePlot();
 			}
 		} else if (evt.getSource().equals(saveSettings)) {
 			//TODO:  create better option for choosing output dir for slice settings

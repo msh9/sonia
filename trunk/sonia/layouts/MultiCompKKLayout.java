@@ -521,7 +521,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 					 if (settings.getProperty(ApplySettings.RECENTER_TRANSFORM).equals(ApplySettings.RECENTER_DURING))
 			            {
 			              LayoutUtils.centerLayout(slice, (int)width, (int)height, xPos, yPos,
-			            		  Boolean.parseBoolean(settings.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE)));
+			            		  Boolean.getBoolean(settings.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE)));
 			            }
 					engine.updateDisplays();
 				}

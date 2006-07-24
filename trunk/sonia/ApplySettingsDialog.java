@@ -292,7 +292,7 @@ public class ApplySettingsDialog implements ActionListener {
 		saveSettings.addActionListener(this);
 
 		//settingsDialog.setBackground(Color.lightGray);
-		settingsDialog.add(mainPanel);
+		settingsDialog.getContentPane().add(mainPanel);
 		settingsDialog.setSize(600, 300);
 	}
 

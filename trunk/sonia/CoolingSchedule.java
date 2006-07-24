@@ -160,7 +160,7 @@ public class CoolingSchedule extends ExportableFrame implements MouseListener,
 		plot.setBorder(new TitledBorder(""));
 
 		GridBagLayout layout = new GridBagLayout();
-		this.setLayout(layout);
+		this.getContentPane().setLayout(layout);
 		GridBagConstraints c = new GridBagConstraints();
 		c.gridx = 0;
 		c.gridy = 0;
@@ -170,7 +170,7 @@ public class CoolingSchedule extends ExportableFrame implements MouseListener,
 		c.weighty = 1;
 		c.fill = GridBagConstraints.BOTH;
 		// this.add(filler,c);
-		this.add(plot, c);
+		this.getContentPane().add(plot, c);
 		c.fill = GridBagConstraints.NONE;
 		// c.gridx=0;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
 		// c.anchor=c.EAST;
@@ -182,14 +182,14 @@ public class CoolingSchedule extends ExportableFrame implements MouseListener,
 		c.gridheight = 1;
 		c.weightx = 0.1;
 		c.weighty = 0.1;
-		this.add(MaxPassField, c);
+		this.getContentPane().add(MaxPassField, c);
 		c.gridx = 1;
 		c.gridy = 1;
 		c.gridwidth = 1;
 		c.gridheight = 1;
 		c.weightx = 0.1;
 		c.weighty = 0.1;
-		this.add(Set, c);
+		this.getContentPane().add(Set, c);
 
 		plot.addMouseMotionListener(this);
 		plot.addMouseListener(this);
@@ -198,7 +198,7 @@ public class CoolingSchedule extends ExportableFrame implements MouseListener,
 		// this.setBackground(Color.lightGray);
 		this.setSize(480, 150);
 		this.setTitle("Schedule");
-		this.setLocation(360, 480);
+		this.setLocation(0, 380);
 		this.setVisible(true);
 
 	}
