@@ -148,6 +148,7 @@ public class ApplySettingsDialog implements ActionListener {
 
 		// starting coordinates
 		c.anchor = GridBagConstraints.WEST;
+		c.fill = GridBagConstraints.VERTICAL;
 		c.gridx = 0;
 		c.gridy = 0;
 		c.gridwidth = 1;
@@ -198,26 +199,23 @@ public class ApplySettingsDialog implements ActionListener {
 
 		transformProps = new JPanel(new GridBagLayout());
 		transformProps.setBorder(new TitledBorder("Transformation Options"));
+		c.fill = GridBagConstraints.VERTICAL;
 		c.gridx = 0;
 		c.gridy = 0;
 		c.gridwidth = 1;
 		c.gridheight = 1;
-		c.weightx = 0;
-		c.weighty = 0;
+		c.weightx = 1;
+		c.weighty = 1;
 		transformProps.add(recenterChoice,c);
 		c.gridx = 0;
 		c.gridy = 1;
 		c.gridwidth = 1;
 		c.gridheight = 1;
-		c.weightx = 0;
-		c.weighty = 0;
 		transformProps.add(rescaleChoice,c);
 		c.gridx = 0;
 		c.gridy = 2;
 		c.gridwidth = 1;
 		c.gridheight = 1;
-		c.weightx = 0;
-		c.weighty = 0;
 		transformProps.add(IsolateExclude, c);
 		
 		c.gridx = 1;
@@ -231,6 +229,7 @@ public class ApplySettingsDialog implements ActionListener {
 
 		// buttons
 		c.anchor = GridBagConstraints.WEST;
+		c.fill = GridBagConstraints.NONE;
 		c.gridx = 2;
 		c.gridy = 1;
 		c.gridwidth = 1;
@@ -284,6 +283,7 @@ public class ApplySettingsDialog implements ActionListener {
 		c.gridheight = 4;
 		c.weightx = 1;
 		c.weighty = 1;
+		c.fill = GridBagConstraints.VERTICAL;
 		mainPanel.add(algProps, c);
 
 		Cancel.addActionListener(this);

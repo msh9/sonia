@@ -126,7 +126,6 @@ public class LayoutSettingsDialog extends JDialog implements ActionListener {
 
 		LayoutType = new JComboBox(layoutNames);
 		LayoutType.setBorder(new TitledBorder("layout type:"));
-		LayoutType.setBackground(Color.white);
 		LayoutType.setSelectedIndex(5);
 
 		sliceSettings = new JPanel(new GridLayout(2, 2));
@@ -151,7 +150,6 @@ public class LayoutSettingsDialog extends JDialog implements ActionListener {
 
 		AnimateType = new JComboBox(interpNames);
 		AnimateType.setBorder(new TitledBorder("Animation type:"));
-		AnimateType.setBackground(Color.white);
 		AnimateType.setSelectedIndex(1);
 
 		SliceAggregation = new JComboBox(aggregateNames);
@@ -176,15 +174,17 @@ public class LayoutSettingsDialog extends JDialog implements ActionListener {
 		c.gridy = 0;
 		c.gridwidth = 2;
 		c.gridheight = 1;
-		c.weightx = 0;
-		c.weighty = 0;
+		c.weightx = 0.5;
+		c.weighty = 1;
 		// this.add(SliceInfoLabel,c);
+		c.fill = GridBagConstraints.VERTICAL;
 		mainPanel.add(sliceSettings, c);
 
 		c.gridx = 2;
 		c.gridy = 0;
 		c.gridwidth = 1;
 		c.gridheight = 1;
+		
 		mainPanel.add(AnimateType, c);
 		c.gridx = 3;
 		c.gridy = 0;
@@ -197,23 +197,24 @@ public class LayoutSettingsDialog extends JDialog implements ActionListener {
 		c.gridy = 0;
 		c.gridheight = 1;
 		mainPanel.add(LayoutType, c);
+		c.fill = GridBagConstraints.NONE;
 		// buttons
 		c.gridx = 0;
-		c.gridy = 6;
+		c.gridy = 1;
 		c.gridheight = 1;
 		mainPanel.add(Plot, c);
 		c.gridx = 1;
-		c.gridy = 6;
+		c.gridy = 1;
 		c.gridheight = 1;
 		mainPanel.add(saveSettings, c);
 
-		c.gridx = 6;
-		c.gridy = 4;
+		c.gridx = 2;
+		c.gridy = 1;
 		c.gridheight = 1;
 		mainPanel.add(Cancel, c);
 
-		c.gridx = 6;
-		c.gridy = 5;
+		c.gridx =3;
+		c.gridy = 1;
 		mainPanel.add(OK, c);
 
 		Cancel.addActionListener(this);
@@ -291,6 +292,7 @@ public class LayoutSettingsDialog extends JDialog implements ActionListener {
 			// this.finalize();
 		} else if (evt.getActionCommand().equals("Cancel")) {
 			this.setVisible(false);
+			//TODO: canceling the layout creation throws exception
 			if (timePlot != null) {
 				timePlot.hide();
 				timePlot = null;
