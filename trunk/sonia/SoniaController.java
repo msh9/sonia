@@ -41,6 +41,7 @@ import sonia.parsers.DLParser;
 import sonia.parsers.DotNetParser;
 import sonia.parsers.DotSonParser;
 import sonia.parsers.Parser;
+import sonia.parsers.RJavaParser;
 
 import cern.jet.random.Uniform;
 import cern.colt.matrix.impl.SparseDoubleMatrix2D;
@@ -289,7 +290,6 @@ public class SoniaController {
 	 *            String representation of the network (for now in R format)
 	 */
 	public void loadData(String data) {
-
 		Parser parser = new RJavaParser();
 		try {
 			parser.parseNetwork(data);
