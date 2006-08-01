@@ -87,6 +87,8 @@ public class SoniaController {
 	private boolean paused = false;
 
 	private LayoutSettings sliceSettings = null;
+	
+	private ApplySettings applySettings = null;
 
 	private Uniform randomUni; // colt package mersense twister random numbers
 
@@ -166,6 +168,7 @@ public class SoniaController {
 		String inFile = "";
 		String networkData = "";
 		String settingsFile = "";
+		String batchSettings = "";
 		for (int i = 0; i < args.length; i++) {
 			String arg = args[i];
 			// look at the arguments passed on the command line
@@ -183,6 +186,9 @@ public class SoniaController {
 			if (arg.startsWith("settings:")) {
 				settingsFile = arg.substring(9);
 			}
+			if (arg.startsWith("batch:")) {
+				batchSettings = arg.substring(6);
+			}
 
 		}
 		SoniaController sonia = new SoniaController(rngSeed);
@@ -192,7 +198,13 @@ public class SoniaController {
 		} else if (!networkData.equals("")) {
 			sonia.loadData(networkData);
 		}
-		if (!settingsFile.equals("")) {
+		// batch overides settings
+		if (!batchSettings.equals("")) {
+			// check if it is a file or a string and try to load it
+			//debug
+			System.out.println("loading batch settings:"+batchSettings);
+			sonia.loadBatchSettings(batchSettings);
+		} else if (!settingsFile.equals("")) {
 			sonia.loadSettings(settingsFile);
 		}
 	}
@@ -308,6 +320,46 @@ public class SoniaController {
 	}
 
 	/**
+	 * desides if argument is a file or a string of compound settings, and tries
+	 * to create the appropriate settings arguments.
+	 * 
+	 * @param settingsOrFile
+	 */
+	public void loadBatchSettings(String settingsOrFile) {
+		//default is to assuming is a string containing lots of settings
+		String compoundSettings = settingsOrFile;
+		//but we also try to see if it is a string pointing to a file of settings
+		try {
+			LineNumberReader reader = new LineNumberReader(new FileReader(
+					settingsOrFile));
+			compoundSettings = "";
+			String line;
+			try {
+				line = reader.readLine(); //this is really a pretty silly way to do this
+				while (line != null) {
+					compoundSettings += line+"\n";
+					line = reader.readLine();
+				}
+			} catch (IOException e) {
+				System.out.println("error reading batch settings from file:"+e.getMessage());
+			}
+		} catch (FileNotFoundException e) {
+			//debug
+			System.out.println("didn't locate file:"+settingsOrFile);
+		}
+       //now try to get the settings objects
+	  PropertyBuilder proper = new PropertyBuilder(compoundSettings);
+	  sliceSettings = proper.getLayoutSettings();
+	  applySettings = proper.getApplySettings();
+	  //try to do the slicing
+	  if (sliceSettings != null){
+	  showStatus("Read layout settings from batch instructions");
+		log("Read layout settings from batch instructions");
+		createLayout();
+	  }
+	}
+
+	/**
 	 * try to read in a previously saved settings file
 	 * 
 	 * @param settingsFile
@@ -358,15 +410,17 @@ public class SoniaController {
 		if (fileLoaded == true) {
 
 			String engName = fileName + " #" + (engines.size() + 1);
-//			 probably should ask for kind of layout here
+			// probably should ask for kind of layout here
 			if (isShowGUI() & (sliceSettings == null)) {
-				LayoutSettingsDialog windowSettings = new LayoutSettingsDialog(sliceSettings, this,
-						engName, ui);
+				LayoutSettingsDialog windowSettings = new LayoutSettingsDialog(
+						sliceSettings, this, engName, ui);
 				if (sliceSettings == null) {
-					// tell the settings dialog what the start and end times for the
+					// tell the settings dialog what the start and end times for
+					// the
 					// data
 					// are
-					windowSettings.setDataStartDefault(networkData.getFirstTime());
+					windowSettings.setDataStartDefault(networkData
+							.getFirstTime());
 					windowSettings.setDataEndDefault(networkData.getLastTime());
 				}
 				// show the dialog
@@ -378,24 +432,24 @@ public class SoniaController {
 			LayoutWindow display = new LayoutWindow(this, engine, 490, 420);
 			engine.setDisplay(display);
 			ui.addFrame(display);
-//			try {
-//				display.setMaximum(true);
-//			} catch (PropertyVetoException e) {
-//				System.out.println("somebody stoped the window from expanding "
-//						+ e);
-//			}
+			// try {
+			// display.setMaximum(true);
+			// } catch (PropertyVetoException e) {
+			// System.out.println("somebody stoped the window from expanding "
+			// + e);
+			// }
 
 		} else {
 			showError("Load file before creating layout");
 		}
 	}
-	
+
 	/**
 	 * Not sure if we should have this method as it is for gui..
+	 * 
 	 * @param frame
 	 */
-	public void showFrame(JInternalFrame frame)
-	{
+	public void showFrame(JInternalFrame frame) {
 		ui.addFrame(frame);
 	}
 

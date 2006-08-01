@@ -21,6 +21,8 @@ import java.util.Properties;
 import java.util.StringTokenizer;
 
 public class ApplySettings extends Properties {
+	
+
 
 	/**
 	 * 
@@ -181,5 +183,19 @@ public class ApplySettings extends Properties {
 		}
 		setProperty(key, value);
 	}
+	
+	/**
+	 * overides to string so that each key=value pair is printed on its own line with an indent
+	 */
+	public String toString(){
+		String outString = PropertyBuilder.SETTING_CLASS_CODE+"="+ApplySettings.class.getName()+"\n";
+		Iterator keyIter = this.keySet().iterator();
+		while (keyIter.hasNext()){
+			String key = (String)keyIter.next();
+			outString = outString +"\t"+key+"="+getProperty(key)+"\n";
+		}
+		return outString;
+	}
+	
 
 }
