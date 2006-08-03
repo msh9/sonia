@@ -49,35 +49,56 @@ import javax.swing.border.TitledBorder;
  * redraws, post-processing, and options to apply to all the remaining slices.
  */
 public class ApplySettingsDialog implements ActionListener {
-	
+
 	private JDialog settingsDialog;
+
 	private SoniaLayoutEngine engine;
+
 	private SoniaController control;
+
 	private NetLayout layoutAlgorithm;
+
 	private ApplySettings applySettings;
+
 	private HashMap layoutProperties = new HashMap(); // holds items added by
-														// specific layouts
-    private JPanel mainPanel;
-    private JPanel algProps;
-    private JPanel iterationProps;
-    private JPanel transformProps;
+
+	// specific layouts
+	private JPanel mainPanel;
+
+	private JPanel algProps;
+
+	private JPanel iterationProps;
+
+	private JPanel transformProps;
+
 	// container dynamically added layout elements
 	private ArrayList propComponents = new ArrayList();
 
 	// layout elements
-//	private JLabel SliceInfoLabel; // shows the laytout info, type of layout
+	// private JLabel SliceInfoLabel; // shows the laytout info, type of layout
 
 	private JComboBox startChoice;
+
 	private JComboBox isolateChoice;
+
 	private JComboBox recenterChoice;
+
 	private JComboBox rescaleChoice;
+
 	private JTextField RepaintN;
+
 	private JLabel repaintLabel;
+
 	private JCheckBox IsolateExclude;
+
 	private JButton Apply;
+
 	private JButton Cancel;
+
 	private JButton MultiApply;
+
 	private JCheckBox ErrorStop;
+
 	private JButton saveSettings;
 
 	/**
@@ -94,7 +115,7 @@ public class ApplySettingsDialog implements ActionListener {
 	 * @param layoutAlg
 	 *            the layout algorithm
 	 */
-	public ApplySettingsDialog( ApplySettings settings, SoniaController cont,
+	public ApplySettingsDialog(ApplySettings settings, SoniaController cont,
 			SoniaLayoutEngine eng, Frame owner, NetLayout layoutAlg) {
 		control = cont;
 		engine = eng;
@@ -106,12 +127,11 @@ public class ApplySettingsDialog implements ActionListener {
 				+ " to slice# " + engine.getCurrentSliceNum() + " ["
 				+ engine.getCurrentSlice().getSliceStart() + "-"
 				+ engine.getCurrentSlice().getSliceEnd() + "]";
-		startChoice = new JComboBox(new Object[] {
-				ApplySettings.COORDS_RANDOM, ApplySettings.COORDS_FROM_PREV,
-				ApplySettings.COORDS_FROM_FILE, ApplySettings.COORDS_CURRENT,
-				ApplySettings.COORDS_CIRCLE });
+		startChoice = new JComboBox(new Object[] { ApplySettings.COORDS_RANDOM,
+				ApplySettings.COORDS_FROM_PREV, ApplySettings.COORDS_FROM_FILE,
+				ApplySettings.COORDS_CURRENT, ApplySettings.COORDS_CIRCLE });
 		startChoice.setBorder(new TitledBorder("Starting Coordinates"));
-		
+
 		isolateChoice = new JComboBox(new Object[] {
 				ApplySettings.ISLOLATE_IGNORE, ApplySettings.ISLOLATE_CIRCLE,
 				ApplySettings.ISLOLATE_EDGE, ApplySettings.ISLOLATE_FILE,
@@ -119,16 +139,17 @@ public class ApplySettingsDialog implements ActionListener {
 		isolateChoice.setBorder(new TitledBorder("Isolate Positioning"));
 
 		RepaintN = new JTextField("0", 2);
-		repaintLabel=new JLabel("Repaint on Nth layout pass");
+		repaintLabel = new JLabel("Repaint on Nth layout pass");
 
-		
-		recenterChoice = new JComboBox(new Object[] {ApplySettings.RECENTER_AFTER,ApplySettings.NONE,
-				ApplySettings.BARYCENTER,ApplySettings.RECENTER_DURING});
+		recenterChoice = new JComboBox(new Object[] {
+				ApplySettings.RECENTER_AFTER, ApplySettings.NONE,
+				ApplySettings.BARYCENTER, ApplySettings.RECENTER_DURING });
 		recenterChoice.setBorder(new TitledBorder("Recentering"));
-		rescaleChoice = new JComboBox(new Object[] {ApplySettings.NONE,ApplySettings.RESCALE_TO_FIT,});
+		rescaleChoice = new JComboBox(new Object[] { ApplySettings.NONE,
+				ApplySettings.RESCALE_TO_FIT, });
 		rescaleChoice.setBorder(new TitledBorder("Rescaling"));
 		IsolateExclude = new JCheckBox("Exclude Isolates in transform", false);
-		
+
 		Apply = new JButton("Apply");
 		Cancel = new JButton("Cancel");
 		MultiApply = new JButton("Apply to Remaining");
@@ -141,7 +162,7 @@ public class ApplySettingsDialog implements ActionListener {
 		GridBagLayout layout = new GridBagLayout();
 		mainPanel = new JPanel(layout);
 		mainPanel.setBorder(new TitledBorder(sliceInfoLabel));
-		//settingsDialog.setLayout(layout);
+		// settingsDialog.setLayout(layout);
 		GridBagConstraints c = new GridBagConstraints();
 		c.insets = new Insets(2, 5, 2, 5);
 		// add components to the layout GBlayout using constraints
@@ -155,15 +176,15 @@ public class ApplySettingsDialog implements ActionListener {
 		c.gridheight = 1;
 		c.weightx = 0;
 		c.weighty = 0;
-		mainPanel.add(startChoice,c);
-		
+		mainPanel.add(startChoice, c);
+
 		c.gridx = 1;
 		c.gridy = 0;
 		c.gridwidth = 1;
 		c.gridheight = 1;
 		c.weightx = 0;
 		c.weighty = 0;
-		mainPanel.add(isolateChoice,c);
+		mainPanel.add(isolateChoice, c);
 
 		iterationProps = new JPanel(new GridBagLayout());
 		iterationProps.setBorder(new TitledBorder("Iteration Options"));
@@ -173,7 +194,7 @@ public class ApplySettingsDialog implements ActionListener {
 		c.gridheight = 1;
 		c.weightx = 0;
 		c.weighty = 1;
-		iterationProps.add(repaintLabel,c);
+		iterationProps.add(repaintLabel, c);
 		c.gridx = 1;
 		c.gridy = 0;
 		c.gridwidth = 2;
@@ -188,14 +209,14 @@ public class ApplySettingsDialog implements ActionListener {
 		c.weightx = 0;
 		c.weighty = 0;
 		iterationProps.add(ErrorStop, c);
-		
+
 		c.gridx = 2;
 		c.gridy = 0;
 		c.gridwidth = 1;
 		c.gridheight = 1;
 		c.weightx = 0;
 		c.weighty = 1;
-		mainPanel.add(iterationProps,c);
+		mainPanel.add(iterationProps, c);
 
 		transformProps = new JPanel(new GridBagLayout());
 		transformProps.setBorder(new TitledBorder("Transformation Options"));
@@ -206,26 +227,25 @@ public class ApplySettingsDialog implements ActionListener {
 		c.gridheight = 1;
 		c.weightx = 1;
 		c.weighty = 1;
-		transformProps.add(recenterChoice,c);
+		transformProps.add(recenterChoice, c);
 		c.gridx = 0;
 		c.gridy = 1;
 		c.gridwidth = 1;
 		c.gridheight = 1;
-		transformProps.add(rescaleChoice,c);
+		transformProps.add(rescaleChoice, c);
 		c.gridx = 0;
 		c.gridy = 2;
 		c.gridwidth = 1;
 		c.gridheight = 1;
 		transformProps.add(IsolateExclude, c);
-		
+
 		c.gridx = 1;
 		c.gridy = 1;
 		c.gridwidth = 1;
 		c.gridheight = 4;
 		c.weightx = 1;
 		c.weighty = 0;
-		mainPanel.add(transformProps,c);
-
+		mainPanel.add(transformProps, c);
 
 		// buttons
 		c.anchor = GridBagConstraints.WEST;
@@ -244,10 +264,9 @@ public class ApplySettingsDialog implements ActionListener {
 		c.gridx = 2;
 		c.gridy = 4;
 		mainPanel.add(Cancel, c);
-		
 
 		// add any addl compondents from the layout
-		
+
 		algProps = new JPanel(new GridBagLayout());
 		algProps.setBorder(new TitledBorder("Algorithm-specific properties"));
 		// first colum (alterneat entries in propcomponents)
@@ -291,9 +310,44 @@ public class ApplySettingsDialog implements ActionListener {
 		MultiApply.addActionListener(this);
 		saveSettings.addActionListener(this);
 
-		//settingsDialog.setBackground(Color.lightGray);
+		// settingsDialog.setBackground(Color.lightGray);
 		settingsDialog.getContentPane().add(mainPanel);
 		settingsDialog.setSize(600, 300);
+		showSettings(); //get the values
+	}
+
+	/**
+	 * changes the GUI elements to match the passed settings object
+	 * 
+	 */
+	private void showSettings() {
+		//get the property value and copy it to the gui, using the current
+		//gui value as the default 
+		startChoice.setSelectedItem(applySettings
+				.getProperty(ApplySettings.STARTING_COORDS,(String)startChoice.getSelectedItem()));
+		isolateChoice.setSelectedItem(applySettings
+				.getProperty(ApplySettings.ISOLATE_POSITION,(String)isolateChoice.getSelectedItem()));
+		RepaintN.setText(applySettings
+				.getProperty(ApplySettings.LAYOUT_REPAINT_N,RepaintN.getText()));
+		ErrorStop.setSelected(Boolean.parseBoolean(applySettings
+				.getProperty(ApplySettings.LAYOUT_REPAINT_N,ErrorStop.isSelected()+"")));
+		recenterChoice.setSelectedItem(applySettings
+				.getProperty(ApplySettings.RECENTER_TRANSFORM,(String)recenterChoice.getSelectedItem()));
+		rescaleChoice.setSelectedItem(applySettings
+				.getProperty(ApplySettings.RESCALE_LAYOUT,(String)rescaleChoice.getSelectedItem()));
+		IsolateExclude.setSelected(Boolean.parseBoolean(applySettings
+				.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE,IsolateExclude.isSelected()+"")));
+		//do algorithm specifc properties
+		Iterator propIter = layoutProperties.keySet().iterator();
+		while (propIter.hasNext()){
+			String prop = (String)propIter.next();
+			String value = applySettings.getProperty(prop);
+			if (value != null){
+				((JTextField)layoutProperties.get(prop)).setText(value);
+			}
+		}
+		
+		
 	}
 
 	/**
@@ -302,7 +356,7 @@ public class ApplySettingsDialog implements ActionListener {
 	public void showDialog() {
 		settingsDialog.setVisible(true);
 		Apply.requestFocus();
-		//TODO: read the values from the passed settings
+		// TODO: read the values from the passed settings
 	}
 
 	/**
@@ -349,254 +403,56 @@ public class ApplySettingsDialog implements ActionListener {
 	}
 
 	/**
-	 * gets the user entered value of the algorithm specific layout property, if
-	 * name matches one of the previously setup parameters. Otherwise spits an
-	 * error to console.
-	 * 
-	 * @param name
-	 *            a string corresponding to the name of the property
-	 */
-	/*
-	public double getLayoutProperty(String name) {
-		double value = 0.0;
-		// make sure it exists
-		if (layoutProperties.keySet().contains(name)) {
-			// find the component with matching name
-			JTextField propField = (JTextField) layoutProperties.get(name);
-			value = Double.parseDouble(propField.getText());
-		} else {
-			System.out.println("unable to match property to name " + name);
-		}
-		return value;
-	}
-	*/
-
-	
-//
-//	/**
-//	 * gets all the parameters from the settings dialog and sets them in the
-//	 * LayoutEngine
-//	 * 
-//	 */
-//	//TODO: need to read this from params
-//	public void setValuesFromDialog() {
-//		// repaint
-//		if (isRepaint()) {
-//			engine.setUpdatesN(Integer.parseInt(RepaintN.getText()));
-//		} else {
-//			engine.setShowUpdates(false);
-//		}
-//	}
-//	
-//
-//	/**
-//	 * returns the int corresponding to the setting for the starting coordinates
-//	 * (where nodes are positioned before algorithm runs). one of the static
-//	 * ints PREV_SLICE - use the coordinates from the previous slice, CIRCLE -
-//	 * postion the nodes in a circle to start, ORIG_FILE - use the coordinates
-//	 * from the node record, CURRENT - use the current screen coordinates,
-//	 * RANDOMIZE - randomly position the nodes.
-//	 */
-//	public int getStartCoordCode() {
-//		int returnInt;
-//		if (FromPrevSlice.isSelected()) {
-//			returnInt = PREV_SLICE;
-//		} else if (Circle.isSelected()) {
-//			returnInt = CIRCLE;
-//		} else if (FromOrigFile.isSelected()) {
-//			returnInt = ORIG_FILE;
-//		} else if (Current.isSelected()) {
-//			returnInt = CURRENT;
-//		} else {
-//			returnInt = RANDOMIZE;
-//		}
-//		return returnInt;
-//	}
-//
-//	/**
-//	 * returns an int indicating the setting for how to handle the position of
-//	 * isolated nodes. IGNORE - leave them where they are. PIN_CIRCLE - position
-//	 * them in a ring on the layout. PIN_EDGE - position them in a line on the
-//	 * bottom of the layout. PIN_ORIG - use the original coordinates stored in
-//	 * the nodes. PIN_PREVIOUS - use the position from the previous slice.
-//	 */
-//	public int getIsolatesCode() {
-//		int returnInt = IGNORE;
-//		if (PinToCircle.isSelected()) {
-//			returnInt = PIN_CIRCLE;
-//		} else if (PinToEdge.isSelected()) {
-//			returnInt = PIN_EDGE;
-//		} else if (UseOrigCoords.isSelected()) {
-//			returnInt = PIN_ORIG;
-//		} else if (PinPrevious.isSelected()) {
-//			returnInt = PIN_PREVIOUS;
-//		}
-//		return returnInt;
-//	}
-//
-//	/**
-//	 * should the layout be rescaled when finsihed?
-//	 */
-//	public boolean isRescale() {
-//		return Rescale.isSelected();
-//	}
-//
-//	/**
-//	 * should isolates be excluded when rescaling? (often used if the isolates
-//	 * are being positioned seperately)
-//	 */
-//	public boolean isIsolateExclude() {
-//		return IsolateExclude.isSelected();
-//	}
-//
-//	/**
-//	 * restrict nodes to a bounding circle? (only works with FR, and not very
-//	 * well)
-//	 * 
-//	 */
-//	public boolean isCircleRestrict() {
-//		return CircleRestrict.isSelected();
-//	}
-//
-//	/**
-//	 * recenter the layout after each pass of the algorithm (so that it won't
-//	 * drift off screen if you are watching the redraws)
-//	 */
-//	public boolean isRecenter() {
-//		return Recenter.isSelected();
-//	}
-//
-//	/**
-//	 * recenter the layout (max, min) when the algorithm is finished?
-//	 */
-//	public boolean isEndRecenter() {
-//		return EndRecenter.isSelected();
-//	}
-//
-//	/**
-//	 * recenter the layout the average of the nodes' coordinates when finished?
-//	 */
-//
-//	public boolean isEndBarycenter() {
-//		return EndBarycenter.isSelected();
-//	}
-//
-//	/**
-//	 * true if the layout is going to be redrawn while algorithm is running
-//	 */
-//	public boolean isRepaint() {
-//		return Repaint.isSelected();
-//	}
-//
-//	/**
-//	 * if true, the "apply to remaining" thread will stop if a layout has an
-//	 * erorr, other wise it will just go on to the next layout
-//	 */
-//	public boolean isStopOnError() {
-//		return ErrorStop.isSelected();
-//	}
-//
-//	/**
-//	 * returns an integer which controls how frequently the network will be
-//	 * redrawn while the layout is in process (redraw every Nth pass)
-//	 */
-//	public int getRepaintN() {
-//		return Integer.parseInt(RepaintN.getText());
-//	}
-
-	/**
 	 * returns a string summarizing the layout settings to record in the log
 	 */
 	public String getSummaryString() {
-//		String layoutParams = layoutAlgorithm.getLayoutInfo();
-//		String startingPos;
-//		String isolates;
-//		String modifications = "";
-//		// get a string for layout params
-//
-//		// get a string for starting
-//		int startPos = getStartCoordCode();
-//		startingPos = "from ORIGINAL FILE coordinates";
-//		if (startPos == RANDOMIZE)
-//			startingPos = "from RANDOM coordinates";
-//		if (startPos == CIRCLE)
-//			startingPos = "from CIRCULAR coordinates";
-//		if (startPos == PREV_SLICE)
-//			startingPos = "from PREVIOUS SLICE coordinates";
-//		if (startPos == CURRENT)
-//			startingPos = "from CURRENT display coordinates";
-//
-//		// get a string for isolates
-//		int isoType = getIsolatesCode();
-//		isolates = "not adjusted";
-//		if (isoType == PIN_CIRCLE)
-//			isolates = "pinned to CIRCLE";
-//		if (isoType == PIN_EDGE)
-//			isolates = "pinned to EDGE";
-//		if (isoType == PIN_ORIG)
-//			isolates = "pinned to ORIGINAL FILE coords";
-//		if (isoType == PIN_PREVIOUS)
-//			isolates = "pinned to PREVIOUS SLICE";
-//
-//		// get a string for afterlayout modifications
-//		if (isCircleRestrict()) {
-//			modifications += "restricted to circle,";
-//		}
-//		if (isEndRecenter()) {
-//			modifications += "recenterd when finished,";
-//		}
-//		if (isRecenter()) {
-//			modifications += "adjusted to barycenter during layout,";
-//		}
-//		if (isRescale()) {
-//			modifications += "rescaled to fit,";
-//			if (isIsolateExclude()) {
-//				modifications += "isolates scaled independently,";
-//			}
-//		}
-//		String summary = "Layout Type:" + layoutAlgorithm.getLayoutType()
-//				+ "\n" + "Layout Parameters:" + layoutParams + "\n"
-//				+ "Starting Positions:" + startingPos + "\n"
-//				+ "Isolate Treatment:" + isolates + "\n" + "Modifications:"
-//				+ modifications;
-//
-//		return summary;
+
 		return applySettings.toString();
 	}
-	
-	public ApplySettings getSettings(){
-		//TODO: need to load the settings from the gui
-		
-		if (applySettings == null){
+
+	public ApplySettings getSettings() {
+		// TODO: need to load the settings from the gui
+
+		if (applySettings == null) {
 			applySettings = new ApplySettings();
 		}
-//		starting positions
-		applySettings.put(ApplySettings.STARTING_COORDS,startChoice.getSelectedItem());
-//		isolate positions
-		applySettings.put(ApplySettings.ISOLATE_POSITION,isolateChoice.getSelectedItem());
-		
+		// starting positions
+		applySettings.put(ApplySettings.STARTING_COORDS, startChoice
+				.getSelectedItem());
+		// isolate positions
+		applySettings.put(ApplySettings.ISOLATE_POSITION, isolateChoice
+				.getSelectedItem());
+
 		// iteration control
-		applySettings.put(ApplySettings.STOP_ON_ERROR,ErrorStop.isSelected()+"");
-		//TODO: should check that this is a valid int..
-		applySettings.put(ApplySettings.LAYOUT_REPAINT_N,RepaintN.getText());
-		applySettings.put(ApplySettings.APPLY_REMAINING,MultiApply.isSelected()+"");
-		
-		//transformations
-		applySettings.put(ApplySettings.RECENTER_TRANSFORM,ErrorStop.isSelected()+"");
-		applySettings.put(ApplySettings.RESCALE_LAYOUT,rescaleChoice.getSelectedItem());
-		applySettings.put(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE,IsolateExclude.isSelected()+"");
-		
-		//layout specific params
-		applySettings.put(ApplySettings.ALG_NAME,layoutAlgorithm.getLayoutType());
+		applySettings.put(ApplySettings.STOP_ON_ERROR, ErrorStop.isSelected()
+				+ "");
+		// TODO: should check that this is a valid int..
+		applySettings.put(ApplySettings.LAYOUT_REPAINT_N, RepaintN.getText());
+		applySettings.put(ApplySettings.APPLY_REMAINING, MultiApply
+				.isSelected()
+				+ "");
+
+		// transformations
+		applySettings.put(ApplySettings.RECENTER_TRANSFORM, ErrorStop
+				.isSelected()
+				+ "");
+		applySettings.put(ApplySettings.RESCALE_LAYOUT, rescaleChoice
+				.getSelectedItem());
+		applySettings.put(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE,
+				IsolateExclude.isSelected() + "");
+
+		// layout specific params
+		applySettings.put(ApplySettings.ALG_NAME, layoutAlgorithm
+				.getLayoutType());
 		Iterator keyIter = layoutProperties.keySet().iterator();
-		while (keyIter.hasNext()){
-			String key = (String)keyIter.next();
+		while (keyIter.hasNext()) {
+			String key = (String) keyIter.next();
 			applySettings.setLayoutSpecificProperty(key,
-					((JTextField)layoutProperties.get(key)).getText());
+					((JTextField) layoutProperties.get(key)).getText());
 		}
-		//debug
-		System.out.println("apply settings: "+applySettings);
-		
+		// debug
+		// System.out.println("apply settings: "+applySettings);
+
 		return applySettings;
 	}
 
@@ -611,31 +467,36 @@ public class ApplySettingsDialog implements ActionListener {
 		if (evt.getSource().equals(Cancel)) {
 			settingsDialog.setVisible(false);
 		} else if (evt.getSource().equals(saveSettings)) {
-			//TODO:  create better option for choosing output dir for slice settings
-			String fileAndPath = control.getCurrentPath()+"SoniaLayoutSettings.prp";
+			// TODO: create better option for choosing output dir for slice
+			// settings
+			String fileAndPath = control.getCurrentPath()
+					+ "SoniaLayoutSettings.prp";
 			ApplySettings settings = getSettings();
 			try {
-				
+
 				FileOutputStream propsOut = new FileOutputStream(fileAndPath);
-				settings.store(propsOut,settingsDialog.getTitle());
-				control.showStatus("Saved layout settings to "+fileAndPath);
+				settings.store(propsOut, settingsDialog.getTitle());
+				control.showStatus("Saved layout settings to " + fileAndPath);
 			} catch (FileNotFoundException e) {
-				control.showError("Unable to create or locate layout settings file: "+fileAndPath
-						+" "+e.getMessage());
+				control
+						.showError("Unable to create or locate layout settings file: "
+								+ fileAndPath + " " + e.getMessage());
 			} catch (IOException e) {
-				control.showError("IO error writing settings file: "+fileAndPath
-						+" "+e.getMessage());
+				control.showError("IO error writing settings file: "
+						+ fileAndPath + " " + e.getMessage());
 			}
 		} else {
 			// read the values from the dialog and set them in engine
-			//setValuesFromDialog();
+			// setValuesFromDialog();
 
 			// now figure out if is apply or multi
 			if (evt.getSource().equals(Apply)) {
-				engine.applyLayoutTo(getSettings(),engine.getCurrentSlice());
+				engine.setApplySettings(getSettings());
+				engine.applyLayoutTo(getSettings(), engine.getCurrentSlice());
 				settingsDialog.setVisible(false);
 			} else if (evt.getSource().equals(MultiApply)) {
-				//this will ask ask the dialog for the settings
+				// this will ask ask the dialog for the settings
+				engine.setApplySettings(getSettings());
 				engine.applyLayoutToRemaining();
 				settingsDialog.setVisible(false);
 			}

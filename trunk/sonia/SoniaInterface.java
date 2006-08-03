@@ -90,7 +90,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 
 	private JButton MovieButton;
 
-	private JButton SaveButton;
+	//private JButton SaveButton;
 
 	private JTextArea StatusText;
 
@@ -119,21 +119,21 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		LayoutButton = new JButton("Create Layout...");
 		PauseButton = new JButton("Pause");
 		MovieButton = new JButton("Export Movie ...");
-		SaveButton = new JButton("Save to File...");
+		//SaveButton = new JButton("Save to File...");
 		StatusText = new JTextArea(
 				"   Welcome to SoNIA "
 						+ SoniaController.VERSION
 						+ " (code date "
 						+ SoniaController.CODE_DATE
 						+ ")\n"
-						+ "   Please view the README and SoNIAWriteup for instructions\n"
-						+ "   Questions/bugs to skyebend@stanford.edu", 5, 50);
+						+ "   For help and information, please visit http://sonia.stanford.edu"
+						+ "  or send questions/bugs to sonia-users@lists.sourceforge.net", 1, 50);
 		// StatusText.setBackground(Color.white);
 		StatusText.setEditable(false);
 		StatusText.setBorder(new TitledBorder("Status:"));
 		StatusText.setLineWrap(true);
 		StatusText.setWrapStyleWord(true);
-		StatusText.setColumns(30);
+		//StatusText.setColumns(30);
 
 		workPane = new JDesktopPane();
 		workPane.setBorder(new TitledBorder("Layouts:"));
@@ -187,13 +187,13 @@ public class SoniaInterface extends JFrame implements WindowListener,
 //		c.weightx = 0.1;
 //		c.weighty = 0.1; // movie is now a menu item on the layout window
 //		menuPane.add(MovieButton, c);
-		c.gridx = 1;
-		c.gridy = 2;
-		c.gridwidth = 1;
-		c.gridheight = 1;
-		c.weightx = 0.1;
-		c.weighty = 0.1;
-		menuPane.add(SaveButton, c);
+//		c.gridx = 1;
+//		c.gridy = 2;
+//		c.gridwidth = 1;
+//		c.gridheight = 1;
+//		c.weightx = 0.1;
+//		c.weighty = 0.1;
+//		menuPane.add(SaveButton, c);
 		c.gridx = 0;
 		c.gridy = 3;
 		c.gridwidth = 3;
@@ -208,16 +208,16 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		LoadButton.addActionListener(this);
 		LayoutButton.addActionListener(this);
 		PauseButton.addActionListener(this);
-		SaveButton.addActionListener(this);
+		//SaveButton.addActionListener(this);
 		// MovieButton.addActionListener(this);
 
-		//setLayout(new BorderLayout());
+		getContentPane().setLayout(new BorderLayout());
 		JSplitPane jsp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,menuPane,workPane);
 		jsp.setOneTouchExpandable(true);
-		getContentPane().add(jsp);
+		getContentPane().add(jsp,BorderLayout.CENTER);
 		//add(workPane, BorderLayout.CENTER);
 		//add(menuPane, BorderLayout.WEST);
-		//add(Credits, BorderLayout.SOUTH);
+		getContentPane().add(StatusText, BorderLayout.SOUTH);
 
 		addWindowListener(this);
 		// setBackground(Color.lightGray);
@@ -229,7 +229,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		//frameTest.setVisible(true);
 
 		// construct frame
-		this.setSize(800, 550);
+		this.setSize(850, 600);
 		this.setTitle("SoNIA v"+SoniaController.VERSION);
 		this.setVisible(true);
 		LoadButton.requestFocus();
@@ -322,14 +322,14 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		} else if (evt.getActionCommand().equals("Create Layout...")) {
 			// should launch this on a new thread?
 			control.createLayout();
-		} else if (evt.getSource().equals(SaveButton)) {
-			// check that network exisits?
-			if (control.hasNetworks()) {
-				// allow choosing which net to export?
-				control.exportMatricies();
-			} else {
-				showError("No networks have been created");
-			}
+//		} else if (evt.getSource().equals(SaveButton)) {
+//			// check that network exisits?
+//			if (control.hasNetworks()) {
+//				// allow choosing which net to export?
+//				control.exportMatricies();
+//			} else {
+//				showError("No networks have been created");
+//			}
 
 			// } else if (evt.getSource().equals(MovieButton)) {
 			// // check that network exisits?

@@ -323,11 +323,12 @@ public class SoniaLayoutEngine {
 	 * Uses the current layout settings, or calles the ApplyLayoutSettings
 	 * dialog if they have not been set.
 	 */
-	public void applyLayoutToCurrent(ApplySettings settings) {
-		if (settings == null) {
+	public void applyLayoutToCurrent() {
+		if (applySettings == null) {
 			showApplyLayoutSettings();
 		} else {
-			applyLayoutTo(settings, (LayoutSlice) layoutSlices.get(currentSlice));
+			
+			applyLayoutTo(applySettings, (LayoutSlice) layoutSlices.get(currentSlice));
 		}
 	}
 
@@ -352,7 +353,7 @@ public class SoniaLayoutEngine {
 	 * chaning the engine to each slice before continuing. Called by the layout
 	 * thread generated with applyLayoutToRemaining. Should be private?
 	 */
-	private void startApplyLayoutToRemaining() {
+	public void startApplyLayoutToRemaining() {
 		// will throw up a settings window, but for now, apply the current
 		// layout to all subsequent layouts
 		// makesure there is a layout chosen
@@ -1007,6 +1008,11 @@ public class SoniaLayoutEngine {
 			shepPlot.hide();
 			shepPlot = null;
 		}
+	}
+
+
+	public void setApplySettings(ApplySettings applySettings) {
+		this.applySettings = applySettings;
 	}
 
 }

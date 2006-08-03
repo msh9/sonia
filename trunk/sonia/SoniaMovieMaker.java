@@ -77,11 +77,13 @@ public class SoniaMovieMaker extends JFrame implements StdQTConstants, Errors
 
   private SoniaLayoutEngine engine;
   private SoniaController control;
+  private String fileName = null;
 
-  public SoniaMovieMaker(SoniaController cont, SoniaLayoutEngine eng)
+  public SoniaMovieMaker(SoniaController cont, SoniaLayoutEngine eng,String file)
   {
     control = cont;
     engine = eng;
+    fileName = file;
   }
 
   /**
@@ -97,16 +99,23 @@ public class SoniaMovieMaker extends JFrame implements StdQTConstants, Errors
       //
       // show save-as dialog, create movie file & empty movie
       //
+    	//check if we already have a name
+    if (fileName == null){
       FileDialog dialog = new FileDialog (new Frame(), "Save Network Movie As...",
           FileDialog.SAVE);
       dialog.show();
       if(dialog.getFile() == null)
       {
        //dont do anything
+    	  return;
       }
       else
       {
-      outFile = new QTFile(dialog.getDirectory() + dialog.getFile());
+    	  fileName = dialog.getDirectory()+dialog.getFile();
+      }
+    }
+      if (fileName != null){
+      outFile = new QTFile(fileName);
 
 
         QTSession.open();  //links to c stubbs?
@@ -182,7 +191,7 @@ public class SoniaMovieMaker extends JFrame implements StdQTConstants, Errors
     catch (Exception e)
     {
       //debug
-      control.showError("problem creating quicktime movie"+e.toString());
+      control.showError("Error saving quicktime movie"+e.toString());
       e.printStackTrace();
     }
   }

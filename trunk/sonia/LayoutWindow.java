@@ -213,7 +213,13 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 
 		exportMenu.add(new AbstractAction("Export Movie...") {
 			public void actionPerformed(ActionEvent arg0) {
-				Control.exportMovie(engine);
+				Control.exportMovie(engine,null);
+			}
+		});
+		
+		exportMenu.add(new AbstractAction("Export Matricies...") {
+			public void actionPerformed(ActionEvent arg0) {
+				Control.exportMatricies(engine);
 			}
 		});
 
@@ -706,14 +712,14 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		// get that slice
 		LayoutSlice currentSlice = engine.getCurrentSlice();
 		// apply layout
-		engine.applyLayoutToCurrent(engine.getCurrentApplySettings());
+		engine.applyLayoutToCurrent();
 		// Render the entire slice as one block, from start to finish
 		RenderTime.setText("" + currentSlice.getSliceStart());
 		RenderDuration.setText(""
 				+ (currentSlice.getSliceEnd() - currentSlice.getSliceStart()));
 		LayoutArea.setRenderSlice(engine.getRenderSlice(currentSlice
 				.getSliceStart(), currentSlice.getSliceEnd()));
-		updateDisplay();
+		updateDisplay(); 
 	}
 
 	/**

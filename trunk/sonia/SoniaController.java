@@ -340,12 +340,12 @@ public class SoniaController {
 					compoundSettings += line+"\n";
 					line = reader.readLine();
 				}
+				showStatus("Read batch settings file: "+settingsOrFile);
+				log("Read batch settings file"+settingsOrFile);
 			} catch (IOException e) {
-				System.out.println("error reading batch settings from file:"+e.getMessage());
+				showError("Error reading batch settings from file:"+settingsOrFile+" :"+e.getMessage());
 			}
 		} catch (FileNotFoundException e) {
-			//debug
-			System.out.println("didn't locate file:"+settingsOrFile);
 		}
        //now try to get the settings objects
 	  PropertyBuilder proper = new PropertyBuilder(compoundSettings);
@@ -357,6 +357,33 @@ public class SoniaController {
 		log("Read layout settings from batch instructions");
 		createLayout();
 	  }
+	  if (sliceSettings != null){
+		  showStatus("Read apply settings from batch instructions");
+			log("Read apply settings from batch instructions");
+			createLayout();
+		  }
+     if ((engine != null) && (applySettings != null)){
+    	 engine.setApplySettings(applySettings);
+    	 engine.applyLayoutToCurrent();
+    	 engine.changeToSliceNum(1);
+    	 applySettings.setProperty(ApplySettings.STARTING_COORDS,ApplySettings.COORDS_FROM_PREV);
+    	 applySettings.setProperty(ApplySettings.APPLY_REMAINING,true+"");
+    	 engine.setApplySettings(applySettings);
+    	 engine.applyLayoutToRemaining();
+    	 engine.changeToSliceNum(0);
+    	 if (isShowGUI()){
+    		 engine.getLayoutWindow().showCurrentSlice();
+    		 
+    	 }
+    	 exportMovie(engine,currentPath+getFileName()+".mov");
+    	 log.writeLogToFile(currentPath+getFileName()+"_log.txt");
+    	 //if there is no ui, then we should quite when done
+    	 if (!isShowGUI()){
+    		 System.out.println("moive export finished, exiting SoNIA");
+    	   System.exit(0);
+    	 }
+    	 
+     }
 	}
 
 	/**
@@ -409,7 +436,7 @@ public class SoniaController {
 		// should make sure there is some network data
 		if (fileLoaded == true) {
 
-			String engName = fileName + " #" + (engines.size() + 1);
+			String engName = getFileName() + " #" + (engines.size() + 1);
 			// probably should ask for kind of layout here
 			if (isShowGUI() & (sliceSettings == null)) {
 				LayoutSettingsDialog windowSettings = new LayoutSettingsDialog(
@@ -428,6 +455,7 @@ public class SoniaController {
 			}
 			engine = new SoniaLayoutEngine(sliceSettings, this, networkData,
 					engName);
+			showStatus("layout "+engName+" created.");
 			engines.add(engine);
 			LayoutWindow display = new LayoutWindow(this, engine, 490, 420);
 			engine.setDisplay(display);
@@ -443,6 +471,12 @@ public class SoniaController {
 			showError("Load file before creating layout");
 		}
 	}
+	
+	/**
+	 */
+	public void pippo(){
+		
+	}
 
 	/**
 	 * Not sure if we should have this method as it is for gui..
@@ -457,13 +491,13 @@ public class SoniaController {
 	 * Brings up a dialog to pick which of the layouts to export as a movie,
 	 * then makes a movie exporter and passes it to the layout engine.
 	 */
-	public void exportMovie(SoniaLayoutEngine engToFilm) {
+	public void exportMovie(SoniaLayoutEngine engToFilm, String fileName) {
 		// NEED TOP PICK WHICH layout to export!!
 		// ListPicker engPicker = new ListPicker(ui,engines,"Choose Layout to
 		// film");
 		// SoniaLayoutEngine engToFilm =
 		// (SoniaLayoutEngine)engPicker.getPickedObject();
-		SoniaMovieMaker exporter = new SoniaMovieMaker(this, engToFilm);
+		SoniaMovieMaker exporter = new SoniaMovieMaker(this, engToFilm, fileName);
 		// for now, tell the engine to tell the layout...
 		engToFilm.makeMovie(exporter);
 
@@ -474,18 +508,18 @@ public class SoniaController {
 	 * and then saves out a text file containing a set of matricies
 	 * corresponding to each slice in the layout.
 	 */
-	public void exportMatricies() {
+	public void exportMatricies(SoniaLayoutEngine engToExport) {
 		// NEED TO PICK WHICH LAYOUTEnginge TO EXPORT
 		// first make sure there is at leat one
 		if (engines.size() < 1) {
 			showError("At least one layout must be created to export");
 		} else {
-			ListPicker layoutPicker = new ListPicker(ui, engines,
-					"Choose Layout to Export");
-			SoniaLayoutEngine engToExport = (SoniaLayoutEngine) layoutPicker
-					.getPickedObject();
-			String promptString = "Please Choose location and name matrix text file";
-			String sugestFile = fileName + ".mat";
+			//ListPicker layoutPicker = new ListPicker(ui, engines,
+			//		"Choose Layout to Export");
+			//SoniaLayoutEngine engToExport = (SoniaLayoutEngine) layoutPicker
+			//		.getPickedObject();
+			String promptString = "Please Choose location and name for the matrix text file";
+			String sugestFile = getFileName() + ".mat";
 			String logFileName = getOutputFile(sugestFile, promptString);
 			// WRITE TEXT TO FILE -----------------------------
 			// check if user canceled save dialog don't output data to file (but
