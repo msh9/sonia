@@ -8,6 +8,7 @@ import java.util.Vector;
 
 import sonia.ArcAttribute;
 import sonia.NodeAttribute;
+import sonia.PropertySettings;
 
 /**
  * Instead of reading a file as input, this class takes sets of arrays passed in
@@ -311,6 +312,13 @@ public class RJavaParser implements Parser {
 
 	public String getParserInfo() {
 		return "R network object parser";
+	}
+
+	/**
+	 * this parser is not configurable
+	 */
+	public void configureParser(PropertySettings settings) {
+		
 	}
 
 }

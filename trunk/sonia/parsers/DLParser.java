@@ -10,6 +10,7 @@ import java.util.Vector;
 
 import sonia.ArcAttribute;
 import sonia.NodeAttribute;
+import sonia.PropertySettings;
 
 /**
  * reads the version of the UCINET DL multiple matrix edgelist format written by
@@ -236,6 +237,13 @@ public class DLParser implements Parser {
 
 	public String getParserInfo() {
 		return "DL edglist1 parser";
+	}
+
+	/**
+	 * this parser is not configurable
+	 */
+	public void configureParser(PropertySettings settings) {
+		
 	}
 
 }

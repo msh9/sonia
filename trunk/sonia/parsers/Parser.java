@@ -29,6 +29,8 @@ import java.util.Vector;
 import java.util.Hashtable;
 import java.io.IOException;
 
+import sonia.PropertySettings;
+
 
 /**
  * There are multiple data formats available for storing and exchanging network
@@ -87,5 +89,12 @@ public interface Parser
    * Returns a string with the name of the parser
    */
   public String getParserInfo();
+  
+  /**
+   * allows configuring the parser's settings before running
+   * @author skyebend
+   * @param settings the settings object appropriate for the specific parser
+   */
+  public void configureParser(PropertySettings settings);
 
 }

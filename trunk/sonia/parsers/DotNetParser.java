@@ -33,6 +33,7 @@ import java.awt.event.*;
 
 import sonia.ArcAttribute;
 import sonia.NodeAttribute;
+import sonia.PropertySettings;
 
 
 
@@ -109,7 +110,7 @@ import sonia.NodeAttribute;
 * is why the .net parser throws up the dialog to ask "parse times as integers."
 * If this is set to true, the end times will all have 0.99999 added to them, so
 * that the interval 1-2 will become 1.0-2.99999 instead of 1.0 to 2.0.
-* @version $Revision: 1.1 $ $Date: 2006-07-05 21:42:43 $
+* @version $Revision: 1.2 $ $Date: 2006-08-10 00:48:39 $
 * @author Skye Bender-deMoll e-mail skyebend@santafe.edu
 */
 public class DotNetParser extends Object implements Parser, ActionListener
@@ -890,5 +891,10 @@ public class DotNetParser extends Object implements Parser, ActionListener
   {
     return "DotNetParser";
   }
+
+public void configureParser(PropertySettings settings) {
+	// TODO make possible to .net parser here instead of with dialog
+	
+}
 
 }
