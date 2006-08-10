@@ -65,6 +65,8 @@ public class SoniaLayoutEngine {
 	private LayoutSettings layoutSettings;
 
 	private ApplySettings applySettings;
+	
+	private GraphicsSettings graphicSettings;
 
 	// private Vector renderSlices;
 	private NetLayout currentLayout;
@@ -138,10 +140,7 @@ public class SoniaLayoutEngine {
 		netData = data;
 		engineName = name;
 		layoutSettings = settings;
-
-		
-		// debug
-		System.out.println("settings " + settings);
+		//graphicSettings = graphSetting;
 
 		// take care of all the settings
 		// make the right kinds of layout
@@ -209,6 +208,7 @@ public class SoniaLayoutEngine {
 		// tell layout to DRAW the first layout without applying layout
 		display.showCurrentSlice();
 		display.setTitle(display.getTitle() + currentLayout.getLayoutType());
+		//TODO: should it update the graphic settings?
 		// make sure the network gets drawn
 		display.updateDisplay();
 		// try to make the layout window active

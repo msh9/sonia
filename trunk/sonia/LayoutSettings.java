@@ -1,7 +1,5 @@
 package sonia;
 
-import java.util.Iterator;
-import java.util.Properties;
 
 /**
  * Stores specifications for sliceing and applying layouts as properties
@@ -9,7 +7,7 @@ import java.util.Properties;
  * @author skyebend
  *
  */
-public class LayoutSettings extends Properties {
+public class LayoutSettings extends PropertySettings {
 
 	
 	/**
@@ -26,17 +24,6 @@ public class LayoutSettings extends Properties {
 	public static final String SLICE_AGGREGATION = "SLICE_AGGREGATION";
 	public static final String LAYOUT_SETTINGS = "LAYOUT_SETTINGS";
 	
-	/**
-	 * overides to string so that each key=value pair is printed on its own line with an indent
-	 */
-	public String toString(){
-		String outString = PropertyBuilder.SETTING_CLASS_CODE+"="+LayoutSettings.class.getName()+"\n";
-		Iterator keyIter = this.keySet().iterator();
-		while (keyIter.hasNext()){
-			String key = (String)keyIter.next();
-			outString = outString +"\t"+key+"="+getProperty(key)+"\n";
-		}
-		return outString;
-	}
+	
 	
 }

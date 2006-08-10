@@ -138,10 +138,10 @@ public class PhasePlot extends ExportableFrame implements
 		c.gridheight = 1;
 		c.weightx = 1;
 		c.weighty = 1;
-		c.fill = c.BOTH;
+		c.fill = GridBagConstraints.BOTH;
 		this.getContentPane().add(drawArea, c);
-		c.fill = c.NONE;
-		c.anchor = c.SOUTH;
+		c.fill = GridBagConstraints.NONE;
+		c.anchor = GridBagConstraints.SOUTH;
 		c.gridx = 1;
 		c.gridy = 1;
 		c.gridwidth = 1;
@@ -179,6 +179,11 @@ public class PhasePlot extends ExportableFrame implements
 	}
 
 	private class PhasePlotPanel extends JPanel {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
 		public void paintComponent(Graphics g) {
 			super.paintComponent(g);
 			Graphics2D graph = (Graphics2D) g;

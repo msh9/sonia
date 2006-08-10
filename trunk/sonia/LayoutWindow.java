@@ -135,6 +135,10 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 
 	private GraphicsSettingsDialog graphicsSettings;
 
+	private GraphicsSettings drawSettings;
+
+	private BrowsingSettings browseSettings;
+
 	private SoniaCanvas LayoutArea;
 
 	private JPanel controlPanel;
@@ -183,7 +187,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	private boolean movingNodes = false;
 
 	private boolean isTransitionActive = false; // indicates if a thread is
-												// animating
+
+	// animating
 
 	private NodeMover mover;
 
@@ -203,20 +208,22 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	 * @param initHeight
 	 *            the initial height of the window in pixels
 	 */
-	public LayoutWindow(SoniaController controller,
-			SoniaLayoutEngine layoutEng, int initWidth, int initHeight) {
+	public LayoutWindow(GraphicsSettings settings, BrowsingSettings browseSet,
+			SoniaController controller, SoniaLayoutEngine layoutEng,
+			int initWidth, int initHeight) {
 		super.setDefaultCloseOperation(ExportableFrame.DO_NOTHING_ON_CLOSE);
-		
-		
+
 		Control = controller;
 		engine = layoutEng;
+		drawSettings = settings;
+		browseSettings = browseSet;
 
 		exportMenu.add(new AbstractAction("Export Movie...") {
 			public void actionPerformed(ActionEvent arg0) {
-				Control.exportMovie(engine,null);
+				Control.exportMovie(engine, null);
 			}
 		});
-		
+
 		exportMenu.add(new AbstractAction("Export Matricies...") {
 			public void actionPerformed(ActionEvent arg0) {
 				Control.exportMatricies(engine);
@@ -252,12 +259,11 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		LayoutNum.setBorder(new TitledBorder("Layout (slice) #:"));
 		LayoutNum.setToolTipText("Index of slices used for coordinates");
 		// LayoutLabel = new JLabel("Layout (slice) #:");
-		LayoutArea = new SoniaCanvas(engine, this);
+		LayoutArea = new SoniaCanvas(drawSettings, engine);
 		LayoutArea.setBackground(Color.WHITE);
 
-		// set up graphics settings dialog
-		graphicsSettings = new GraphicsSettingsDialog(Control, engine, null,
-				LayoutArea);
+		graphicsSettings = new GraphicsSettingsDialog(LayoutArea.getSettings(),
+				Control, engine, null, LayoutArea);
 
 		// NumInterpLabel = new JLabel("num. interp frames");
 		NumInterps = new JTextField("10", 5);
@@ -275,8 +281,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		// set up top level components
 		// c.gridx=0;c.gridy=0;c.gridwidth=7;c.gridheight=1;c.weightx=1;c.weighty=1;
 		// c.fill=c.BOTH;
-		getContentPane().add(LayoutArea, BorderLayout.CENTER);
-		getContentPane().add(controlPanel, BorderLayout.SOUTH);
+		getContentPane().add(LayoutArea,BorderLayout.CENTER);
+		getContentPane().add(controlPanel,BorderLayout.SOUTH);
 
 		GridBagLayout layout = new GridBagLayout();
 		controlPanel.setLayout(layout);
@@ -434,12 +440,16 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 
 		addInternalFrameListener(this);
 
+		// read settings from the browsng properties
+		fetchBrowseSettings();
+
 		// this.setBackground(Color.lightGray);
 		this.setSize(initWidth, initHeight);
 		this.setTitle(engine.toString());
 		this.setLocation(10, 10);
 		this.setVisible(true);
 		
+
 
 	}
 
@@ -462,6 +472,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	 *            the event indicating the source of the action
 	 */
 	public void actionPerformed(ActionEvent evt) {
+
 		if (evt.getSource().equals(ApplyLayout)) {
 			applyLayout();
 		} else if (evt.getSource().equals(ReApply)) {
@@ -484,10 +495,10 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		} else if (evt.getSource().equals(Pause)) {
 			if (Control.isPaused()) {
 				Control.setPaused(false);
-				Pause.setLabel("||");
+				Pause.setText("||");
 			} else {
 				Control.setPaused(true);
-				Pause.setLabel("[||]");
+				Pause.setText("[||]");
 			}
 		} else if (evt.getSource().equals(PrevSlice)) {
 			if (!isTransitionActive) {
@@ -523,6 +534,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 				moveNodes();
 			}
 		}
+		recordBrowseSettings();
 	}
 
 	/**
@@ -535,7 +547,6 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	 */
 	public void makeMovie(SoniaMovieMaker exporter) {
 		movie = exporter;
-		int startIndex = 1;
 		int endIndex = engine.getNumSlices();
 		int numFrames = endIndex * Integer.parseInt(NumInterps.getText());
 		movie.setupMovie(LayoutArea, numFrames);
@@ -672,12 +683,12 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 			movingNodes = true;
 			// mover will add itself to layout as a mouse motion listener
 			mover = new NodeMover(Control, engine, LayoutArea);
-			MoveNodes.setLabel("Stop Moving");
+			MoveNodes.setText("Stop Moving");
 		} else {
 			movingNodes = false;
 			mover.endMoveNodes();
 			mover = null;
-			MoveNodes.setLabel("Move Nodes");
+			MoveNodes.setText("Move Nodes");
 		}
 	}
 
@@ -719,7 +730,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 				+ (currentSlice.getSliceEnd() - currentSlice.getSliceStart()));
 		LayoutArea.setRenderSlice(engine.getRenderSlice(currentSlice
 				.getSliceStart(), currentSlice.getSliceEnd()));
-		updateDisplay(); 
+		updateDisplay();
 	}
 
 	/**
@@ -783,7 +794,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 			// try changeing to the requested one (there might not be one)
 			engine.changeToSliceNum(number);
 			int newNum = engine.getCurrentSliceNum(); // incase we were at the
-														// last slice
+			// last slice
 			if (newNum != nowNum) {
 				// get the next (now the current) slice
 				LayoutSlice newSlice = engine.getCurrentSlice();
@@ -912,7 +923,13 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		// get the difference between existing layout size and frame size
 		int widthDif = this.getWidth() - LayoutArea.getWidth();
 		int heightDif = this.getHeight() - LayoutArea.getHeight();
-		LayoutArea.setSize(width, height);
+		
+		//dbug
+		System.out.println("window width "+this.getWidth()
+				+"window height " + this.getHeight()+
+				"layout width "+ LayoutArea.getWidth()+
+				"layout height "+LayoutArea.getHeight());
+		LayoutArea.setSize(new Dimension(width, height));
 		this.setSize(width + widthDif, height + heightDif);
 		this.validate();
 	}
@@ -926,13 +943,10 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	// //this will just redraw the old image of the network to same time
 	// LayoutArea.paint(g);
 	// }
-
 	/*
 	 * public void invalidate() { super.invalidate(); LayoutArea.invalidate();
 	 * //debug System.out.println("layout window invalidated"); }
 	 */
-
-
 
 	public void internalFrameClosing(InternalFrameEvent e) {
 		// ask if this is a good idea
@@ -951,7 +965,51 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 			this.dispose();
 		}
 	}
+	
+	
 
+	
+	/**
+	 * reads the browse settings from the gui and stores them in the properties
+	 * object
+	 * 
+	 * @author skyebend
+	 */
+	private void recordBrowseSettings() {
+		if (browseSettings == null) {
+			browseSettings = new BrowsingSettings();
+		}
+		browseSettings.setDoubleProperty(BrowsingSettings.RENDER_DURATION,
+				RenderDuration.getText().trim());
+		browseSettings.setDoubleProperty(BrowsingSettings.RENDER_OFFSET,
+				renderOffset.getText().trim());
+		browseSettings.setDoubleProperty(BrowsingSettings.INTERP_FRAMES,
+				NumInterps.getText().trim());
+		browseSettings.setDoubleProperty(BrowsingSettings.FRAME_DELAY,
+				frameDelay.getText().trim());
+		// debug
+		System.out.println(browseSettings.toString());
+	}
 
+	/**
+	 * reads browse settings from the properties object and set them in the gui,
+	 * using the current gui values as defaults
+	 * 
+	 * @author skyebend
+	 */
+	private void fetchBrowseSettings() {
+		if (browseSettings == null) {
+			browseSettings = new BrowsingSettings();
+		}
+		RenderDuration.setText(browseSettings.getProperty(
+				BrowsingSettings.RENDER_DURATION, RenderDuration.getText()
+						.trim()));
+		renderOffset.setText(browseSettings.getProperty(
+				BrowsingSettings.RENDER_OFFSET, renderOffset.getText().trim()));
+		NumInterps.setText(browseSettings.getProperty(
+				BrowsingSettings.INTERP_FRAMES, NumInterps.getText().trim()));
+		frameDelay.setText(browseSettings.getProperty(
+				BrowsingSettings.FRAME_DELAY, frameDelay.getText().trim()));
+	}
 
 }

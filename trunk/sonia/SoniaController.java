@@ -37,6 +37,8 @@ import javax.swing.UIManager;
 import javax.swing.plaf.metal.MetalLookAndFeel;
 import javax.swing.plaf.metal.MetalTheme;
 
+import com.sun.org.apache.bcel.internal.generic.GETSTATIC;
+
 import sonia.parsers.DLParser;
 import sonia.parsers.DotNetParser;
 import sonia.parsers.DotSonParser;
@@ -56,7 +58,7 @@ import cern.colt.matrix.impl.SparseDoubleMatrix2D;
  */
 
 public class SoniaController {
-	public static final String CODE_DATE = "2006-03-19";
+	public static final String CODE_DATE = "2006-08-09";
 
 	public static final String VERSION = "1.1.3";
 
@@ -89,6 +91,12 @@ public class SoniaController {
 	private LayoutSettings sliceSettings = null;
 	
 	private ApplySettings applySettings = null;
+	
+	private GraphicsSettings graphicSettings = null;
+	
+	private BrowsingSettings browseSettings = null;
+	
+	private PropertySettings parserSettings = null;
 
 	private Uniform randomUni; // colt package mersense twister random numbers
 
@@ -192,12 +200,7 @@ public class SoniaController {
 
 		}
 		SoniaController sonia = new SoniaController(rngSeed);
-		// if a file has been passed on the command line, load it
-		if (!inFile.equals("")) {
-			sonia.loadFile(inFile);
-		} else if (!networkData.equals("")) {
-			sonia.loadData(networkData);
-		}
+	
 		// batch overides settings
 		if (!batchSettings.equals("")) {
 			// check if it is a file or a string and try to load it
@@ -206,6 +209,17 @@ public class SoniaController {
 			sonia.loadBatchSettings(batchSettings);
 		} else if (!settingsFile.equals("")) {
 			sonia.loadSettings(settingsFile);
+		}
+		// if a file has been passed on the command line, load it
+		if (!inFile.equals("")) {
+			sonia.loadFile(inFile);
+		} else if (!networkData.equals("")) {
+			sonia.loadData(networkData);
+		}
+		
+		//if we are going to run a batch, run it here ( later move this code)
+		if (!batchSettings.equals("")){
+			sonia.runBatch();
 		}
 	}
 
@@ -270,6 +284,7 @@ public class SoniaController {
 			Parser parser;
 			if (fileName.endsWith(".son")) {
 				parser = new DotSonParser();
+				parser.configureParser(parserSettings);
 			} else if (fileName.endsWith(".dl")) {
 				parser = new DLParser();
 			}
@@ -343,25 +358,52 @@ public class SoniaController {
 				showStatus("Read batch settings file: "+settingsOrFile);
 				log("Read batch settings file"+settingsOrFile);
 			} catch (IOException e) {
-				showError("Error reading batch settings from file:"+settingsOrFile+" :"+e.getMessage());
+				showError("Error reading batch settings from file: "+settingsOrFile+" :"+e.getMessage());
 			}
 		} catch (FileNotFoundException e) {
 		}
        //now try to get the settings objects
 	  PropertyBuilder proper = new PropertyBuilder(compoundSettings);
+	  parserSettings = proper.getParserSettings();
+	  if (parserSettings != null){
+		  showStatus("Read parser settings from batch instructions");
+			log("Read parser settings from batch instructions:\n "+parserSettings);
+	  }
 	  sliceSettings = proper.getLayoutSettings();
+	  if (sliceSettings != null){
+		  showStatus("Read layout slice settings from batch instructions");
+			log("Read layout slice settings from batch instructions:\n "+sliceSettings);
+	  }
 	  applySettings = proper.getApplySettings();
+	  if (applySettings != null){
+		  showStatus("Read layout apply settings from batch instructions");
+			log("Read layout apply settings from batch instructions:\n "+applySettings);
+	  }
+	  graphicSettings = proper.getGraphicsSettings();
+	  if (sliceSettings != null){
+		  showStatus("Read graphics settings from batch instructions");
+			log("Read graphics settings from batch instructions:\n "+graphicSettings);
+	  }
+	  browseSettings = proper.getBrowsingSettings();
+	  if (sliceSettings != null){
+		  showStatus("Read layout browsing settings from batch instructions");
+			log("Read layout browsing settings from batch instructions:\n "+browseSettings);
+	  }
+	
+	}
+	
+	/**
+	 * if batch settings have been loaded, runs sonia as specified without user interaction. 
+	 * @author skyebend
+	 */
+	public void runBatch(){
 	  //try to do the slicing
 	  if (sliceSettings != null){
 	  showStatus("Read layout settings from batch instructions");
 		log("Read layout settings from batch instructions");
 		createLayout();
 	  }
-	  if (sliceSettings != null){
-		  showStatus("Read apply settings from batch instructions");
-			log("Read apply settings from batch instructions");
-			createLayout();
-		  }
+	 
      if ((engine != null) && (applySettings != null)){
     	 engine.setApplySettings(applySettings);
     	 engine.applyLayoutToCurrent();
@@ -375,14 +417,14 @@ public class SoniaController {
     		 engine.getLayoutWindow().showCurrentSlice();
     		 
     	 }
-    	 exportMovie(engine,currentPath+getFileName()+".mov");
-    	 log.writeLogToFile(currentPath+getFileName()+"_log.txt");
-    	 //if there is no ui, then we should quite when done
-    	 if (!isShowGUI()){
-    		 System.out.println("moive export finished, exiting SoNIA");
-    	   System.exit(0);
-    	 }
-    	 
+//    	 exportMovie(engine,currentPath+getFileName()+".mov");
+//    	 log.writeLogToFile(currentPath+getFileName()+"_log.txt");
+//    	 //if there is no ui, then we should quite when done
+//    	 if (!isShowGUI()){
+//    		 System.out.println("moive export finished, exiting SoNIA");
+//    	   System.exit(0);
+//    	 }
+//    	 
      }
 	}
 
@@ -457,9 +499,20 @@ public class SoniaController {
 					engName);
 			showStatus("layout "+engName+" created.");
 			engines.add(engine);
-			LayoutWindow display = new LayoutWindow(this, engine, 490, 420);
+			//check if we have graphic settings
+			if (graphicSettings == null){
+				//kludge to get settings with defaults
+				graphicSettings = (new GraphicsSettingsDialog(new GraphicsSettings(),this,engine,null,null)).storeSettings();
+			}
+			//debug
+			System.out.println("graphic settings: "+graphicSettings);
+			LayoutWindow display = new LayoutWindow(graphicSettings, browseSettings, this, engine, 490, 420);
 			engine.setDisplay(display);
 			ui.addFrame(display);
+			 engine.setDisplayWidth(Integer.parseInt(graphicSettings
+						.getProperty(GraphicsSettings.LAYOUT_WIDTH)));
+			engine.setDisplayHeight(Integer.parseInt(graphicSettings
+						.getProperty(GraphicsSettings.LAYOUT_HEIGHT)));
 			// try {
 			// display.setMaximum(true);
 			// } catch (PropertyVetoException e) {

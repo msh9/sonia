@@ -22,7 +22,7 @@ import javax.swing.JScrollPane;
 public class AttributeMapperDialog extends Object{
     
     private ArrayList unmapped;
-    private ColumnMap map;
+    private DotSonColumnMap map;
     private Dialog dialog;
     private JScrollPane sp;
     private JPanel layoutPanel;
@@ -31,14 +31,14 @@ public class AttributeMapperDialog extends Object{
             public void itemStateChanged(ItemEvent e){
                 //debug
                 System.out.println(((JComboBox)e.getSource()).getName()+":"+ e.getItem());
-                map.setValueForFieldName(((JComboBox)e.getSource()).getName(), e.getItem().toString());
+                map.setProperty(((JComboBox)e.getSource()).getName(), e.getItem().toString());
                 //need to put the deselected item on the list for others to use...
             }
         };
     
     
     /** Creates a new instance of AttributeMapperDialog */
-    public AttributeMapperDialog(ColumnMap map, ArrayList unmapped) {
+    public AttributeMapperDialog(DotSonColumnMap map, ArrayList unmapped) {
         
         
         this.unmapped = unmapped;
@@ -70,7 +70,7 @@ public class AttributeMapperDialog extends Object{
         c.gridx=1;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=1;c.weighty=1;
         layoutPanel.add(colLabel,c);
         int rowNum = 2;
-        ArrayList mapKeys =map.getMapKeys();
+        Set mapKeys =map.keySet();
         Iterator attrKeyIter = mapKeys.iterator();
         //loop to add all the attribute labels
         while(attrKeyIter.hasNext()) {
@@ -80,14 +80,15 @@ public class AttributeMapperDialog extends Object{
             rowNum++;
         }
         c.gridx=0;c.gridy=rowNum;c.gridwidth=2;c.gridheight=1;c.weightx=1;c.weighty=1.5;
-        
+        //TODO: clean all this up, it is messy
         //loop to add the column choices
-        ArrayList values = map.getMapValues();
-        for (int i=0;i<values.size();i++) {
+        Object[] values = map.values().toArray();
+        Object[] keys = mapKeys.toArray();
+        for (int i=0;i<values.length;i++) {
             //make a new list of choices
-        	unmapped.add(0,(String)values.get(i));
+        	unmapped.add(0,values[i].toString());
             JComboBox choiceList = new JComboBox(unmapped.toArray());
-            choiceList.setName((String)mapKeys.get(i));
+            choiceList.setName(keys[i].toString());
             choiceList.addItemListener(choiceListener);
             unmapped.remove(0);
             //add the items to the list

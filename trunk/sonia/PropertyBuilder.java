@@ -5,13 +5,13 @@ import java.util.StringTokenizer;
 
 public class PropertyBuilder {
 	
-	public static final String SETTING_CLASS_CODE = "SettingsClass";
+	
 	
     private String[] settingsBlocks;
     
 	public PropertyBuilder(String compoundProperties){
 		// parse the string into blocks to find the class headers later
-		 settingsBlocks  = compoundProperties.split(SETTING_CLASS_CODE+"=");
+		 settingsBlocks  = compoundProperties.split(PropertySettings.SETTING_CLASS_CODE+"=");
 	}
 	
 	
@@ -38,7 +38,7 @@ public class PropertyBuilder {
 	 * looks for an LayoutSettings block in the compoundProperties string,
 	 * initializes and returns it, or null if none foud
 	 * 
-	 * @return an ApplySettings object with values initialized, or null
+	 * @return an LayoutSettings object with values initialized, or null
 	 */
 	public LayoutSettings getLayoutSettings(){
 		// look through the blocks for one with a matching header
@@ -47,6 +47,67 @@ public class PropertyBuilder {
 			if (settingsBlocks[i].trim().startsWith(LayoutSettings.class.getName())){
 				
 				settings = (LayoutSettings)addProps(new LayoutSettings(),settingsBlocks[i]);
+				break;
+			}
+			
+		}
+		return settings;
+	}
+	
+	/**
+	 * looks for an GraphicsSettings block in the compoundProperties string,
+	 * initializes and returns it, or null if none foud
+	 * 
+	 * @return an GraphicsSettings object with values initialized, or null
+	 */
+	public GraphicsSettings getGraphicsSettings(){
+		// look through the blocks for one with a matching header
+		GraphicsSettings settings = null;
+		for (int i = 0; i < settingsBlocks.length; i++) {
+			if (settingsBlocks[i].trim().startsWith(GraphicsSettings.class.getName())){
+				
+				settings = (GraphicsSettings)addProps(new GraphicsSettings(),settingsBlocks[i]);
+				break;
+			}
+			
+		}
+		return settings;
+	}
+	
+	/**
+	 * looks for an BrowsingSettings block in the compoundProperties string,
+	 * initializes and returns it, or null if none foud
+	 * 
+	 * @return an BrowsingSettings object with values initialized, or null
+	 */
+	public BrowsingSettings getBrowsingSettings(){
+		// look through the blocks for one with a matching header
+		BrowsingSettings settings = null;
+		for (int i = 0; i < settingsBlocks.length; i++) {
+			if (settingsBlocks[i].trim().startsWith(BrowsingSettings.class.getName())){
+				
+				settings = (BrowsingSettings)addProps(new BrowsingSettings(),settingsBlocks[i]);
+				break;
+			}
+			
+		}
+		return settings;
+	}
+	
+	/**
+	 * looks for an DotSonColumnMap block in the compoundProperties string,
+	 * can be extended for other settings
+	 * initializes and returns it, or null if none foud
+	 * 
+	 * @return an DotSonColumnMap object with values initialized, or null
+	 */
+	public PropertySettings getParserSettings(){
+		// look through the blocks for one with a matching header
+		DotSonColumnMap settings = null;
+		for (int i = 0; i < settingsBlocks.length; i++) {
+			if (settingsBlocks[i].trim().startsWith(DotSonColumnMap.class.getName())){
+				
+				settings = (DotSonColumnMap)addProps(new DotSonColumnMap(),settingsBlocks[i]);
 				break;
 			}
 			

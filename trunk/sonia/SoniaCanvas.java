@@ -34,15 +34,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 public class SoniaCanvas extends JPanel
 {
   private SoniaLayoutEngine engine;
-  private LayoutWindow display;
+ // private LayoutWindow display;
   private RenderSlice lastRender = null;
+  private GraphicsSettings settings = null;
   //private Image offScreen;
   private Image ghostImage = null;
   private int drawWidth;
   private int drawHeight;
-  private int topInset;
-  private int leftInset;
-  private int pad;
+
   private boolean antiAlias = true;
   private boolean showStats = true;
   private boolean showLabels = true;
@@ -68,10 +67,11 @@ public class SoniaCanvas extends JPanel
    * Does the actual job of rendering the network, and maintains the graphics
    * settings.  See LayoutWindow for an overview of the rendering process.
    */
-  public SoniaCanvas(SoniaLayoutEngine eng, LayoutWindow window)
+  public SoniaCanvas(GraphicsSettings settings, SoniaLayoutEngine eng)
   {
     engine = eng;
-    display = window;
+    this.settings = settings;
+    //display = window;
 
     drawWidth = engine.getDisplayWidth();
     drawHeight = engine.getDisplayHeight();
@@ -121,7 +121,7 @@ public class SoniaCanvas extends JPanel
 	 
    // leftInset = getInsets();
    // topInset = display.getInsets().top;
-    pad = engine.getPad();
+  //  pad = engine.getPad();
 	 // super.paintComponent(g);
     //check if the window has changed size
     if ((drawWidth != engine.getDisplayWidth()) |
@@ -206,177 +206,194 @@ public class SoniaCanvas extends JPanel
 */
   public boolean isAntiAlias()
   {
-    return antiAlias;
+    //return antiAlias;
+	  return Boolean.parseBoolean(settings.getProperty(GraphicsSettings.ANTI_ALIAS));
   }
-  public void setAntiAlias(boolean onOff)
-  {
-    antiAlias = onOff;
-  }
+//  public void setAntiAlias(boolean onOff)
+//  {
+//    antiAlias = onOff;
+//  }
   public boolean isShowArrows()
   {
-    return showArrows;
+    //return showArrows;
+	  return settings.getProperty(GraphicsSettings.ARROW_STYLE).equals(GraphicsSettings.ARROW_END);
   }
-  public void setShowArrows(boolean onOff)
-  {
-    showArrows = onOff;
-  }
+//  public void setShowArrows(boolean onOff)
+//  {
+//    showArrows = onOff;
+//  }
   public boolean isShowArcWeights()
   {
-    return showArcWeights;
+    //return showArcWeights;
+    return settings.getProperty(GraphicsSettings.ARC_LABELS).equals(GraphicsSettings.LAYOUT_WEIGHTS);
   }
-  public void setShowArcWeights(boolean onOff)
-  {
-    showArcWeights = onOff;
-  }
+//  public void setShowArcWeights(boolean onOff)
+//  {
+//    showArcWeights = onOff;
+//  }
   public boolean isShowArcLabels()
   {
-    return showArcLabels;
+    //return showArcLabels;
+	  return settings.getProperty(GraphicsSettings.ARC_LABELS).equals(GraphicsSettings.LABELS);
   }
-  public void setShowArcLabels(boolean onOff)
-  {
-    showArcLabels = onOff;
-  }
+//  public void setShowArcLabels(boolean onOff)
+//  {
+//    showArcLabels = onOff;
+//  }
   public boolean isGhostSlice()
   {
-    return ghostSlice;
+     ghostSlice = Boolean.parseBoolean(settings.getProperty(GraphicsSettings.ANTI_ALIAS));
+     if (!ghostSlice)
+     {
+       ghostImage = null;
+     }
+	  return ghostSlice;
   }
-  public void setGhostSlice(boolean onOff)
-  {
-    ghostSlice = onOff;
-    if (!ghostSlice)
-    {
-      ghostImage = null;
-    }
-  }
-  public void setFlashNew(boolean value) 
-  {
-          flashNewEvents = value;
-  }
+//  public void setGhostSlice(boolean onOff)
+//  {
+//    ghostSlice = onOff;
+//    if (!ghostSlice)
+//    {
+//      ghostImage = null;
+//    }
+//  }
+//  public void setFlashNew(boolean value) 
+//  {
+//	 
+//	  
+//          flashNewEvents = value;
+//  }
   /**
    * indicates if "new" events should be "flashed" (graphically hilited) in the 
    * display.  new events are defined by their start time and flash duration
    */
   public boolean isFlashNew()
   {
-      return flashNewEvents;
+      return getFlashDuration() != 0.0;
   }
   /**
    * how long (in data time) flashed events should be drawn as flashed events
    */
-  public void setFlashDuration(double duration)
-  {
-      flashDuration = duration;
-  }
+//  public void setFlashDuration(double duration)
+//  {
+//      flashDuration = duration;
+//  }
   public double getFlashDuration()
   {
-      return flashDuration;
+      //return flashDuration;
+	  return Double.parseDouble(settings.getProperty(GraphicsSettings.FLASH_EVENTS));
   }
   
   public boolean isShowLabels()
   {
-    return showLabels;
+    //return showLabels;
+	  return settings.getProperty(GraphicsSettings.NODE_LABELS).equals(GraphicsSettings.LABELS);
   }
-  public void setShowLabels(boolean onOff)
-  {
-    showLabels = onOff;
-  }
+//  public void setShowLabels(boolean onOff)
+//  {
+//    showLabels = onOff;
+//  }
   public float getShowLabelsVal()
   {
-    return showLabelsVal;
+    //return showLabelsVal;
+    return Float.parseFloat(settings.getProperty(GraphicsSettings.NODE_LABEL_CUTOFF));
   }
-  public void setShowLabelsVal(float thresh)
-  {
-    showLabelsVal = thresh;
-  }
+//  public void setShowLabelsVal(float thresh)
+//  {
+//    showLabelsVal = thresh;
+//  }
   public boolean isShowId()
   {
-    return showID;
+    //return showID;
+	  return settings.getProperty(GraphicsSettings.NODE_LABELS).equals(GraphicsSettings.IDS);
   }
-  public void setShowId(boolean onOff)
-  {
-    showID = onOff;
-  }
+//  public void setShowId(boolean onOff)
+//  {
+//    showID = onOff;
+//  }
   public float getShowIdsVal()
   {
-    return showIdsVal;
+    return getShowLabelsVal();
   }
-  public void setShowIdsVal(float thresh)
-  {
-    showIdsVal = thresh;
-  }
+//  public void setShowIdsVal(float thresh)
+//  {
+//    showIdsVal = thresh;
+//  }
   public boolean isShowStats()
   {
-    return showStats;
+    //return showStats;
+	 return Boolean.parseBoolean(settings.getProperty(GraphicsSettings.SHOW_STATS));
   }
-  public void setShowStats(boolean onOff)
-  {
-    showStats = onOff;
-  }
+//  public void setShowStats(boolean onOff)
+//  {
+//    showStats = onOff;
+//  }
   public boolean isArcTrans()
   {
-    return arcTrans;
+	 
+    return getArcTransVal() != 1.0;
   }
   public boolean isNodeTrans()
   {
-    return nodeTrans;
+    return getNodeTransVal() != 1.0;
   }
-  public void setArcTrans(boolean onOff)
-  {
-    arcTrans = onOff;
-  }
-  public void setNodeTrans(boolean onOff)
-  {
-    nodeTrans = onOff;
-  }
+//  public void setArcTrans(boolean onOff)
+//  {
+//    arcTrans = onOff;
+//  }
+//  public void setNodeTrans(boolean onOff)
+//  {
+//    nodeTrans = onOff;
+//  }
   public float getArcTransVal()
   {
     return arcTransVal;
   }
   public float getNodeTransVal()
   {
-    return nodeTransVal;
+    return Float.parseFloat(settings.getProperty(GraphicsSettings.NODE_TRANSPARENCY,nodeTransVal+""));
   }
-  public void setArcTransVal(float trans)
-  {
-    arcTransVal = trans;
-  }
-  public void setNodeTransVal(float trans)
-  {
-    nodeTransVal = trans;
-  }
+//  public void setArcTransVal(float trans)
+//  {
+//    arcTransVal = trans;
+//  }
+//  public void setNodeTransVal(float trans)
+//  {
+//    nodeTransVal = trans;
+//  }
   public float getArcWidthFact()
   {
-    return arcWidthFact;
+    return Float.parseFloat(settings.getProperty(GraphicsSettings.ARCS_WIDTH_FACTOR,arcWidthFact+""));
   }
-  public void setArcWidthFact(float fact)
-  {
-    arcWidthFact = fact;
-  }
-  public void setNodeScaleFact(float fact)
-  {
-    nodeScaleFact = fact;
-  }
+//  public void setArcWidthFact(float fact)
+//  {
+//    arcWidthFact = fact;
+//  }
+//  public void setNodeScaleFact(float fact)
+//  {
+//    nodeScaleFact = fact;
+//  }
   public float getNodeScaleFact()
   {
-    return nodeScaleFact;
+    return Float.parseFloat(settings.getProperty(GraphicsSettings.NODE_SCALE_FACTOR,nodeScaleFact+""));
   }
 
   public boolean isHideNodes()
   {
-    return hideNodes;
+    return settings.getProperty(GraphicsSettings.HIDE_NODES).equals(GraphicsSettings.ALL);
   }
-  public void setHideNodes(boolean state)
-  {
-    hideNodes = state;
-  }
+//  public void setHideNodes(boolean state)
+//  {
+//    hideNodes = state;
+//  }
   public boolean isHideArcs()
   {
-    return hideArcs;
+     return settings.getProperty(GraphicsSettings.HIDE_ARCS).equals(GraphicsSettings.ALL);
   }
-  public void setHideArcs(boolean state)
-  {
-    hideArcs = state;
-  }
+//  public void setHideArcs(boolean state)
+//  {
+//    hideArcs = state;
+//  }
 
 
 
@@ -398,6 +415,13 @@ public class SoniaCanvas extends JPanel
   public void update(Graphics g) {
 
   }
+public GraphicsSettings getSettings() {
+	return settings;
+}
+public void setSettings(GraphicsSettings settings) {
+	this.settings = settings;
+	repaint();
+}
 
 
 
