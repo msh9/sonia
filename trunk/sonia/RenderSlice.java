@@ -234,7 +234,9 @@ public class RenderSlice
   private BasicStroke getStrokeForWidth(float width, boolean isNegitive){
 	  if (isNegitive){
 		  width = width*-1;
+		  //TODO: negitive weights not working correctly
 	  }
+	  width = Math.abs(width);
 	  Float key = new Float(width);
 	  if (strokeTable.containsKey(key)){
 		  //return the stroke already made for this width

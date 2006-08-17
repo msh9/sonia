@@ -545,16 +545,18 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	 * @param exporter
 	 *            the SoniaMovieMaker which will record the images
 	 */
-	public void makeMovie(SoniaMovieMaker exporter) {
+	public void makeMovie(SoniaMovieMaker exporter) throws Exception {
 		movie = exporter;
 		int endIndex = engine.getNumSlices();
 		int numFrames = endIndex * Integer.parseInt(NumInterps.getText());
-		movie.setupMovie(LayoutArea, numFrames);
-		// make sure we are on the first slice
-		engine.changeToSliceNum(0);
-		// THIS SHOULD BE ON A SEPERATE THREAD SO WE CAN PAUSE
-		// should also record movie layout stats to first frame
-		startMovieRecordThread();
+		
+			movie.setupMovie(LayoutArea, numFrames);
+			// make sure we are on the first slice
+			engine.changeToSliceNum(0);
+			// THIS SHOULD BE ON A SEPERATE THREAD SO WE CAN PAUSE
+			// should also record movie layout stats to first frame
+			startMovieRecordThread();
+	
 	}
 
 	/**
@@ -923,12 +925,6 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		// get the difference between existing layout size and frame size
 		int widthDif = this.getWidth() - LayoutArea.getWidth();
 		int heightDif = this.getHeight() - LayoutArea.getHeight();
-		
-		//dbug
-		System.out.println("window width "+this.getWidth()
-				+"window height " + this.getHeight()+
-				"layout width "+ LayoutArea.getWidth()+
-				"layout height "+LayoutArea.getHeight());
 		LayoutArea.setSize(new Dimension(width, height));
 		this.setSize(width + widthDif, height + heightDif);
 		this.validate();

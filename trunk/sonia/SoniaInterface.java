@@ -19,6 +19,8 @@ import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.UIManager;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.CompoundBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.plaf.FontUIResource;
 
@@ -130,7 +132,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 						+ "  or send questions/bugs to sonia-users@lists.sourceforge.net", 1, 50);
 		// StatusText.setBackground(Color.white);
 		StatusText.setEditable(false);
-		StatusText.setBorder(new TitledBorder("Status:"));
+		StatusText.setBorder(new CompoundBorder( new BevelBorder(BevelBorder.LOWERED),new TitledBorder("Status:")));
 		StatusText.setLineWrap(true);
 		StatusText.setWrapStyleWord(true);
 		//StatusText.setColumns(30);

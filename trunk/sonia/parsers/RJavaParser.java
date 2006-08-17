@@ -53,6 +53,7 @@ public class RJavaParser implements Parser {
 	private static final String VERTEX_NAME = "vertex.names";
 
 	/**
+	 * String may be a list of networks, need to seperate them
 	 * String is the output of the paste() command for a network object in R.
 	 * Will be a set of lists "mel" : Master Edge List, "gal" : Graph Attribute
 	 * List, "val" : Vertex Attribute List, "iel" : In Edge List, "oel", Out
@@ -134,60 +135,75 @@ public class RJavaParser implements Parser {
 	 * @throws Exception
 	 */
 	private void parseMel(String mel) throws Exception {
-		// TODO: need to deal with missing deleted edges when parsing, they will
-		// have null values
+
 		int edgeCount = 1;
+
 		Iterator edgeIter = parseList(mel.substring(6)).iterator();
 		while (edgeIter.hasNext()) {
-			Iterator edgeTokenIter = parseList((String) edgeIter.next())
-					.iterator();
-			int fromId = -1;
-			int toId = -1;
-			double start = 0.0;
-			double end = 1.0;
-			double weight = 1.0;
-			double width = 1.0;
-			while (edgeTokenIter.hasNext()) {
-				String edgeToken = ((String) edgeTokenIter.next()).trim();
-				// should be list of in node, out nodes, and a list of
-				// attributes
-				// since at the moment sonia doesn't support multiple head or
-				// tail sets, willthrow an error if there are more than one
-				if (edgeToken.startsWith("inl")) { // in list
-					// parse the id of the starting node
-					try {
-					  fromId = Integer.parseInt(edgeToken.substring(
-								edgeToken.indexOf("=") + 1).trim());
-					} catch (Exception e) {
-						String error = "Unable to parse starting id for edge #"+edgeCount+" : "
-								+ edgeToken + " : " + e.getMessage();
+
+			String protoEdge = (String) edgeIter.next();
+			// need to deal with missing deleted edges when parsing, they will
+			// have NULL values
+			if (!protoEdge.equals("NULL")) {
+				Iterator edgeTokenIter = parseList(protoEdge).iterator();
+				int fromId = -1;
+				int toId = -1;
+				double start = 0.0;
+				double end = 1.0;
+				double weight = 1.0;
+				double width = 1.0;
+				while (edgeTokenIter.hasNext()) {
+					String edgeToken = ((String) edgeTokenIter.next()).trim();
+					// should be list of in node, out nodes, and a list of
+					// attributes
+					// since at the moment sonia doesn't support multiple head
+					// or
+					// tail sets, willthrow an error if there are more than one
+					if (edgeToken.startsWith("inl")) { // in list
+						// parse the id of the starting node
+						try {
+							fromId = Integer.parseInt(edgeToken.substring(
+									edgeToken.indexOf("=") + 1).trim());
+						} catch (Exception e) {
+							String error = "Unable to parse starting id for edge #"
+									+ edgeCount
+									+ " : "
+									+ edgeToken
+									+ " : "
+									+ e.getMessage();
+							throw new Exception(error);
+						}
+					} else if (edgeToken.startsWith("outl")) {// out list
+					// parse the id of the ending node
+						try {
+							toId = Integer.parseInt(edgeToken.substring(
+									edgeToken.indexOf("=") + 1).trim());
+						} catch (Exception e) {
+							String error = "Unable to parseending id for edge #"
+									+ edgeCount
+									+ " : "
+									+ edgeToken
+									+ " : "
+									+ e.getMessage();
+							throw new Exception(error);
+						}
+					} else if (edgeToken.startsWith("atl")) { // attributes
+						// TODO: parse attribute of edge from r
+
+					} else {
+						String error = "Unrecognized element in master edge list for edge #"
+								+ edgeCount + " : " + edgeToken;
 						throw new Exception(error);
 					}
-				} else if (edgeToken.startsWith("outl")) {// out list
-//					 parse the id of the ending node
-					try {
-						toId = Integer.parseInt(edgeToken.substring(
-								edgeToken.indexOf("=") + 1).trim());
-					} catch (Exception e) {
-						String error = "Unable to parseending id for edge #"+edgeCount+" : "
-								+ edgeToken + " : " + e.getMessage();
-						throw new Exception(error);
-					}
-				} else if (edgeToken.startsWith("atl")) { // attributes
-					//TODO:  parse attribute of edge from r
 
-				} else {
-					String error = "Unrecognized element in master edge list for edge #"+edgeCount+" : "
-							+ edgeToken;
-					throw new Exception(error);
-				}
+				}// end parsing of edge
 
-			}//end parsing of edge
-			
-			ArcAttribute arc = new ArcAttribute(start,end,fromId,toId,weight,width);
-			arcList.add(arc);
-			
-			edgeCount++;
+				ArcAttribute arc = new ArcAttribute(start, end, fromId, toId,
+						weight, width);
+				arcList.add(arc);
+
+				edgeCount++;
+			}//end if null loop
 		}// end edge loop
 
 	}
@@ -318,7 +334,7 @@ public class RJavaParser implements Parser {
 	 * this parser is not configurable
 	 */
 	public void configureParser(PropertySettings settings) {
-		
+
 	}
 
 }

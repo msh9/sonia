@@ -89,13 +89,13 @@ public class SoniaController {
 	private boolean paused = false;
 
 	private LayoutSettings sliceSettings = null;
-	
+
 	private ApplySettings applySettings = null;
-	
+
 	private GraphicsSettings graphicSettings = null;
-	
+
 	private BrowsingSettings browseSettings = null;
-	
+
 	private PropertySettings parserSettings = null;
 
 	private Uniform randomUni; // colt package mersense twister random numbers
@@ -200,13 +200,14 @@ public class SoniaController {
 
 		}
 		SoniaController sonia = new SoniaController(rngSeed);
-	
+
 		// batch overides settings
 		if (!batchSettings.equals("")) {
 			// check if it is a file or a string and try to load it
-			//debug
-			System.out.println("loading batch settings:"+batchSettings);
+			// debug
+			System.out.println("loading batch settings:" + batchSettings);
 			sonia.loadBatchSettings(batchSettings);
+			//this should be an option
 		} else if (!settingsFile.equals("")) {
 			sonia.loadSettings(settingsFile);
 		}
@@ -216,10 +217,13 @@ public class SoniaController {
 		} else if (!networkData.equals("")) {
 			sonia.loadData(networkData);
 		}
-		
-		//if we are going to run a batch, run it here ( later move this code)
-		if (!batchSettings.equals("")){
+
+		// if we are going to run a batch, run it here ( later move this code)
+		if (!batchSettings.equals("")) {
 			sonia.runBatch();
+		}
+		else {
+			
 		}
 	}
 
@@ -341,91 +345,106 @@ public class SoniaController {
 	 * @param settingsOrFile
 	 */
 	public void loadBatchSettings(String settingsOrFile) {
-		//default is to assuming is a string containing lots of settings
+		// default is to assuming is a string containing lots of settings
 		String compoundSettings = settingsOrFile;
-		//but we also try to see if it is a string pointing to a file of settings
+		// but we also try to see if it is a string pointing to a file of
+		// settings
 		try {
 			LineNumberReader reader = new LineNumberReader(new FileReader(
 					settingsOrFile));
 			compoundSettings = "";
 			String line;
 			try {
-				line = reader.readLine(); //this is really a pretty silly way to do this
+				line = reader.readLine(); // this is really a pretty silly way
+											// to do this
 				while (line != null) {
-					compoundSettings += line+"\n";
+					compoundSettings += line + "\n";
 					line = reader.readLine();
 				}
-				showStatus("Read batch settings file: "+settingsOrFile);
-				log("Read batch settings file"+settingsOrFile);
+				showStatus("Read batch settings file: " + settingsOrFile);
+				log("Read batch settings file" + settingsOrFile);
 			} catch (IOException e) {
-				showError("Error reading batch settings from file: "+settingsOrFile+" :"+e.getMessage());
+				showError("Error reading batch settings from file: "
+						+ settingsOrFile + " :" + e.getMessage());
 			}
 		} catch (FileNotFoundException e) {
 		}
-       //now try to get the settings objects
-	  PropertyBuilder proper = new PropertyBuilder(compoundSettings);
-	  parserSettings = proper.getParserSettings();
-	  if (parserSettings != null){
-		  showStatus("Read parser settings from batch instructions");
-			log("Read parser settings from batch instructions:\n "+parserSettings);
-	  }
-	  sliceSettings = proper.getLayoutSettings();
-	  if (sliceSettings != null){
-		  showStatus("Read layout slice settings from batch instructions");
-			log("Read layout slice settings from batch instructions:\n "+sliceSettings);
-	  }
-	  applySettings = proper.getApplySettings();
-	  if (applySettings != null){
-		  showStatus("Read layout apply settings from batch instructions");
-			log("Read layout apply settings from batch instructions:\n "+applySettings);
-	  }
-	  graphicSettings = proper.getGraphicsSettings();
-	  if (sliceSettings != null){
-		  showStatus("Read graphics settings from batch instructions");
-			log("Read graphics settings from batch instructions:\n "+graphicSettings);
-	  }
-	  browseSettings = proper.getBrowsingSettings();
-	  if (sliceSettings != null){
-		  showStatus("Read layout browsing settings from batch instructions");
-			log("Read layout browsing settings from batch instructions:\n "+browseSettings);
-	  }
-	
+		// now try to get the settings objects
+		PropertyBuilder proper = new PropertyBuilder(compoundSettings);
+		parserSettings = proper.getParserSettings();
+		if (parserSettings != null) {
+			showStatus("Read parser settings from batch instructions");
+			log("Read parser settings from batch instructions:\n "
+					+ parserSettings);
+		}
+		sliceSettings = proper.getLayoutSettings();
+		if (sliceSettings != null) {
+			showStatus("Read layout slice settings from batch instructions");
+			log("Read layout slice settings from batch instructions:\n "
+					+ sliceSettings);
+		}
+		applySettings = proper.getApplySettings();
+		if (applySettings != null) {
+			showStatus("Read layout apply settings from batch instructions");
+			log("Read layout apply settings from batch instructions:\n "
+					+ applySettings);
+		}
+		graphicSettings = proper.getGraphicsSettings();
+		if (sliceSettings != null) {
+			showStatus("Read graphics settings from batch instructions");
+			log("Read graphics settings from batch instructions:\n "
+					+ graphicSettings);
+		}
+		browseSettings = proper.getBrowsingSettings();
+		if (sliceSettings != null) {
+			showStatus("Read layout browsing settings from batch instructions");
+			log("Read layout browsing settings from batch instructions:\n "
+					+ browseSettings);
+		}
+
 	}
-	
+
 	/**
-	 * if batch settings have been loaded, runs sonia as specified without user interaction. 
+	 * if batch settings have been loaded, runs sonia as specified without user
+	 * interaction.
+	 * 
 	 * @author skyebend
 	 */
-	public void runBatch(){
-	  //try to do the slicing
-	  if (sliceSettings != null){
-	  showStatus("Read layout settings from batch instructions");
-		log("Read layout settings from batch instructions");
-		createLayout();
-	  }
-	 
-     if ((engine != null) && (applySettings != null)){
-    	 engine.setApplySettings(applySettings);
-    	 engine.applyLayoutToCurrent();
-    	 engine.changeToSliceNum(1);
-    	 applySettings.setProperty(ApplySettings.STARTING_COORDS,ApplySettings.COORDS_FROM_PREV);
-    	 applySettings.setProperty(ApplySettings.APPLY_REMAINING,true+"");
-    	 engine.setApplySettings(applySettings);
-    	 engine.applyLayoutToRemaining();
-    	 engine.changeToSliceNum(0);
-    	 if (isShowGUI()){
-    		 engine.getLayoutWindow().showCurrentSlice();
-    		 
-    	 }
-//    	 exportMovie(engine,currentPath+getFileName()+".mov");
-//    	 log.writeLogToFile(currentPath+getFileName()+"_log.txt");
-//    	 //if there is no ui, then we should quite when done
-//    	 if (!isShowGUI()){
-//    		 System.out.println("moive export finished, exiting SoNIA");
-//    	   System.exit(0);
-//    	 }
-//    	 
-     }
+	public void runBatch() {
+		try {
+			showGUI = false;
+			// try to do the slicing
+			if (sliceSettings != null) {
+				showStatus("Read layout settings from batch instructions");
+				log("Read layout settings from batch instructions");
+				createLayout();
+			}
+
+			if ((engine != null) && (applySettings != null)) {
+				engine.setApplySettings(applySettings);
+				engine.applyLayoutToCurrent();
+				engine.changeToSliceNum(1);
+				applySettings.setProperty(ApplySettings.STARTING_COORDS,
+						ApplySettings.COORDS_FROM_PREV);
+				applySettings.setProperty(ApplySettings.APPLY_REMAINING,
+						true + "");
+				engine.setApplySettings(applySettings);
+				//call the non-threaded version so we can catch the exceptions...
+				engine.startApplyLayoutToRemaining();
+				engine.changeToSliceNum(0);
+				engine.getLayoutWindow().showCurrentSlice();
+				String movFileName = currentPath+getFileName()+".mov";
+				 exportMovie(engine,movFileName);
+				 log.writeLogToFile(currentPath+getFileName()+"_log.txt");
+				 //if there is no ui, then we should quite when done
+				
+			}
+		} catch (Exception e) {
+			System.out.println("ERROR in batch execution: "); 
+			e.printStackTrace();
+			System.exit(-1);
+		}
+
 	}
 
 	/**
@@ -497,22 +516,25 @@ public class SoniaController {
 			}
 			engine = new SoniaLayoutEngine(sliceSettings, this, networkData,
 					engName);
-			showStatus("layout "+engName+" created.");
+			showStatus("layout " + engName + " created.");
 			engines.add(engine);
-			//check if we have graphic settings
-			if (graphicSettings == null){
-				//kludge to get settings with defaults
-				graphicSettings = (new GraphicsSettingsDialog(new GraphicsSettings(),this,engine,null,null)).storeSettings();
+			// check if we have graphic settings
+			if (graphicSettings == null) {
+				// kludge to get settings with defaults
+				graphicSettings = (new GraphicsSettingsDialog(
+						new GraphicsSettings(), this, engine, null, null))
+						.storeSettings();
 			}
-			//debug
-			System.out.println("graphic settings: "+graphicSettings);
-			LayoutWindow display = new LayoutWindow(graphicSettings, browseSettings, this, engine, 490, 420);
+			// debug
+			// System.out.println("graphic settings: "+graphicSettings);
+			LayoutWindow display = new LayoutWindow(graphicSettings,
+					browseSettings, this, engine, 490, 420);
 			engine.setDisplay(display);
 			ui.addFrame(display);
-			 engine.setDisplayWidth(Integer.parseInt(graphicSettings
-						.getProperty(GraphicsSettings.LAYOUT_WIDTH)));
+			engine.setDisplayWidth(Integer.parseInt(graphicSettings
+					.getProperty(GraphicsSettings.LAYOUT_WIDTH)));
 			engine.setDisplayHeight(Integer.parseInt(graphicSettings
-						.getProperty(GraphicsSettings.LAYOUT_HEIGHT)));
+					.getProperty(GraphicsSettings.LAYOUT_HEIGHT)));
 			// try {
 			// display.setMaximum(true);
 			// } catch (PropertyVetoException e) {
@@ -524,11 +546,11 @@ public class SoniaController {
 			showError("Load file before creating layout");
 		}
 	}
-	
+
 	/**
 	 */
-	public void pippo(){
-		
+	public void pippo() {
+
 	}
 
 	/**
@@ -550,9 +572,18 @@ public class SoniaController {
 		// film");
 		// SoniaLayoutEngine engToFilm =
 		// (SoniaLayoutEngine)engPicker.getPickedObject();
-		SoniaMovieMaker exporter = new SoniaMovieMaker(this, engToFilm, fileName);
+		SoniaMovieMaker exporter = new SoniaMovieMaker(this, engToFilm,
+				fileName);
 		// for now, tell the engine to tell the layout...
-		engToFilm.makeMovie(exporter);
+		try {
+			engToFilm.makeMovie(exporter);
+		} catch (Exception e) {
+			//TODO: need to deal more elegantly when the movie file is busy or locked...
+			showError("ERROR saving movie: "+e.getMessage());
+			e.printStackTrace();
+			exporter.setVisible(false);
+			exporter = null;
+		}
 
 	}
 
@@ -567,10 +598,10 @@ public class SoniaController {
 		if (engines.size() < 1) {
 			showError("At least one layout must be created to export");
 		} else {
-			//ListPicker layoutPicker = new ListPicker(ui, engines,
-			//		"Choose Layout to Export");
-			//SoniaLayoutEngine engToExport = (SoniaLayoutEngine) layoutPicker
-			//		.getPickedObject();
+			// ListPicker layoutPicker = new ListPicker(ui, engines,
+			// "Choose Layout to Export");
+			// SoniaLayoutEngine engToExport = (SoniaLayoutEngine) layoutPicker
+			// .getPickedObject();
 			String promptString = "Please Choose location and name for the matrix text file";
 			String sugestFile = getFileName() + ".mat";
 			String logFileName = getOutputFile(sugestFile, promptString);

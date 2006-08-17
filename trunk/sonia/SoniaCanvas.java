@@ -242,7 +242,7 @@ public class SoniaCanvas extends JPanel
 //  }
   public boolean isGhostSlice()
   {
-     ghostSlice = Boolean.parseBoolean(settings.getProperty(GraphicsSettings.ANTI_ALIAS));
+     ghostSlice = Boolean.parseBoolean(settings.getProperty(GraphicsSettings.GHOST_SLICE));
      if (!ghostSlice)
      {
        ghostImage = null;

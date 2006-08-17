@@ -91,11 +91,11 @@ public class SoniaMovieMaker extends JFrame implements StdQTConstants, Errors
    * throws up a new window with the same size as the layout, and plays the layout,
    * recording each frame to the new window, and into the movie file.
    */
-  public void setupMovie(SoniaCanvas canvas,int frames)
+  public void setupMovie(SoniaCanvas canvas,int frames) throws Exception
   {
     //control.showStatus("starting movie export...");
-    try
-    {
+  //  try
+   // {
       //
       // show save-as dialog, create movie file & empty movie
       //
@@ -187,13 +187,13 @@ public class SoniaMovieMaker extends JFrame implements StdQTConstants, Errors
         imageDrawer.setGWorld (quickDraw);
         imageDrawer.setDisplayBounds (clipRect);
       }
-    }
-    catch (Exception e)
-    {
+   // }
+   // catch (Exception e)
+   // {
       //debug
-      control.showError("Error saving quicktime movie"+e.toString());
-      e.printStackTrace();
-    }
+     // control.showError("Error saving quicktime movie"+e.toString());
+     // e.printStackTrace();
+   // }
   }
 
   /**
@@ -258,13 +258,15 @@ public class SoniaMovieMaker extends JFrame implements StdQTConstants, Errors
 
      QTSession.close();
      control.showStatus("Movie saved to file "+outFile.toString());
-     this.hide();
+     this.setVisible(false);
      this.dispose();
    }
    catch (Exception e)
    {
-     control.showError("problem closing moive "+e.toString());
+     control.showError("ERROR with movie export "+e.toString());
      e.printStackTrace();
+     this.setVisible(false);
+     this.dispose();
    }
  }
 

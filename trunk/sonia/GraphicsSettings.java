@@ -82,6 +82,11 @@ public class GraphicsSettings extends PropertySettings {
 	public static final String NODE_LABEL_CUTOFF = "node label cutoff";
 	
 	/**
+	 * key for value indicating the font size for labels (not yet used)
+	 */
+	public static final String NODE_LABEL_FONTSIZE = "node label fontsize";
+	
+	/**
 	 * key indicating if nodes should be hidden. value NONE or ALL, etc..
 	 */
 	public static final String HIDE_NODES = "hide nodes";
