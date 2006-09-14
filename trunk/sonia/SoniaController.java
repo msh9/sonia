@@ -177,6 +177,7 @@ public class SoniaController {
 		String networkData = "";
 		String settingsFile = "";
 		String batchSettings = "";
+		boolean runBatch = false;
 		for (int i = 0; i < args.length; i++) {
 			String arg = args[i];
 			// look at the arguments passed on the command line
@@ -194,8 +195,11 @@ public class SoniaController {
 			if (arg.startsWith("settings:")) {
 				settingsFile = arg.substring(9);
 			}
-			if (arg.startsWith("batch:")) {
+			if (arg.startsWith("batchsettings:")) {
 				batchSettings = arg.substring(6);
+			}
+			if (arg.startsWith("runbatch:")) {
+				runBatch = true;
 			}
 
 		}
@@ -219,7 +223,7 @@ public class SoniaController {
 		}
 
 		// if we are going to run a batch, run it here ( later move this code)
-		if (!batchSettings.equals("")) {
+		if (runBatch & !batchSettings.equals("")) {
 			sonia.runBatch();
 		}
 		else {
@@ -323,6 +327,10 @@ public class SoniaController {
 	public void loadData(String data) {
 		Parser parser = new RJavaParser();
 		try {
+			//try to configure the parser
+			if (parserSettings != null){
+				parser.configureParser(parserSettings);
+			}
 			parser.parseNetwork(data);
 			fileLoaded = true;
 			showStatus("Parsed network data from command line");

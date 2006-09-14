@@ -3,6 +3,8 @@ package sonia;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
+import sonia.parsers.RParserSettings;
+
 public class PropertyBuilder {
 	
 	
@@ -95,19 +97,24 @@ public class PropertyBuilder {
 	}
 	
 	/**
-	 * looks for an DotSonColumnMap block in the compoundProperties string,
-	 * can be extended for other settings
+	 * looks for an PropertySettings block in the compoundProperties string corresponding
+	 * to one of the classes of parser settings (DotSonColumnMap, RJavaParserSettigns, etc)
 	 * initializes and returns it, or null if none foud
 	 * 
-	 * @return an DotSonColumnMap object with values initialized, or null
+	 * @return an PropertySettings object with values initialized, or null
 	 */
 	public PropertySettings getParserSettings(){
 		// look through the blocks for one with a matching header
-		DotSonColumnMap settings = null;
+		PropertySettings settings = null;
 		for (int i = 0; i < settingsBlocks.length; i++) {
 			if (settingsBlocks[i].trim().startsWith(DotSonColumnMap.class.getName())){
 				
 				settings = (DotSonColumnMap)addProps(new DotSonColumnMap(),settingsBlocks[i]);
+				break;
+			}
+			else if (settingsBlocks[i].trim().startsWith(RParserSettings.class.getName())){
+				
+				settings = (RParserSettings)addProps(new RParserSettings(),settingsBlocks[i]);
 				break;
 			}
 			
