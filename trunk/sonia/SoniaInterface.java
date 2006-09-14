@@ -149,6 +149,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		menuPane = new JPanel(layout);
 		GridBagConstraints c = new GridBagConstraints();
 		c.insets = new Insets(2, 2, 2, 2);
+		c.anchor = GridBagConstraints.WEST;
 
 		// add components to the layout GBlayout using constraints
 		// buttons
@@ -162,21 +163,21 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		menuPane.add(StatusText, c);
 		c.fill = GridBagConstraints.NONE;
 		c.gridx = 0;
-		c.gridy = 1;
+		c.gridy = 0;
 		c.gridwidth = 1;
 		c.gridheight = 1;
 		c.weightx = 0.1;
 		c.weighty = 0.1;
 		menuPane.add(LoadButton, c);
-		c.gridx = 1;
+		c.gridx = 0;
 		c.gridy = 1;
 		c.gridwidth = 1;
 		c.gridheight = 1;
 		c.weightx = 0.1;
 		c.weighty = 0.1;
 		menuPane.add(LayoutButton, c);
-		c.gridx = 2;
-		c.gridy = 1;
+		c.gridx = 0;
+		c.gridy = 2;
 		c.gridwidth = 1;
 		c.gridheight = 1;
 		c.weightx = 0.1;
@@ -216,6 +217,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		getContentPane().setLayout(new BorderLayout());
 		JSplitPane jsp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,menuPane,workPane);
 		jsp.setOneTouchExpandable(true);
+		jsp.setDividerLocation(250);
 		getContentPane().add(jsp,BorderLayout.CENTER);
 		//add(workPane, BorderLayout.CENTER);
 		//add(menuPane, BorderLayout.WEST);
