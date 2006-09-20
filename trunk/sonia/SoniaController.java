@@ -58,9 +58,9 @@ import cern.colt.matrix.impl.SparseDoubleMatrix2D;
  */
 
 public class SoniaController {
-	public static final String CODE_DATE = "2006-08-09";
+	public static final String CODE_DATE = "2006-09-15";
 
-	public static final String VERSION = "1.1.3";
+	public static final String VERSION = "1.1.3_unstable";
 
 	private SoniaInterface ui;
 
@@ -208,8 +208,6 @@ public class SoniaController {
 		// batch overides settings
 		if (!batchSettings.equals("")) {
 			// check if it is a file or a string and try to load it
-			// debug
-			System.out.println("loading batch settings:" + batchSettings);
 			sonia.loadBatchSettings(batchSettings);
 			//this should be an option
 		} else if (!settingsFile.equals("")) {
@@ -332,6 +330,8 @@ public class SoniaController {
 				parser.configureParser(parserSettings);
 			}
 			parser.parseNetwork(data);
+			//put in a fake file name
+			fileName = "R_import";
 			fileLoaded = true;
 			showStatus("Parsed network data from command line");
 		} catch (IOException error) {
@@ -421,6 +421,7 @@ public class SoniaController {
 	public void runBatch() {
 		try {
 			showGUI = false;
+			ui.setVisible(false);
 			// try to do the slicing
 			if (sliceSettings != null) {
 				showStatus("Read layout settings from batch instructions");
@@ -445,6 +446,7 @@ public class SoniaController {
 				 exportMovie(engine,movFileName);
 				 log.writeLogToFile(currentPath+getFileName()+"_log.txt");
 				 //if there is no ui, then we should quite when done
+				 System.exit(1);
 				
 			}
 		} catch (Exception e) {

@@ -3,6 +3,8 @@ package sonia;
 import java.awt.*;
 import java.awt.font.*;
 import java.awt.event.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.*;
 import java.util.*;
 import java.awt.color.*;
@@ -92,7 +94,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 
 	private JButton MovieButton;
 
-	//private JButton SaveButton;
+	// private JButton SaveButton;
 
 	private JTextArea StatusText;
 
@@ -104,13 +106,12 @@ public class SoniaInterface extends JFrame implements WindowListener,
 
 	private Font errorFont;
 
-
-
 	public SoniaInterface(SoniaController theController) {
 		control = theController;
 		changeAllFonts(new FontUIResource(control.getFont()));
-		 Image soniaIcon = Toolkit.getDefaultToolkit().getImage("sonia/image/soniaLogo16.jpg");
-		 super.setIconImage(soniaIcon);
+		Image soniaIcon = Toolkit.getDefaultToolkit().getImage(
+				this.getClass().getResource("image/soniaLogo16.jpg"));
+		super.setIconImage(soniaIcon);
 
 		super.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
@@ -121,7 +122,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		LayoutButton = new JButton("Create Layout...");
 		PauseButton = new JButton("Pause");
 		MovieButton = new JButton("Export Movie ...");
-		//SaveButton = new JButton("Save to File...");
+		// SaveButton = new JButton("Save to File...");
 		StatusText = new JTextArea(
 				"   Welcome to SoNIA "
 						+ SoniaController.VERSION
@@ -129,20 +130,20 @@ public class SoniaInterface extends JFrame implements WindowListener,
 						+ SoniaController.CODE_DATE
 						+ ")\n"
 						+ "   For help and information, please visit http://sonia.stanford.edu"
-						+ "  or send questions/bugs to sonia-users@lists.sourceforge.net", 1, 50);
+						+ "  or send questions/bugs to sonia-users@lists.sourceforge.net",
+				1, 50);
 		// StatusText.setBackground(Color.white);
 		StatusText.setEditable(false);
-		StatusText.setBorder(new CompoundBorder( new BevelBorder(BevelBorder.LOWERED),new TitledBorder("Status:")));
+		StatusText.setBorder(new CompoundBorder(new BevelBorder(
+				BevelBorder.LOWERED), new TitledBorder("Status:")));
 		StatusText.setLineWrap(true);
 		StatusText.setWrapStyleWord(true);
-		//StatusText.setColumns(30);
+		// StatusText.setColumns(30);
 
 		workPane = new JDesktopPane();
 		workPane.setBorder(new TitledBorder("Layouts:"));
 		workPane.setSize(300, 250);
 		workPane.setVisible(true);
-
-		
 
 		// LAYOUT
 		GridBagLayout layout = new GridBagLayout();
@@ -183,20 +184,20 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		c.weightx = 0.1;
 		c.weighty = 0.1;
 		menuPane.add(PauseButton, c);
-//		c.gridx = 0;
-//		c.gridy = 2;
-//		c.gridwidth = 1;
-//		c.gridheight = 1;
-//		c.weightx = 0.1;
-//		c.weighty = 0.1; // movie is now a menu item on the layout window
-//		menuPane.add(MovieButton, c);
-//		c.gridx = 1;
-//		c.gridy = 2;
-//		c.gridwidth = 1;
-//		c.gridheight = 1;
-//		c.weightx = 0.1;
-//		c.weighty = 0.1;
-//		menuPane.add(SaveButton, c);
+		// c.gridx = 0;
+		// c.gridy = 2;
+		// c.gridwidth = 1;
+		// c.gridheight = 1;
+		// c.weightx = 0.1;
+		// c.weighty = 0.1; // movie is now a menu item on the layout window
+		// menuPane.add(MovieButton, c);
+		// c.gridx = 1;
+		// c.gridy = 2;
+		// c.gridwidth = 1;
+		// c.gridheight = 1;
+		// c.weightx = 0.1;
+		// c.weighty = 0.1;
+		// menuPane.add(SaveButton, c);
 		c.gridx = 0;
 		c.gridy = 3;
 		c.gridwidth = 3;
@@ -205,36 +206,36 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		c.weighty = 1;
 		c.fill = GridBagConstraints.BOTH;
 		menuPane.add(control.getLogRef(), c);
-		
 
 		// add action listeners for button clicks
 		LoadButton.addActionListener(this);
 		LayoutButton.addActionListener(this);
 		PauseButton.addActionListener(this);
-		//SaveButton.addActionListener(this);
+		// SaveButton.addActionListener(this);
 		// MovieButton.addActionListener(this);
 
 		getContentPane().setLayout(new BorderLayout());
-		JSplitPane jsp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,menuPane,workPane);
+		JSplitPane jsp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, menuPane,
+				workPane);
 		jsp.setOneTouchExpandable(true);
 		jsp.setDividerLocation(250);
-		getContentPane().add(jsp,BorderLayout.CENTER);
-		//add(workPane, BorderLayout.CENTER);
-		//add(menuPane, BorderLayout.WEST);
+		getContentPane().add(jsp, BorderLayout.CENTER);
+		// add(workPane, BorderLayout.CENTER);
+		// add(menuPane, BorderLayout.WEST);
 		getContentPane().add(StatusText, BorderLayout.SOUTH);
 
 		addWindowListener(this);
 		// setBackground(Color.lightGray);
 
 		// debug test the jinternal frame
-		//JInternalFrame frameTest = new JInternalFrame("dummy network");
-		//frameTest.setSize(300, 200);
-		//workPane.add(frameTest);
-		//frameTest.setVisible(true);
+		// JInternalFrame frameTest = new JInternalFrame("dummy network");
+		// frameTest.setSize(300, 200);
+		// workPane.add(frameTest);
+		// frameTest.setVisible(true);
 
 		// construct frame
 		this.setSize(850, 600);
-		this.setTitle("SoNIA v"+SoniaController.VERSION);
+		this.setTitle("SoNIA v" + SoniaController.VERSION);
 		this.setVisible(true);
 		LoadButton.requestFocus();
 		this.repaint();
@@ -326,14 +327,14 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		} else if (evt.getActionCommand().equals("Create Layout...")) {
 			// should launch this on a new thread?
 			control.createLayout();
-//		} else if (evt.getSource().equals(SaveButton)) {
-//			// check that network exisits?
-//			if (control.hasNetworks()) {
-//				// allow choosing which net to export?
-//				control.exportMatricies();
-//			} else {
-//				showError("No networks have been created");
-//			}
+			// } else if (evt.getSource().equals(SaveButton)) {
+			// // check that network exisits?
+			// if (control.hasNetworks()) {
+			// // allow choosing which net to export?
+			// control.exportMatricies();
+			// } else {
+			// showError("No networks have been created");
+			// }
 
 			// } else if (evt.getSource().equals(MovieButton)) {
 			// // check that network exisits?

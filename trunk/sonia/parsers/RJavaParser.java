@@ -1,6 +1,9 @@
 package sonia.parsers;
 
 import java.awt.Color;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Rectangle2D;
+import java.awt.geom.RectangularShape;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -73,7 +76,10 @@ public class RJavaParser implements Parser {
 		// configure defaults
 		if (settings == null) {
 			settings = new RParserSettings();
-			settings.setProperty(settings.NODE_LABEL, "vertex.names");
+			settings.setProperty(RParserSettings.NODE_LABEL, "vertex.names");
+			settings.setProperty(RParserSettings.NODE_COLOR, "red");
+			settings.setProperty(RParserSettings.NODE_SIZE, "5");
+			settings.setProperty(RParserSettings.NODE_SHAPE, "circle");
 
 		}
 
@@ -82,6 +88,11 @@ public class RJavaParser implements Parser {
 
 		try {
 			Vector mainElements = parseList(netString);
+			//check if it is null
+			if (mainElements.size() <= 1){
+				throw( new Exception("Unexpected network value:"+netString));
+			}
+				
 			String mel = (String) mainElements.get(0);
 			String gal = (String) mainElements.get(1);
 			String val = (String) mainElements.get(2);
@@ -279,6 +290,10 @@ public class RJavaParser implements Parser {
 			// decide how we are handling colors
 			Color nc = parseRColor(settings
 					.getProperty(RParserSettings.NODE_COLOR));
+			double size = Double.parseDouble(settings
+					.getProperty(RParserSettings.NODE_SIZE));
+			RectangularShape shape = parseShape(settings
+					.getProperty(RParserSettings.NODE_SHAPE));
 			// if it is a single element, assume
 
 			while (nodeAttrIter.hasNext()) {
@@ -290,7 +305,7 @@ public class RJavaParser implements Parser {
 						attribute.indexOf("=") - 1).trim();
 				String attrValue = attribute.substring(
 						attribute.indexOf("=") + 1).trim();
-				if (attribute.startsWith(settings
+				if (attrName.startsWith(settings
 						.getProperty(RParserSettings.NODE_LABEL))) {
 					label = attrValue;
 				}
@@ -320,6 +335,8 @@ public class RJavaParser implements Parser {
 			NodeAttribute node = new NodeAttribute(nodeId, label, x, y, start,
 					end, orgiFile);
 			node.setNodeColor(nc);
+			node.setNodeShape(shape);
+			node.setNodeSize(size);
 			nodeList.add(node);
 			nodeId++;
 		}
@@ -451,6 +468,23 @@ public class RJavaParser implements Parser {
 
 		return vectorContents;
 	}
+	
+	private RectangularShape parseShape(String shapeString) throws IOException{
+		RectangularShape shape = null;
+		if (shapeString.equalsIgnoreCase("square")
+				| shapeString.equalsIgnoreCase("rect")) {
+			shape = new Rectangle2D.Double();
+		} else if (shapeString.equalsIgnoreCase("circle")
+				| shapeString.equalsIgnoreCase("ellipse")) {
+			shape = new Ellipse2D.Double();
+		} else {
+			String error = "Unable to parse shape \"" + shapeString
+					+ "currently, shape must be \"square\" or \"circle\"";
+			throw (new IOException(error));
+		}
+		return shape;
+	}
+
 
 	public int getMaxNumNodes() {
 		return maxNodes;
@@ -485,8 +519,6 @@ public class RJavaParser implements Parser {
 	 */
 	public void configureParser(PropertySettings settings) {
 		this.settings = (RParserSettings) settings;
-		// debug
-		System.out.println("parser settings: " + settings.toString());
 	}
 
 	private static final String[] R_COLOR_NAMES = new String[] { "white",
