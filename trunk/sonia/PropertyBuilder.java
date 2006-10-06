@@ -98,6 +98,24 @@ public class PropertyBuilder {
 	
 	/**
 	 * looks for an PropertySettings block in the compoundProperties string corresponding
+	 * to the class MovieSettings initializes and returns it, or null if none found
+	 * 
+	 * @return an PropertySettings object with values initialized, or null
+	 */
+	public MovieSettings getMovieSettings(){
+//		 look through the blocks for one with a matching header
+		MovieSettings settings = null;
+		for (int i = 0; i < settingsBlocks.length; i++) {
+			if (settingsBlocks[i].trim().startsWith(MovieSettings.class.getName())){
+				settings = (MovieSettings)addProps(new MovieSettings(),settingsBlocks[i]);
+				break;
+			}
+		}
+		return settings;
+	}
+	
+	/**
+	 * looks for an PropertySettings block in the compoundProperties string corresponding
 	 * to one of the classes of parser settings (DotSonColumnMap, RJavaParserSettigns, etc)
 	 * initializes and returns it, or null if none foud
 	 * 

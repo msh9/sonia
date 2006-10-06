@@ -99,8 +99,6 @@ public class PhasePlot extends ExportableFrame implements
 		data = dat;
 		settings = set;
 		currentLayout = engine.getLayoutWindow();
-		//debug
-		System.out.println("layoutSettings "+settings);
 		double plotStart = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_START));
 		double plotEnd = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_END));
 		// fudge the end time to make sure things get included..
@@ -197,8 +195,7 @@ public class PhasePlot extends ExportableFrame implements
 			double sliceDuration = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_DURATION));
 			double sliceDelta = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_DELTA));
 			// check for infinate values
-			// debug
-			System.out.println("start,end " + plotStart + " " + plotEnd);
+			
 			if (plotStart == Double.NEGATIVE_INFINITY
 					| plotEnd == Double.POSITIVE_INFINITY) {
 				graph.setColor(Color.red);

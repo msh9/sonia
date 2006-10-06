@@ -342,7 +342,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 			// repalce the infinities with the replace Weight
 			//should be a more efficent way
 			//debug
-			System.out.println("replaceing infinate distances with "+replaceWeight);
+			//System.out.println("replaceing infinate distances with "+replaceWeight);
 			for (int i = 0; i < distMatrix.rows(); i++) {
 				for (int j = 0; j < distMatrix.columns(); j++) {
 					if (distMatrix.getQuick(i,j)== Double.POSITIVE_INFINITY){

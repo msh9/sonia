@@ -983,8 +983,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 				NumInterps.getText().trim());
 		browseSettings.setDoubleProperty(BrowsingSettings.FRAME_DELAY,
 				frameDelay.getText().trim());
-		// debug
-		System.out.println(browseSettings.toString());
+		
 	}
 
 	/**

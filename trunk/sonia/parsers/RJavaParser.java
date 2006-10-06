@@ -88,11 +88,11 @@ public class RJavaParser implements Parser {
 
 		try {
 			Vector mainElements = parseList(netString);
-			//check if it is null
-			if (mainElements.size() <= 1){
-				throw( new Exception("Unexpected network value:"+netString));
+			// check if it is null
+			if (mainElements.size() <= 1) {
+				throw (new Exception("Unexpected network value:" + netString));
 			}
-				
+
 			String mel = (String) mainElements.get(0);
 			String gal = (String) mainElements.get(1);
 			String val = (String) mainElements.get(2);
@@ -202,6 +202,8 @@ public class RJavaParser implements Parser {
 
 					String error = "Unable to parse edge time for edge#"
 							+ edgeCount + " :" + nfe.toString();
+					// debug
+					System.out.println("error");
 					throw new Exception(error);
 				}
 				double weight = 1.0;
@@ -278,7 +280,8 @@ public class RJavaParser implements Parser {
 		while (nodeIter.hasNext()) {
 			// get the attributes for each node
 			String nodeToken = (String) nodeIter.next();
-			Iterator nodeAttrIter = parseList(nodeToken).iterator();
+			Vector nodeAttrs = parseList(nodeToken);
+			Iterator nodeAttrIter = nodeAttrs.iterator();
 			String label = nodeId + "";
 			double x = 0.0;
 			double y = 0.0;
@@ -299,47 +302,115 @@ public class RJavaParser implements Parser {
 			while (nodeAttrIter.hasNext()) {
 				// check if is na
 				// TODO: what do do if node is missing
+				String attribute = ((String) nodeAttrIter.next()).trim();
+				String attrName = attribute.substring(0,
+						attribute.indexOf("=") - 1).trim();
+				String attrValue = attribute.substring(
+						attribute.indexOf("=") + 1).trim();
+				// only do non-dynamic attributes
+				if (!dynamicVertAttrMap.contains(attrName)) {
+					if (attrName.startsWith(settings
+							.getProperty(RParserSettings.NODE_LABEL))) {
+						label = attrValue;
+					}
+					if (attribute.startsWith(settings
+							.getProperty(RParserSettings.NODE_COLOR))) {
+						nc = parseRColor(attrValue);
+						if (nc == null) {
+							String error = "Unable to parse attribute as RGB value R color name:"
+									+ attrValue;
+							throw new Exception(error);
+						}
+					}
+				}
+			}// end non-dynamic
+
+			// now that those are set, now loop again for dynamic attributes
+			nodeAttrIter = nodeAttrs.iterator();
+			while (nodeAttrIter.hasNext()) {
+				// check if is na
+				// TODO: what do do if node is missing
 				// TODO: figure out how to map rest of attributes...
 				String attribute = ((String) nodeAttrIter.next()).trim();
 				String attrName = attribute.substring(0,
 						attribute.indexOf("=") - 1).trim();
 				String attrValue = attribute.substring(
 						attribute.indexOf("=") + 1).trim();
-				if (attrName.startsWith(settings
-						.getProperty(RParserSettings.NODE_LABEL))) {
-					label = attrValue;
-				}
-				if (attribute.startsWith(settings
-						.getProperty(RParserSettings.NODE_COLOR))) {
-					nc = parseRColor(attrValue);
-					if (nc == null) {
-						String error = "Unable to parse attribute as RGB value R color name:"
-								+ attrValue;
-						throw new Exception(error);
-					}
-				}
+
 				// if attribute is dynamic, need to create a new object with the
 				// apropriate values
-				// TODO: this may go haywire if multiple dynamic attributes
+				// TODO: this WILL go haywire if multiple dynamic attributes
 				if (dynamicVertAttrMap.contains(attrName)) {
 					// c(blue, green, 1, 2)
 					// hmm, worrysome, should return somethink like "structure(
 					// c(...."
+					Vector timeData = parseVector(attrValue);
+					int nsteps = timeData.size() / 2;
+					// make node for first range..
+					start = minTime;
+					end = Double.parseDouble((String) timeData.get(nsteps));
+					NodeAttribute node = new NodeAttribute(nodeId, label, x, y,
+							start, end, orgiFile);
+					node.setNodeColor(nc);
+					node.setNodeShape(shape);
+					node.setNodeSize(size);
+					nodeList.add(node);
+
+					// add an extra time at the end to fudge..
+					timeData.add("" + maxTime);
+
+					// loop over times and values
+					for (int t = 0; t < nsteps; t++) {
+
+						attrValue = (String) timeData.get(t);
+						start = end;
+						end = Double.parseDouble((String) timeData.get(t
+								+ nsteps + 1));
+
+						if (attrName.startsWith(settings
+								.getProperty(RParserSettings.NODE_LABEL))) {
+							label = attrValue;
+						}
+						if (attribute.startsWith(settings
+								.getProperty(RParserSettings.NODE_COLOR))) {
+							nc = parseRColor(attrValue);
+							if (nc == null) {
+								String error = "Unable to parse attribute as RGB value R color name:"
+										+ attrValue;
+								throw new Exception(error);
+							}
+						}
+
+						node = new NodeAttribute(nodeId, label, x, y, start,
+								end, orgiFile);
+						node.setNodeColor(nc);
+						node.setNodeShape(shape);
+						node.setNodeSize(size);
+						nodeList.add(node);
+
+					}
+					// start = end;
+					// end = maxTime;
+					// debug
+					System.out.println("processed dynamic attribute:"
+							+ attrName);
 					// debug
 					System.out
-							.println("skipped attribute dynamic:" + attrValue);
+							.println("WARNING: this will probabl break with more than one dynamic attribute");
 
 				}
-			}
-
-			NodeAttribute node = new NodeAttribute(nodeId, label, x, y, start,
-					end, orgiFile);
-			node.setNodeColor(nc);
-			node.setNodeShape(shape);
-			node.setNodeSize(size);
-			nodeList.add(node);
+			}// end dynamic attributes
+//TODO:generates the last value twice!!
+			
+				NodeAttribute node = new NodeAttribute(nodeId, label, x, y,
+						start, end, orgiFile);
+				node.setNodeColor(nc);
+				node.setNodeShape(shape);
+				node.setNodeSize(size);
+				nodeList.add(node);
+			
 			nodeId++;
-		}
+		}// end node loop
 
 	}
 
@@ -468,8 +539,8 @@ public class RJavaParser implements Parser {
 
 		return vectorContents;
 	}
-	
-	private RectangularShape parseShape(String shapeString) throws IOException{
+
+	private RectangularShape parseShape(String shapeString) throws IOException {
 		RectangularShape shape = null;
 		if (shapeString.equalsIgnoreCase("square")
 				| shapeString.equalsIgnoreCase("rect")) {
@@ -484,7 +555,6 @@ public class RJavaParser implements Parser {
 		}
 		return shape;
 	}
-
 
 	public int getMaxNumNodes() {
 		return maxNodes;
@@ -657,13 +727,13 @@ public class RJavaParser implements Parser {
 			"yellow4", "yellowgreen" };
 
 	private static final String[] R_COLOR_VALUES = new String[] {
-			"255,255,255", "240,248,255", "250,235,215",
-			"255,239,219", "238,223,204", "205,192,176", "139,131,120",
-			"127,255,212", "127,255,212", "118,238,198", "102,205,170",
-			"69,139,116", "240,255,255", "240,255,255", "224,238,238",
-			"193,205,205", "131,139,139", "245,245,220", "255,228,196",
-			"255,228,196", "238,213,183", "205,183,158", "139,125,107",
-			"0,0,0", "255,235,205", "0,0,255", "0,0,255", "0,0,238", "0,0,205",
+			"255,255,255", "240,248,255", "250,235,215", "255,239,219",
+			"238,223,204", "205,192,176", "139,131,120", "127,255,212",
+			"127,255,212", "118,238,198", "102,205,170", "69,139,116",
+			"240,255,255", "240,255,255", "224,238,238", "193,205,205",
+			"131,139,139", "245,245,220", "255,228,196", "255,228,196",
+			"238,213,183", "205,183,158", "139,125,107", "0,0,0",
+			"255,235,205", "0,0,255", "0,0,255", "0,0,238", "0,0,205",
 			"0,0,139", "138,43,226", "165,42,42", "255,64,64", "238,59,59",
 			"205,51,51", "139,35,35", "222,184,135", "255,211,155",
 			"238,197,145", "205,170,125", "139,115,85", "95,158,160",

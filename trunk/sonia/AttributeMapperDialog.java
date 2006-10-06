@@ -29,8 +29,7 @@ public class AttributeMapperDialog extends Object{
     
     private ItemListener choiceListener =  new ItemListener() {
             public void itemStateChanged(ItemEvent e){
-                //debug
-                System.out.println(((JComboBox)e.getSource()).getName()+":"+ e.getItem());
+                
                 map.setProperty(((JComboBox)e.getSource()).getName(), e.getItem().toString());
                 //need to put the deselected item on the list for others to use...
             }

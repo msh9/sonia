@@ -78,6 +78,8 @@ public class SoniaMovieMaker extends JFrame implements StdQTConstants, Errors
   private SoniaLayoutEngine engine;
   private SoniaController control;
   private String fileName = null;
+  private boolean exporting = false;
+  
 
   public SoniaMovieMaker(SoniaController cont, SoniaLayoutEngine eng,String file)
   {
@@ -117,7 +119,7 @@ public class SoniaMovieMaker extends JFrame implements StdQTConstants, Errors
       if (fileName != null){
       outFile = new QTFile(fileName);
 
-
+exporting = true;
         QTSession.open();  //links to c stubbs?
         width = engine.getDisplayWidth(); //need to add pads?
         height = engine.getDisplayHeight();
@@ -258,6 +260,7 @@ public class SoniaMovieMaker extends JFrame implements StdQTConstants, Errors
 
      QTSession.close();
      control.showStatus("Movie saved to file "+outFile.toString());
+     exporting=false;
      this.setVisible(false);
      this.dispose();
    }
@@ -265,9 +268,14 @@ public class SoniaMovieMaker extends JFrame implements StdQTConstants, Errors
    {
      control.showError("ERROR with movie export "+e.toString());
      e.printStackTrace();
+     exporting = false;
      this.setVisible(false);
      this.dispose();
    }
+ }
+ 
+ public boolean isExporting(){
+	 return exporting;
  }
 
 

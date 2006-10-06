@@ -130,8 +130,7 @@ public class DotSonColumnMap extends PropertySettings {
 //			String key = (String)keyIter.next();
 //			setProperty(key,getValueForFieldName(key));
 //		}
-		//debug
-		System.out.println(this.toString());
+
 	}
 
 	/**

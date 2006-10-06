@@ -106,7 +106,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 
 	private Font errorFont;
 
-	public SoniaInterface(SoniaController theController) {
+	public SoniaInterface(SoniaController theController, boolean show) {
 		control = theController;
 		changeAllFonts(new FontUIResource(control.getFont()));
 		Image soniaIcon = Toolkit.getDefaultToolkit().getImage(
@@ -236,7 +236,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		// construct frame
 		this.setSize(850, 600);
 		this.setTitle("SoNIA v" + SoniaController.VERSION);
-		this.setVisible(true);
+		this.setVisible(show);
 		LoadButton.requestFocus();
 		this.repaint();
 

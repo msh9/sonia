@@ -97,6 +97,8 @@ public class SoniaController {
 	private BrowsingSettings browseSettings = null;
 
 	private PropertySettings parserSettings = null;
+	
+	private PropertySettings movieSettings = null;
 
 	private Uniform randomUni; // colt package mersense twister random numbers
 
@@ -116,7 +118,7 @@ public class SoniaController {
 		// make a new log window
 		log = new LogWindow(this);
 		// construct new UI and pass a ref
-		ui = new SoniaInterface(this);
+		ui = new SoniaInterface(this,false);
 		networks = new ArrayList();// to hold nets
 		engines = new ArrayList();
 		log("Log of SoNIA session beginning "
@@ -137,6 +139,17 @@ public class SoniaController {
 			// }
 			log("ERROR: unable to initialize random number generator: "
 					+ e.getMessage());
+		}
+	}
+	
+	/**
+	 * hide and show the main gui window (if it has been created);
+	 * @author skyebend
+	 * @param visable
+	 */
+	public void showGUI(boolean visable){
+		if (ui != null){
+			ui.setVisible(visable);
 		}
 	}
 
@@ -225,7 +238,7 @@ public class SoniaController {
 			sonia.runBatch();
 		}
 		else {
-			
+			sonia.showGUI(true);
 		}
 	}
 
@@ -409,6 +422,13 @@ public class SoniaController {
 			log("Read layout browsing settings from batch instructions:\n "
 					+ browseSettings);
 		}
+		movieSettings = proper.getMovieSettings();
+		if (movieSettings != null) {
+			showStatus("Read movie output settings from batch instructions");
+			log("Read movie output settings from batch instructions:\n "
+					+ movieSettings);
+		}
+		
 
 	}
 
@@ -421,7 +441,7 @@ public class SoniaController {
 	public void runBatch() {
 		try {
 			showGUI = false;
-			ui.setVisible(false);
+			//ui.setVisible(showGUI);
 			// try to do the slicing
 			if (sliceSettings != null) {
 				showStatus("Read layout settings from batch instructions");
@@ -439,18 +459,36 @@ public class SoniaController {
 						true + "");
 				engine.setApplySettings(applySettings);
 				//call the non-threaded version so we can catch the exceptions...
+			
 				engine.startApplyLayoutToRemaining();
 				engine.changeToSliceNum(0);
 				engine.getLayoutWindow().showCurrentSlice();
+
+				
 				String movFileName = currentPath+getFileName()+".mov";
-				 exportMovie(engine,movFileName);
+				if (movieSettings != null){
+					String name = movieSettings.getProperty(MovieSettings.OUTPUT_PATH);
+					if ((name != null) && !name.equals("")){
+						movFileName = name;
+					}
+				}
+
+				
+				//THIS LAUNCHES ON ANOTHER THREAD!!
+				 SoniaMovieMaker movie  = exportMovie(engine,movFileName);
+				 while (movie.isExporting()){
+					 //TODO: need to notify when export is done, not loop continously!!
+				 }
+				 //wait for movie export to finsih
 				 log.writeLogToFile(currentPath+getFileName()+"_log.txt");
-				 //if there is no ui, then we should quite when done
-				 System.exit(1);
+				 //if there is no ui, then we should quit when done
+				 System.exit(0);
 				
 			}
 		} catch (Exception e) {
-			System.out.println("ERROR in batch execution: "); 
+			System.out.println("error in batch:"+e.getMessage()); 
+			ui.setVisible(true);
+			showStatus("ERROR in batch execution: "+e.getMessage());
 			e.printStackTrace();
 			System.exit(-1);
 		}
@@ -576,7 +614,7 @@ public class SoniaController {
 	 * Brings up a dialog to pick which of the layouts to export as a movie,
 	 * then makes a movie exporter and passes it to the layout engine.
 	 */
-	public void exportMovie(SoniaLayoutEngine engToFilm, String fileName) {
+	public SoniaMovieMaker exportMovie(SoniaLayoutEngine engToFilm, String fileName) {
 		// NEED TOP PICK WHICH layout to export!!
 		// ListPicker engPicker = new ListPicker(ui,engines,"Choose Layout to
 		// film");
@@ -590,11 +628,14 @@ public class SoniaController {
 		} catch (Exception e) {
 			//TODO: need to deal more elegantly when the movie file is busy or locked...
 			showError("ERROR saving movie: "+e.getMessage());
+			log("ERROR saving movie: "+e.getMessage());
+			//debug 
+			System.out.println("Errors saving movie: "+e.getMessage());
 			e.printStackTrace();
 			exporter.setVisible(false);
 			exporter = null;
 		}
-
+		return exporter;
 	}
 
 	/**
