@@ -326,7 +326,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 			PauseButton.setLabel("Pause");
 		} else if (evt.getActionCommand().equals("Create Layout...")) {
 			// should launch this on a new thread?
-			control.createLayout();
+			control.createNewLayout();
 			// } else if (evt.getSource().equals(SaveButton)) {
 			// // check that network exisits?
 			// if (control.hasNetworks()) {

@@ -306,6 +306,9 @@ public class SoniaController {
 				parser.configureParser(parserSettings);
 			} else if (fileName.endsWith(".dl")) {
 				parser = new DLParser();
+			} else if (fileName.endsWith(".rdump")){
+				parser = new RJavaParser();
+				parser.configureParser(parserSettings);
 			}
 			// otherwise, try the DotNetParser
 			else {
@@ -324,6 +327,7 @@ public class SoniaController {
 			// CHECK IF PARSING WAS SUCCESFULL
 			if (fileLoaded) {
 				setupData(inFile, parser);
+				createLayout();
 			}
 		}
 
@@ -356,6 +360,7 @@ public class SoniaController {
 		// CHECK IF PARSING WAS SUCCESFULL
 		if (fileLoaded) {
 			setupData("data from R", parser);
+			createLayout();
 		}
 	}
 
@@ -536,10 +541,31 @@ public class SoniaController {
 		// put it in list of loaded networks
 		networks.add(networkData);
 	}
+	
+	/**
+	 * always shows slice setting dialog, then calls create layout
+	 * @author skyebend
+	 */
+	public void createNewLayout(){
+		if (fileLoaded == true){
+		String engName = getFileName() + " #" + (engines.size() + 1);
+		LayoutSettingsDialog windowSettings = new LayoutSettingsDialog(
+				sliceSettings, this, engName, ui);
+		if (sliceSettings == null) {
+			// tell the settings dialog what the start and end times for
+			windowSettings.setDataStartDefault(networkData
+					.getFirstTime());
+			windowSettings.setDataEndDefault(networkData.getLastTime());
+		}
+		// show the dialog
+		sliceSettings = windowSettings.askUserSettings();
+		createLayout();
+	}
+	}
 
 	/**
 	 * Checks that a file has been loaded, then creates a layout engien for the
-	 * most recently loaded file.
+	 * most recently loaded file. Shows slice dialog only if there are now slice settings.
 	 */
 	public void createLayout() {
 		// should make sure there is some network data
@@ -573,8 +599,7 @@ public class SoniaController {
 						new GraphicsSettings(), this, engine, null, null))
 						.storeSettings();
 			}
-			// debug
-			// System.out.println("graphic settings: "+graphicSettings);
+	
 			LayoutWindow display = new LayoutWindow(graphicSettings,
 					browseSettings, this, engine, 490, 420);
 			engine.setDisplay(display);
