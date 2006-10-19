@@ -28,6 +28,11 @@ import sonia.PropertySettings;
 public class RParserSettings extends PropertySettings {
 	
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2741177210767534091L;
+
 	public static final String NODE_LABEL = "NODE_LABEL";
 
 	public static final String NODE_COLOR = "NODE_COLOR";
@@ -35,5 +40,9 @@ public class RParserSettings extends PropertySettings {
 	public static final String NODE_SIZE = "NODE_SIZE";
 	
 	public static final String NODE_SHAPE = "NODE_SHAPE";
+	
+	public static final String NODE_X = "NODE_X";
+	
+	public static final String NODE_Y = "NODE_Y";
 
 }
