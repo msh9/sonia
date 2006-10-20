@@ -58,7 +58,7 @@ import cern.colt.matrix.impl.SparseDoubleMatrix2D;
  */
 
 public class SoniaController {
-	public static final String CODE_DATE = "2006-09-15";
+	public static final String CODE_DATE = "2006-10-20";
 
 	public static final String VERSION = "1.1.3_unstable";
 
@@ -151,6 +151,10 @@ public class SoniaController {
 		if (ui != null){
 			ui.setVisible(visable);
 		}
+		//this is a kludge
+		if (fileLoaded){
+			createLayout();
+		}
 	}
 
 	/**
@@ -240,6 +244,7 @@ public class SoniaController {
 		else {
 			sonia.showGUI(true);
 		}
+		
 	}
 
 	/**
@@ -327,7 +332,6 @@ public class SoniaController {
 			// CHECK IF PARSING WAS SUCCESFULL
 			if (fileLoaded) {
 				setupData(inFile, parser);
-				createLayout();
 			}
 		}
 
@@ -360,7 +364,6 @@ public class SoniaController {
 		// CHECK IF PARSING WAS SUCCESFULL
 		if (fileLoaded) {
 			setupData("data from R", parser);
-			createLayout();
 		}
 	}
 
@@ -599,9 +602,8 @@ public class SoniaController {
 						new GraphicsSettings(), this, engine, null, null))
 						.storeSettings();
 			}
-	
 			LayoutWindow display = new LayoutWindow(graphicSettings,
-					browseSettings, this, engine, 490, 420);
+					browseSettings, this, engine, 500, 420);
 			engine.setDisplay(display);
 			ui.addFrame(display);
 			engine.setDisplayWidth(Integer.parseInt(graphicSettings
