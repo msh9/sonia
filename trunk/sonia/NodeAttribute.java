@@ -102,6 +102,8 @@ public class NodeAttribute implements NetworkEvent{
   public void paint(Graphics2D graphics, SoniaCanvas canvas, double xCoord,
                     double yCoord)
   {
+	  Color startColor = graphics.getColor();
+	  Font startFont = graphics.getFont();
     double nodeDrawSize = 0.0;
     
     //check if drawing node
@@ -114,8 +116,10 @@ public class NodeAttribute implements NetworkEvent{
       nodeShape.setFrame((xCoord - nodeDrawSize/2.0),
                          (yCoord - nodeDrawSize/2.0),nodeDrawSize,nodeDrawSize);
      
-      graphics.setColor(nodeColor);
-      graphics.fill(nodeShape);
+      if (nodeColor != null){
+	      graphics.setColor(nodeColor);
+	      graphics.fill(nodeShape);
+      }
       //set border color/width and draw it
       graphics.setColor(borderColor);
       graphics.setStroke(borderStroke);
@@ -165,6 +169,8 @@ public class NodeAttribute implements NetworkEvent{
       graphics.drawString(printLabel, (float)(xCoord+(nodeDrawSize/2.0)+2.0),
                           (float)(yCoord+labelSize/2.0));
     }
+    graphics.setColor(startColor);
+    graphics.setFont(startFont);
 
     //how can I do this to just change the attributes of the same shape?
     //need to create my own nodeShape classes

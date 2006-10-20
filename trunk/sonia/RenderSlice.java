@@ -121,7 +121,8 @@ public class RenderSlice
     int left = layoutEngine.getLeftPad();
     int top = layoutEngine.getTopPad();
 
- 
+    Color origColor = graphics.getColor();
+    Font originalFont = graphics.getFont();
 
     //first do arcs
     //KLUDG check to not draw arcs for speed
@@ -139,7 +140,7 @@ public class RenderSlice
     ArcAttribute arc;
     int fromId;
     int toId;
-    Font originalFont = graphics.getFont();
+    
     graphics.setFont(originalFont.deriveFont(10)); //this should be adjustable
 
     //LOOP OVER ARC EVENTS
@@ -180,9 +181,10 @@ public class RenderSlice
 
       graphics.drawString(""+sliceArcWeight,labelX,labelY);
     }
-
+  
   } //end arc event loop
-
+    graphics.setFont(originalFont);
+    graphics.setColor(origColor);
     }
 
   // check settings before node transparency
@@ -217,6 +219,7 @@ public class RenderSlice
       node.paint(graphics,canvas,xCoords[index]+left,yCoords[index]+top);
     }
 
+   graphics.setFont(originalFont);
     //debug show slice stats
     if (canvas.isShowStats())
     {
@@ -229,6 +232,7 @@ public class RenderSlice
                           "-"+formater.format(sliceEnd),5,10);
     //  graphics.drawString(" layout:"+layoutEngine.getLayoutInfo(),5,20);
     }
+    graphics.setColor(origColor);
   }
   
   private BasicStroke getStrokeForWidth(float width, boolean isNegitive){
