@@ -313,7 +313,7 @@ public class ApplySettingsDialog implements ActionListener {
 		// settingsDialog.setBackground(Color.lightGray);
 		settingsDialog.getContentPane().add(mainPanel);
 		settingsDialog.setSize(600, 300);
-		showSettings(); //get the values
+		showSettings(); // get the values
 	}
 
 	/**
@@ -321,33 +321,37 @@ public class ApplySettingsDialog implements ActionListener {
 	 * 
 	 */
 	private void showSettings() {
-		//get the property value and copy it to the gui, using the current
-		//gui value as the default 
-		startChoice.setSelectedItem(applySettings
-				.getProperty(ApplySettings.STARTING_COORDS,(String)startChoice.getSelectedItem()));
-		isolateChoice.setSelectedItem(applySettings
-				.getProperty(ApplySettings.ISOLATE_POSITION,(String)isolateChoice.getSelectedItem()));
-		RepaintN.setText(applySettings
-				.getProperty(ApplySettings.LAYOUT_REPAINT_N,RepaintN.getText()));
-		ErrorStop.setSelected(Boolean.parseBoolean(applySettings
-				.getProperty(ApplySettings.LAYOUT_REPAINT_N,ErrorStop.isSelected()+"")));
-		recenterChoice.setSelectedItem(applySettings
-				.getProperty(ApplySettings.RECENTER_TRANSFORM,(String)recenterChoice.getSelectedItem()));
-		rescaleChoice.setSelectedItem(applySettings
-				.getProperty(ApplySettings.RESCALE_LAYOUT,(String)rescaleChoice.getSelectedItem()));
+		// get the property value and copy it to the gui, using the current
+		// gui value as the default
+		startChoice.setSelectedItem(applySettings.getProperty(
+				ApplySettings.STARTING_COORDS, (String) startChoice
+						.getSelectedItem()));
+		isolateChoice.setSelectedItem(applySettings.getProperty(
+				ApplySettings.ISOLATE_POSITION, (String) isolateChoice
+						.getSelectedItem()));
+		RepaintN.setText(applySettings.getProperty(
+				ApplySettings.LAYOUT_REPAINT_N, RepaintN.getText()));
+		ErrorStop.setSelected(Boolean.parseBoolean(applySettings.getProperty(
+				ApplySettings.LAYOUT_REPAINT_N, ErrorStop.isSelected() + "")));
+		recenterChoice.setSelectedItem(applySettings.getProperty(
+				ApplySettings.RECENTER_TRANSFORM, (String) recenterChoice
+						.getSelectedItem()));
+		rescaleChoice.setSelectedItem(applySettings.getProperty(
+				ApplySettings.RESCALE_LAYOUT, (String) rescaleChoice
+						.getSelectedItem()));
 		IsolateExclude.setSelected(Boolean.parseBoolean(applySettings
-				.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE,IsolateExclude.isSelected()+"")));
-		//do algorithm specifc properties
+				.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE,
+						IsolateExclude.isSelected() + "")));
+		// do algorithm specifc properties
 		Iterator propIter = layoutProperties.keySet().iterator();
-		while (propIter.hasNext()){
-			String prop = (String)propIter.next();
+		while (propIter.hasNext()) {
+			String prop = (String) propIter.next();
 			String value = applySettings.getProperty(prop);
-			if (value != null){
-				((JTextField)layoutProperties.get(prop)).setText(value);
+			if (value != null) {
+				((JTextField) layoutProperties.get(prop)).setText(value);
 			}
 		}
-		
-		
+
 	}
 
 	/**
@@ -433,8 +437,8 @@ public class ApplySettingsDialog implements ActionListener {
 				+ "");
 
 		// transformations
-		applySettings.put(ApplySettings.RECENTER_TRANSFORM, ErrorStop
-				.isSelected()
+		applySettings.put(ApplySettings.RECENTER_TRANSFORM, recenterChoice
+				.getSelectedItem()
 				+ "");
 		applySettings.put(ApplySettings.RESCALE_LAYOUT, rescaleChoice
 				.getSelectedItem());
