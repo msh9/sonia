@@ -322,6 +322,7 @@ public class RJavaParser implements Parser {
 		// get the string for each node with all its attributes, times etc
 		Iterator nodeIter = parseList(val.substring(6)).iterator();
 		while (nodeIter.hasNext()) {
+			NodeAttribute node = null;
 			// get the attributes for each node
 			String nodeToken = (String) nodeIter.next();
 			Vector nodeAttrs = parseList(nodeToken);
@@ -335,7 +336,6 @@ public class RJavaParser implements Parser {
 			double start = minTime;
 			double end = maxTime;
 			String orgiFile = "R export";
-			// decide how we are handling colors
 			Color nc = parseRColor(settings
 					.getProperty(RParserSettings.NODE_COLOR));
 			double size = Double.parseDouble(settings
@@ -343,7 +343,6 @@ public class RJavaParser implements Parser {
 			RectangularShape shape = parseShape(settings
 					.getProperty(RParserSettings.NODE_SHAPE));
 			// if it is a single element, assume
-
 			while (nodeAttrIter.hasNext()) {
 				// check if is na
 				// TODO: what do do if node is missing
@@ -378,13 +377,16 @@ public class RJavaParser implements Parser {
 					}
 				}
 			}// end non-dynamic attributes
+			//if a node has only dynamic attribute, no vertex is created
+			// until first specified attribute
+
 			// now that those are set, now loop again for dynamic attributes
 			nodeAttrIter = nodeAttrs.iterator();
 			// construct a table of times by attribute values
 			TimedTagBin timeMapper = new TimedTagBin();
 			while (nodeAttrIter.hasNext()) {
 				// check if is na
-				// TODO: what do do if node is missing
+				// TODO: what do do if node is missing na
 				String attribute = ((String) nodeAttrIter.next()).trim();
 				String attrName = attribute.substring(0,
 						attribute.indexOf("=") - 1).trim();
@@ -400,15 +402,16 @@ public class RJavaParser implements Parser {
 					int nsteps = timeData.size() / 2;
 					// make node for first range..
 					start = minTime;
-					end = Double.parseDouble((String) timeData.get(nsteps));
+					end = Double.parseDouble(stripQuotes((String) timeData
+							.get(nsteps)));
 					// add an extra time at the end to fudge..
 					timeData.add("" + maxTime);
 					// loop over times and values
 					for (int t = 0; t < nsteps; t++) {
-						attrValue = (String) timeData.get(t);
+						attrValue = stripQuotes((String) timeData.get(t));
 						start = end;
-						end = Double.parseDouble((String) timeData.get(t
-								+ nsteps + 1));
+						end = Double.parseDouble(stripQuotes((String) timeData
+								.get(t + nsteps + 1)));
 						timeMapper.addAssociation(start, end, attrName,
 								attrValue);
 					}
@@ -446,22 +449,23 @@ public class RJavaParser implements Parser {
 							throw new Exception(error);
 						}
 					}
-					NodeAttribute node = new NodeAttribute(nodeId, label, x, y,
-							start, end, orgiFile);
+					node = new NodeAttribute(nodeId, label, x, y, start, end,
+							orgiFile);
 					node.setNodeColor(nc);
 					node.setNodeShape(shape);
 					node.setNodeSize(size);
 					nodeList.add(node);
 				}
-			}//end dynamic attribute creation
+			}// end dynamic attribute creation
 			// TODO:generates the last value twice?
-
-			NodeAttribute node = new NodeAttribute(nodeId, label, x, y, start,
-					end, orgiFile);
-			node.setNodeColor(nc);
-			node.setNodeShape(shape);
-			node.setNodeSize(size);
-			nodeList.add(node);
+			if (node == null) {
+				node = new NodeAttribute(nodeId, label, x, y, start, end,
+						orgiFile);
+				node.setNodeColor(nc);
+				node.setNodeShape(shape);
+				node.setNodeSize(size);
+				nodeList.add(node);
+			}
 			nodeId++;
 		}// end node loop
 
