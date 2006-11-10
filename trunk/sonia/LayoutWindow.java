@@ -131,7 +131,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 
 	private SoniaLayoutEngine engine;
 
-	private SoniaMovieMaker movie;
+	private MovieMaker movie;
 
 	private GraphicsSettingsDialog graphicsSettings;
 
@@ -227,6 +227,12 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		exportMenu.add(new AbstractAction("Export Matricies...") {
 			public void actionPerformed(ActionEvent arg0) {
 				Control.exportMatricies(engine);
+			}
+		});
+		
+		exportMenu.add(new AbstractAction("Export Test Flash Movie...") {
+			public void actionPerformed(ActionEvent arg0) {
+				Control.exportFlashMovie(engine,LayoutArea,"flashExportTest.swf");
 			}
 		});
 
@@ -545,7 +551,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	 * @param exporter
 	 *            the SoniaMovieMaker which will record the images
 	 */
-	public void makeMovie(SoniaMovieMaker exporter) throws Exception {
+	public void makeMovie(MovieMaker exporter) throws Exception {
 		movie = exporter;
 		int endIndex = engine.getNumSlices();
 		int numFrames = endIndex * Integer.parseInt(NumInterps.getText());

@@ -37,6 +37,9 @@ import javax.swing.UIManager;
 import javax.swing.plaf.metal.MetalLookAndFeel;
 import javax.swing.plaf.metal.MetalTheme;
 
+import com.anotherbigidea.flash.readers.SWFReader;
+import com.anotherbigidea.flash.readers.TagParser;
+import com.anotherbigidea.flash.writers.SWFTagDumper;
 import com.sun.org.apache.bcel.internal.generic.GETSTATIC;
 
 import sonia.parsers.DLParser;
@@ -483,7 +486,7 @@ public class SoniaController {
 
 				
 				//THIS LAUNCHES ON ANOTHER THREAD!!
-				 SoniaMovieMaker movie  = exportMovie(engine,movFileName);
+				 MovieMaker movie  = exportMovie(engine,movFileName);
 				 while (movie.isExporting()){
 					 //TODO: need to notify when export is done, not loop continously!!
 				 }
@@ -641,13 +644,13 @@ public class SoniaController {
 	 * Brings up a dialog to pick which of the layouts to export as a movie,
 	 * then makes a movie exporter and passes it to the layout engine.
 	 */
-	public SoniaMovieMaker exportMovie(SoniaLayoutEngine engToFilm, String fileName) {
+	public MovieMaker exportMovie(SoniaLayoutEngine engToFilm, String fileName) {
 		// NEED TOP PICK WHICH layout to export!!
 		// ListPicker engPicker = new ListPicker(ui,engines,"Choose Layout to
 		// film");
 		// SoniaLayoutEngine engToFilm =
 		// (SoniaLayoutEngine)engPicker.getPickedObject();
-		SoniaMovieMaker exporter = new SoniaMovieMaker(this, engToFilm,
+		QTMovieMaker exporter = new QTMovieMaker(this, engToFilm,
 				fileName);
 		// for now, tell the engine to tell the layout...
 		try {
@@ -663,6 +666,21 @@ public class SoniaController {
 			exporter = null;
 		}
 		return exporter;
+	}
+	
+	public void exportFlashMovie(SoniaLayoutEngine engToExport, SoniaCanvas canvas, String fileName){
+		//debug
+		System.out.println("testing flash export..");
+		SWFMovieMaker exporter = new SWFMovieMaker(this,fileName);
+		
+		try {
+			engToExport.makeMovie(exporter);
+		} catch (Exception e) {
+			showError("Error writing flash movie:"+e.getMessage());
+			e.printStackTrace();
+		}
+
+	           
 	}
 
 	/**

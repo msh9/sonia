@@ -45,12 +45,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 public class NodeAttribute implements NetworkEvent{
 
-	
+ public static final String FLASH_EFFECT = "FLASH_EFFECT";
+ public static final String NO_EFFECT = "NO_EFFECT";
  public static final Color DEFAULT_NODE_COLOR = Color.blue;
  public static final Color DEFAULT_BORDER_COLOR = Color.black;
  public static final Color DEFULAT_LABEL_COLOR = Color.red;
- private static Color flashColor = Color.yellow;
- private static float flashFactor = 4.0f; //how large to expand new events when they are flashed
+
   // variables instatiated with defaults
   private int nodeId;   //should never change after instantiation, used for coords
                          //smallest ID should be 1.
@@ -62,13 +62,14 @@ public class NodeAttribute implements NetworkEvent{
   private Color nodeColor = Color.blue;
   private Color borderColor = Color.black;
   private float borderWidth = 1.0f;
-  private BasicStroke borderStroke = new BasicStroke(borderWidth);
+  //private BasicStroke borderStroke = new BasicStroke(borderWidth);
   private double nodeSize = 10.0;
   private RectangularShape nodeShape = new Ellipse2D.Double();  //not always a rect, but bounds are rect
   private double obsXCoord = 0.0;  //originaly observed cordinates
   private double obsYCoord = 0.0;
   private String origFileLoc = "";  //name and line in file that created it
-  private boolean flashNode = false;  //if it should be flashed when it is drawn
+ // private boolean flashNode = false;  //if it should be flashed when it is drawn
+  private String effect = NO_EFFECT;
 
   //coords not stored here so that they can be accessed more quickly
   //transparency???
@@ -99,83 +100,83 @@ public class NodeAttribute implements NetworkEvent{
    * Paints the node onto the passed graphics at the passed coords, using the
    * graphics settings of the canvas.  (MORE DETAILS)
    */
-  public void paint(Graphics2D graphics, SoniaCanvas canvas, double xCoord,
-                    double yCoord)
-  {
-	  Color startColor = graphics.getColor();
-	  Font startFont = graphics.getFont();
-    double nodeDrawSize = 0.0;
-    
-    //check if drawing node
-    if (!canvas.isHideNodes())
-    {
-      nodeDrawSize = nodeSize * canvas.getNodeScaleFact();
-
-      //changes size and shape of node by repositioning and scaling the rectacular
-      //frame enclosing it
-      nodeShape.setFrame((xCoord - nodeDrawSize/2.0),
-                         (yCoord - nodeDrawSize/2.0),nodeDrawSize,nodeDrawSize);
-     
-      if (nodeColor != null){
-	      graphics.setColor(nodeColor);
-	      graphics.fill(nodeShape);
-      }
-      //set border color/width and draw it
-      graphics.setColor(borderColor);
-      graphics.setStroke(borderStroke);
-      graphics.draw(nodeShape);
-      
-      //if it has never been drawn, than draww it very large so it will show
-      if (flashNode)
-      {
-         nodeShape.setFrame((xCoord - (nodeDrawSize+flashFactor)/2.0),
-                         (yCoord - (nodeDrawSize+flashFactor)/2.0),(nodeDrawSize+flashFactor),(nodeDrawSize+flashFactor));;
-         graphics.setColor(flashColor);
-         graphics.draw(nodeShape);
-         flashNode = false; //so we only draw once, even if stay on same slice..?
-      }
-      
-      // drawing image for Node
-      if (icon != null)
-      {
-         int xc = (int)xCoord - (int)nodeDrawSize/2;
-         int yc = (int)yCoord - (int)nodeDrawSize/2;
-         graphics.drawImage(icon.getImage(), xc, yc, (int)nodeDrawSize, (int)nodeDrawSize, null);
-      }
-      // end draw image
-            
-    }
-    
-    //rough label
-    if (canvas.isShowLabels() | canvas.isShowId())
-    {
-      String printLabel ="";
-      graphics.setColor(labelColor);
-      Font originalFont = graphics.getFont();
-      graphics.setFont(originalFont.deriveFont(labelSize));
-      if (canvas.isShowId() && (nodeSize >= canvas.getShowLabelsVal()))
-      {
-        printLabel = printLabel+nodeId;
-        //if both are on, show with a ":" seperator
-        if (canvas.isShowLabels() && (nodeSize >= canvas.getShowIdsVal()))
-        {
-          printLabel = printLabel+":";
-        }
-      }
-      if (canvas.isShowLabels() && (nodeSize >= canvas.getShowLabelsVal()))
-      {
-          printLabel = printLabel+nodeLabel;
-      }
-      graphics.drawString(printLabel, (float)(xCoord+(nodeDrawSize/2.0)+2.0),
-                          (float)(yCoord+labelSize/2.0));
-    }
-    graphics.setColor(startColor);
-    graphics.setFont(startFont);
-
-    //how can I do this to just change the attributes of the same shape?
-    //need to create my own nodeShape classes
-
-  }
+//  public void paint(Graphics2D graphics, SoniaCanvas canvas, double xCoord,
+//                    double yCoord)
+//  {
+//	  Color startColor = graphics.getColor();
+//	  Font startFont = graphics.getFont();
+//    double nodeDrawSize = 0.0;
+//    
+//    //check if drawing node
+//    if (!canvas.isHideNodes())
+//    {
+//      nodeDrawSize = nodeSize * canvas.getNodeScaleFact();
+//
+//      //changes size and shape of node by repositioning and scaling the rectacular
+//      //frame enclosing it
+//      nodeShape.setFrame((xCoord - nodeDrawSize/2.0),
+//                         (yCoord - nodeDrawSize/2.0),nodeDrawSize,nodeDrawSize);
+//     
+//      if (nodeColor != null){
+//	      graphics.setColor(nodeColor);
+//	      graphics.fill(nodeShape);
+//      }
+//      //set border color/width and draw it
+//      graphics.setColor(borderColor);
+//      graphics.setStroke(borderStroke);
+//      graphics.draw(nodeShape);
+//      
+//      //if it has never been drawn, than draww it very large so it will show
+//      if (flashNode)
+//      {
+//         nodeShape.setFrame((xCoord - (nodeDrawSize+flashFactor)/2.0),
+//                         (yCoord - (nodeDrawSize+flashFactor)/2.0),(nodeDrawSize+flashFactor),(nodeDrawSize+flashFactor));;
+//         graphics.setColor(flashColor);
+//         graphics.draw(nodeShape);
+//         flashNode = false; //so we only draw once, even if stay on same slice..?
+//      }
+//      
+//      // drawing image for Node
+//      if (icon != null)
+//      {
+//         int xc = (int)xCoord - (int)nodeDrawSize/2;
+//         int yc = (int)yCoord - (int)nodeDrawSize/2;
+//         graphics.drawImage(icon.getImage(), xc, yc, (int)nodeDrawSize, (int)nodeDrawSize, null);
+//      }
+//      // end draw image
+//            
+//    }
+//    
+//    //rough label
+//    if (canvas.isShowLabels() | canvas.isShowId())
+//    {
+//      String printLabel ="";
+//      graphics.setColor(labelColor);
+//      Font originalFont = graphics.getFont();
+//      graphics.setFont(originalFont.deriveFont(labelSize));
+//      if (canvas.isShowId() && (nodeSize >= canvas.getShowLabelsVal()))
+//      {
+//        printLabel = printLabel+nodeId;
+//        //if both are on, show with a ":" seperator
+//        if (canvas.isShowLabels() && (nodeSize >= canvas.getShowIdsVal()))
+//        {
+//          printLabel = printLabel+":";
+//        }
+//      }
+//      if (canvas.isShowLabels() && (nodeSize >= canvas.getShowLabelsVal()))
+//      {
+//          printLabel = printLabel+nodeLabel;
+//      }
+//      graphics.drawString(printLabel, (float)(xCoord+(nodeDrawSize/2.0)+2.0),
+//                          (float)(yCoord+labelSize/2.0));
+//    }
+//    graphics.setColor(startColor);
+//    graphics.setFont(startFont);
+//
+//    //how can I do this to just change the attributes of the same shape?
+//    //need to create my own nodeShape classes
+//
+//  }
 
   /**
    * compares start times for list sorting. returns -1 if start timve of evt
@@ -230,7 +231,7 @@ public class NodeAttribute implements NetworkEvent{
   {
    return borderColor;
   }
-  public double getBorderWidth()
+  public float getBorderWidth()
   {
     return borderWidth;
   }
@@ -242,7 +243,7 @@ public class NodeAttribute implements NetworkEvent{
   {
     borderWidth = (float)width;
     //also make a borderStroke shape with that width
-    borderStroke = new BasicStroke(borderWidth);
+    //borderStroke = new BasicStroke(borderWidth);
   }
   public float getLabelSize()
   {
@@ -268,10 +269,15 @@ public class NodeAttribute implements NetworkEvent{
   {
     return iconURL;
   }
-  public void flash()
-  {
-      flashNode = true;
+  
+  public ImageIcon getIcon(){
+	  return icon;
   }
+//  public void flash()
+//  {
+//     // flashNode = true;
+//	  effect = FLASH_EFFECT;
+//  }
   public void setNodeShape(RectangularShape s)
   {
     nodeShape = s;
@@ -349,6 +355,20 @@ public class NodeAttribute implements NetworkEvent{
   public void setObsYCoord(double y)
   {
     obsXCoord = y;
+  }
+  
+  /**
+   * Returns keys corresponding to various visual effects
+   */
+  public String getEffect(){
+	  return effect;
+  }
+  
+  /**
+   * Returns keys corresponding to various visual effects
+   */
+  public void SetEffect(String effectKey){
+	   effect = effectKey;
   }
 
 

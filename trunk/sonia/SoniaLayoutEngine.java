@@ -686,7 +686,7 @@ public class SoniaLayoutEngine {
 	 * @param exporter
 	 *            the SoniaMovieMaker to save the movie frames to
 	 */
-	public void makeMovie(SoniaMovieMaker exporter) throws Exception {
+	public void makeMovie(MovieMaker exporter) throws Exception {
 		display.makeMovie(exporter);
 	}
 

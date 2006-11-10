@@ -55,7 +55,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  * <BR><BR>
  * THIS PACKAGE REQUIRES THE QUICKTIME FOR JAVA LIBRARIES AVAILIBLE FORM APPLE COMPUTER
  */
-public class SoniaMovieMaker extends JFrame implements StdQTConstants, Errors
+public class QTMovieMaker extends JFrame implements StdQTConstants, Errors, MovieMaker
 {
   private QTImageDrawer imageDrawer;
   private QTCanvas QCanvas;
@@ -81,18 +81,16 @@ public class SoniaMovieMaker extends JFrame implements StdQTConstants, Errors
   private boolean exporting = false;
   
 
-  public SoniaMovieMaker(SoniaController cont, SoniaLayoutEngine eng,String file)
+  public QTMovieMaker(SoniaController cont, SoniaLayoutEngine eng,String file)
   {
     control = cont;
     engine = eng;
     fileName = file;
   }
 
-  /**
-   * opens a file dialog asking where to save the movie, opens a "QuickTime session"
-   * throws up a new window with the same size as the layout, and plays the layout,
-   * recording each frame to the new window, and into the movie file.
-   */
+  /* (non-Javadoc)
+ * @see sonia.MovieMaker#setupMovie(sonia.SoniaCanvas, int)
+ */
   public void setupMovie(SoniaCanvas canvas,int frames) throws Exception
   {
     //control.showStatus("starting movie export...");
@@ -198,9 +196,9 @@ exporting = true;
    // }
   }
 
-  /**
-   * Records the currently displayed image to the movie file.
-   */
+  /* (non-Javadoc)
+ * @see sonia.MovieMaker#captureImage()
+ */
  public void captureImage()
  {
    //should check that movie is setup
@@ -234,7 +232,10 @@ exporting = true;
    }
  }
 
- public void finishMovie()
+ /* (non-Javadoc)
+ * @see sonia.MovieMaker#finishMovie()
+ */
+public void finishMovie()
  {
    try
    {
@@ -274,7 +275,10 @@ exporting = true;
    }
  }
  
- public boolean isExporting(){
+ /* (non-Javadoc)
+ * @see sonia.MovieMaker#isExporting()
+ */
+public boolean isExporting(){
 	 return exporting;
  }
 

@@ -82,6 +82,10 @@ public class SoniaCanvas extends JPanel
   {
     lastRender=slice;
   }
+  
+  public RenderSlice getRenderSlice(){
+	  return lastRender;
+  }
 
   /**
    * Redraws the previously drawn off-screen image (buffer) to the passed Graphics from the
