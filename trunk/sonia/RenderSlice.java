@@ -54,7 +54,7 @@ public class RenderSlice {
 
 	private SoniaLayoutEngine layoutEngine;
 
-	private Render render;
+	//private Render render;
 
 	private double sliceStart;
 
@@ -84,7 +84,6 @@ public class RenderSlice {
 		arcEvents = arcs;
 		formater.setMaximumFractionDigits(3);
 		formater.setMinimumFractionDigits(3);
-		render = new Graphics2DRender();
 	}
 
 	public RenderSlice(SoniaLayoutEngine engine, double startTime,
@@ -96,7 +95,6 @@ public class RenderSlice {
 		arcEvents = new Vector();
 		formater.setMaximumFractionDigits(3);
 		formater.setMinimumFractionDigits(3);
-		render = new Graphics2DRender();
 	}
 
 	public void addArcEvent(ArcAttribute arc) {
@@ -108,7 +106,7 @@ public class RenderSlice {
 	}
 
 	// loops over all objects and asks them to paint themselves
-	public void paint(Graphics2D graphics, SoniaCanvas canvas)
+	public void render(Object drawTarget, SoniaCanvas canvas, Render render)
 
 	{
 		// need to calc new coords for nodes from layout slices
@@ -121,10 +119,10 @@ public class RenderSlice {
 		int left = layoutEngine.getLeftPad();
 		int top = layoutEngine.getTopPad();
 
-		Color origColor = graphics.getColor();
-		Font originalFont = graphics.getFont();
+		//Color origColor = graphics.getColor();
+		//Font originalFont = graphics.getFont();
 
-		render.setDrawingTarget(graphics);
+		render.setDrawingTarget(drawTarget);
 
 		// first do arcs
 		// KLUDG check to not draw arcs for speed
@@ -170,20 +168,20 @@ public class RenderSlice {
 				// labels!
 				// TODO: painting arc weights does not work with new layout
 				// system!
-				if (canvas.isShowArcWeights()) {
-					double sliceArcWeight = layoutEngine.getCurrentSlice()
-							.getSymMaxArcWeight(fromId, toId);
-					graphics.setColor(Color.darkGray);
-					float labelX = (float) (xCoords[fromId] + left + (xCoords[toId] - xCoords[fromId]) / 2);
-					float labelY = (float) (yCoords[fromId] + top + (yCoords[toId] - yCoords[fromId]) / 2);
-					// round the arc weight
-
-					graphics.drawString("" + sliceArcWeight, labelX, labelY);
-				}
+//				if (canvas.isShowArcWeights()) {
+//					double sliceArcWeight = layoutEngine.getCurrentSlice()
+//							.getSymMaxArcWeight(fromId, toId);
+//					graphics.setColor(Color.darkGray);
+//					float labelX = (float) (xCoords[fromId] + left + (xCoords[toId] - xCoords[fromId]) / 2);
+//					float labelY = (float) (yCoords[fromId] + top + (yCoords[toId] - yCoords[fromId]) / 2);
+//					// round the arc weight
+//
+//					graphics.drawString("" + sliceArcWeight, labelX, labelY);
+//				}
 
 			} // end arc event loop
-			graphics.setFont(originalFont);
-			graphics.setColor(origColor);
+		//	graphics.setFont(originalFont);
+			//graphics.setColor(origColor);
 		}
 
 		// check settings before node transparency
@@ -238,6 +236,7 @@ public class RenderSlice {
 		}
 
 	}
+	
 
 	// private BasicStroke getStrokeForWidth(float width, boolean isNegitive){
 	// if (isNegitive){

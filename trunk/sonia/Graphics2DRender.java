@@ -18,6 +18,7 @@ import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.IllegalPathStateException;
@@ -36,7 +37,9 @@ public class Graphics2DRender implements Render {
 	private static HashMap strokeTable = new HashMap();
 
 	public void setDrawingTarget(Object drawTarget) {
-		graphics = (Graphics2D) drawTarget;
+		//if (Graphics.class.isAssignableFrom(drawTarget.getClass())){
+			graphics = (Graphics2D) drawTarget;
+		//}
 	}
 
 	public void paintNode(NodeAttribute node, double xCoord, double yCoord,

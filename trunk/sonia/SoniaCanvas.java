@@ -36,6 +36,7 @@ public class SoniaCanvas extends JPanel
   private SoniaLayoutEngine engine;
  // private LayoutWindow display;
   private RenderSlice lastRender = null;
+  private Graphics2DRender g2dRender;
   private GraphicsSettings settings = null;
   //private Image offScreen;
   private Image ghostImage = null;
@@ -77,6 +78,7 @@ public class SoniaCanvas extends JPanel
     drawHeight = engine.getDisplayHeight();
   //  this.setBackground(Color.white);
   //  offScreen = createImage(drawWidth, drawHeight);
+    g2dRender = new Graphics2DRender();
   }
   public void setRenderSlice(RenderSlice slice)
   {
@@ -174,9 +176,10 @@ public class SoniaCanvas extends JPanel
       }
     }
     //now draw the currently selected render slice
+    //TODO:  should render something else to the UI when the render is being diverted?
     if (lastRender != null)
     {
-      lastRender.paint(graphics,this);
+      lastRender.render(graphics,this,g2dRender);
     }
    // g.drawImage(offScreen, 0, 0, null);
 
