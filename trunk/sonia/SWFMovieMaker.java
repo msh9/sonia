@@ -14,43 +14,24 @@
  */
 package sonia;
 
-import java.awt.Graphics2D;
-import java.awt.geom.Rectangle2D;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Iterator;
 
-import com.anotherbigidea.flash.SWFConstants;
-import com.anotherbigidea.flash.interfaces.SWFActionBlock;
-import com.anotherbigidea.flash.interfaces.SWFActions;
-import com.anotherbigidea.flash.interfaces.SWFShape;
-import com.anotherbigidea.flash.movie.Font;
-import com.anotherbigidea.flash.movie.FontDefinition;
-import com.anotherbigidea.flash.movie.FontLoader;
 import com.anotherbigidea.flash.movie.Frame;
-import com.anotherbigidea.flash.movie.Instance;
 import com.anotherbigidea.flash.movie.Movie;
 import com.anotherbigidea.flash.movie.Shape;
 import com.anotherbigidea.flash.readers.SWFReader;
 import com.anotherbigidea.flash.readers.TagParser;
 import com.anotherbigidea.flash.structs.Color;
-import com.anotherbigidea.flash.structs.Matrix;
-import com.anotherbigidea.flash.structs.Rect;
 import com.anotherbigidea.flash.writers.SWFTagDumper;
-import com.anotherbigidea.flash.writers.SWFWriter;
-import com.anotherbigidea.flash.writers.TagWriter;
 
 public class SWFMovieMaker implements MovieMaker {
 
 	private Movie movie;
 
-	private Graphics2dSWF gSWF;
-
 	private SWFRender renderer;
-
-	private TagWriter swf;
 
 	private Frame currentFrame;
 
@@ -59,15 +40,13 @@ public class SWFMovieMaker implements MovieMaker {
 	private String file;
 
 	private SoniaController control;
-
-	private Render oldRender;
-
-	private SWFWriter writer;
 	
-	
+	private SoniaLayoutEngine engine;
 
-	public SWFMovieMaker(SoniaController control, String fileAndPath) {
+
+	public SWFMovieMaker(SoniaController control, SoniaLayoutEngine engine, String fileAndPath) {
 		this.control = control;
+		this.engine = engine;
 		this.file = fileAndPath;
 	}
 
@@ -80,36 +59,11 @@ public class SWFMovieMaker implements MovieMaker {
 		this.canvas = canvas;
 		 movie = new Movie();
 		 movie.setBackColor(new Color(255, 255, 255));
-//		 try{
-//				fontdef = FontLoader.loadFont(this.getClass().getResourceAsStream("image/VerdanaFont.swf"));
-//				font  = new Font(fontdef);
-//				font.loadAllGlyphs();
-//				
-//				//swf.tagDefineFont2(1,0,"font",font.getGlyphList().size(),fontdef.getAscent(),fontdef.getDescent(),fontdef.getLeading(),null,fontdef.);
-//				} catch (IOException e){
-//					System.out.println("Error loading font for swf: "+e.toString());
-//					e.printStackTrace();
-//				}
+		 movie.setFrameRate((int)Math.round(1.0/((double)engine.getFrameDelay()/1000.0))); //fps
 		 currentFrame = movie.appendFrame();
-		// gSWF = new
-		// Graphics2dSWF((Graphics2D)canvas.getGraphics(),currentFrame);
-		renderer = new SWFRender(movie);
+		renderer = new SWFRender();
 		renderer.setDrawingTarget(currentFrame);
-		//writer = new SWFWriter(file);
-	//	swf = new TagWriter(writer);
-
-//		swf.header(5, // Flash version
-//				-1, // unknown length
-//				canvas.getWidth() * SWFConstants.TWIPS, // width in twips
-//				canvas.getHeight() * SWFConstants.TWIPS, // height in twips
-//				1, // frames per sec
-//				-1); // unknown frame count
-
-		//swf.tagSetBackgroundColor(new Color(255, 255, 255));
 		drawBorder();
-		//renderer.newFrame();
-		//swf.tagShowFrame();
-
 	}
 
 	/**
@@ -135,6 +89,7 @@ public class SWFMovieMaker implements MovieMaker {
 
 	public void captureImage() {
 		canvas.getRenderSlice().render(currentFrame, canvas, renderer);
+		//ask the renderer to remove objects that should no longer be showing
 		renderer.newFrame();
 		currentFrame = movie.appendFrame();
 	}
@@ -148,28 +103,20 @@ public class SWFMovieMaker implements MovieMaker {
 	 */
 	public void finishMovie() {
 		try {
-			 
+			//clean up remaining events
+			renderer.newFrame();
 			// create an action to stop the movie from looping
 			currentFrame.stop();
 			movie.write(file);
-			
-//			SWFActions actions = swf.tagDoAction();
-//			SWFActionBlock ab = actions.start(0);
-//			ab.stop();
-//			ab.end();
-//			actions.done();
-//			swf.tagEnd();
-//			writer.close();
-
 		} catch (IOException e) {
 			control.showError("Error export SWF movie:" + e.getMessage());
 			e.printStackTrace();
 		}
 		
-
 		// debug
+		
 		System.out.println("Saved flash file to:" + file);
-		// debug more by saving out a deparsed representation
+		// debug more by saving out a human readable deparsed representation
 		FileInputStream in;
 		try {
 			in = new FileInputStream(file);

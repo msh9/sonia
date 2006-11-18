@@ -671,7 +671,7 @@ public class SoniaController {
 	public void exportFlashMovie(SoniaLayoutEngine engToExport, SoniaCanvas canvas, String fileName){
 		//debug
 		System.out.println("testing flash export..");
-		SWFMovieMaker exporter = new SWFMovieMaker(this,fileName);
+		SWFMovieMaker exporter = new SWFMovieMaker(this,engToExport,fileName);
 		
 		try {
 			engToExport.makeMovie(exporter);

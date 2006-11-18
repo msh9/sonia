@@ -53,6 +53,9 @@ import com.anotherbigidea.flash.writers.TagWriter;
  */
 public class SWFRender implements Render {
 
+	// TODO: need to figure out how to reuse layers so the draw order (arcs,
+	// nodes, labels) is mantained...
+
 	private HashMap nodeGraphics;
 
 	private HashMap nodeLabels;
@@ -65,11 +68,7 @@ public class SWFRender implements Render {
 
 	private HashMap activeEdges;
 
-	// private HashMap layerLookup;
 	private int transVal = 255;
-
-	// private TagWriter swf;
-	private Movie movie;
 
 	private Frame currentFrame;
 
@@ -77,14 +76,12 @@ public class SWFRender implements Render {
 
 	private Font font;
 
-
 	// private Text statusText;
 	// private int statusTextLayer;
 	// private int statusTextId;
 	private Instance statusText;
 
-	public SWFRender(Movie movie) {
-		this.movie = movie;
+	public SWFRender() {
 		nodeGraphics = new HashMap();
 		nodeLabels = new HashMap();
 		edgeGraphics = new HashMap();
@@ -95,11 +92,12 @@ public class SWFRender implements Render {
 			fontdef = FontLoader.loadFont(this.getClass().getResourceAsStream(
 					"image/VerdanaFont.swf"));
 			font = new Font(fontdef);
-			font.loadAllGlyphs();
+			//font.loadAllGlyphs();
 
 			// swf.tagDefineFont2(1,0,"font",font.getGlyphList().size(),fontdef.getAscent(),fontdef.getDescent(),fontdef.getLeading(),null,fontdef.);
 		} catch (IOException e) {
-			System.out.println("Error loading font for swf: " + e.toString());
+			System.out.println("Error loading font for swf movie: "
+					+ e.toString());
 			e.printStackTrace();
 		}
 	}
@@ -110,26 +108,14 @@ public class SWFRender implements Render {
 		Instance inst;
 		// if we've already drawn the shape, just return its reference
 		if (nodeGraphics.containsKey(node)) {
-			// shapeID = ((Integer) nodeGraphics.get(node)).intValue();
 			inst = (Instance) nodeGraphics.remove(node);
 		} else {
 			// get the java shape
 			RectangularShape s = (RectangularShape) node.getNodeShape();
-			// make the new shape
-			// set the min and max for the swf shape
-			// dimensions are in twips
+			// draw the shape centered around the origin
 			double centerX = (s.getWidth() / 2) + s.getMinX(); // have to
-																// subtract out
-																// the
-																// "original"
-																// coords...
+			// subtract out the "original" coords...
 			double centerY = (s.getHeight() / 2) + s.getMinY();
-			// Rect outline = new Rect((int) Math.round(-1 * (frameWidth / 2)
-			// * SWFConstants.TWIPS), (int) Math.round(-1
-			// * (frameHeight / 2) * SWFConstants.TWIPS), (int) Math
-			// .round((frameWidth / 2) * SWFConstants.TWIPS), (int) Math
-			// .round((frameHeight / 2) * SWFConstants.TWIPS));
-			// SWFShape shape = swf.tagDefineShape(shapeID, outline);
 			Shape shape = new Shape();
 			// edge width
 			double borderWidth = node.getBorderWidth();
@@ -166,48 +152,118 @@ public class SWFRender implements Render {
 				}
 				pathIter.next();
 			}
-			inst = currentFrame.placeSymbol(shape, 0, 0);
+			inst = currentFrame.placeSymbol(shape, null, null);
 		}
 		activeNodes.put(node, inst);
 		return inst;
 
-		// private Instance getSWFLabel(NodeAttribute){
-		// Instance inst;
-		//			
-		// }
 	}
 
+	private Instance getSWFLabel(NodeAttribute node, String label,
+			double scaleFact) {
+		Instance inst;
+		if (nodeLabels.containsKey(node)) {
+			inst = (Instance) nodeLabels.remove(node);
+		} else {
+			Text text = new Text(null);
+			java.awt.Color c = node.DEFULAT_LABEL_COLOR;
+			try {
+				text.row(font.chars(label, node.getLabelSize()),
+						new Color(c.getRed(), c.getGreen(), c.getBlue()), 0, 0,
+						false, false);
+			} catch (NoGlyphException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			inst = currentFrame.placeSymbol(text, null, null);
+
+		}
+		activeLabels.put(node, inst);
+		return inst;
+
+	}
+
+	/**
+	 * always have to redraw the edge shapes because it is too hard to calculate
+	 * a transform to position the ends correctly without distorting the edge
+	 * thickness
+	 * 
+	 * @author skyebend
+	 * @param arc
+	 * @param startX
+	 * @param startY
+	 * @param endX
+	 * @param endY
+	 * @return
+	 * @throws IOException
+	 */
 	private Instance getSWFEdge(ArcAttribute arc, double startX, double startY,
-			double endX, double endY) throws IOException {
+			double endX, double endY, double widthFactor, boolean arrows) throws IOException {
 		Instance inst;
 		// if we've already drawn the shape, just return its reference
-
-		// set the min and max for the swf shape
-		// dimensions are in twips
-		// double frameWidth = endX-startX;
-		// double frameHeight = endY-startY;
-		// Rect outline = new Rect((int) Math.round(-1 * (frameWidth / 2)
-		// * SWFConstants.TWIPS), (int) Math.round(-1
-		// * (frameHeight / 2) * SWFConstants.TWIPS), (int) Math
-		// .round((frameWidth / 2) * SWFConstants.TWIPS), (int) Math
-		// .round((frameHeight / 2) * SWFConstants.TWIPS));
-		// SWFShape shape = swf.tagDefineShape(shapeID, outline);
 		Shape shape = new Shape();
 		// edge width
-		double borderWidth = arc.getArcWidth();
+		double borderWidth = arc.getArcWidth()*widthFactor;
 		java.awt.Color c = arc.getArcColor();
-		shape.defineLineStyle(borderWidth, new AlphaColor(c.getRed(), c
-				.getGreen(), c.getBlue(), transVal));
+		Color arrowC = new AlphaColor(c.getRed(), c
+				.getGreen(), c.getBlue(), transVal);
+		shape.defineLineStyle(borderWidth, arrowC);
 		shape.setLineStyle(1);
-		shape.move(startX, startY);
-		shape.line(endX, endY);
+		shape.move(Math.round(startX), Math.round(startY));
+		shape.line(Math.round(endX), Math.round(endY));
+		if (arrows) {
+			shape.defineFillStyle(arrowC);
+			shape.setRightFillStyle(1);
+			//make no line so that it is just the head shape
+			shape.defineLineStyle(0.0, arrowC);
+			shape.setLineStyle(2);
+			/*
+			//try just making a box
+			shape.move(endX,endY);
+			shape.line(endX+10,endY);
+			shape.line(endX+10,endY+10);
+			shape.line(endX,endY+10);
+			shape.move(endX,endY);
+			*/
+			
+			double arrowSize = RenderSlice.arrowLength + borderWidth;
+			double xDiff = (startX - endX);
+			double yDiff = (startY - endY);
+			double lineAngle = Math.atan((xDiff) / (yDiff));
+			// trap cases where xDiff and yDiff are zero to stop strange
+			// PRException onPC
+			if (Double.isNaN(lineAngle)) {
+				lineAngle = 0.0;
+			}
+			if (yDiff < 0) // rotate by 180
+			{
+				lineAngle += Math.PI;
+			}
 
+			//  we should be alreay at the tip of the arrow
+			// but there is a bug in javaswf..
+			//Also have to deal with some round off error in the double to int conversion
+			shape.move(Math.round(endX),Math.round(endY));
+			// one wedge
+			shape.line( Math.round(endX+ (arrowSize * Math
+					.sin(lineAngle - 0.3))),  Math.round(endY + (arrowSize * Math
+					.cos(lineAngle - 0.3))));
+			// other wedge
+			shape.line( Math.round(endX + (arrowSize * Math
+					.sin(lineAngle + 0.3))),  Math.round(endY + (arrowSize * Math
+					.cos(lineAngle + 0.3))));
+			// back to top
+			shape.line(Math.round(endX), Math.round(endY));
+			
+	
+			
+		}
 		if (edgeGraphics.containsKey(arc)) {
 			inst = (Instance) edgeGraphics.remove(arc);
 			inst = currentFrame.replaceSymbol(shape, inst.getDepth(), null,
 					null, 0, 0);
 		} else {
-			inst = currentFrame.placeSymbol(shape, 0, 0);
+			inst = currentFrame.placeSymbol(shape, null, null);
 		}
 		activeEdges.put(arc, inst);
 		return inst;
@@ -221,13 +277,14 @@ public class SWFRender implements Render {
 		}
 		map.clear();
 	}
-	
+
 	/**
 	 * Reset various elements (remove undrawn edges) and start next frame
+	 * 
 	 * @author skyebend
 	 */
-	public void newFrame(){
-//		 we are starting an new frame, so remove any objects that didn't
+	public void newFrame() {
+		// we are starting an new frame, so remove any objects that didn't
 		// get drawn last time
 		removeInactive(nodeGraphics);
 		nodeGraphics.putAll(activeNodes);
@@ -238,8 +295,7 @@ public class SWFRender implements Render {
 		removeInactive(nodeLabels);
 		nodeLabels.putAll(activeLabels);
 		activeLabels.clear();
-		//now start next frame
-		//currentFrame = movie.appendFrame();
+		// now start next frame
 	}
 
 	/**
@@ -266,8 +322,9 @@ public class SWFRender implements Render {
 		// TODO: flash not supported for swf arcs
 		// TODO: arrows not supported for swf arcs
 		// TODO: labels not supported for swf arcs
+		// TODO: will multiple arcs draw correctly?
 		try {
-			Instance inst = getSWFEdge(arc, fromX, fromY, toX, toY);
+			Instance inst = getSWFEdge(arc, fromX, fromY, toX, toY,widthFactor, arrows);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -284,7 +341,7 @@ public class SWFRender implements Render {
 		// reposition it..
 		try {
 			Instance inst = getSWFNode(node);
-			currentFrame.alter(inst, (int) xCoord, (int) yCoord);
+			currentFrame.alter(inst, (int) Math.round(xCoord), (int) Math.round(yCoord));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -293,7 +350,22 @@ public class SWFRender implements Render {
 
 	public void paintNodeLabels(NodeAttribute node, double xCoord,
 			double yCoord, double scaleFact, boolean showLabels, boolean showId) {
-		// TODO Auto-generated method stub
+		// rough label
+		String printLabel = "";
+		if (showId) {
+			printLabel = printLabel + node.getNodeId();
+			// if both are on, show with a ":" seperator
+			if (showLabels) {
+				printLabel = printLabel + ":";
+			}
+		}
+		if (showLabels) {
+			printLabel = printLabel + node.getNodeLabel();
+		}
+		double nodeDrawSize = node.getNodeSize() * scaleFact;
+		Instance inst = getSWFLabel(node, printLabel, scaleFact);
+		currentFrame.alter(inst, (int) Math.round(xCoord + (nodeDrawSize / 2.0)
+				+ 2.0), (int) Math.round(yCoord + node.getLabelSize() / 2.0));
 
 	}
 
@@ -303,7 +375,6 @@ public class SWFRender implements Render {
 			text.row(font.chars(stats, 8), new Color(50, 50, 50), 0, 0, false,
 					false);
 		} catch (NoGlyphException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		if (statusText == null) {

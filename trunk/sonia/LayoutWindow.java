@@ -218,7 +218,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		drawSettings = settings;
 		browseSettings = browseSet;
 
-		exportMenu.add(new AbstractAction("Export Movie...") {
+		exportMenu.add(new AbstractAction("Export QuickTime Movie...") {
 			public void actionPerformed(ActionEvent arg0) {
 				Control.exportMovie(engine, null);
 			}
@@ -230,7 +230,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 			}
 		});
 		
-		exportMenu.add(new AbstractAction("Export Test Flash Movie...") {
+		exportMenu.add(new AbstractAction("Export Flash Movie...") {
 			public void actionPerformed(ActionEvent arg0) {
 				Control.exportFlashMovie(engine,LayoutArea,"flashExportTest.swf");
 			}
@@ -841,17 +841,16 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 					} else {
 						// update the display
 						updateDisplay();
-					}
-					// now the rendering is going to fast, so we have to slow it
-					// down
+//						 now the rendering is going to fast, so we have to slow it
+						// down
 
-					try {
-						Thread.sleep(engine.getFrameDelay());
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						try {
+							Thread.sleep(engine.getFrameDelay());
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 					}
-
 				}
 				LayoutNum.setText("" + engine.getCurrentSliceNum());
 				RenderTime.setText("" + newSlice.getSliceStart());
