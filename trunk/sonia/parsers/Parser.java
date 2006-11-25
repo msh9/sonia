@@ -29,7 +29,7 @@ import java.util.Vector;
 import java.util.Hashtable;
 import java.io.IOException;
 
-import sonia.PropertySettings;
+import sonia.settings.PropertySettings;
 
 
 /**

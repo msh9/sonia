@@ -15,7 +15,8 @@
 /**
  * this code was originally written for SoNIA by skyebend in 2006 
  */
-package sonia;
+package sonia.settings;
+
 
 /**
  * this class holds the settings that control the view of the network and the

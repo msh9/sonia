@@ -1,4 +1,4 @@
-package sonia;
+package sonia.ui;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -22,6 +22,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.RepaintManager;
 import javax.swing.event.InternalFrameEvent;
+
 
 /**
  * 

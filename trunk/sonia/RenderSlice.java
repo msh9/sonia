@@ -34,6 +34,8 @@ import java.awt.geom.GeneralPath;
 import java.awt.geom.IllegalPathStateException;
 import java.text.*;
 
+import sonia.render.Render;
+
 /**
  * A bin or container for the node and arc events meeting its criteria, it draws
  * them to the screen when asked. See Layout window for an explanation of the

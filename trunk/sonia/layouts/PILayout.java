@@ -4,14 +4,13 @@ import cern.colt.matrix.impl.*;
 import cern.colt.matrix.linalg.*;
 import java.util.*;
 
-import sonia.ApplySettings;
-import sonia.ApplySettingsDialog;
 import sonia.LayoutSlice;
 import sonia.LayoutUtils;
-import sonia.NetLayout;
 import sonia.NetUtils;
 import sonia.SoniaController;
 import sonia.SoniaLayoutEngine;
+import sonia.settings.ApplySettings;
+import sonia.ui.ApplySettingsDialog;
 
 
 /**

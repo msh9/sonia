@@ -3,16 +3,15 @@ package sonia.layouts;
 import java.util.*;
 import java.lang.Math;
 
-import sonia.ApplySettings;
-import sonia.ApplySettingsDialog;
 import sonia.CoolingSchedule;
 import sonia.LayoutSlice;
 import sonia.LayoutUtils;
-import sonia.NetLayout;
 import sonia.NetUtils;
 import sonia.SoniaController;
 import sonia.SoniaLayoutEngine;
 import sonia.Subnet;
+import sonia.settings.ApplySettings;
+import sonia.ui.ApplySettingsDialog;
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.*;
 

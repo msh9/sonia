@@ -18,8 +18,9 @@ import java.util.Vector;
 import sonia.ArcAttribute;
 import sonia.Interval;
 import sonia.NodeAttribute;
-import sonia.PropertySettings;
 import sonia.TimedTagBin;
+import sonia.settings.PropertySettings;
+import sonia.settings.RParserSettings;
 
 /**
  * This class takes sets of lists exported from R using deparse(). Lists may

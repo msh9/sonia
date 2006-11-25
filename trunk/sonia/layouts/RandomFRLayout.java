@@ -3,14 +3,13 @@ package sonia.layouts;
 import java.util.*;
 import java.lang.Math;
 
-import sonia.ApplySettings;
-import sonia.ApplySettingsDialog;
 import sonia.CoolingSchedule;
 import sonia.LayoutSlice;
 import sonia.LayoutUtils;
-import sonia.NetLayout;
 import sonia.SoniaController;
 import sonia.SoniaLayoutEngine;
+import sonia.settings.ApplySettings;
+import sonia.ui.ApplySettingsDialog;
 import jal.INT.Modification;
 
 //mport javax.swing.SwingUtilities;

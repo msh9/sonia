@@ -1,4 +1,4 @@
-package sonia;
+package sonia.ui;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -20,6 +20,15 @@ import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 import javax.swing.plaf.basic.BasicBorders;
+
+import sonia.LayoutSlice;
+import sonia.NodeMover;
+import sonia.SoniaCanvas;
+import sonia.SoniaController;
+import sonia.SoniaLayoutEngine;
+import sonia.movie.MovieMaker;
+import sonia.settings.BrowsingSettings;
+import sonia.settings.GraphicsSettings;
 
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>

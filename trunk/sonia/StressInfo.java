@@ -15,6 +15,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.event.InternalFrameEvent;
 
+import sonia.ui.ExportableFrame;
+
 
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>

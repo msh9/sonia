@@ -1,4 +1,4 @@
-package sonia;
+package sonia.ui;
 
 import java.awt.*;
 import java.awt.font.*;
@@ -25,6 +25,8 @@ import javax.swing.border.BevelBorder;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.plaf.FontUIResource;
+
+import sonia.SoniaController;
 
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>

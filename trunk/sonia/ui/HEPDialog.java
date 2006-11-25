@@ -1,4 +1,4 @@
-package sonia;
+package sonia.ui;
 
 import org.freehep.util.export.*;
 import java.awt.*;
@@ -37,7 +37,7 @@ import org.freehep.graphicsio.swf.SWFExportFileType;
  * 
  * @author tonyj, modified by eytan adar for GUESS, modified by skybend for
  *         sonia
- * @version $Id: HEPDialog.java,v 1.2 2006-04-06 17:52:36 skyebend Exp $
+ * @version $Id: HEPDialog.java,v 1.1 2006-11-25 01:26:31 skyebend Exp $
  */
 public class HEPDialog extends JOptionPane {
 	private static final String rootKey = HEPDialog.class.getName();

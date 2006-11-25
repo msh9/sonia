@@ -12,7 +12,7 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package sonia;
+package sonia.render;
 
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
@@ -24,6 +24,10 @@ import java.awt.geom.GeneralPath;
 import java.awt.geom.IllegalPathStateException;
 import java.awt.geom.RectangularShape;
 import java.util.HashMap;
+
+import sonia.ArcAttribute;
+import sonia.NodeAttribute;
+import sonia.RenderSlice;
 
 public class Graphics2DRender implements Render {
 

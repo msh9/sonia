@@ -42,11 +42,25 @@ import com.anotherbigidea.flash.readers.TagParser;
 import com.anotherbigidea.flash.writers.SWFTagDumper;
 import com.sun.org.apache.bcel.internal.generic.GETSTATIC;
 
+import sonia.movie.MovieMaker;
+import sonia.movie.QTMovieMaker;
+import sonia.movie.SWFMovieMaker;
 import sonia.parsers.DLParser;
 import sonia.parsers.DotNetParser;
 import sonia.parsers.DotSonParser;
 import sonia.parsers.Parser;
 import sonia.parsers.RJavaParser;
+import sonia.settings.ApplySettings;
+import sonia.settings.BrowsingSettings;
+import sonia.settings.GraphicsSettings;
+import sonia.settings.LayoutSettings;
+import sonia.settings.MovieSettings;
+import sonia.settings.PropertySettings;
+import sonia.ui.GraphicsSettingsDialog;
+import sonia.ui.LayoutSettingsDialog;
+import sonia.ui.LayoutWindow;
+import sonia.ui.LogWindow;
+import sonia.ui.SoniaInterface;
 
 import cern.jet.random.Uniform;
 import cern.colt.matrix.impl.SparseDoubleMatrix2D;

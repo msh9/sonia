@@ -15,7 +15,7 @@
 /**
  * this code was originally written for SoNIA by skyebend in 2006 
  */
-package sonia;
+package sonia.settings;
 
 import java.util.Iterator;
 import java.util.Properties;

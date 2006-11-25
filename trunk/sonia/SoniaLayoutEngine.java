@@ -34,10 +34,19 @@ import sonia.layouts.CircleLayout;
 import sonia.layouts.FRLayout;
 import sonia.layouts.MetricMDSLayout;
 import sonia.layouts.MultiCompKKLayout;
+import sonia.layouts.NetLayout;
 import sonia.layouts.OrigCoordLayout;
 import sonia.layouts.PILayout;
 import sonia.layouts.RandomFRLayout;
 import sonia.layouts.RubBandFRLayout;
+import sonia.movie.MovieMaker;
+import sonia.settings.ApplySettings;
+import sonia.settings.GraphicsSettings;
+import sonia.settings.LayoutSettings;
+import sonia.ui.ApplySettingsDialog;
+import sonia.ui.LayoutSettingsDialog;
+import sonia.ui.LayoutWindow;
+import sonia.ui.PhasePlot;
 
 import cern.colt.matrix.impl.SparseDoubleMatrix2D;
 

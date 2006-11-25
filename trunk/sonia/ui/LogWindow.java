@@ -1,4 +1,4 @@
-package sonia;
+package sonia.ui;
 
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>
@@ -37,6 +37,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.border.TitledBorder;
+
+import sonia.SoniaController;
 
 /**
  * Semi-independent window that logs all actions of a session for repeatability

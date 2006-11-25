@@ -12,9 +12,12 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package sonia;
+package sonia.render;
 
 import java.awt.Graphics2D;
+
+import sonia.ArcAttribute;
+import sonia.NodeAttribute;
 
 /**
  * abstracts the painting calls need to draw the network to make it possible to

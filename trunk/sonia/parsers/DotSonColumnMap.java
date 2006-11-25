@@ -3,7 +3,7 @@
  *
  * Created on 08 April 2005, 10:46
  */
-package sonia;
+package sonia.parsers;
 
 /*
  * This program is free software; you can redistribute it and/or modify it under
@@ -22,6 +22,8 @@ package sonia;
  */
 import java.util.*;
 import java.lang.reflect.Field;
+
+import sonia.settings.PropertySettings;
 
 /**
  * Class for associating the columnames of the .son input file with their

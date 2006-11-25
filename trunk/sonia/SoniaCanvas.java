@@ -5,6 +5,9 @@ import java.awt.*;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import sonia.render.Graphics2DRender;
+import sonia.settings.GraphicsSettings;
+
 
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>

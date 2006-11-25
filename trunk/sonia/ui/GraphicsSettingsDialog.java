@@ -1,4 +1,4 @@
-package sonia;
+package sonia.ui;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -15,6 +15,11 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
+
+import sonia.SoniaCanvas;
+import sonia.SoniaController;
+import sonia.SoniaLayoutEngine;
+import sonia.settings.GraphicsSettings;
 
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>

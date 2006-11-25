@@ -12,22 +12,28 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package sonia;
 
-/**
- * holds properties for specifying location and properties of the exported movie
- * @author skyebend
- *
- */
-public class MovieSettings extends PropertySettings {
-	
+package sonia.movie;
+
+import sonia.SoniaCanvas;
+
+public interface MovieMaker {
+
 	/**
-	 * 
+	 * opens a file dialog asking where to save the movie, opens a "QuickTime session"
+	 * throws up a new window with the same size as the layout, and plays the layout,
+	 * recording each frame to the new window, and into the movie file.
 	 */
-	private static final long serialVersionUID = -3443808061066683501L;
+	public abstract void setupMovie(SoniaCanvas canvas, int frames)
+			throws Exception;
+
 	/**
-	 * key for value giving path (including file name) where movie should be saved. 
+	 * Records the currently displayed image to the movie file.
 	 */
-	public static final String OUTPUT_PATH = "OUTPUT_PATH";
+	public abstract void captureImage();
+
+	public abstract void finishMovie();
+
+	public abstract boolean isExporting();
 
 }

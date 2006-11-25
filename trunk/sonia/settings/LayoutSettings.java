@@ -1,4 +1,5 @@
-package sonia;
+package sonia.settings;
+
 
 
 /**

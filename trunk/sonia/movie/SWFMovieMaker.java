@@ -12,12 +12,17 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package sonia;
+package sonia.movie;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+
+import sonia.SoniaCanvas;
+import sonia.SoniaController;
+import sonia.SoniaLayoutEngine;
+import sonia.render.SWFRender;
 
 import com.anotherbigidea.flash.movie.Frame;
 import com.anotherbigidea.flash.movie.Movie;

@@ -7,10 +7,9 @@ import java.awt.Color;
 import java.awt.geom.*;
 
 import sonia.ArcAttribute;
-import sonia.AttributeMapperDialog;
-import sonia.DotSonColumnMap;
 import sonia.NodeAttribute;
-import sonia.PropertySettings;
+import sonia.settings.PropertySettings;
+import sonia.ui.AttributeMapperDialog;
 
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>

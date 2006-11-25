@@ -1,4 +1,4 @@
-package sonia;
+package sonia.ui;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -31,32 +31,42 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 /**
-  * Tages a suggestion string, shows it to the user, and returns input via get method,
-  * also has prompt string for window title
+   * Takes a list, creates a dialog presenting the user with a list view of all the objects on it,
+   * and returns the one chosen by the user
+   *
+   * @deprecated  no longer used, delte
    */
-public class TextPrompter
+//TODO: no longer used, delete this class
+public class ListPicker extends Object
 {
   private Dialog dialog;
   private Button OK;
-  private TextField field;
-  /**
-   * Tages a suggestion string, shows it to the user, and returns input via get method,
-   * also has prompt string for window title
-   * @param promptString string to be used as the window title
-   * @pram suggestString text to be displayed as a suggestion in the text area
-   */
-  public TextPrompter(Frame owner, String suggestString, String promptString)
+  private List displayList;
+  private Object pickedObject = null;
+  private ArrayList pickList;
+
+  public ListPicker(Frame owner, ArrayList list, String promptString)
   {
 
+    int numItems = list.size();
     dialog = new Dialog(owner,promptString,true);
-    field = new TextField(suggestString,suggestString.length()+10);
     OK = new Button("OK");
-
+    pickList = list;
+    displayList = new List(numItems);
+    for (int i=0;i<numItems ;i++ )
+    {
+      //add the string representation of each object in the pickList
+      displayList.add(((Object)pickList.get(i)).toString());
+    }
+    displayList.select(0);
+    displayList.setBackground(Color.white);
 
     OK.addActionListener(new ActionListener()
     {
       public void actionPerformed(ActionEvent evt)
       {
+        int index = displayList.getSelectedIndex();
+        pickedObject = (Object)pickList.get(index);
         dialog.hide();
       }
     });
@@ -65,21 +75,17 @@ public class TextPrompter
     GridBagConstraints c = new GridBagConstraints();
     c.insets = new Insets(0,2,0,2);
     c.gridx=0;c.gridy=0;c.gridwidth=1;c.gridheight=1;c.weightx=1;c.weighty=1;
-    dialog.add(field,c);
+    dialog.add(displayList,c);
     c.gridx=0;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=1;c.weighty=1;
     dialog.add(OK,c);
     dialog.setBackground(Color.lightGray);
-    dialog.setLocation(400,400);
-    dialog.setSize(400,100);
+    dialog.setSize(200,300);
+    dialog.setLocation(100,100);
     dialog.show();
 
   }
-
-  /**
-   * Returns the string entered in the text field by the user
-   */
-  public String getUserString()
+  public Object getPickedObject()
   {
-    return field.getText();
+    return pickedObject;
   }
 }

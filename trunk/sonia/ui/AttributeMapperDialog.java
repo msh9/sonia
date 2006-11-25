@@ -3,7 +3,7 @@
  *
  * Created on 08 April 2005, 13:55
  */
-package sonia;
+package sonia.ui;
 import java.awt.*;
 import java.util.*;
 import java.awt.event.*;
@@ -15,6 +15,8 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+
+import sonia.parsers.DotSonColumnMap;
 /**
  *
  * @author skyebend

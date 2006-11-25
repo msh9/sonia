@@ -3,7 +3,14 @@ package sonia;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
-import sonia.parsers.RParserSettings;
+import sonia.parsers.DotSonColumnMap;
+import sonia.settings.ApplySettings;
+import sonia.settings.BrowsingSettings;
+import sonia.settings.GraphicsSettings;
+import sonia.settings.LayoutSettings;
+import sonia.settings.MovieSettings;
+import sonia.settings.PropertySettings;
+import sonia.settings.RParserSettings;
 
 public class PropertyBuilder {
 	

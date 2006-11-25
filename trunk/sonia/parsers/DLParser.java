@@ -10,7 +10,7 @@ import java.util.Vector;
 
 import sonia.ArcAttribute;
 import sonia.NodeAttribute;
-import sonia.PropertySettings;
+import sonia.settings.PropertySettings;
 
 /**
  * reads the version of the UCINET DL multiple matrix edgelist format written by

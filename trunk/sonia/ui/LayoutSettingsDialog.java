@@ -1,4 +1,4 @@
-package sonia;
+package sonia.ui;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -19,6 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
+import sonia.SoniaController;
 import sonia.layouts.CircleLayout;
 import sonia.layouts.FRLayout;
 import sonia.layouts.MetricMDSLayout;
@@ -27,6 +28,7 @@ import sonia.layouts.OrigCoordLayout;
 import sonia.layouts.PILayout;
 import sonia.layouts.RandomFRLayout;
 import sonia.layouts.RubBandFRLayout;
+import sonia.settings.LayoutSettings;
 
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>

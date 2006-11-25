@@ -1,4 +1,4 @@
-package sonia;
+package sonia.movie;
 
 import java.io.*;
 import java.awt.*;
@@ -18,6 +18,9 @@ import quicktime.util.*;
 import quicktime.app.display.*;
 import quicktime.app.image.*;
 import quicktime.app.QTFactory;
+import sonia.SoniaCanvas;
+import sonia.SoniaController;
+import sonia.SoniaLayoutEngine;
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>
  * <p>Description:Animates layouts of time-based networks
