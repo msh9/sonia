@@ -43,6 +43,7 @@ import com.anotherbigidea.flash.writers.SWFTagDumper;
 import com.sun.org.apache.bcel.internal.generic.GETSTATIC;
 
 import sonia.movie.MovieMaker;
+import sonia.movie.OldQTMovieMaker;
 import sonia.movie.QTMovieMaker;
 import sonia.movie.SWFMovieMaker;
 import sonia.parsers.DLParser;
@@ -664,7 +665,7 @@ public class SoniaController {
 		// film");
 		// SoniaLayoutEngine engToFilm =
 		// (SoniaLayoutEngine)engPicker.getPickedObject();
-		QTMovieMaker exporter = new QTMovieMaker(this, engToFilm,
+		OldQTMovieMaker exporter = new OldQTMovieMaker(this, engToFilm,
 				fileName);
 		// for now, tell the engine to tell the layout...
 		try {
@@ -691,10 +692,23 @@ public class SoniaController {
 			engToExport.makeMovie(exporter);
 		} catch (Exception e) {
 			showError("Error writing flash movie:"+e.getMessage());
+			log("ERROR saving movie: "+e.getMessage());
 			e.printStackTrace();
-		}
-
-	           
+		}        
+	}
+	
+	public void exportQTMovie(SoniaLayoutEngine engToExport, SoniaCanvas canvas, String fileName){
+		//debug
+		System.out.println("testing new QT export..");
+		QTMovieMaker exporter = new QTMovieMaker(fileName);
+		
+		try {
+			engToExport.makeMovie(exporter);
+		} catch (Exception e) {
+			showError("Error writing QT movie:"+e.getMessage());
+			log("ERROR saving movie: "+e.getMessage());
+			e.printStackTrace();
+		}        
 	}
 
 	/**

@@ -229,7 +229,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 
 		exportMenu.add(new AbstractAction("Export QuickTime Movie...") {
 			public void actionPerformed(ActionEvent arg0) {
-				Control.exportMovie(engine, null);
+				//Control.exportMovie(engine, null);
+				Control.exportQTMovie(engine, LayoutArea,"QTExportTest.mov");
 			}
 		});
 

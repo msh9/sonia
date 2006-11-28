@@ -13,6 +13,7 @@ import sonia.Subnet;
 import sonia.settings.ApplySettings;
 import sonia.ui.ApplySettingsDialog;
 import cern.colt.list.IntArrayList;
+import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.SparseDoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 
@@ -239,7 +240,11 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 	public static final String SPRNG_CONST ="springConst";
 	public static final String COOL_FACT ="cool factor";
 	public static final String COMP_CONN ="comp connect value";
-	public static final String MAX_PASS ="max passes";
+	/**
+	 * property key whose value gives the maximum number of iterations a layout
+	 * algorithm should be allowed. Value must be parseable as an int.
+	 */
+	public static final String MAX_PASS = "max passes";
 
 	/**
 	 * Instantiates the layout with reference to the main SoniaController and
@@ -271,13 +276,12 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 	 *            the dialog the parameters will be added to
 	 */
 	public void setupLayoutProperties(ApplySettingsDialog settings) {
+		settings.addLayoutProperty(MAX_PASS,500);
 		settings.addLayoutProperty(OPT_DIST, 20);
 		settings.addLayoutProperty(MIN_EPSI, 1.0);
 		settings.addLayoutProperty(SPRNG_CONST, 1.0);
 		settings.addLayoutProperty(COOL_FACT, 0.25);
 		settings.addLayoutProperty(COMP_CONN, 0.0);
-		settings.addLayoutProperty(MAX_PASS,1000);
-		//TODO:  make layout read max passes from settings and show in cooling schedule
 	}
 
 	/**
@@ -296,7 +300,9 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 			ApplySettings set) {
 		slice = s;
 		settings = set;
-		maxPasses = schedule.getMaxUsrPasses();
+		//maxPasses = schedule.getMaxUsrPasses();
+		maxPasses = (int)Math.round(Double.parseDouble(settings.getProperty(MAX_PASS)));
+		schedule.setMaxPasses(maxPasses);
 		width = w;
 		height = h;
 		layoutInfo = "";
@@ -334,10 +340,13 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 			// (matrix was symetrized when divided into components)
 			// using the max and min value of all matricies in engine
 			// then sets up the matrix of path distances with Dijkstras APSP
+			control.showStatus("Starting shortest path calculation...");
 			DenseDoubleMatrix2D distMatrix = NetUtils
 					.getAllShortPathMatrix(NetUtils.getReverse(subnet
 							.getMatrix(), engine.getMaxMatrixVal(), engine
 							.getMinMatrixValue()));
+			
+		
 			// repalce the infinities with the replace Weight
 			//should be a more efficent way
 			//debug
@@ -368,6 +377,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 					// using the max and min value of all matricies in engine
 					// then sets up the matrix of path distances with Dijkstras
 					// APSP
+					control.showStatus("Starting shortest path calculation...");
 					DenseDoubleMatrix2D distMatrix = NetUtils
 							.getAllShortPathMatrix(NetUtils.getReverse(subnet
 									.getMatrix(), engine.getMaxMatrixVal(),
@@ -396,8 +406,9 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 	 * The optimization loop proceeds as follows: First, the node with the
 	 * highest energy (worst position) is located.
 	 */
-	private void KKLoop(Subnet subnet, DenseDoubleMatrix2D distMatrix) {
+	private void KKLoop(Subnet subnet, DoubleMatrix2D distMatrix) {
 		int nNodes = subnet.getNumNodes();
+		control.showStatus("Starting KK main loop...");
 		schedule.reset();
 
 		// sets up kmatrix of forces (optimal [but not always achieveable]
@@ -641,7 +652,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 	/**
 	 * set up matrix of spring forces between pairs using K/(d[i][j]^2)
 	 */
-	private DenseDoubleMatrix2D calcKMatrix(DenseDoubleMatrix2D distMatrix,
+	private DenseDoubleMatrix2D calcKMatrix(DoubleMatrix2D distMatrix,
 			double spring) {
 		int nNodes = distMatrix.rows();
 		DenseDoubleMatrix2D kMatrix = new DenseDoubleMatrix2D(nNodes, nNodes);
@@ -657,7 +668,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 	/**
 	 * set up matrix of desired edge lengths using L*d[i][j]
 	 */
-	private DenseDoubleMatrix2D calcLMatrix(DenseDoubleMatrix2D distMatrix,
+	private DenseDoubleMatrix2D calcLMatrix(DoubleMatrix2D distMatrix,
 			double optDist) {
 		int nNodes = distMatrix.rows();
 		DenseDoubleMatrix2D lMatrix = new DenseDoubleMatrix2D(nNodes, nNodes);

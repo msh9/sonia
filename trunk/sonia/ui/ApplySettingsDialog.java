@@ -91,6 +91,7 @@ public class ApplySettingsDialog implements ActionListener {
 	private JComboBox rescaleChoice;
 
 	private JTextField RepaintN;
+	
 
 	private JLabel repaintLabel;
 
@@ -145,7 +146,7 @@ public class ApplySettingsDialog implements ActionListener {
 
 		RepaintN = new JTextField("0", 2);
 		repaintLabel = new JLabel("Repaint on Nth layout pass");
-
+		
 		recenterChoice = new JComboBox(new Object[] {
 				ApplySettings.RECENTER_AFTER, ApplySettings.NONE,
 				ApplySettings.BARYCENTER, ApplySettings.RECENTER_DURING });
@@ -206,6 +207,7 @@ public class ApplySettingsDialog implements ActionListener {
 		c.gridheight = 1;
 		c.weightx = 0;
 		c.weighty = 1;
+		
 		iterationProps.add(RepaintN, c);
 		c.gridx = 0;
 		c.gridy = 1;

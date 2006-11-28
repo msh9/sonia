@@ -1,322 +1,270 @@
+/* This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation; either version 2
+ of the License, or (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
 package sonia.movie;
 
-import java.io.*;
-import java.awt.*;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.awt.image.PixelGrabber;
+import java.awt.image.SinglePixelPackedSampleModel;
+import java.io.File;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-
-import quicktime.qd.*;
-import quicktime.*;
-import quicktime.std.*;
-import quicktime.io.*;
-import quicktime.std.image.*;
-import quicktime.std.movies.*;
-import quicktime.std.movies.media.*;
-import quicktime.util.*;
-
-import quicktime.app.display.*;
-import quicktime.app.image.*;
-import quicktime.app.QTFactory;
+import quicktime.QTException;
+import quicktime.QTSession;
+import quicktime.io.OpenMovieFile;
+import quicktime.io.QTFile;
+import quicktime.qd.QDColor;
+import quicktime.qd.QDConstants;
+import quicktime.qd.QDException;
+import quicktime.qd.QDGraphics;
+import quicktime.qd.QDRect;
+import quicktime.std.image.CSequence;
+import quicktime.std.image.CodecComponent;
+import quicktime.std.image.CompressedFrameInfo;
+import quicktime.std.image.ImageDescription;
+import quicktime.std.image.QTImage;
+import quicktime.std.StdQTConstants;
+import quicktime.std.StdQTConstants4;
+import quicktime.std.StdQTException;
+import quicktime.std.movies.Movie;
+import quicktime.std.movies.Track;
+import quicktime.std.movies.media.VideoMedia;
+import quicktime.util.EndianOrder;
+import quicktime.util.QTHandle;
+import quicktime.util.RawEncodedImage;
 import sonia.SoniaCanvas;
-import sonia.SoniaController;
-import sonia.SoniaLayoutEngine;
-/**
- * <p>Title:SoNIA (Social Network Image Animator) </p>
- * <p>Description:Animates layouts of time-based networks
- * <p>Copyright: CopyLeft  2004: GNU GPL</p>
- * <p>Company: none</p>
- * @author Skye Bender-deMoll unascribed
- * @version 1.1
- */
-
-
-/* This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- */
+import sonia.render.Graphics2DRender;
 
 /**
- * Sets up connection to QuickTime for Java libraries to export the network
- * animation as a movie.  Unfortunately, the libraries are only availible for
- * windows and macs.  Even worse, apple broke the mac version in the recent java
- * releases, so if you want it to work you will need to run under java 1.3.1.
- * The whole thing is pretty kludgy to begin with, needs to be redone, and perhaps
- * support for Flash files so we could do vector based animation.
- * <BR><BR>
- *
- * <BR><BR>
- * THIS PACKAGE REQUIRES THE QUICKTIME FOR JAVA LIBRARIES AVAILIBLE FORM APPLE COMPUTER
+ * Exports animation as a QuickTime movie, using the QTJava library. Replaces
+ * OldQTMovieMaker which was not compatible with current QT on macs. Much of the
+ * code on this page is based on an example from a bug report submitted to
+ * http://lists.apple.com/archives/quicktime-java/2006/Apr/msg00074.html Also I
+ * also worked from an example by Wayne Rasband from the imageJ plugin website
+ * at http://rsb.info.nih.gov/ij/plugins/download/QuickTime_Writer.java
+ * 
+ * 
+ * @author skyebend
+ * 
  */
-public class QTMovieMaker extends JFrame implements StdQTConstants, Errors, MovieMaker
-{
-  private QTImageDrawer imageDrawer;
-  private QTCanvas QCanvas;
-  private QTFile outFile;
-  private NetPainter painter;
-  private int numFrames = 60;
-  private int width;
-  private int height;
+public class QTMovieMaker implements MovieMaker {
 
-  private Movie theMovie;
-  private QDRect clipRect;
-  private QDGraphics quickDraw;
-  private RawEncodedImage compressedImage;
-  private VideoMedia vidMedia;
-  private Track vidTrack;
-  private QTHandle imageHandle;
-  private CSequence seq;
-  private ImageDescription desc;
+	private String fileName;
 
-  private SoniaLayoutEngine engine;
-  private SoniaController control;
-  private String fileName = null;
-  private boolean exporting = false;
-  
+	public static final String SUFFIX = ".mov";
+	
+	private QDRect bounds; 
 
-  public QTMovieMaker(SoniaController cont, SoniaLayoutEngine eng,String file)
-  {
-    control = cont;
-    engine = eng;
-    fileName = file;
-  }
+	private QDGraphics graphics;
 
-  /* (non-Javadoc)
- * @see sonia.MovieMaker#setupMovie(sonia.SoniaCanvas, int)
- */
-  public void setupMovie(SoniaCanvas canvas,int frames) throws Exception
-  {
-    //control.showStatus("starting movie export...");
-  //  try
-   // {
-      //
-      // show save-as dialog, create movie file & empty movie
-      //
-    	//check if we already have a name
-    if (fileName == null){
-      FileDialog dialog = new FileDialog (new Frame(), "Save Network Movie As...",
-          FileDialog.SAVE);
-      dialog.show();
-      if(dialog.getFile() == null)
-      {
-       //dont do anything
-    	  return;
-      }
-      else
-      {
-    	  fileName = dialog.getDirectory()+dialog.getFile();
-      }
-    }
-      if (fileName != null){
-      outFile = new QTFile(fileName);
+	private QTFile movFile;
+	
+	private QTHandle imageHandle; //pointer to block of memory? (c wrapper)
+	
+	private RawEncodedImage compressedImage;
+	
+	private Movie movie;
+	
+	private VideoMedia videoMedia;
+	
+	private Track videoTrack;
+	
+	private CSequence seq;
+	private ImageDescription imgDesc;
 
-exporting = true;
-        QTSession.open();  //links to c stubbs?
-        width = engine.getDisplayWidth(); //need to add pads?
-        height = engine.getDisplayHeight();
-        numFrames = frames;
+	public static final int KEY_FRAME_RATE = 30;
 
-        //frame stuff so we can visually debug
-       QCanvas = new QTCanvas(QTCanvas.kInitialSize, 0.5F, 0.5F);
-       JPanel holder = new JPanel();
-       holder.setSize(width,height);
-       holder.add(QCanvas);
-       this.add(holder);
-       this.setBackground(Color.black);
-       this.setLocation(300,300);
-       this.pack();
-       this.setSize(width+50,height+50);
-       this.setTitle("Exporting movie to "+outFile.getName()+" ...");
-        this.show();
+	public static final int TIME_SCALE = 600;
 
-        painter = new NetPainter(canvas);
-        imageDrawer = new QTImageDrawer(painter,
-                                        new Dimension(width,height),
-                                        Redrawable.kMultiFrame);
-        QCanvas.setClient (imageDrawer, true);
-        imageDrawer.setRedrawing(true);//so it will get new data from image source
-        theMovie = Movie.createMovieFile (outFile,
-            kMoviePlayer,
-            createMovieFileDeleteCurFile | createMovieFileDontCreateResFile);
-        int kNoVolume	= 0;
-        int kVidTimeScale = 600;
+	public static final String[] codecs = { "Cinepak", "Animation", "H.263", "Sorenson",
+			"Sorenson 3", "MPEG-4" };
 
-        vidTrack = theMovie.addTrack (width, height, kNoVolume);
-        vidMedia = new VideoMedia (vidTrack, kVidTimeScale);
+	public static final int[] codecTypes = { StdQTConstants.kCinepakCodecType,
+			StdQTConstants.kAnimationCodecType, StdQTConstants.kH263CodecType,
+			StdQTConstants.kSorensonCodecType, 0x53565133, 0x6d703476 };
 
-        //begin QT editing
-        vidMedia.beginEdits();
-        clipRect = new QDRect (width, height);
-        quickDraw = new QDGraphics (clipRect);
+	private String codec = "Animation";
 
+	public static final String[] qualityStrings = { "Low", "Normal", "High", "Maximum" };
 
-        int size = QTImage.getMaxCompressionSize (quickDraw,
-            clipRect,
-            8,//quickDraw.getPixMap().getPixelSize(),  the color depth
-            codecHighQuality,   //recomended quality
-            kAnimationCodecType,
-            CodecComponent.bestFidelityCodec);   //the compressor
-        imageHandle = new QTHandle (size, true);
-        imageHandle.lock();
-        compressedImage = RawEncodedImage.fromQTHandle(imageHandle);
-       seq = new CSequence (quickDraw,
-                                       clipRect,
-                                       8,//quickDraw.getPixMap().getPixelSize(),
-                                       kAnimationCodecType,
-                                     //  CodecComponent.bestCompressionCodec,
-                                       CodecComponent.bestFidelityCodec,
-                                       codecHighQuality,
-                                       codecHighQuality,
-                                       numFrames,	//1 key frame
-                                       null, //cTab,
-                                       0);
+	public static final int[] qualityConstants = { StdQTConstants.codecLowQuality,
+			StdQTConstants.codecNormalQuality, StdQTConstants.codecHighQuality,
+			StdQTConstants.codecMaxQuality };
 
-        desc = seq.getDescription();
+	private  String quality = "High";
+	
+	private int rate = 30; //TODO: read qt fps from engine
+	
+	private BufferedImage bufferedImage;
 
-        //redraw first...
-        painter.paint(QCanvas.getGraphics());
-        imageDrawer.redraw(null);
+	private Graphics2D graphics2D;
 
-        imageDrawer.setGWorld (quickDraw);
-        imageDrawer.setDisplayBounds (clipRect);
-      }
-   // }
-   // catch (Exception e)
-   // {
-      //debug
-     // control.showError("Error saving quicktime movie"+e.toString());
-     // e.printStackTrace();
-   // }
-  }
+	private Graphics2DRender renderer;
 
-  /* (non-Javadoc)
- * @see sonia.MovieMaker#captureImage()
- */
- public void captureImage()
- {
-   //should check that movie is setup
-   if (theMovie != null)
-   {
-     try
-     {
-   //get the renderslices and everything ready
-   //painter.setUpNextFrame();
-   painter.paint(QCanvas.getGraphics());
-   imageDrawer.redraw(null);
-   CompressedFrameInfo info = seq.compressFrame(quickDraw,
-       clipRect,
-       codecFlagUpdatePrevious,
-       compressedImage);
-   boolean isKeyFrame = info.getSimilarity() == 0;
-   //System.out.println ("f#:" + curSample + ",kf=" + isKeyFrame + ",sim=" + info.getSimilarity());
-   vidMedia.addSample (imageHandle,
-                       0, // dataOffset,
-                       info.getDataSize(),
-                       engine.getFrameDelay(), // frameDuration in 600ths of seconds, 60/600 = 1/10 of a second, desired time per frame
-                       desc,
-                       1, // one sample
-                       (isKeyFrame ? 0 : mediaSampleNotSync)); // no flags
-     }
-     catch (Exception e)
-     {
-       control.showError("problem adding slice frame "+e.toString());
-       e.printStackTrace();
-     }
-   }
- }
+	private SoniaCanvas canvas;
 
- /* (non-Javadoc)
- * @see sonia.MovieMaker#finishMovie()
- */
-public void finishMovie()
- {
-   try
-   {
-     //print out ImageDescription for the last video media data ->
-     //this has a sample count of 1 because we add each "frame" as an individual media sample
-     control.log(desc.toString()+"\n");
+	private boolean isExporting = false;
+	
+	private int[] pixels;
+	
+	private int currentFrame = 1;
 
-     //end QT editing
-     vidMedia.endEdits();
+	public QTMovieMaker(String fileAndPath) {
+		fileName = fileAndPath;
+		renderer = new Graphics2DRender();
+	}
 
-     int kTrackStart	= 0;
-     int kMediaTime 	= 0;
-     int kMediaRate	= 1;
-     vidTrack.insertMedia (kTrackStart, kMediaTime, vidMedia.getDuration(), kMediaRate);
+	public void setupMovie(SoniaCanvas canvas, int frames) throws Exception {
+		this.canvas = canvas;
+		isExporting = true;
+		QTSession.open();
+		// Set up a Quicktime graphics world
+		 bounds = new QDRect(canvas.getWidth(), canvas.getHeight());
+		// Workaround suggested from Simon Goldrei to deal with endian order
+		// bug on intel macs
+		if (quicktime.util.EndianOrder.isNativeLittleEndian()) {
+			graphics = new QDGraphics(QDConstants.k32BGRAPixelFormat, bounds);
+		} else {
+			graphics = new QDGraphics(QDGraphics.kDefaultPixelFormat, bounds);
+		}
+		// Get the raw image from the QT graphics world
+		RawEncodedImage image = graphics.getPixMap().getPixelData();
+		int scanLength = image.getRowBytes() >>> 2;
+		int scanHeight = image.getSize() / image.getRowBytes();
+
+		// Set up a Java graphics context based upaon an array as the storage
+		// for a buffered image
+		int codecQuality = StdQTConstants.codecMaxQuality;
+		int codecType = StdQTConstants.kAnimationCodecType;
+		 bufferedImage = new BufferedImage(scanLength, scanHeight,
+				BufferedImage.TYPE_INT_RGB);
+//			create a java graphcs based on the QT image
+			graphics2D = bufferedImage.createGraphics();
+			graphics2D.setBackground(canvas.getBackground());
+		// setup QT file io
+		movFile = new QTFile(new File(fileName));
+		 movie = Movie.createMovieFile(movFile,
+				StdQTConstants.kMoviePlayer,
+				StdQTConstants.createMovieFileDeleteCurFile
+						| StdQTConstants.createMovieFileDontCreateResFile);
+		 //TODO: trap file busy error # -47
+		int timeScale = TIME_SCALE; // 100 units per second
+		videoTrack = movie.addTrack(canvas.getWidth(),
+				canvas.getHeight(), 0);
+		videoMedia = new VideoMedia(videoTrack, timeScale);
+		videoMedia.beginEdits();
+//		ImageDescription imgDesc2 = new ImageDescription(
+//				QDConstants.k32ARGBPixelFormat);
+//		imgDesc2.setWidth(canvas.getWidth());
+//		imgDesc2.setHeight(canvas.getHeight());
+//		QDGraphics gw = new QDGraphics(imgDesc2, 0);
+		//figure out how much memory for each frame
+		int rawImageSize = QTImage.getMaxCompressionSize(graphics, bounds, graphics
+				.getPixMap().getPixelSize(), codecQuality, codecType,
+				CodecComponent.anyCodec);
+		//allocate the memory and lock it
+	    imageHandle = new QTHandle(rawImageSize, true);
+		imageHandle.lock();
+		//create a pointer o it
+		compressedImage = RawEncodedImage
+				.fromQTHandle(imageHandle);
+		//create a "compressed image sequence" around the graphics
+		 seq = new CSequence(graphics, bounds,
+				graphics.getPixMap().getPixelSize(), codecType,
+				CodecComponent.bestFidelityCodec, codecQuality, codecQuality,
+				KEY_FRAME_RATE, null, 0);
+		 imgDesc = seq.getDescription();
+
+	}
+
+	public void captureImage() {
 
 
-     //
-     // save movie to file
-     //
-     OpenMovieFile outStream = OpenMovieFile.asWrite (outFile);
-     theMovie.addResource( outStream, movieInDataForkResID, outFile.getName() );
-     outStream.close();
+		graphics2D.clearRect(0,0,bufferedImage.getWidth(),bufferedImage.getHeight());
+		//ask sonia to render the graphics to the QTGraphics
+		canvas.getRenderSlice().render(graphics2D, canvas, renderer);
+		try {
+		RawEncodedImage pixelData = graphics.getPixMap().getPixelData();
+		int intsPerRow = pixelData.getRowBytes()/4;
+		if (pixels==null) pixels = new int[intsPerRow*bufferedImage.getHeight()];
+		//need to copy the pixel data from the java to QuickDraw  graphics
+		//OR could implement as quickdraw graphics renderer..
+		PixelGrabber grabber = new PixelGrabber(bufferedImage,0,0,bufferedImage.getWidth(),
+				bufferedImage.getHeight(),false);
+		try {
+			grabber.grabPixels();
+		} catch (InterruptedException e) {
+			System.err.println(e);
+		};
+		int[] javaPixels = (int[])grabber.getPixels();
+//		if (EndianOrder.isNativeLittleEndian()) {
+//			System.out.println("\tswaping endian order..");
+//			//EndianOrder.flipBigEndianToNative(pixels, 0, EndianDescriptor.flipAll32);
+//			int offset1, offset2;
+//			for (int y=0; y<bufferedImage.getHeight(); y++) {
+//				offset1 = y*bufferedImage.getHeight();
+//				offset2 = y* intsPerRow;
+//				for (int x=0; x<bufferedImage.getWidth(); x++)
+//					pixels[offset2++] = EndianOrder.flipBigEndianToNative32(pixels[offset1++]);
+//			}
+//		} else {
+//			for (int i=0; i<bufferedImage.getHeight(); i++)
+//				System.arraycopy(javaPixels, i*bufferedImage.getWidth(), pixels, 
+//						i*intsPerRow, bufferedImage.getWidth());
+//		}
+		pixelData.copyFromArray(0, javaPixels, 0, intsPerRow*bufferedImage.getHeight());
+	
+		
+		CompressedFrameInfo cfInfo = seq.compressFrame (graphics, bounds, 
+					StdQTConstants.codecFlagUpdatePrevious, compressedImage);
+		//decide if we need a keyframe,
+//		 see developer.apple.com/qa/qtmcc/qtmcc20.html
+		boolean syncSample = cfInfo.getSimilarity()==0; 	
+		videoMedia.addSample (imageHandle, 0, cfInfo.getDataSize(), rate, 
+				imgDesc, 1, syncSample?0:StdQTConstants.mediaSampleNotSync);
+		} catch (StdQTException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		//debug
+		System.out.println("saved frame "+currentFrame);
+		currentFrame++;
 
-     QTSession.close();
-     control.showStatus("Movie saved to file "+outFile.toString());
-     exporting=false;
-     this.setVisible(false);
-     this.dispose();
-   }
-   catch (Exception e)
-   {
-     control.showError("ERROR with movie export "+e.toString());
-     e.printStackTrace();
-     exporting = false;
-     this.setVisible(false);
-     this.dispose();
-   }
- }
- 
- /* (non-Javadoc)
- * @see sonia.MovieMaker#isExporting()
- */
-public boolean isExporting(){
-	 return exporting;
- }
+	}
 
+	public void finishMovie() {
+		try {
+			videoMedia.endEdits();
+			videoTrack.insertMedia (0, 0, videoMedia.getDuration(), 1);
+			OpenMovieFile omf = OpenMovieFile.asWrite (movFile);
+			movie.addResource (omf, StdQTConstants.movieInDataForkResID, movFile.getName());
+		} catch (StdQTException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (QTException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		QTSession.close();
+		isExporting = false;
+		//debug
+		System.out.println("QTMovie export finished..");
+	}
 
-  class NetPainter implements Paintable
-  {
-    private SoniaCanvas canvas;
-    private int frameNum;
-
-    public NetPainter(SoniaCanvas canv)
-    {
-      canvas=canv;
-    }
-
-    //implments quicktimes paing commands
-    public Rectangle[] paint(Graphics g)
-    {
-      Rectangle[] clipRegions = new Rectangle[1];
-      Rectangle clipRect = new Rectangle(0,0,width,height);
-      clipRegions[0]=clipRect;
-      //calls the original sonia canvas do draw the net
-      //need to update the display first, 'cause paint will just redraw the
-      //previous image
-      canvas.updateDisplay(g,canvas.isGhostSlice());
-      canvas.paint(g);
-
-      return clipRegions;
-    }
-
-    public void newSizeNotified(QTImageDrawer drawer, Dimension d)
-    {
-       width=d.width;
-       height=d.height;
-    }
-
-  }
+	public boolean isExporting() {
+		return isExporting;
+	}
 
 }

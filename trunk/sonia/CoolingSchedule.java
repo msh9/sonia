@@ -130,16 +130,7 @@ public class CoolingSchedule extends ExportableFrame implements MouseListener,
 		screenPointsToCtlValues();
 	}
 
-	// THIS IS BROKEN, use parseCtlValueString
-	/**
-	 * deprecated?
-	 */
-	/*
-	 * public CoolingSchedule(int numPoints, double[][] pointPassFact) {
-	 * bendPoints = numPoints; ctlValues = pointPassFact; pointsX = new
-	 * int[bendPoints]; pointsY = new int[bendPoints]; makeGUI(); reset();
-	 * ctlValuesToScreenPoints(); }
-	 */
+	
 
 	/**
 	 * creates the gui, creating the layout, adding components, etc. Adds button

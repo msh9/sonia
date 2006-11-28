@@ -126,8 +126,6 @@ public class FRLayout implements NetLayout, Runnable
   private int passes;
   private double optDist;    //optimal distance for nodes, gets reset later in code
 
-  private boolean animate = true;       //whether to animate the transitions
-  private boolean firstLayout = true;
   private boolean noBreak = true;
   private double width;
   private double height;
@@ -135,11 +133,15 @@ public class FRLayout implements NetLayout, Runnable
   private LayoutSlice slice;
   private ApplySettings settings;
   private String layoutInfo = "";
-  private double[][] defaultCooling = new double[][]{};
   
   public static final String OPT_DIST = "optimum distance";
   public static final String MOVE_DIST = "move distance";
   public static final String REPEL_CUTOFF = "repel cutoff";
+	/**
+	 * property key whose value gives the maximum number of iterations a layout
+	 * algorithm should be allowed. Value must be parseable as an int.
+	 */
+	public static final String MAX_PASS = "max passes";
 
   /**
    * Configures the layout, displays a cooling schedule with default control points.
@@ -149,7 +151,9 @@ public class FRLayout implements NetLayout, Runnable
     control = cont;
     engine = eng;
     schedule = new CoolingSchedule(8);
-    schedule.setMaxPasses(maxPasses);
+    //schedule.setMaxPasses(maxPasses);
+    maxPasses = Integer.parseInt(settings.getProperty(MAX_PASS));
+	schedule.setMaxPasses(maxPasses);
     schedule.parseCtlValueString("(0,1.0) (3,0.64) (9,0.33) (17,0.21) (30,0.12) (52,0.08) (74,0.04) (100,0.0)");
     control.showFrame(schedule);
   }
@@ -166,6 +170,7 @@ public class FRLayout implements NetLayout, Runnable
    */
   public void setupLayoutProperties(ApplySettingsDialog settings)
   {
+	settings.addLayoutProperty(MAX_PASS,maxPasses);
     settings.addLayoutProperty(OPT_DIST,20);
     settings.addLayoutProperty(REPEL_CUTOFF,999);
     settings.addLayoutProperty(MOVE_DIST,200);
@@ -177,7 +182,9 @@ public class FRLayout implements NetLayout, Runnable
   {
     slice = s;
     settings = set;
-    maxPasses = schedule.getMaxUsrPasses();
+   // maxPasses = schedule.getMaxUsrPasses();
+    maxPasses = (int)Math.round(Double.parseDouble(settings.getProperty(MAX_PASS)));
+    schedule.setMaxPasses(maxPasses);
     width = w;
     height = h;
 

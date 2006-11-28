@@ -344,6 +344,8 @@ public class NetUtils
     }
     return distMatrix;
   }
+  
+  
 
   /**
   * Returns a double equal to the graph-theoretic diameter of the passed

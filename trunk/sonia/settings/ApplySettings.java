@@ -1,6 +1,5 @@
 package sonia.settings;
 
-
 /* This program is free software; you can redistribute it and/or
  modify it under the terms of the GNU General Public License
  as published by the Free Software Foundation; either version 2
@@ -16,11 +15,7 @@ package sonia.settings;
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-
-
 public class ApplySettings extends PropertySettings {
-	
-
 
 	/**
 	 * 
@@ -72,6 +67,7 @@ public class ApplySettings extends PropertySettings {
 	 * reaint
 	 */
 	public static final String LAYOUT_REPAINT_N = "LAYOUT_REPAINT_N";
+
 
 	/**
 	 * property key indicating if these settings should be repeatedly applied to
@@ -175,14 +171,11 @@ public class ApplySettings extends PropertySettings {
 			if (keyString == null) {
 				setProperty(ALG_PROP_KEYS, key);
 			} else {
-				keyString = keyString +","+ key;
+				keyString = keyString + "," + key;
 				setProperty(ALG_PROP_KEYS, keyString);
 			}
 		}
 		setProperty(key, value);
 	}
-	
-	
-	
 
 }

@@ -47,6 +47,8 @@ public class SWFMovieMaker implements MovieMaker {
 	private SoniaController control;
 	
 	private SoniaLayoutEngine engine;
+	
+	private boolean isExporting = false;
 
 
 	public SWFMovieMaker(SoniaController control, SoniaLayoutEngine engine, String fileAndPath) {
@@ -58,7 +60,7 @@ public class SWFMovieMaker implements MovieMaker {
 	public void setupMovie(SoniaCanvas canvas, int frames) throws Exception {
 		// debug
 		System.out.println("setup flash movie");
-		
+		isExporting = true;
 
 
 		this.canvas = canvas;
@@ -141,11 +143,12 @@ public class SWFMovieMaker implements MovieMaker {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		isExporting = false;
 
 	}
 
 	public boolean isExporting() {
-		return false;
+		return isExporting;
 	}
 
 }
