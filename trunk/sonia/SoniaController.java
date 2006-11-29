@@ -33,6 +33,7 @@ import java.awt.color.*;
 import java.beans.PropertyVetoException;
 
 import javax.swing.JInternalFrame;
+import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.plaf.metal.MetalLookAndFeel;
 import javax.swing.plaf.metal.MetalTheme;
@@ -61,6 +62,7 @@ import sonia.ui.GraphicsSettingsDialog;
 import sonia.ui.LayoutSettingsDialog;
 import sonia.ui.LayoutWindow;
 import sonia.ui.LogWindow;
+import sonia.ui.MovExportSettingsDialog;
 import sonia.ui.SoniaInterface;
 
 import cern.jet.random.Uniform;
@@ -700,8 +702,27 @@ public class SoniaController {
 	public void exportQTMovie(SoniaLayoutEngine engToExport, SoniaCanvas canvas, String fileName){
 		//debug
 		System.out.println("testing new QT export..");
+		
+		if (fileName == null) {
+			FileDialog dialog = new FileDialog(new Frame(),
+					"Save Network Movie As...", FileDialog.SAVE);
+		    dialog.setFile("network.mov");
+ 
+			dialog.setVisible(true);
+			if (dialog.getFile() == null) {
+				// dont do anything
+				return;
+			} else {
+				fileName = dialog.getDirectory() + dialog.getFile();
+			}
+			
+			
+		}
 		QTMovieMaker exporter = new QTMovieMaker(fileName);
 		
+//		also ask about export formats
+		MovExportSettingsDialog set = new MovExportSettingsDialog(ui,exporter); 
+		set.showDialog();
 		try {
 			engToExport.makeMovie(exporter);
 		} catch (Exception e) {

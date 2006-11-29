@@ -21,6 +21,8 @@ import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 import javax.swing.plaf.basic.BasicBorders;
 
+import quicktime.std.qtcomponents.MovieExporter;
+
 import sonia.LayoutSlice;
 import sonia.NodeMover;
 import sonia.SoniaCanvas;
@@ -230,7 +232,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		exportMenu.add(new AbstractAction("Export QuickTime Movie...") {
 			public void actionPerformed(ActionEvent arg0) {
 				//Control.exportMovie(engine, null);
-				Control.exportQTMovie(engine, LayoutArea,"QTExportTest.mov");
+			
+				Control.exportQTMovie(engine, LayoutArea,null);
 			}
 		});
 

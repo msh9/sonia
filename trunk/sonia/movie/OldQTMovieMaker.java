@@ -106,6 +106,7 @@ public class OldQTMovieMaker extends JFrame implements StdQTConstants, Errors, M
     if (fileName == null){
       FileDialog dialog = new FileDialog (new Frame(), "Save Network Movie As...",
           FileDialog.SAVE);
+
       dialog.show();
       if(dialog.getFile() == null)
       {
