@@ -30,5 +30,22 @@ public class MovieSettings extends PropertySettings {
 	 * key for value giving path (including file name) where movie should be saved. 
 	 */
 	public static final String OUTPUT_PATH = "OUTPUT_PATH";
+	
+	/**
+	 * key for the file type to be used for movie export
+	 */
+	public static final String FILE_TYPE = "FILE_TYPE";
+	
+	
+	/**
+	 * file type value indicating a QuickTime movie.  
+	 * Note: only works on macs and pcs with quicktime installed
+	 */
+	public static final String QUICKTIME_FILE_TYPE = "mov";
+	
+	/**
+	 * file type value indicating a QuickTime movie.  Note: not useable on linux
+	 */
+	public static final String FLASH_FILE_TYPE = "swf";
 
 }

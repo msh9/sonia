@@ -198,7 +198,7 @@ public class Graphics2DRender implements Render {
 				e.printStackTrace();
 			}
 
-		}// end draw arcs
+		}// end draw arrows
 
 		// CHECK IF LABELS ARE TO BE DRAWN
 		if (labels) {

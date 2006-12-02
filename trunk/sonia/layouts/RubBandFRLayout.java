@@ -139,7 +139,7 @@ public class RubBandFRLayout implements NetLayout, Runnable
 
     //set up arcs matrix, (assumed to be similarities)
     //symetrize it
-    SparseDoubleMatrix2D arcsMatrix = NetUtils.getSymMaxMatrix(subnet.getMatrix());
+    DoubleMatrix2D arcsMatrix = NetUtils.getSymMaxMatrix(subnet.getMatrix());
     //reverse it so that it will be disimilarities
     //using max and min values of all slices is engine
     arcsMatrix  = NetUtils.getReverse(arcsMatrix,engine.getMaxMatrixVal(),

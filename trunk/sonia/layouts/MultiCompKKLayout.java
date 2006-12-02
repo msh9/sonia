@@ -342,9 +342,9 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 			// then sets up the matrix of path distances with Dijkstras APSP
 			control.showStatus("Starting shortest path calculation...");
 			DenseDoubleMatrix2D distMatrix = NetUtils
-					.getAllShortPathMatrix(NetUtils.getReverse(subnet
+					.getFastFastAllShortPathMatrix(subnet
 							.getMatrix(), engine.getMaxMatrixVal(), engine
-							.getMinMatrixValue()));
+							.getMinMatrixValue(),false);
 			
 		
 			// repalce the infinities with the replace Weight
@@ -378,10 +378,14 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 					// then sets up the matrix of path distances with Dijkstras
 					// APSP
 					control.showStatus("Starting shortest path calculation...");
+//					DenseDoubleMatrix2D distMatrix = NetUtils
+//							.getAllShortPathMatrix(NetUtils.getReverse(subnet
+//									.getMatrix(), engine.getMaxMatrixVal(),
+//									engine.getMinMatrixValue()));
 					DenseDoubleMatrix2D distMatrix = NetUtils
-							.getAllShortPathMatrix(NetUtils.getReverse(subnet
-									.getMatrix(), engine.getMaxMatrixVal(),
-									engine.getMinMatrixValue()));
+					.getFastFastAllShortPathMatrix(subnet
+							.getMatrix(), engine.getMaxMatrixVal(),
+							engine.getMinMatrixValue(),false);
 					KKLoop(subnet, distMatrix);
 				}
 
@@ -414,13 +418,13 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 		// sets up kmatrix of forces (optimal [but not always achieveable]
 		// energies?)
 		springConst = Double.parseDouble(settings.getProperty(SPRNG_CONST));
-		DenseDoubleMatrix2D kMatrix = calcKMatrix(distMatrix, springConst);
+		//DenseDoubleMatrix2D kMatrix = calcKMatrix(distMatrix, springConst);
 		/*
 		 * //calc desired distance between nodes double optDist =
 		 * Math.min(width, height) / Math.max(NetUtils.calcDiameter(distMatrix),
 		 * 1); //RECALCS ALLSHORTPAHS, BUT USE FOR NOW FOR COMPATIBLITY
 		 */
-		double optDist = Double.parseDouble(settings.getProperty(OPT_DIST));
+		optDist = Double.parseDouble(settings.getProperty(OPT_DIST));
 		minEpsilon = Double.parseDouble(settings.getProperty(MIN_EPSI));
 		double coolFact = Double.parseDouble(settings.getProperty(COOL_FACT));
 		// do these only apply to the last subnet run?
@@ -428,7 +432,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 		layoutInfo = layoutInfo + "\nminimum epsilon: " + minEpsilon;
 		layoutInfo = layoutInfo + "\ncool factor: " + coolFact;
 		// sets up lMatrix of distance between nodes pairs
-		DenseDoubleMatrix2D lMatrix = calcLMatrix(distMatrix, optDist);
+		//DenseDoubleMatrix2D lMatrix = calcLMatrix(distMatrix, optDist);
 		// arrays for quick acess to node coords
 		double[] xPos = subnet.getSubsetArray(slice.getXCoords());
 		double[] yPos = subnet.getSubsetArray(slice.getYCoords());
@@ -439,16 +443,16 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 		// FIGURE OUT COOLING SCHEDULE
 		// epsilon = (nNodes * numEdges)/2;
 		// figure out the initial stat to compare to at the end
-		double initialEnergy = getEnergy(lMatrix, kMatrix, xPos, yPos);
+		double initialEnergy = getEnergy(distMatrix, xPos, yPos);
 		layoutInfo = layoutInfo + "\ninitial KK energy: " + initialEnergy;
 		// double epsilon = { initialEnergy / nNodes;
 
 		// figure out which node to start moving first
 		double deltaM;
 		int maxDeltaMIndex = 0;
-		double maxDeltaM = getDeltaM(0, lMatrix, kMatrix, xPos, yPos);
+		double maxDeltaM = getDeltaM(0, distMatrix, xPos, yPos);
 		for (int i = 1; i < nNodes; i++) {
-			deltaM = getDeltaM(i, lMatrix, kMatrix, xPos, yPos);
+			deltaM = getDeltaM(i, distMatrix,xPos, yPos);
 			if (deltaM > maxDeltaM) {
 				maxDeltaM = deltaM;
 				maxDeltaMIndex = i;
@@ -486,15 +490,14 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 
 					// get the deltas which will move node towards the local
 					// minima
-					deltas = getDeltas(maxDeltaMIndex, lMatrix, kMatrix, xPos,
+					deltas = getDeltas(maxDeltaMIndex,distMatrix, xPos,
 							yPos);
 					// set coords of node to old coords + changes
 					xPos[maxDeltaMIndex] += deltas[0];
 					yPos[maxDeltaMIndex] += deltas[1];
 					previousDeltaM = moveNodeDeltaM;
 					// recalculate the deltaM of the node w/ new vals
-					moveNodeDeltaM = getDeltaM(maxDeltaMIndex, lMatrix,
-							kMatrix, xPos, yPos);
+					moveNodeDeltaM = getDeltaM(maxDeltaMIndex, distMatrix,xPos, yPos);
 					subPasses++;
 					if (subPasses > maxPasses) {
 						// break the loop, and tell us
@@ -508,9 +511,9 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 				previousDeltaM = maxDeltaM;
 				// recalculate deltaMs and find node with max
 				maxDeltaMIndex = 0;
-				maxDeltaM = getDeltaM(0, lMatrix, kMatrix, xPos, yPos);
+				maxDeltaM = getDeltaM(0, distMatrix,xPos, yPos);
 				for (int i = 1; i < nNodes; i++) {
-					deltaM = getDeltaM(i, lMatrix, kMatrix, xPos, yPos);
+					deltaM = getDeltaM(i, distMatrix,xPos, yPos);
 					if (deltaM > maxDeltaM) {
 						maxDeltaM = deltaM;
 						maxDeltaMIndex = i;
@@ -559,15 +562,14 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 	 * returns a double[] x,y pair giving the position differnce for the node of
 	 * index i, given the passed positions, distance, and spring matricies.
 	 */
-	private double[] getDeltas(int i, DenseDoubleMatrix2D lMatrix,
-			DenseDoubleMatrix2D kMatrix, double[] xPos, double[] yPos) {
+	private double[] getDeltas(int i, DoubleMatrix2D distMatrix,
+			 double[] xPos, double[] yPos) {
 		// solve deltaM partial eqns to figure out new position for node of
 		// index i
 		// where deltaM is close to 0 (or less then epsilon)
-		int nNodes = lMatrix.rows();
+		int nNodes = distMatrix.rows();
 		double[] deltas = new double[2]; // holds x and y coords to return
 		double dx, dy, dd;
-		double deltaX, deltaY;
 		double xPartial = 0;
 		double yPartial = 0;
 		double xxPartial = 0;
@@ -580,8 +582,10 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 				dy = yPos[i] - yPos[j];
 				dd = Math.sqrt(dx * dx + dy * dy);
 
-				double kMatrixVal = kMatrix.getQuick(i, j);
-				double lMatrixVal = lMatrix.getQuick(i, j);
+				//double kMatrixVal = kMatrix.getQuick(i, j);
+				//double lMatrixVal = lMatrix.getQuick(i, j);
+				double kMatrixVal = calcKValue(distMatrix,i,j);
+				double lMatrixVal = calcLValue(distMatrix,i,j);
 				double ddCubed = dd * dd * dd;
 
 				xPartial += kMatrixVal * (dx - lMatrixVal * dx / dd);
@@ -605,9 +609,9 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 	/**
 	 * returns the energy of i (looping over all other nodes)
 	 */
-	private double getDeltaM(int i, DenseDoubleMatrix2D lMatrix,
-			DenseDoubleMatrix2D kMatrix, double[] xPos, double[] yPos) {
-		int nNodes = lMatrix.rows();
+	private double getDeltaM(int i, DoubleMatrix2D distMatrix,
+			double[] xPos, double[] yPos) {
+		int nNodes = distMatrix.rows();
 		double deltaM = 0;
 		double xPartial = 0;
 		double yPartial = 0;
@@ -617,8 +621,8 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 				dx = xPos[i] - xPos[j];
 				dy = yPos[i] - yPos[j];
 				dd = Math.sqrt(dx * dx + dy * dy);
-				double kMatrixVal = kMatrix.getQuick(i, j);
-				double lMatrixVal = lMatrix.getQuick(i, j);
+				double kMatrixVal = calcKValue(distMatrix,i,j);
+				double lMatrixVal = calcLValue(distMatrix,i,j);
 				xPartial += kMatrixVal * (dx - lMatrixVal * dx / dd);
 				yPartial += kMatrixVal * (dy - lMatrixVal * dy / dd);
 			}
@@ -628,9 +632,8 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 		return deltaM;
 	}
 
-	private double getEnergy(DenseDoubleMatrix2D lMatrix,
-			DenseDoubleMatrix2D kMatrix, double[] xPos, double[] yPos) {
-		int nNodes = lMatrix.rows();
+	private double getEnergy(DoubleMatrix2D distMatrix, double[] xPos, double[] yPos) {
+		int nNodes = distMatrix.rows();
 		double energy = 0;
 		double dx, dy, lij;
 		int limit = nNodes - 1;
@@ -639,18 +642,45 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 			for (int j = i + 1; j < nNodes; j++) {
 				dx = xPos[i] - xPos[j];
 				dy = yPos[i] - yPos[j];
-				lij = lMatrix.getQuick(i, j);
+				lij = calcLValue(distMatrix,i,j);
 				energy += 0.5
-						* kMatrix.getQuick(i, j)
+						* calcKValue(distMatrix,i, j)
 						* (dx * dx + dy * dy + lij * lij - 2 * lij
 								* Math.sqrt(dx * dx + dy * dy));
 			}
 		}
 		return energy;
 	}
+	
+	/**
+	 * simulates the existance of a K matrix of spring forces between pairs using K/(d[i][j]^2
+	 * without keeping it in memory
+	 * @author skyebend
+	 * @param subnet
+	 * @param distMatrix
+	 * @param i
+	 * @param j
+	 * @return
+	 */
+	private double calcKValue(DoubleMatrix2D distMatrix, int i, int j){
+		return springConst / (distMatrix.getQuick(i,j) * distMatrix.getQuick(i,j));
+	}
+	/**
+	 * simulates the existane of matrix of desired edge lengths using L*d[i][j]
+	 * without keeping it in memory
+	 * @author skyebend
+	 * @param subnet
+	 * @param distMatrix
+	 * @param i
+	 * @param j
+	 * @return
+	 */
+	private double calcLValue(DoubleMatrix2D distMatrix, int i, int j){
+		return optDist * distMatrix.getQuick(i,j);
+	}
 
 	/**
-	 * set up matrix of spring forces between pairs using K/(d[i][j]^2)
+	 * set up matrix of spring forces between pairs using K/(d[i][j]^2 )
 	 */
 	private DenseDoubleMatrix2D calcKMatrix(DoubleMatrix2D distMatrix,
 			double spring) {

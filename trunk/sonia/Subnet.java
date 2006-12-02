@@ -1,6 +1,8 @@
 package sonia;
 
 import java.util.*;
+
+import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.SparseDoubleMatrix2D;
 import cern.colt.list.IntArrayList;
 import cern.colt.map.OpenIntIntHashMap;
@@ -37,14 +39,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 public class Subnet
 {
-  private SparseDoubleMatrix2D subnet;
+  private DoubleMatrix2D subnet;
   private OpenIntIntHashMap remap;
-  private int nNodes;
+ // private int nNodes;
 
-  //takes the original net and a list of the nodes to include in the subnet
-  public Subnet(SparseDoubleMatrix2D net, IntArrayList includeNodes)
+  /**
+   * takes the original net and a list of the nodes to include in the subnet
+   **/
+  public Subnet(DoubleMatrix2D net, IntArrayList includeNodes)
   {
-    nNodes = includeNodes.size();
+    int nNodes = includeNodes.size();
     //construct the maping of subnet-to-net indcies
     subnet = NetUtils.getSubnetMatrix(net,includeNodes);
     remap = new OpenIntIntHashMap(nNodes);
@@ -54,25 +58,32 @@ public class Subnet
     }
   }
 
-  //returns the index of the node in the original (big) network
+ /**
+  * returns the index of the node in the original (big) network
+  */
   public int getNetIndex(int subIndex)
   {
     return remap.get(subIndex);
   }
 
-  //returns the list of all the origina (big net) indcies present
+  /**
+   * returns the list of all the original (big net) indcies present
+   */
   public IntArrayList getNetIndexList()
   {
     return remap.values();
   }
 
-  //returns a shorter array in which contains the appropriate values of the big array
+  /**
+   * returns a shorter array which contains the appropriate values of the big array
+   * (used for remapping coordinates, etc. )
+   */
   public double[] getSubsetArray(double[] sliceArray)
   {
-    double[] subnetArray = new double[nNodes];
-    for (int i = 0; i <nNodes; i++)
+    double[] subnetArray = new double[subnet.rows()];
+    for (int i = 0; i <subnet.rows(); i++)
     {
-      //coppy the correct values from the slice-sized array
+      //copy the correct values from the slice-sized array
       subnetArray[i] = sliceArray[remap.get(i)];
     }
     return subnetArray;
@@ -84,16 +95,22 @@ public class Subnet
   }
 
   //returns the internal matrix
-  public SparseDoubleMatrix2D getMatrix()
+  public DoubleMatrix2D getMatrix()
   {
     //is this dangerous, will it get modified later?
     return subnet;
   }
-  //returns the value stored at given subnet indicies
+  /**
+   * returns the value stored at given subnet indicies
+   * @author skyebend
+   * @param subIndexI
+   * @param subIndexJ
+   * @return
+   */
   public double get(int subIndexI, int subIndexJ)
   {
     //does not check ranges or preconditions
-    return subnet.getQuick(subIndexI,subIndexJ);
+    return subnet.get(subIndexI,subIndexJ);
   }
   public String toString()
   {

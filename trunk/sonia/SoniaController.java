@@ -117,7 +117,7 @@ public class SoniaController {
 	private BrowsingSettings browseSettings = null;
 
 	private PropertySettings parserSettings = null;
-	
+
 	private PropertySettings movieSettings = null;
 
 	private Uniform randomUni; // colt package mersense twister random numbers
@@ -138,7 +138,7 @@ public class SoniaController {
 		// make a new log window
 		log = new LogWindow(this);
 		// construct new UI and pass a ref
-		ui = new SoniaInterface(this,false);
+		ui = new SoniaInterface(this, false);
 		networks = new ArrayList();// to hold nets
 		engines = new ArrayList();
 		log("Log of SoNIA session beginning "
@@ -161,19 +161,20 @@ public class SoniaController {
 					+ e.getMessage());
 		}
 	}
-	
+
 	/**
 	 * hide and show the main gui window (if it has been created);
+	 * 
 	 * @author skyebend
 	 * @param visable
 	 */
-	public void showGUI(boolean visable){
-		if (ui != null){
+	public void showGUI(boolean visable) {
+		if (ui != null) {
 			ui.setVisible(visable);
 		}
-		//this is a kludge
-		if (fileLoaded){
-			createLayout();
+		// this is a kludge
+		if (fileLoaded) {
+			createLayout(sliceSettings);
 		}
 	}
 
@@ -246,7 +247,7 @@ public class SoniaController {
 		if (!batchSettings.equals("")) {
 			// check if it is a file or a string and try to load it
 			sonia.loadBatchSettings(batchSettings);
-			//this should be an option
+			// this should be an option
 		} else if (!settingsFile.equals("")) {
 			sonia.loadSettings(settingsFile);
 		}
@@ -260,11 +261,10 @@ public class SoniaController {
 		// if we are going to run a batch, run it here ( later move this code)
 		if (runBatch & !batchSettings.equals("")) {
 			sonia.runBatch();
-		}
-		else {
+		} else {
 			sonia.showGUI(true);
 		}
-		
+
 	}
 
 	/**
@@ -331,7 +331,7 @@ public class SoniaController {
 				parser.configureParser(parserSettings);
 			} else if (fileName.endsWith(".dl")) {
 				parser = new DLParser();
-			} else if (fileName.endsWith(".rdump")){
+			} else if (fileName.endsWith(".rdump")) {
 				parser = new RJavaParser();
 				parser.configureParser(parserSettings);
 			}
@@ -366,12 +366,12 @@ public class SoniaController {
 	public void loadData(String data) {
 		Parser parser = new RJavaParser();
 		try {
-			//try to configure the parser
-			if (parserSettings != null){
+			// try to configure the parser
+			if (parserSettings != null) {
 				parser.configureParser(parserSettings);
 			}
 			parser.parseNetwork(data);
-			//put in a fake file name
+			// put in a fake file name
 			fileName = "R_import";
 			fileLoaded = true;
 			showStatus("Parsed network data from command line");
@@ -405,7 +405,7 @@ public class SoniaController {
 			String line;
 			try {
 				line = reader.readLine(); // this is really a pretty silly way
-											// to do this
+				// to do this
 				while (line != null) {
 					compoundSettings += line + "\n";
 					line = reader.readLine();
@@ -456,7 +456,6 @@ public class SoniaController {
 			log("Read movie output settings from batch instructions:\n "
 					+ movieSettings);
 		}
-		
 
 	}
 
@@ -469,12 +468,12 @@ public class SoniaController {
 	public void runBatch() {
 		try {
 			showGUI = false;
-			//ui.setVisible(showGUI);
+			// ui.setVisible(showGUI);
 			// try to do the slicing
 			if (sliceSettings != null) {
 				showStatus("Read layout settings from batch instructions");
 				log("Read layout settings from batch instructions");
-				createLayout();
+				createLayout(sliceSettings);
 			}
 
 			if ((engine != null) && (applySettings != null)) {
@@ -486,37 +485,38 @@ public class SoniaController {
 				applySettings.setProperty(ApplySettings.APPLY_REMAINING,
 						true + "");
 				engine.setApplySettings(applySettings);
-				//call the non-threaded version so we can catch the exceptions...
-			
+				// call the non-threaded version so we can catch the
+				// exceptions...
+
 				engine.startApplyLayoutToRemaining();
 				engine.changeToSliceNum(0);
 				engine.getLayoutWindow().showCurrentSlice();
 
-				
-				String movFileName = currentPath+getFileName()+".mov";
-				if (movieSettings != null){
-					String name = movieSettings.getProperty(MovieSettings.OUTPUT_PATH);
-					if ((name != null) && !name.equals("")){
+				String movFileName = currentPath + getFileName() + ".mov";
+				if (movieSettings != null) {
+					String name = movieSettings
+							.getProperty(MovieSettings.OUTPUT_PATH);
+					if ((name != null) && !name.equals("")) {
 						movFileName = name;
 					}
 				}
 
-				
-				//THIS LAUNCHES ON ANOTHER THREAD!!
-				 MovieMaker movie  = exportMovie(engine,movFileName);
-				 while (movie.isExporting()){
-					 //TODO: need to notify when export is done, not loop continously!!
-				 }
-				 //wait for movie export to finsih
-				 log.writeLogToFile(currentPath+getFileName()+"_log.txt");
-				 //if there is no ui, then we should quit when done
-				 System.exit(0);
-				
+				// THIS LAUNCHES ON ANOTHER THREAD!!
+				MovieMaker movie = exportMovie(engine, movFileName);
+				while (movie.isExporting()) {
+					// TODO: need to notify when export is done, not loop
+					// continously!!
+				}
+				// wait for movie export to finsih
+				log.writeLogToFile(currentPath + getFileName() + "_log.txt");
+				// if there is no ui, then we should quit when done
+				System.exit(0);
+
 			}
 		} catch (Exception e) {
-			System.out.println("error in batch:"+e.getMessage()); 
+			System.out.println("error in batch:" + e.getMessage());
 			ui.setVisible(true);
-			showStatus("ERROR in batch execution: "+e.getMessage());
+			showStatus("ERROR in batch execution: " + e.getMessage());
 			e.printStackTrace();
 			System.exit(-1);
 		}
@@ -535,7 +535,7 @@ public class SoniaController {
 			sliceSettings.load(settIn);
 			showStatus("Read layout settings from " + settingsFile);
 			log("Read layout settings from " + settingsFile);
-			createLayout();
+			createLayout(sliceSettings);
 		} catch (FileNotFoundException e) {
 			showError("Unable to locate specified settings file: "
 					+ settingsFile + " " + e.getMessage());
@@ -564,33 +564,34 @@ public class SoniaController {
 		// put it in list of loaded networks
 		networks.add(networkData);
 	}
-	
+
 	/**
 	 * always shows slice setting dialog, then calls create layout
+	 * 
 	 * @author skyebend
 	 */
-	public void createNewLayout(){
-		if (fileLoaded == true){
-		String engName = getFileName() + " #" + (engines.size() + 1);
-		LayoutSettingsDialog windowSettings = new LayoutSettingsDialog(
-				sliceSettings, this, engName, ui);
-		if (sliceSettings == null) {
-			// tell the settings dialog what the start and end times for
-			windowSettings.setDataStartDefault(networkData
-					.getFirstTime());
-			windowSettings.setDataEndDefault(networkData.getLastTime());
+	public void createNewLayout() {
+		if (fileLoaded == true) {
+			String engName = getFileName() + " #" + (engines.size() + 1);
+			LayoutSettingsDialog windowSettings = new LayoutSettingsDialog(
+					sliceSettings, this, engName, ui);
+			if (sliceSettings == null) {
+				// tell the settings dialog what the start and end times for
+				windowSettings.setDataStartDefault(networkData.getFirstTime());
+				windowSettings.setDataEndDefault(networkData.getLastTime());
+			}
+			// show the dialog
+			sliceSettings = windowSettings.askUserSettings();
+			createLayout(sliceSettings);
 		}
-		// show the dialog
-		sliceSettings = windowSettings.askUserSettings();
-		createLayout();
-	}
 	}
 
 	/**
 	 * Checks that a file has been loaded, then creates a layout engien for the
-	 * most recently loaded file. Shows slice dialog only if there are now slice settings.
+	 * most recently loaded file. Shows slice dialog only if there are now slice
+	 * settings.
 	 */
-	public void createLayout() {
+	public void createLayout(LayoutSettings sliceSettings) {
 		// should make sure there is some network data
 		if (fileLoaded == true) {
 
@@ -610,6 +611,10 @@ public class SoniaController {
 				}
 				// show the dialog
 				sliceSettings = windowSettings.askUserSettings();
+			}
+			if (sliceSettings == null){
+				showStatus("layout cancled: null slice settings");
+				return;
 			}
 			engine = new SoniaLayoutEngine(sliceSettings, this, networkData,
 					engName);
@@ -673,41 +678,27 @@ public class SoniaController {
 		try {
 			engToFilm.makeMovie(exporter);
 		} catch (Exception e) {
-			//TODO: need to deal more elegantly when the movie file is busy or locked...
-			showError("ERROR saving movie: "+e.getMessage());
-			log("ERROR saving movie: "+e.getMessage());
-			//debug 
-			System.out.println("Errors saving movie: "+e.getMessage());
+			// TODO: need to deal more elegantly when the movie file is busy or
+			// locked...
+			showError("ERROR saving movie: " + e.getMessage());
+			log("ERROR saving movie: " + e.getMessage());
+			// debug
+			System.out.println("Errors saving movie: " + e.getMessage());
 			e.printStackTrace();
 			exporter.setVisible(false);
 			exporter = null;
 		}
 		return exporter;
 	}
-	
-	public void exportFlashMovie(SoniaLayoutEngine engToExport, SoniaCanvas canvas, String fileName){
-		//debug
-		System.out.println("testing flash export..");
-		SWFMovieMaker exporter = new SWFMovieMaker(this,engToExport,fileName);
-		
-		try {
-			engToExport.makeMovie(exporter);
-		} catch (Exception e) {
-			showError("Error writing flash movie:"+e.getMessage());
-			log("ERROR saving movie: "+e.getMessage());
-			e.printStackTrace();
-		}        
-	}
-	
-	public void exportQTMovie(SoniaLayoutEngine engToExport, SoniaCanvas canvas, String fileName){
-		//debug
-		System.out.println("testing new QT export..");
-		
-		if (fileName == null) {
+
+	public void exportFlashMovie(SoniaLayoutEngine engToExport,
+			SoniaCanvas canvas, String fileName) {
+
+		if ((fileName == null) & isShowGUI()) {
 			FileDialog dialog = new FileDialog(new Frame(),
-					"Save Network Movie As...", FileDialog.SAVE);
-		    dialog.setFile("network.mov");
- 
+					"Save Network Flash Movie As...", FileDialog.SAVE);
+			dialog.setFile("network.swf");
+
 			dialog.setVisible(true);
 			if (dialog.getFile() == null) {
 				// dont do anything
@@ -715,21 +706,60 @@ public class SoniaController {
 			} else {
 				fileName = dialog.getDirectory() + dialog.getFile();
 			}
-			
-			
+
 		}
-		QTMovieMaker exporter = new QTMovieMaker(fileName);
-		
-//		also ask about export formats
-		MovExportSettingsDialog set = new MovExportSettingsDialog(ui,exporter); 
-		set.showDialog();
-		try {
-			engToExport.makeMovie(exporter);
-		} catch (Exception e) {
-			showError("Error writing QT movie:"+e.getMessage());
-			log("ERROR saving movie: "+e.getMessage());
-			e.printStackTrace();
-		}        
+		if (fileName != null) {
+			SWFMovieMaker exporter = new SWFMovieMaker(this, engToExport,
+					fileName);
+
+			try {
+				engToExport.makeMovie(exporter);
+			} catch (Exception e) {
+				showError("Error writing flash movie:" + e.getMessage());
+				log("ERROR saving movie: " + e.getMessage());
+				e.printStackTrace();
+			}
+		} else {
+			showError("Unable to export movie with null file name");
+		}
+	}
+
+	public void exportQTMovie(SoniaLayoutEngine engToExport,
+			SoniaCanvas canvas, String fileName) {
+		// debug
+		System.out.println("testing new QT export..");
+
+		if ((fileName == null) & isShowGUI()) {
+			FileDialog dialog = new FileDialog(new Frame(),
+					"Save Network QuickTime Movie As...", FileDialog.SAVE);
+			dialog.setFile("network.mov");
+
+			dialog.setVisible(true);
+			if (dialog.getFile() == null) {
+				// dont do anything
+				return;
+			} else {
+				fileName = dialog.getDirectory() + dialog.getFile();
+			}
+
+		}
+		if (fileName != null) {
+			QTMovieMaker exporter = new QTMovieMaker(fileName);
+
+			// also ask about export formats
+			MovExportSettingsDialog set = new MovExportSettingsDialog(ui,
+					exporter);
+			set.showDialog();
+			try {
+				engToExport.makeMovie(exporter);
+			} catch (Exception e) {
+				showError("Error writing QT movie:" + e.getMessage());
+				log("ERROR saving movie: " + e.getMessage());
+				e.printStackTrace();
+			}
+		} else {
+			showError("Unable to export movie with null file name");
+		}
 	}
 
 	/**
@@ -988,6 +1018,20 @@ public class SoniaController {
 
 	public boolean isShowGUI() {
 		return showGUI;
+	}
+	
+	/**
+	 * returns the layout engine at the index, if there is one
+	 * @author skyebend
+	 * @param index
+	 * @return
+	 */
+	public SoniaLayoutEngine getEngine(int index){
+		SoniaLayoutEngine eng = null;
+		if (index < engines.size()){
+			eng = (SoniaLayoutEngine)engines.get(index);
+		}
+		return eng;
 	}
 
 }

@@ -3,6 +3,7 @@ package sonia;
 import java.awt.*;
 import java.awt.event.*;
 
+import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.impl.SparseDoubleMatrix2D;
 import cern.colt.list.DoubleArrayList;
@@ -191,7 +192,7 @@ public class StressInfo extends ExportableFrame
       if (subnet.getNumNodes() > 1)  //ignore isolates
       {
         //the raw similarities matrix
-        SparseDoubleMatrix2D sim = subnet.getMatrix();
+        DoubleMatrix2D sim = subnet.getMatrix();
         //the all-pairs-shortest path distances from disimilaritise
         DenseDoubleMatrix2D pathDist =
             NetUtils.getAllShortPathMatrix(NetUtils.getReverse(subnet.getMatrix(),

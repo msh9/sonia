@@ -45,8 +45,9 @@ public class RenderSlice {
 	public static final Color flashColor = Color.yellow;
 
 	public static final float flashFactor = 4.0f; // how large to expand new
-													// events when they are
-													// flashed
+
+	// events when they are
+	// flashed
 
 	public static final double arrowLength = 10;
 
@@ -56,7 +57,7 @@ public class RenderSlice {
 
 	private SoniaLayoutEngine layoutEngine;
 
-	//private Render render;
+	// private Render render;
 
 	private double sliceStart;
 
@@ -121,8 +122,8 @@ public class RenderSlice {
 		int left = layoutEngine.getLeftPad();
 		int top = layoutEngine.getTopPad();
 
-		//Color origColor = graphics.getColor();
-		//Font originalFont = graphics.getFont();
+		// Color origColor = graphics.getColor();
+		// Font originalFont = graphics.getFont();
 
 		render.setDrawingTarget(drawTarget);
 
@@ -156,34 +157,28 @@ public class RenderSlice {
 				// correct for id ofset 0 -> 1
 				fromId = arc.getFromNodeId() - 1;
 				toId = arc.getToNodeId() - 1;
-				// check if doing arcs at all
-				if (!canvas.isHideArcs()) {
-					// translate coords to allow for visual insets
-					render.paintArc(arc, canvas.getArcWidthFact(),
-							xCoords[fromId] + left, yCoords[fromId] + top,
-							xCoords[toId] + left, yCoords[toId] + top, arc
-									.shouldFlash(), canvas.isShowArrows(),
-							canvas.isShowArcLabels());
-				}
 
 				// CHECK IF WEIGHT LABELS ARE TO BE DRAWN !Not the same as arc
 				// labels!
-				// TODO: painting arc weights does not work with new layout
-				// system!
-//				if (canvas.isShowArcWeights()) {
-//					double sliceArcWeight = layoutEngine.getCurrentSlice()
-//							.getSymMaxArcWeight(fromId, toId);
-//					graphics.setColor(Color.darkGray);
-//					float labelX = (float) (xCoords[fromId] + left + (xCoords[toId] - xCoords[fromId]) / 2);
-//					float labelY = (float) (yCoords[fromId] + top + (yCoords[toId] - yCoords[fromId]) / 2);
-//					// round the arc weight
-//
-//					graphics.drawString("" + sliceArcWeight, labelX, labelY);
-//				}
+				// TODO: check if this kludge to paint arc weights will mess up
+				// the arc labels?
+				String kludgeLabel = arc.getArcLabel();
+				if (canvas.isShowArcWeights()) {
+					double sliceArcWeight = layoutEngine.getCurrentSlice()
+							.getSymMaxArcWeight(fromId, toId);
+					arc.setArcLabel(formater.format(sliceArcWeight) + "");
+				}
+
+				// translate coords to allow for visual insets
+				render.paintArc(arc, canvas.getArcWidthFact(), xCoords[fromId]
+						+ left, yCoords[fromId] + top, xCoords[toId] + left,
+						yCoords[toId] + top, arc.shouldFlash(), canvas
+								.isShowArrows(), canvas.isShowArcLabels() | canvas.isShowArcWeights());
+				arc.setArcLabel(kludgeLabel);
 
 			} // end arc event loop
-		//	graphics.setFont(originalFont);
-			//graphics.setColor(origColor);
+			// graphics.setFont(originalFont);
+			// graphics.setColor(origColor);
 		}
 
 		// check settings before node transparency
@@ -238,7 +233,6 @@ public class RenderSlice {
 		}
 
 	}
-	
 
 	// private BasicStroke getStrokeForWidth(float width, boolean isNegitive){
 	// if (isNegitive){

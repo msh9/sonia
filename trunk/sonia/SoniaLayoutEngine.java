@@ -209,7 +209,7 @@ public class SoniaLayoutEngine {
 		// System.out.println("error parsing slice settings properties "
 		// + e.toString());
 		// }
-
+		control.log("Created layout:\n"+settings.toString());
 	}
 
 	public void setDisplay(LayoutWindow display) {

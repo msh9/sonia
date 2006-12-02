@@ -161,8 +161,7 @@ public class QTMovieMaker implements MovieMaker {
 					RenderingHints.VALUE_ANTIALIAS_OFF);
 		}
 		// setup QT file io
-		//movFile = new QTFile(new File(fileName));
-		movFile = new QTFile(new File("soniaScratchFile.mov"));
+		movFile = new QTFile(new File(fileName));
 		try {
 			movie = Movie.createMovieFile(movFile, StdQTConstants.kMoviePlayer,
 					StdQTConstants.createMovieFileDeleteCurFile
@@ -210,10 +209,9 @@ public class QTMovieMaker implements MovieMaker {
 		try {
 			RawEncodedImage pixelData = graphics.getPixMap().getPixelData();
 			int intsPerRow = pixelData.getRowBytes() / 4;
-			// if (pixels == null)
-			// pixels = new int[intsPerRow * bufferedImage.getHeight()];
 			// need to copy the pixel data from the java to QuickDraw graphics
 			// OR could implement as quickdraw graphics renderer..
+			
 			PixelGrabber grabber = new PixelGrabber(bufferedImage, 0, 0,
 					bufferedImage.getWidth(), bufferedImage.getHeight(), false);
 			try {
@@ -221,25 +219,8 @@ public class QTMovieMaker implements MovieMaker {
 			} catch (InterruptedException e) {
 				System.err.println(e);
 			}
-			;
 			int[] javaPixels = (int[]) grabber.getPixels();
-			// if (EndianOrder.isNativeLittleEndian()) {
-			// System.out.println("\tswaping endian order..");
-			// //EndianOrder.flipBigEndianToNative(pixels, 0,
-			// EndianDescriptor.flipAll32);
-			// int offset1, offset2;
-			// for (int y=0; y<bufferedImage.getHeight(); y++) {
-			// offset1 = y*bufferedImage.getHeight();
-			// offset2 = y* intsPerRow;
-			// for (int x=0; x<bufferedImage.getWidth(); x++)
-			// pixels[offset2++] =
-			// EndianOrder.flipBigEndianToNative32(pixels[offset1++]);
-			// }
-			// } else {
-			// for (int i=0; i<bufferedImage.getHeight(); i++)
-			// System.arraycopy(javaPixels, i*bufferedImage.getWidth(), pixels,
-			// i*intsPerRow, bufferedImage.getWidth());
-			// }
+			
 			pixelData.copyFromArray(0, javaPixels, 0, intsPerRow
 					* bufferedImage.getHeight());
 
@@ -257,7 +238,7 @@ public class QTMovieMaker implements MovieMaker {
 		}
 
 		// debug
-		System.out.println("saved frame " + currentFrame);
+		System.out.println("\t saved QT frame " + currentFrame);
 		currentFrame++;
 
 	}

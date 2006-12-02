@@ -110,7 +110,7 @@ import sonia.settings.PropertySettings;
 * is why the .net parser throws up the dialog to ask "parse times as integers."
 * If this is set to true, the end times will all have 0.99999 added to them, so
 * that the interval 1-2 will become 1.0-2.99999 instead of 1.0 to 2.0.
-* @version $Revision: 1.3 $ $Date: 2006-11-25 01:26:31 $
+* @version $Revision: 1.4 $ $Date: 2006-12-02 02:06:24 $
 * @author Skye Bender-deMoll e-mail skyebend@santafe.edu
 */
 public class DotNetParser extends Object implements Parser, ActionListener
@@ -144,28 +144,29 @@ public class DotNetParser extends Object implements Parser, ActionListener
   public DotNetParser()
   {
     //throw up a dilog to ask about combining and coords
-    settings = new Dialog(new Frame(),"DotNet Parser Settings",true);
-    settings.setLayout(new GridBagLayout());
-    settings.setBackground(Color.lightGray);
-    combineNames = new Checkbox("Combine nodes with same names",true);
-    coords = new Checkbox("Parse X and Y coords from file",true);
-    intTime = new Checkbox("parse times as integers",false);
-    OK = new Button("OK");
-    OK.addActionListener(this);
-    GridBagConstraints c = new GridBagConstraints();
-    c.insets = new Insets(0,2,0,2);
-    c.gridx=0;c.gridy=0;c.gridwidth=1;c.gridheight=1;c.weightx=1;c.weighty=1;
-    settings.add(combineNames,c);
-    c.gridx=0;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=1;c.weighty=1;
-    settings.add(coords,c);
-    c.gridx=0;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=1;c.weighty=1;
-    settings.add(intTime,c);
-    c.gridx=0;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=1;c.weighty=1;
-    settings.add(OK,c);
-    settings.setSize(200,150);
-    settings.setLocation(300,50);
-    settings.show();
-    OK.requestFocus();
+	  //TODO: implement settings for .net parser
+//    settings = new Dialog(new Frame(),"DotNet Parser Settings",true);
+//    settings.setLayout(new GridBagLayout());
+//    settings.setBackground(Color.lightGray);
+//    combineNames = new Checkbox("Combine nodes with same names",true);
+//    coords = new Checkbox("Parse X and Y coords from file",true);
+//    intTime = new Checkbox("parse times as integers",false);
+//    OK = new Button("OK");
+//    OK.addActionListener(this);
+//    GridBagConstraints c = new GridBagConstraints();
+//    c.insets = new Insets(0,2,0,2);
+//    c.gridx=0;c.gridy=0;c.gridwidth=1;c.gridheight=1;c.weightx=1;c.weighty=1;
+//    settings.add(combineNames,c);
+//    c.gridx=0;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=1;c.weighty=1;
+//    settings.add(coords,c);
+//    c.gridx=0;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=1;c.weighty=1;
+//    settings.add(intTime,c);
+//    c.gridx=0;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=1;c.weighty=1;
+//    settings.add(OK,c);
+//    settings.setSize(200,150);
+//    settings.setLocation(300,50);
+//    settings.show();
+//    OK.requestFocus();
   }
 
   //gets the settings from the dilog
