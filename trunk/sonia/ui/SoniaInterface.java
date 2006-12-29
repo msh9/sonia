@@ -112,7 +112,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		control = theController;
 		changeAllFonts(new FontUIResource(control.getFont()));
 		Image soniaIcon = Toolkit.getDefaultToolkit().getImage(
-				this.getClass().getResource("../image/soniaLogo16.jpg"));
+				control.getClass().getResource("image/soniaLogo16.jpg"));
 		super.setIconImage(soniaIcon);
 
 		super.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);

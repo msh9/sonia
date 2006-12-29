@@ -245,7 +245,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		
 		exportMenu.add(new AbstractAction("Export Flash Movie...") {
 			public void actionPerformed(ActionEvent arg0) {
-				Control.exportFlashMovie(engine,LayoutArea,"flashExportTest.swf");
+				Control.exportFlashMovie(engine,LayoutArea,null);
 			}
 		});
 
@@ -585,6 +585,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	private void startMovieRecordThread() {
 		Thread movieThread = new Thread() {
 			public void run() {
+				//debug
+				System.out.println("started movie record thread");
 				isTransitionActive = true;
 				recordMovie();
 				movie.finishMovie();
@@ -912,6 +914,15 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		// LayoutArea.paintComponent(graph);
 		LayoutArea.repaint();
 		// try to make it updage the controls on mac
+	}
+	
+	/**
+	 * returns a reference to the SoniaCanvas used by this layout window
+	 * @author skyebend
+	 * @return the layout area for network rendering in use by this window
+	 */
+	public SoniaCanvas getDisplay(){
+		return LayoutArea;
 	}
 
 	/**

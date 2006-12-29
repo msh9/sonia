@@ -78,7 +78,7 @@ import cern.colt.matrix.impl.SparseDoubleMatrix2D;
  */
 
 public class SoniaController {
-	public static final String CODE_DATE = "2006-10-20";
+	public static final String CODE_DATE = "2006-12-07";
 
 	public static final String VERSION = "1.1.3_unstable";
 
@@ -96,15 +96,15 @@ public class SoniaController {
 
 	private Font textFont; // the font for the GUIs
 
-	private boolean showGUI = true;
+	private boolean showGUI = false;
 
 	private String fileName = "network001";
 
 	private String currentPath = "";
 
-	private boolean combineSameNames = true;
-
 	private boolean fileLoaded = false;
+	
+	private boolean verbose = false;
 
 	private boolean paused = false;
 
@@ -169,6 +169,7 @@ public class SoniaController {
 	 * @param visable
 	 */
 	public void showGUI(boolean visable) {
+		showGUI = visable;
 		if (ui != null) {
 			ui.setVisible(visable);
 		}
@@ -203,9 +204,7 @@ public class SoniaController {
 		try {
 			// UIManager.setLookAndFeel(
 			// UIManager.getCrossPlatformLookAndFeelClassName());
-		} catch (Exception e) {
-			System.out.println(e);
-		}
+		
 
 		Date seedDate = new Date();
 		// kludge here 'cause millisecond value of date is too large for int
@@ -216,6 +215,7 @@ public class SoniaController {
 		String settingsFile = "";
 		String batchSettings = "";
 		boolean runBatch = false;
+		boolean verbose = false;
 		for (int i = 0; i < args.length; i++) {
 			String arg = args[i];
 			// look at the arguments passed on the command line
@@ -239,9 +239,15 @@ public class SoniaController {
 			if (arg.startsWith("runbatch:")) {
 				runBatch = true;
 			}
+			
+			if (arg.startsWith("verbose:")) {
+				verbose = true;
+			}
 
 		}
 		SoniaController sonia = new SoniaController(rngSeed);
+		
+		sonia.setVerbose(verbose);
 
 		// batch overides settings
 		if (!batchSettings.equals("")) {
@@ -263,6 +269,11 @@ public class SoniaController {
 			sonia.runBatch();
 		} else {
 			sonia.showGUI(true);
+		}
+		} catch (Exception e) {
+			System.out.println("Error Launching Sonia:"+e.getMessage());
+			e.printStackTrace();
+			System.exit(-1);
 		}
 
 	}
@@ -343,7 +354,7 @@ public class SoniaController {
 				parser.parseNetwork(currentPath + inFile);
 				fileLoaded = true;
 				showStatus("Parsed file " + currentPath + inFile);
-			} catch (IOException error) {
+			} catch (Exception error) {
 				showError("Unable to load file: " + error.getMessage());
 				fileLoaded = false;
 
@@ -466,8 +477,9 @@ public class SoniaController {
 	 * @author skyebend
 	 */
 	public void runBatch() {
+		showGUI = false;
+		showStatus("Starting sonia in batch mode...");
 		try {
-			showGUI = false;
 			// ui.setVisible(showGUI);
 			// try to do the slicing
 			if (sliceSettings != null) {
@@ -479,7 +491,7 @@ public class SoniaController {
 			if ((engine != null) && (applySettings != null)) {
 				engine.setApplySettings(applySettings);
 				engine.applyLayoutToCurrent();
-				engine.changeToSliceNum(1);
+				//engine.changeToSliceNum(1);
 				applySettings.setProperty(ApplySettings.STARTING_COORDS,
 						ApplySettings.COORDS_FROM_PREV);
 				applySettings.setProperty(ApplySettings.APPLY_REMAINING,
@@ -487,22 +499,38 @@ public class SoniaController {
 				engine.setApplySettings(applySettings);
 				// call the non-threaded version so we can catch the
 				// exceptions...
+				//wait for it to finish
+				while (!engine.getCurrentSlice().isLayoutFinished()){
+					//debug
+					System.out.println("\t waiting for layout...");
+				}
 
 				engine.startApplyLayoutToRemaining();
 				engine.changeToSliceNum(0);
 				engine.getLayoutWindow().showCurrentSlice();
-
-				String movFileName = currentPath + getFileName() + ".mov";
+				String movType = MovieSettings.QUICKTIME_FILE_TYPE;
+				String movFileName = currentPath + getFileName() + "."+movType;
 				if (movieSettings != null) {
 					String name = movieSettings
 							.getProperty(MovieSettings.OUTPUT_PATH);
+					movType = movieSettings.getProperty(MovieSettings.FILE_TYPE);
+					name = name+"."+movType;
 					if ((name != null) && !name.equals("")) {
 						movFileName = name;
 					}
 				}
 
 				// THIS LAUNCHES ON ANOTHER THREAD!!
-				MovieMaker movie = exportMovie(engine, movFileName);
+				MovieMaker movie;
+				if (movType != null && movType.equals(MovieSettings.FLASH_FILE_TYPE)){
+					movie = exportFlashMovie(engine,engine.getLayoutWindow().getDisplay(),movFileName);
+				} else if (movType != null && movType.equals(MovieSettings.QUICKTIME_FILE_TYPE)) {
+					movie = exportQTMovie(engine,engine.getLayoutWindow().getDisplay(),movFileName);
+				}
+				else {
+					showError("Unknown movie file type:"+movType);
+					return;
+				}
 				while (movie.isExporting()) {
 					// TODO: need to notify when export is done, not loop
 					// continously!!
@@ -514,10 +542,9 @@ public class SoniaController {
 
 			}
 		} catch (Exception e) {
-			System.out.println("error in batch:" + e.getMessage());
 			ui.setVisible(true);
-			showStatus("ERROR in batch execution: " + e.getMessage());
 			e.printStackTrace();
+			showError("ERROR in batch execution: " + e.getMessage());
 			System.exit(-1);
 		}
 
@@ -593,7 +620,7 @@ public class SoniaController {
 	 */
 	public void createLayout(LayoutSettings sliceSettings) {
 		// should make sure there is some network data
-		if (fileLoaded == true) {
+		if (fileLoaded) {
 
 			String engName = getFileName() + " #" + (engines.size() + 1);
 			// probably should ask for kind of layout here
@@ -643,7 +670,7 @@ public class SoniaController {
 			// }
 
 		} else {
-			showError("Load file before creating layout");
+			showError("File must be loaded before layout can be created");
 		}
 	}
 
@@ -665,6 +692,7 @@ public class SoniaController {
 	/**
 	 * Brings up a dialog to pick which of the layouts to export as a movie,
 	 * then makes a movie exporter and passes it to the layout engine.
+	 * @deprecated uses old qt export call exportQTMovie() instead
 	 */
 	public MovieMaker exportMovie(SoniaLayoutEngine engToFilm, String fileName) {
 		// NEED TOP PICK WHICH layout to export!!
@@ -691,9 +719,10 @@ public class SoniaController {
 		return exporter;
 	}
 
-	public void exportFlashMovie(SoniaLayoutEngine engToExport,
+	public MovieMaker exportFlashMovie(SoniaLayoutEngine engToExport,
 			SoniaCanvas canvas, String fileName) {
 
+		SWFMovieMaker exporter = null;
 		if ((fileName == null) & isShowGUI()) {
 			FileDialog dialog = new FileDialog(new Frame(),
 					"Save Network Flash Movie As...", FileDialog.SAVE);
@@ -702,17 +731,17 @@ public class SoniaController {
 			dialog.setVisible(true);
 			if (dialog.getFile() == null) {
 				// dont do anything
-				return;
+				return exporter;
 			} else {
 				fileName = dialog.getDirectory() + dialog.getFile();
 			}
 
 		}
 		if (fileName != null) {
-			SWFMovieMaker exporter = new SWFMovieMaker(this, engToExport,
-					fileName);
-
+			 
 			try {
+				exporter = new SWFMovieMaker(this, engToExport,
+						fileName);
 				engToExport.makeMovie(exporter);
 			} catch (Exception e) {
 				showError("Error writing flash movie:" + e.getMessage());
@@ -722,13 +751,12 @@ public class SoniaController {
 		} else {
 			showError("Unable to export movie with null file name");
 		}
+		return exporter;
 	}
 
-	public void exportQTMovie(SoniaLayoutEngine engToExport,
+	public MovieMaker exportQTMovie(SoniaLayoutEngine engToExport,
 			SoniaCanvas canvas, String fileName) {
-		// debug
-		System.out.println("testing new QT export..");
-
+		MovieMaker exporter = null;
 		if ((fileName == null) & isShowGUI()) {
 			FileDialog dialog = new FileDialog(new Frame(),
 					"Save Network QuickTime Movie As...", FileDialog.SAVE);
@@ -737,20 +765,24 @@ public class SoniaController {
 			dialog.setVisible(true);
 			if (dialog.getFile() == null) {
 				// dont do anything
-				return;
+				return exporter;
 			} else {
 				fileName = dialog.getDirectory() + dialog.getFile();
 			}
 
 		}
 		if (fileName != null) {
-			QTMovieMaker exporter = new QTMovieMaker(fileName);
-
-			// also ask about export formats
-			MovExportSettingsDialog set = new MovExportSettingsDialog(ui,
-					exporter);
-			set.showDialog();
+			
 			try {
+				 exporter = new QTMovieMaker(fileName);
+
+					// also ask about export formats
+				 if (movieSettings == null & isShowGUI()){
+					MovExportSettingsDialog set = new MovExportSettingsDialog(ui,
+							(QTMovieMaker)exporter);
+					set.showDialog();
+				 }
+				exporter.configure((MovieSettings)movieSettings);
 				engToExport.makeMovie(exporter);
 			} catch (Exception e) {
 				showError("Error writing QT movie:" + e.getMessage());
@@ -760,6 +792,7 @@ public class SoniaController {
 		} else {
 			showError("Unable to export movie with null file name");
 		}
+		return exporter;
 	}
 
 	/**
@@ -827,7 +860,13 @@ public class SoniaController {
 	 *            the text to display in the text area
 	 */
 	public void showStatus(String text) {
-		ui.showStatus(text);
+		if (isShowGUI()){
+			ui.showStatus(text);
+		} 
+		if (isVerbose()){
+			System.out.println("<status>"+text);
+		}
+		
 	}
 
 	/**
@@ -838,17 +877,26 @@ public class SoniaController {
 	 *            the text of the error message
 	 */
 	public void showError(String text) {
-		ui.showError(text);
+		if (isShowGUI()){
+			ui.showError(text);
+		} else {
+			System.out.println("ERROR: "+text);
+			System.exit(-1);
+		}
+		
 	}
 
 	/**
 	 * Asks the log to append the passed text.
-	 * 
+	 *TODO: in command line mode log should save out to a file
 	 * @param text
 	 *            the text to append to the log
 	 */
 	public void log(String text) {
 		log.log(text);
+		if (verbose){
+			System.out.println("<log> "+text);
+		}
 	}
 
 	/**
@@ -1016,8 +1064,31 @@ public class SoniaController {
 		return false;
 	}
 
+	/**
+	 * indicates if the GUI should be displayed, or if sonia is running in commandline mode
+	 * @author skyebend
+	 * @return
+	 */
 	public boolean isShowGUI() {
 		return showGUI;
+	}
+	
+	/**
+	 * sets wether logs messags should be displayed to user in command line mode
+	 * @author skyebend
+	 * @param value
+	 */
+	public void setVerbose(boolean value){
+		verbose = value;
+	}
+	
+	/**
+	 * indicates if log messages should be displayed to the user in command line mode
+	 * @author skyebend
+	 * @return
+	 */
+	public boolean isVerbose(){
+		return verbose;
 	}
 	
 	/**

@@ -501,7 +501,8 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 					subPasses++;
 					if (subPasses > maxPasses) {
 						// break the loop, and tell us
-						control.showError("KK inner loop exceeded max passes");
+						control.showStatus("KK inner loop exceeded max passes");
+						control.log("KK inner loop exceeded max passes");
 						layoutInfo = layoutInfo
 								+ "\nKK inner loop exceeded max passes";
 						slice.setError(true);

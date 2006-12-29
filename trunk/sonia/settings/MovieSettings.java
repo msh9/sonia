@@ -36,6 +36,10 @@ public class MovieSettings extends PropertySettings {
 	 */
 	public static final String FILE_TYPE = "FILE_TYPE";
 	
+	/**
+	 * key for string containing names of additional format specific paramters
+	 */
+	public static final String FORMAT_PARAMS = "FORMAT_PARAMS";
 	
 	/**
 	 * file type value indicating a QuickTime movie.  
@@ -47,5 +51,7 @@ public class MovieSettings extends PropertySettings {
 	 * file type value indicating a QuickTime movie.  Note: not useable on linux
 	 */
 	public static final String FLASH_FILE_TYPE = "swf";
+	
+	
 
 }

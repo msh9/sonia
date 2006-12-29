@@ -16,24 +16,34 @@
 package sonia.movie;
 
 import sonia.SoniaCanvas;
+import sonia.settings.MovieSettings;
 
 public interface MovieMaker {
 
 	/**
-	 * opens a file dialog asking where to save the movie, opens a "QuickTime session"
-	 * throws up a new window with the same size as the layout, and plays the layout,
-	 * recording each frame to the new window, and into the movie file.
+	 * Asks the movie to do any necessary setup, open a file on disk, etc
 	 */
 	public abstract void setupMovie(SoniaCanvas canvas, int frames)
 			throws Exception;
 
 	/**
-	 * Records the currently displayed image to the movie file.
+	 * Records the current slice of network to the movie file.
 	 */
 	public abstract void captureImage();
 
+	/**
+	 * Asks the movie to do any cleanup, flush buffers, and close file
+	 * @author skyebend
+	 */
 	public abstract void finishMovie();
 
 	public abstract boolean isExporting();
+	
+	/**
+	 * Asks the movie to read the settings and configure appropriately
+	 * @author skyebend
+	 * @param settings
+	 */
+	public abstract void configure(MovieSettings settings);
 
 }

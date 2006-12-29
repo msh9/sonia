@@ -21,6 +21,7 @@ import quicktime.app.QTFactory;
 import sonia.SoniaCanvas;
 import sonia.SoniaController;
 import sonia.SoniaLayoutEngine;
+import sonia.settings.MovieSettings;
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>
  * <p>Description:Animates layouts of time-based networks
@@ -319,5 +320,11 @@ public boolean isExporting(){
     }
 
   }
+
+
+public void configure(MovieSettings settings) {
+	// TODO Auto-generated method stub
+	
+}
 
 }

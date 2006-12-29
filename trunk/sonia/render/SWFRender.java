@@ -20,6 +20,7 @@ import java.awt.geom.PathIterator;
 import java.awt.geom.RectangularShape;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 
 import sonia.ArcAttribute;
@@ -45,6 +46,7 @@ import com.anotherbigidea.flash.structs.AlphaTransform;
 import com.anotherbigidea.flash.structs.Color;
 import com.anotherbigidea.flash.structs.Matrix;
 import com.anotherbigidea.flash.structs.Rect;
+import com.anotherbigidea.flash.writers.SWFWriter;
 import com.anotherbigidea.flash.writers.TagWriter;
 
 /**
@@ -80,6 +82,12 @@ public class SWFRender implements Render {
 
 	private Font font;
 
+	private TagWriter tagwriter;
+
+	private Transform statusPosition;
+
+	private Instance testEdge;
+
 	// private Text statusText;
 	// private int statusTextLayer;
 	// private int statusTextId;
@@ -92,11 +100,12 @@ public class SWFRender implements Render {
 		activeNodes = new HashMap();
 		activeLabels = new HashMap();
 		activeEdges = new HashMap();
+		statusPosition = new Transform(5, 10);
 		try {
 			fontdef = FontLoader.loadFont(this.getClass().getResourceAsStream(
-					"image/VerdanaFont.swf"));
+					"VerdanaFont.swf"));
 			font = new Font(fontdef);
-			//font.loadAllGlyphs();
+			// font.loadAllGlyphs();
 
 			// swf.tagDefineFont2(1,0,"font",font.getGlyphList().size(),fontdef.getAscent(),fontdef.getDescent(),fontdef.getLeading(),null,fontdef.);
 		} catch (IOException e) {
@@ -106,7 +115,8 @@ public class SWFRender implements Render {
 		}
 	}
 
-	private Instance getSWFNode(NodeAttribute node) throws IOException {
+	private Instance getSWFNode(NodeAttribute node, double scaleFactor)
+			throws IOException {
 
 		// int shapeID = nextShapeID;
 		Instance inst;
@@ -114,8 +124,13 @@ public class SWFRender implements Render {
 		if (nodeGraphics.containsKey(node)) {
 			inst = (Instance) nodeGraphics.remove(node);
 		} else {
+			double nodeDrawSize = node.getNodeSize() * scaleFactor;
+
 			// get the java shape
 			RectangularShape s = (RectangularShape) node.getNodeShape();
+			// adjust for scaling
+			s.setFrame((nodeDrawSize / 2.0), (nodeDrawSize / 2.0),
+					nodeDrawSize, nodeDrawSize);
 			// draw the shape centered around the origin
 			double centerX = (s.getWidth() / 2) + s.getMinX(); // have to
 			// subtract out the "original" coords...
@@ -170,9 +185,9 @@ public class SWFRender implements Render {
 			inst = (Instance) nodeLabels.remove(node);
 		} else {
 			Text text = new Text(null);
-			java.awt.Color c = node.DEFULAT_LABEL_COLOR;
+			java.awt.Color c = NodeAttribute.DEFULAT_LABEL_COLOR;
 			try {
-				text.row(font.chars(label, node.getLabelSize()),
+				text.row(font.chars(label, node.getLabelSize() * 0.75f),
 						new Color(c.getRed(), c.getGreen(), c.getBlue()), 0, 0,
 						false, false);
 			} catch (NoGlyphException e) {
@@ -202,15 +217,16 @@ public class SWFRender implements Render {
 	 * @throws IOException
 	 */
 	private Instance getSWFEdge(ArcAttribute arc, double startX, double startY,
-			double endX, double endY, double widthFactor, boolean arrows) throws IOException {
+			double endX, double endY, double widthFactor, boolean arrows)
+			throws IOException {
 		Instance inst;
 		// if we've already drawn the shape, just return its reference
 		Shape shape = new Shape();
 		// edge width
-		double borderWidth = arc.getArcWidth()*widthFactor;
+		double borderWidth = arc.getArcWidth() * widthFactor;
 		java.awt.Color c = arc.getArcColor();
-		Color arrowC = new AlphaColor(c.getRed(), c
-				.getGreen(), c.getBlue(), transVal);
+		Color arrowC = new AlphaColor(c.getRed(), c.getGreen(), c.getBlue(),
+				transVal);
 		shape.defineLineStyle(borderWidth, arrowC);
 		shape.setLineStyle(1);
 		shape.move(Math.round(startX), Math.round(startY));
@@ -218,18 +234,10 @@ public class SWFRender implements Render {
 		if (arrows) {
 			shape.defineFillStyle(arrowC);
 			shape.setRightFillStyle(1);
-			//make no line so that it is just the head shape
+			// make no line so that it is just the head shape
 			shape.defineLineStyle(0.0, arrowC);
 			shape.setLineStyle(2);
-			/*
-			//try just making a box
-			shape.move(endX,endY);
-			shape.line(endX+10,endY);
-			shape.line(endX+10,endY+10);
-			shape.line(endX,endY+10);
-			shape.move(endX,endY);
-			*/
-			
+
 			double arrowSize = RenderSlice.arrowLength + borderWidth;
 			double xDiff = (startX - endX);
 			double yDiff = (startY - endY);
@@ -244,29 +252,29 @@ public class SWFRender implements Render {
 				lineAngle += Math.PI;
 			}
 
-			//  we should be alreay at the tip of the arrow
+			// we should be alreay at the tip of the arrow
 			// but there is a bug in javaswf..
-			//Also have to deal with some round off error in the double to int conversion
-			shape.move(Math.round(endX),Math.round(endY));
+			// Also have to deal with some round off error in the double to int
+			// conversion
+			shape.move(Math.round(endX), Math.round(endY));
 			// one wedge
-			shape.line( Math.round(endX+ (arrowSize * Math
-					.sin(lineAngle - 0.3))),  Math.round(endY + (arrowSize * Math
-					.cos(lineAngle - 0.3))));
+			shape.line(Math.round(endX
+					+ (arrowSize * Math.sin(lineAngle - 0.3))), Math.round(endY
+					+ (arrowSize * Math.cos(lineAngle - 0.3))));
 			// other wedge
-			shape.line( Math.round(endX + (arrowSize * Math
-					.sin(lineAngle + 0.3))),  Math.round(endY + (arrowSize * Math
-					.cos(lineAngle + 0.3))));
+			shape.line(Math.round(endX
+					+ (arrowSize * Math.sin(lineAngle + 0.3))), Math.round(endY
+					+ (arrowSize * Math.cos(lineAngle + 0.3))));
 			// back to top
 			shape.line(Math.round(endX), Math.round(endY));
-			
-	
-			
+
 		}
 		if (edgeGraphics.containsKey(arc)) {
 			inst = (Instance) edgeGraphics.remove(arc);
 			inst = currentFrame.replaceSymbol(shape, inst.getDepth(), null,
 					null, 0, 0);
 		} else {
+
 			inst = currentFrame.placeSymbol(shape, null, null);
 		}
 		activeEdges.put(arc, inst);
@@ -288,6 +296,7 @@ public class SWFRender implements Render {
 	 * @author skyebend
 	 */
 	public void newFrame() {
+
 		// we are starting an new frame, so remove any objects that didn't
 		// get drawn last time
 		removeInactive(nodeGraphics);
@@ -328,7 +337,16 @@ public class SWFRender implements Render {
 		// TODO: labels not supported for swf arcs
 		// TODO: will multiple arcs draw correctly?
 		try {
-			Instance inst = getSWFEdge(arc, fromX, fromY, toX, toY,widthFactor, arrows);
+			Instance inst = getSWFEdge(arc, fromX, fromY, toX, toY,
+					widthFactor, arrows);
+			// Instance inst = getSWFEdge(arc, 0.0, 0.0, 10, 0,widthFactor,
+			// arrows);
+			// double length =
+			// Math.sqrt(Math.pow((fromX-toX),2)+Math.pow((fromY-toY),2))/10;
+			// double rotate = Math.atan((toY-fromY)/(toX-fromX));
+			// Transform xform = new
+			// Transform(rotate,length,length,fromX,fromY);
+			// currentFrame.alter(inst,xform,null);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -344,8 +362,9 @@ public class SWFRender implements Render {
 		// get (or create) graphics for this node attribute so we can just
 		// reposition it..
 		try {
-			Instance inst = getSWFNode(node);
-			currentFrame.alter(inst, (int) Math.round(xCoord), (int) Math.round(yCoord));
+			Instance inst = getSWFNode(node, scaleFact);
+			currentFrame.alter(inst, (int) Math.round(xCoord), (int) Math
+					.round(yCoord));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -384,8 +403,9 @@ public class SWFRender implements Render {
 		if (statusText == null) {
 			statusText = currentFrame.placeSymbol(text, 5, 10);
 		} else {
+
 			statusText = currentFrame.replaceSymbol(text,
-					statusText.getDepth(), new Transform(5, 10), null, 0, 0);
+					statusText.getDepth(), statusPosition, null, 0, 0);
 		}
 	}
 
@@ -401,5 +421,64 @@ public class SWFRender implements Render {
 		}
 
 	}
+
+	/*
+	 * private void writeIncrementalFrame(Movie movie, Frame frame){
+	 * frame.write( movie, tagwriter, tagwriter ); }
+	 * 
+	 * private void startIncrementalWrite(Movie movie,String filename,boolean
+	 * compressed) throws IOException{ SWFWriter swfwriter = new SWFWriter(
+	 * filename ); tagwriter = new TagWriter( swfwriter );
+	 * swfwriter.setCompression( compressed ); Hashtable definedSymbols = new
+	 * Hashtable(); int maxId = 1;
+	 * 
+	 * tagwriter.header( movie.getVersion(), -1, //force length calculation
+	 * canvas.getWidth() * SWFConstants.TWIPS, canvas.getHeight() *
+	 * SWFConstants.TWIPS,
+	 * (int)Math.round(1.0/((double)engine.getFrameDelay()/1000.0)), -1);
+	 * //force frame calculation
+	 * 
+	 * 
+	 * 
+	 * tagwriter.tagSetBackgroundColor( new Color(255, 255, 255) );
+	 * 
+	 * 
+	 * //--Process Imports
+	 * 
+	 * if( importLibraries != null && ! importLibraries.isEmpty() ) { for(
+	 * Iterator keys = importLibraries.keySet().iterator(); keys.hasNext();) {
+	 * String libName = (String)keys.next(); List imports =
+	 * (List)importLibraries.get( libName );
+	 * 
+	 * String[] names = new String[imports.size()]; int[] ids = new
+	 * int[imports.size()];
+	 * 
+	 * int i = 0; for( Iterator it = imports.iterator(); it.hasNext(); ) {
+	 * ImportedSymbol imp = (ImportedSymbol)it.next();
+	 * 
+	 * names[i] = imp.getName(); ids[i] = imp.define( movie, tagwriter,
+	 * tagwriter );
+	 * 
+	 * i++; }
+	 * 
+	 * tagwriter.tagImport( libName, names, ids ); } }
+	 * 
+	 * //--Process Exports if( exportedSymbols != null && !
+	 * exportedSymbols.isEmpty() ) { String[] names = new
+	 * String[exportedSymbols.size()]; int[] ids = new
+	 * int[exportedSymbols.size()];
+	 * 
+	 * int i = 0; for( Iterator it = exportedSymbols.iterator(); it.hasNext(); ) {
+	 * ExportedSymbol exp = (ExportedSymbol)it.next();
+	 * 
+	 * names[i] = exp.getExportName(); ids[i] = exp.getSymbol().define( movie,
+	 * tagwriter, tagwriter );
+	 * 
+	 * i++; }
+	 * 
+	 * tagwriter.tagExport( names, ids ); }
+	 * 
+	 *  }
+	 */
 
 }

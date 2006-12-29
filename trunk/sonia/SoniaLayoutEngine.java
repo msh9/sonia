@@ -470,8 +470,8 @@ public class SoniaLayoutEngine {
 
 			// print out layout info to log
 			control.showStatus("Starting layout on slice "
-					+ layoutSlices.indexOf(slice) + "\nstart time:"
-					+ slice.getSliceStart() + "\nend time:"
+					+ layoutSlices.indexOf(slice) + "\tstart time:"
+					+ slice.getSliceStart() + "\tend time:"
 					+ slice.getSliceEnd());
 
 		}

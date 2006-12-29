@@ -41,6 +41,7 @@ import quicktime.util.QTHandle;
 import quicktime.util.RawEncodedImage;
 import sonia.SoniaCanvas;
 import sonia.render.Graphics2DRender;
+import sonia.settings.MovieSettings;
 
 /**
  * Exports animation as a QuickTime movie, using the QTJava library. Replaces
@@ -58,7 +59,7 @@ public class QTMovieMaker implements MovieMaker {
 
 	private String fileName;
 
-	public static final String SUFFIX = ".mov";
+	public static final String SUFFIX = "mov";
 
 	private QDRect bounds;
 
@@ -83,6 +84,8 @@ public class QTMovieMaker implements MovieMaker {
 	public static final int KEY_FRAME_RATE = 30;
 
 	public static final int TIME_SCALE = 600;
+	
+	public static final String CODEC_PARAM_NAME = "CODEC";
 
 	public static final String[] codecs = { "Cinepak", "Animation", "H.263",
 			"Sorenson", "Sorenson 3", "MPEG-4" };
@@ -238,7 +241,7 @@ public class QTMovieMaker implements MovieMaker {
 		}
 
 		// debug
-		System.out.println("\t saved QT frame " + currentFrame);
+		//System.out.println("\t saved QT frame " + currentFrame);
 		currentFrame++;
 
 	}
@@ -315,6 +318,16 @@ public class QTMovieMaker implements MovieMaker {
 	public void setCodecType(int codecType) {
 		this.codecType = codecType;
 		codec = "unknown:" + codecType;
+	}
+
+	public void configure(MovieSettings settings) {
+		//check that it is the right kind of settings
+		if (settings != null && settings.getProperty(MovieSettings.FILE_TYPE).equals(SUFFIX)){
+			setCodec(settings.getProperty(CODEC_PARAM_NAME));
+		}
+		else {
+			System.out.println("Settings are not appropriate for QuickTime movie maker");
+		}
 	}
 
 	/**

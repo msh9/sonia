@@ -23,6 +23,9 @@ public class LayoutSettings extends PropertySettings {
 	public static final String SLICE_DELTA = "SLICE_DELTA";
 	public static final String ANIMATE_TYPE = "ANIMATE_TYPE";
 	public static final String SLICE_AGGREGATION = "SLICE_AGGREGATION";
+	/**
+	 * Names of additional parameters for certain algorithms
+	 */
 	public static final String LAYOUT_SETTINGS = "LAYOUT_SETTINGS";
 	
 	

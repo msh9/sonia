@@ -233,7 +233,7 @@ public class GraphicsSettingsDialog {
 		arcLabels = new JComboBox(new String[] { GraphicsSettings.NONE,
 				GraphicsSettings.LABELS, GraphicsSettings.LAYOUT_WEIGHTS });
 		arcLabels.setBorder(new TitledBorder("Arc labeling"));
-		ShowLabelsField = new JTextField("10.0", 3);
+		ShowLabelsField = new JTextField("0.0", 3);
 		ShowLabelsField.setBorder(new TitledBorder("Min. value for label"));
 
 		// NodeLabelGroup
