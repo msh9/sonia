@@ -138,13 +138,13 @@ public class NetDataStructure
    *
    * For Arcs:<BR>
    * include arc in bin if obsTime is within interval (will include relations
-   * of lenth shorter than interval) if obsTime before start AND endTime after
+   * of lenth shorter than interval) if obsTime before start AND endTime after or equal to
    * end of interval<BR><BR>
    *
    * For Nodes: <BR>
    * include node in bin if obsTime is within interval (inclusive) (will include
    * relations of lenth shorter than interval) if obsTime before start AND
-   * endTime after end of interval
+   * endTime after or equal to end of interval
    */
   public LayoutSlice makeLayoutSlice(double sliceStart, double sliceEnd,
                                      int aggregateType)
@@ -166,7 +166,7 @@ public class NetDataStructure
        // (will include relations of lenth shorter than interval)
        //if obsTime before start AND endTime after end of interval
        if(((obsTime >= sliceStart) & (obsTime < sliceEnd))
-          | ((obsTime <= sliceStart) & (end > sliceEnd)))
+          | ((obsTime <= sliceStart) & (end >= sliceEnd)))
        {
          int fromId = arcEventArray[i].getFromNodeId();
          int toId = arcEventArray[i].getToNodeId();
@@ -186,7 +186,7 @@ public class NetDataStructure
        // (will include relations of lenth shorter than interval)
        //if obsTime before start AND endTime after end of interval
        if(((obsTime >= sliceStart) & (obsTime < sliceEnd))
-          | ((obsTime <= sliceStart) & (end > sliceEnd)))
+          | ((obsTime <= sliceStart) & (end >= sliceEnd)))
        {
          int id = nodeEventArray[i].getNodeId();
          double x = nodeEventArray[i].getObsXCoord();
@@ -227,6 +227,7 @@ public class NetDataStructure
 
   public RenderSlice fillRenderSlice(RenderSlice slice)
   {
+	  //TODO: build time indexing structure to speed up slice filling
     double sliceStart = slice.getSliceStart();
     double sliceEnd = slice.getSliceEnd();
     //loop over all nodes to see which should be in this slice
@@ -238,7 +239,7 @@ public class NetDataStructure
        // (will include relations of lenth shorter than interval)
        //if obsTime before start AND endTime after end of interval
        if(((obsTime >= sliceStart) & (obsTime < sliceEnd))
-         | ((obsTime <= sliceStart) & (end > sliceEnd)))
+         | ((obsTime <= sliceStart) & (end >= sliceEnd)))
        {
          slice.addNodeEvent(nodeEventArray[i]);
        }
@@ -253,7 +254,7 @@ public class NetDataStructure
        // (will include relations of lenth shorter than interval)
        //if obsTime before start AND endTime after end of interval
        if(((obsTime >= sliceStart) & (obsTime < sliceEnd))
-           | ((obsTime <= sliceStart) & (end > sliceEnd)))
+           | ((obsTime <= sliceStart) & (end >= sliceEnd)))
        {
          slice.addArcEvent(arcEventArray[i]);
        }
