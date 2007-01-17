@@ -74,7 +74,7 @@ public class SoniaLayoutEngine {
 	private LayoutSettings layoutSettings;
 
 	private ApplySettings applySettings;
-	
+
 	private GraphicsSettings graphicSettings;
 
 	// private Vector renderSlices;
@@ -143,13 +143,14 @@ public class SoniaLayoutEngine {
 	 * @param name
 	 *            the name of the engine (to show in the window)
 	 */
-	public SoniaLayoutEngine(LayoutSettings settings,
+	public SoniaLayoutEngine(LayoutSettings settings,ApplySettings apply,
 			SoniaController controller, NetDataStructure data, String name) {
 		control = controller;
 		netData = data;
 		engineName = name;
 		layoutSettings = settings;
-		//graphicSettings = graphSetting;
+		applySettings = apply;
+		// graphicSettings = graphSetting;
 
 		// take care of all the settings
 		// make the right kinds of layout
@@ -209,7 +210,7 @@ public class SoniaLayoutEngine {
 		// System.out.println("error parsing slice settings properties "
 		// + e.toString());
 		// }
-		control.log("Created layout:\n"+settings.toString());
+		control.log("Created layout:\n" + settings.toString());
 	}
 
 	public void setDisplay(LayoutWindow display) {
@@ -217,7 +218,7 @@ public class SoniaLayoutEngine {
 		// tell layout to DRAW the first layout without applying layout
 		display.showCurrentSlice();
 		display.setTitle(display.getTitle() + currentLayout.getLayoutType());
-		//TODO: should it update the graphic settings?
+		// TODO: should it update the graphic settings?
 		// make sure the network gets drawn
 		display.updateDisplay();
 		// try to make the layout window active
@@ -233,11 +234,11 @@ public class SoniaLayoutEngine {
 		if (applySettings == null) {
 			applySettings = new ApplySettings();
 		}
-		
+
 		if (control.isShowGUI()) {
 			if (settings == null) {
-				settings = new ApplySettingsDialog(applySettings, control, this,
-						null, currentLayout);
+				settings = new ApplySettingsDialog(applySettings, control,
+						this, null, currentLayout);
 			}
 			settings.showDialog();
 		}
@@ -336,8 +337,9 @@ public class SoniaLayoutEngine {
 		if (applySettings == null) {
 			showApplyLayoutSettings();
 		} else {
-			
-			applyLayoutTo(applySettings, (LayoutSlice) layoutSlices.get(currentSlice));
+
+			applyLayoutTo(applySettings, (LayoutSlice) layoutSlices
+					.get(currentSlice));
 		}
 	}
 
@@ -349,7 +351,18 @@ public class SoniaLayoutEngine {
 	public void applyLayoutToRemaining() {
 		Thread layoutRunner = new Thread() {
 			public void run() {
-				startApplyLayoutToRemaining();
+				// catch errors on this thread
+				try {
+					startApplyLayoutToRemaining();
+				} catch (Throwable t) {
+					control.showError("Error applying layout: "
+							+ t.getMessage());
+					t.printStackTrace();
+					if (!control.isShowGUI()) {
+						// exit the system
+						System.exit(-1);
+					}
+				}
 			}
 		};
 		layoutRunner.setName("apply layout to remaining");
@@ -368,8 +381,8 @@ public class SoniaLayoutEngine {
 		// makesure there is a layout chosen
 		int startSlice = currentSlice;
 		int slicesLeft = layoutSlices.size() - currentSlice;
-		//get the settings
-		if (applySettings == null){
+		// get the settings
+		if (applySettings == null) {
 			applySettings = settings.getSettings();
 		}
 		control.showStatus("Applying layouts to slices " + startSlice + " to "
@@ -378,30 +391,39 @@ public class SoniaLayoutEngine {
 		// ONE LAYOUT FINISHES BEFORE NEXT STARTS
 		// SHOULD CHECK THAT THE prev slice is finished
 		LayoutSlice slice = getCurrentSlice();
-		applyLayoutTo(applySettings,slice);
+		applyLayoutTo(applySettings, slice);
 		startSlice++;
 		slicesLeft--;
+		int errorSlices = 0;
 		while ((slicesLeft > 0) & (!control.isPaused())) {
+			// TODO: while loop for layout apply should not be here, should use
+			// threading
 			// check that layout is finished bfore startign next
 			if (slice.isLayoutFinished()) {
 				// check if we should break for errors
-				if (applySettings.get(ApplySettings.STOP_ON_ERROR).equals(Boolean.toString(true))
-					& slice.isError()) {
-					slicesLeft = 0;
-					break;
-				} else // go ahead with the next layout
-				{
-					changeToSliceNum(startSlice);
-					slice = getCurrentSlice();
-					applyLayoutTo(applySettings, slice);
-					//TODO: decide if there should be a repaint call here, check the repaintN?
-					display.updateDisplay();
-					startSlice++;
-					slicesLeft--;
+				if (slice.isError()) {
+					errorSlices++;
+					if (applySettings.get(ApplySettings.STOP_ON_ERROR).equals(
+							Boolean.toString(true))) {
+						slicesLeft = 0;
+						break;
+					}
 				}
+				// go ahead with the next layout
+
+				changeToSliceNum(startSlice);
+				slice = getCurrentSlice();
+				applyLayoutTo(applySettings, slice);
+				// TODO: decide if there should be a repaint call here,
+				// check the repaintN?
+				display.updateDisplay();
+				startSlice++;
+				slicesLeft--;
+
 			}
 		}
-		
+		control.showStatus("Layouts complete with " + errorSlices
+				+ " error slices");
 
 	}
 
@@ -437,11 +459,14 @@ public class SoniaLayoutEngine {
 			int height = getLayoutHeight();
 			int thisIndex = layoutSlices.indexOf(slice);
 			// apply any start coordinte options
-			if (settings.get(ApplySettings.STARTING_COORDS).equals(ApplySettings.COORDS_RANDOM)) {
+			if (settings.get(ApplySettings.STARTING_COORDS).equals(
+					ApplySettings.COORDS_RANDOM)) {
 				LayoutUtils.randomizeLayout(control, slice, width, height);
-			} else if (settings.get(ApplySettings.STARTING_COORDS).equals(ApplySettings.COORDS_CIRCLE)) {
+			} else if (settings.get(ApplySettings.STARTING_COORDS).equals(
+					ApplySettings.COORDS_CIRCLE)) {
 				LayoutUtils.circleLayout(slice, width, height);
-			} else if (settings.get(ApplySettings.STARTING_COORDS).equals(ApplySettings.COORDS_FROM_PREV)) {
+			} else if (settings.get(ApplySettings.STARTING_COORDS).equals(
+					ApplySettings.COORDS_FROM_PREV)) {
 				// make sure there is a previous slice
 				if (thisIndex > 0) {
 					LayoutSlice prevSlice = (LayoutSlice) layoutSlices
@@ -451,7 +476,8 @@ public class SoniaLayoutEngine {
 					LayoutUtils.copyLayout(prevSlice, slice);
 				}
 
-			} else if (settings.get(ApplySettings.STARTING_COORDS).equals(ApplySettings.COORDS_FROM_FILE)) {
+			} else if (settings.get(ApplySettings.STARTING_COORDS).equals(
+					ApplySettings.COORDS_FROM_FILE)) {
 				// since slices is initialized with coords from orig file,
 				// get a new slice with the same times, and copy the coords
 				LayoutSlice copySlice = netData.makeLayoutSlice(slice
@@ -481,7 +507,9 @@ public class SoniaLayoutEngine {
 	 * Does any final repositioning (rescaling, recentering, Isolate
 	 * repositioning, etc) of the nodes, logs layout settings and results, and
 	 * sets the slice to "finished" status, updates the display.
-	 * @param settings TODO
+	 * 
+	 * @param settings
+	 *            TODO
 	 * @param layout
 	 *            the layout to finish
 	 * @param slice
@@ -491,30 +519,55 @@ public class SoniaLayoutEngine {
 	 * @param height
 	 *            the height (in pixels) of the layout area
 	 */
-	public void finishLayout( ApplySettings settings, NetLayout layout, LayoutSlice slice,
-			double width, double height) {
+	public void finishLayout(ApplySettings settings, NetLayout layout,
+			LayoutSlice slice, double width, double height) {
 		// check for rescale
-		if (settings.getProperty(ApplySettings.RESCALE_LAYOUT).equals(ApplySettings.RESCALE_TO_FIT)) {
-			LayoutUtils.rescalePositions(slice, (int) width, (int) height,
-					slice.getXCoords(), slice.getYCoords(), 
-					Boolean.getBoolean(settings.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE)));
-					
+		if (settings.getProperty(ApplySettings.RESCALE_LAYOUT).equals(
+				ApplySettings.RESCALE_TO_FIT)) {
+			LayoutUtils
+					.rescalePositions(
+							slice,
+							(int) width,
+							(int) height,
+							slice.getXCoords(),
+							slice.getYCoords(),
+							Boolean
+									.getBoolean(settings
+											.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE)));
+
 		}
 		// check for recenter
-		if (settings.getProperty(ApplySettings.RECENTER_TRANSFORM).equals(ApplySettings.RECENTER_AFTER)) {
-			LayoutUtils.centerLayout(slice, (int) width, (int) height, 
-					Boolean.getBoolean(settings.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE)));
-		} else if (settings.getProperty(ApplySettings.RECENTER_TRANSFORM).equals(ApplySettings.BARYCENTER)) {
-			LayoutUtils.barycenterLayout(slice, (int) width, (int) height,
-					Boolean.getBoolean(settings.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE)));
+		if (settings.getProperty(ApplySettings.RECENTER_TRANSFORM).equals(
+				ApplySettings.RECENTER_AFTER)) {
+			LayoutUtils
+					.centerLayout(
+							slice,
+							(int) width,
+							(int) height,
+							Boolean
+									.getBoolean(settings
+											.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE)));
+		} else if (settings.getProperty(ApplySettings.RECENTER_TRANSFORM)
+				.equals(ApplySettings.BARYCENTER)) {
+			LayoutUtils
+					.barycenterLayout(
+							slice,
+							(int) width,
+							(int) height,
+							Boolean
+									.getBoolean(settings
+											.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE)));
 		}
 
 		// take care of isolates if necessary, otherwise ignore
-		if (settings.getProperty(ApplySettings.ISOLATE_POSITION).equals(ApplySettings.ISLOLATE_CIRCLE)) {
+		if (settings.getProperty(ApplySettings.ISOLATE_POSITION).equals(
+				ApplySettings.ISLOLATE_CIRCLE)) {
 			LayoutUtils.pinIsolatesCircle(slice, (int) width, (int) height);
-		} else if (settings.getProperty(ApplySettings.ISOLATE_POSITION).equals(ApplySettings.ISLOLATE_EDGE)) {
+		} else if (settings.getProperty(ApplySettings.ISOLATE_POSITION).equals(
+				ApplySettings.ISLOLATE_EDGE)) {
 			LayoutUtils.pinIsolatesBottom(slice, (int) width, (int) height);
-		} else if (settings.getProperty(ApplySettings.ISOLATE_POSITION).equals(ApplySettings.ISLOLATE_FILE)) {
+		} else if (settings.getProperty(ApplySettings.ISOLATE_POSITION).equals(
+				ApplySettings.ISLOLATE_FILE)) {
 			LayoutUtils.pinIsolatesOrig(slice);
 		}
 		// check if there were errors
@@ -605,7 +658,7 @@ public class SoniaLayoutEngine {
 		}
 		return currentYcoords;
 	}
-	
+
 	public ApplySettings getCurrentApplySettings() {
 		return applySettings;
 	}
@@ -1019,7 +1072,6 @@ public class SoniaLayoutEngine {
 			shepPlot = null;
 		}
 	}
-
 
 	public void setApplySettings(ApplySettings applySettings) {
 		this.applySettings = applySettings;
