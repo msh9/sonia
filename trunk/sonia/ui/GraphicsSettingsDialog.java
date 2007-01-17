@@ -376,8 +376,8 @@ public class GraphicsSettingsDialog {
 	public void showDialog() {
 		WindowHeight.setText(engine.getDisplayHeight() + "");
 		WindowWidth.setText(engine.getDisplayWidth() + "");
-		graphicsDialog.setVisible(true);
 		readSettings();
+		graphicsDialog.setVisible(true);
 		OK.requestFocus();
 	}
 
@@ -427,7 +427,7 @@ public class GraphicsSettingsDialog {
 	 */
 	private void readSettings() {
 		if (settings == null) {
-			settings = new GraphicsSettings();
+			//settings = new GraphicsSettings();
 		}
 		AntiAlias.setSelected(Boolean.parseBoolean(settings.getProperty(
 				GraphicsSettings.ANTI_ALIAS, AntiAlias.isSelected() + "")));
@@ -474,34 +474,5 @@ public class GraphicsSettingsDialog {
 
 	}
 
-	/**
-	 * Transfers the settings from the display checkboxes to the Canvas.
-	 */
-	public void applySettings() {
-		// canvas.setAntiAlias(AntiAlias.isSelected());
-		// canvas.setArcTrans(ArcTrans.isSelected());
-		// canvas.setArcTransVal(Float.parseFloat(ArcTransField.getText()));
-		// canvas.setNodeTrans(NodeTrans.isSelected());
-		// canvas.setNodeTransVal(Float.parseFloat(NodeTransField.getText()));
-		// canvas.setArcWidthFact(Float.parseFloat(ArcWidthFactorField.getText()));
-		// // canvas.setShowArrows(ShowArrows.isSelected());
-		// // canvas.setShowArcWeights(ShowArcWeights.isSelected());
-		// // canvas.setShowArcLabels(ShowArcLabels.isSelected());
-		// // canvas.setShowLabels(ShowLabels.isSelected());
-		// canvas.setShowLabelsVal(Float.parseFloat(ShowLabelsField.getText()));
-		// canvas.setShowId(ShowIds.isSelected());
-		// canvas.setShowIdsVal(Float.parseFloat(ShowIdsField.getText()));
-		// canvas.setShowStats(ShowStats.isSelected());
-		// canvas.setGhostSlice(GhostSlice.isSelected());
-		// canvas.setFlashNew(FlashNew.isSelected());
-		// canvas.setFlashDuration(Double.parseDouble(FlashDuration.getText()));
-		// canvas.setNodeScaleFact(Float
-		// .parseFloat(NodeScaleFactorField.getText()));
-		// // canvas.setHideArcs(HideArcs.isSelected());
-		// // canvas.setHideNodes(HideNodes.isSelected());
-		// engine.setDisplayWidth(Integer.parseInt(WindowWidth.getText()));
-		// engine.setDisplayHeight(Integer.parseInt(WindowHeight.getText()));
-		// graphicsDialog.setVisible(false);
-		// canvas.repaint();
-	}
+	
 }
