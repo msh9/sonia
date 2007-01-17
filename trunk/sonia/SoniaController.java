@@ -78,9 +78,9 @@ import cern.colt.matrix.impl.SparseDoubleMatrix2D;
  */
 
 public class SoniaController {
-	public static final String CODE_DATE = "2006-12-07";
+	public static final String CODE_DATE = "2007-01-16";
 
-	public static final String VERSION = "1.1.3_unstable";
+	public static final String VERSION = "1.1.4";
 
 	private SoniaInterface ui;
 
@@ -270,7 +270,7 @@ public class SoniaController {
 		} else {
 			sonia.showGUI(true);
 		}
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			System.out.println("Error Launching Sonia:"+e.getMessage());
 			e.printStackTrace();
 			System.exit(-1);
@@ -500,10 +500,10 @@ public class SoniaController {
 				// call the non-threaded version so we can catch the
 				// exceptions...
 				//wait for it to finish
-				while (!engine.getCurrentSlice().isLayoutFinished()){
-					//debug
-					System.out.println("\t waiting for layout...");
-				}
+				//while (!engine.getCurrentSlice().isLayoutFinished()){
+					//pause here so as not to gobble system resourcs
+			
+				//}
 
 				engine.startApplyLayoutToRemaining();
 				engine.changeToSliceNum(0);
@@ -541,8 +541,8 @@ public class SoniaController {
 				System.exit(0);
 
 			}
-		} catch (Exception e) {
-			ui.setVisible(true);
+		} catch (Throwable e) {
+			//ui.setVisible(true);
 			e.printStackTrace();
 			showError("ERROR in batch execution: " + e.getMessage());
 			System.exit(-1);
@@ -643,7 +643,7 @@ public class SoniaController {
 				showStatus("layout cancled: null slice settings");
 				return;
 			}
-			engine = new SoniaLayoutEngine(sliceSettings, this, networkData,
+			engine = new SoniaLayoutEngine(sliceSettings, applySettings,this, networkData,
 					engName);
 			showStatus("layout " + engName + " created.");
 			engines.add(engine);
@@ -949,6 +949,7 @@ public class SoniaController {
 			}
 
 		}
+		ui.repaint();
 	}
 
 	// accessors------------------
