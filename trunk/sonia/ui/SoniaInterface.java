@@ -259,7 +259,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 	 * Displays the passed text as a message in the status window
 	 */
 	public void showStatus(String text) {
-		this.setForeground(Color.black);
+		StatusText.setForeground(Color.black);
 		StatusText.setText("");
 		StatusText.setText("  " + text);
 		StatusText.setCaretPosition(0);
@@ -271,15 +271,11 @@ public class SoniaInterface extends JFrame implements WindowListener,
 	 */
 	public void showError(String text) {
 		(Toolkit.getDefaultToolkit()).beep();
-		this.setBackground(Color.red);
-		this.setForeground(Color.red);
+		StatusText.setForeground(Color.red);
 		StatusText.setText("");
 		StatusText.setText("  " + text);
 		StatusText.setCaretPosition(0);
-		repaint();
-		this.setBackground(Color.lightGray);
-		this.setForeground(Color.black);
-		repaint();
+		
 	}
 
 	/**
