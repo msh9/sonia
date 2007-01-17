@@ -47,25 +47,25 @@ public class SoniaCanvas extends JPanel
   private int drawHeight;
 
   private boolean antiAlias = true;
-  private boolean showStats = true;
-  private boolean showLabels = true;
-  private float showLabelsVal = 10.0f;
-  private boolean showID = false;
-  private float showIdsVal = 10.0f;
-  private boolean showArrows = true;
-  private boolean arcTrans = true;
-  private boolean nodeTrans = true;
-  private boolean showArcWeights = false;
-  private boolean showArcLabels = false;
+//  private boolean showStats = true;
+//  private boolean showLabels = true;
+//  private float showLabelsVal = 10.0f;
+//  private boolean showID = false;
+//  private float showIdsVal = 10.0f;
+//  private boolean showArrows = true;
+//  private boolean arcTrans = true;
+//  private boolean nodeTrans = true;
+//  private boolean showArcWeights = false;
+//  private boolean showArcLabels = false;
   private boolean ghostSlice = false;
-  private boolean flashNewEvents = false;
+ // private boolean flashNewEvents = false;
   private float arcWidthFact = 1.0f;
   private float arcTransVal = 0.5f;
   private float nodeTransVal = 0.5f;
   private float nodeScaleFact = 1.0f;
-  private boolean hideNodes = false;
-  private boolean hideArcs = false;
-  private double flashDuration = 1.0;
+ // private boolean hideNodes = false;
+ // private boolean hideArcs = false;
+  //private double flashDuration = 1.0;
 
   /**
    * Does the actual job of rendering the network, and maintains the graphics
