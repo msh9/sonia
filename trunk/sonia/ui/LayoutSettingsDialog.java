@@ -105,15 +105,16 @@ public class LayoutSettingsDialog extends JDialog implements ActionListener {
 
 	private double layoutEndTime = 10.0;
 
-	private String[] layoutNames = { "coordinates from original file",
-			"circular layout", "FR layout", "random FR layout",
-			"Rubber-Band FR Layout", "MultiComp KK Layout", "Moody PI layout",
-			"MetricMDS (SVD)?" };
+	private String[] layoutNames = { LayoutSettings.COORD_ORIG,
+			LayoutSettings.CIRCULAR, LayoutSettings.FR, LayoutSettings.RAND_FR,
+			LayoutSettings.RUB_FR, LayoutSettings.MULTI_KK, LayoutSettings.PI,
+			LayoutSettings.METRIC_MDS };
 
-	private String[] interpNames = { "none", "cosine animation" };
+	private String[] interpNames = { LayoutSettings.NO_ANIMATION,
+			LayoutSettings.COSITE_ANIMATION };
 
-	private String[] aggregateNames = { "Number  of i->j ties",
-			"Avg of i->j ties", "Sum  of i->j ties" };
+	private String[] aggregateNames = { LayoutSettings.NUM_TIES,
+			LayoutSettings.AVG_TIES, LayoutSettings.SUM_TIES };
 	
 	private LayoutSettings settings;
 
