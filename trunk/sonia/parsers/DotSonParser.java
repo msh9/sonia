@@ -1439,7 +1439,12 @@ public class DotSonParser implements Parser {
 	 * casts to DotSonColmnMap and uses to controll column labling
 	 */
 	public void configureParser(PropertySettings settings) {
-		this.colMap = (DotSonColumnMap)settings;
+		//check type of settings
+		if (settings instanceof DotSonColumnMap){
+			this.colMap = (DotSonColumnMap)settings;
+		} else {
+			//TODO: need a way to report errors in configuration
+		}
 		
 	}
 }
