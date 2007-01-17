@@ -77,6 +77,8 @@ public class RJavaParser implements Parser {
 	private double minTime = 0.0;
 
 	private RParserSettings settings;
+	
+	private String parserInfo ="";
 
 	/**
 	 * 
@@ -100,7 +102,7 @@ public class RJavaParser implements Parser {
 			settings.setProperty(RParserSettings.NODE_Y, "0.0");
 
 		}
-
+		parserInfo = "";
 		nodeList = new Vector();
 		arcList = new Vector();
 
@@ -247,8 +249,6 @@ public class RJavaParser implements Parser {
 
 					String error = "Unable to parse edge time for edge#"
 							+ edgeCount + " :" + nfe.toString();
-					// debug
-					System.out.println("error");
 					throw new Exception(error);
 				}
 				double weight = 1.0;
@@ -320,6 +320,29 @@ public class RJavaParser implements Parser {
 	private void parseVal(String val) throws Exception {
 
 		int nodeId = 1;
+		//determine if attributes for all nodes are fixed and identical
+		
+		//if the color name variable can be parsed as a color, assume it is fixed
+		Color fixedColor = null;
+		try {
+			fixedColor = parseRColor(settings
+					.getProperty(RParserSettings.NODE_COLOR));
+			parserInfo+=" node color fixed as "+fixedColor;
+		} catch (Exception e){}
+		RectangularShape fixedShape = null;
+		//if the shape name variable can be parsed as a shape, assume it is fixed
+		try {
+			fixedShape = parseShape(settings
+					.getProperty(RParserSettings.NODE_SHAPE));
+			parserInfo+=" node shape fixed as "+fixedShape;
+		} catch (Exception e){}
+		double  fixedSize = -1;
+		try {
+			fixedSize = Double.parseDouble(settings
+					.getProperty(RParserSettings.NODE_SIZE));
+			parserInfo+=" node size fixed as "+fixedSize;
+		} catch (Exception e){}
+		
 		// get the string for each node with all its attributes, times etc
 		Iterator nodeIter = parseList(val.substring(6)).iterator();
 		while (nodeIter.hasNext()) {
@@ -337,12 +360,16 @@ public class RJavaParser implements Parser {
 			double start = minTime;
 			double end = maxTime;
 			String orgiFile = "R export";
-			Color nc = parseRColor(settings
-					.getProperty(RParserSettings.NODE_COLOR));
-			double size = Double.parseDouble(settings
-					.getProperty(RParserSettings.NODE_SIZE));
-			RectangularShape shape = parseShape(settings
-					.getProperty(RParserSettings.NODE_SHAPE));
+			//if the attri
+//			Color nc = parseRColor(settings
+//					.getProperty(RParserSettings.NODE_COLOR));
+//			double size = Double.parseDouble(settings
+//					.getProperty(RParserSettings.NODE_SIZE));
+//			RectangularShape shape = parseShape(settings
+//					.getProperty(RParserSettings.NODE_SHAPE));
+			Color nc = fixedColor;
+			double size = fixedSize;
+			RectangularShape shape = fixedShape;
 			// if it is a single element, assume
 			while (nodeAttrIter.hasNext()) {
 				// check if is na
@@ -365,9 +392,18 @@ public class RJavaParser implements Parser {
 					if (attrName.startsWith(settings
 							.getProperty(RParserSettings.NODE_Y))) {
 						y = Double.parseDouble(attrValue);
-						;
+						
 					}
-					if (attribute.startsWith(settings
+					if (shape == null && attrName.startsWith(settings
+							.getProperty(RParserSettings.NODE_SHAPE))) {
+						shape = parseShape(attrValue);
+					}
+					
+					if (size < 0 && attrName.startsWith(settings.getProperty(RParserSettings.NODE_SIZE))){
+						size = Double.parseDouble(attrValue);
+					}
+					
+					if (nc == null && attribute.startsWith(settings
 							.getProperty(RParserSettings.NODE_COLOR))) {
 						nc = parseRColor(attrValue);
 						if (nc == null) {
@@ -483,15 +519,22 @@ public class RJavaParser implements Parser {
 					.parseInt((String) comps.get(2)));
 
 		}
-		// if it is a single elemnt, assume it is an R color name
-
+		// if it is a single elemnt, assume it is an R color name or hex string
 		if (comps.size() == 1) {
-			int index = Arrays.asList(R_COLOR_NAMES).indexOf(comps.get(0));
+			String colString = ((String)comps.get(0)).replace("\"","");
+			//check if it is a hex code
+			if (colString.startsWith("#")){
+				//convert from hex code
+				col = Color.decode(colString);
+			} else {
+			//other wise, try looking it up as an r color name
+			int index = Arrays.asList(R_COLOR_NAMES).indexOf(colString);
 			if (index >= 0) {
 				comps = parseVector(R_COLOR_VALUES[index]);
 				col = new Color(Integer.parseInt((String) comps.get(0)),
 						Integer.parseInt((String) comps.get(1)), Integer
 								.parseInt((String) comps.get(2)));
+			}
 			}
 		}
 		return col;
@@ -604,6 +647,8 @@ public class RJavaParser implements Parser {
 	}
 
 	private RectangularShape parseShape(String shapeString) throws IOException {
+		//strip quotes from string
+	  shapeString = shapeString.replace("\"","");
 		RectangularShape shape = null;
 		if (shapeString.equalsIgnoreCase("square")
 				| shapeString.equalsIgnoreCase("rect")) {
@@ -613,7 +658,7 @@ public class RJavaParser implements Parser {
 			shape = new Ellipse2D.Double();
 		} else {
 			String error = "Unable to parse shape \"" + shapeString
-					+ "currently, shape must be \"square\" or \"circle\"";
+					+ "\", currently shape must be \"square\" or \"circle\"";
 			throw (new IOException(error));
 		}
 		return shape;
@@ -644,7 +689,7 @@ public class RJavaParser implements Parser {
 	}
 
 	public String getParserInfo() {
-		return "R network object parser";
+		return "R network object parser:";
 	}
 
 	/**
