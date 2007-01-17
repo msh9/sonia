@@ -231,9 +231,9 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 
 		exportMenu.add(new AbstractAction("Export QuickTime Movie...") {
 			public void actionPerformed(ActionEvent arg0) {
-				//Control.exportMovie(engine, null);
-			
-				Control.exportQTMovie(engine, LayoutArea,null);
+				// Control.exportMovie(engine, null);
+
+				Control.exportQTMovie(engine, LayoutArea, null);
 			}
 		});
 
@@ -242,10 +242,10 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 				Control.exportMatricies(engine);
 			}
 		});
-		
+
 		exportMenu.add(new AbstractAction("Export Flash Movie...") {
 			public void actionPerformed(ActionEvent arg0) {
-				Control.exportFlashMovie(engine,LayoutArea,null);
+				Control.exportFlashMovie(engine, LayoutArea, null);
 			}
 		});
 
@@ -300,8 +300,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		// set up top level components
 		// c.gridx=0;c.gridy=0;c.gridwidth=7;c.gridheight=1;c.weightx=1;c.weighty=1;
 		// c.fill=c.BOTH;
-		getContentPane().add(LayoutArea,BorderLayout.CENTER);
-		getContentPane().add(controlPanel,BorderLayout.SOUTH);
+		getContentPane().add(LayoutArea, BorderLayout.CENTER);
+		getContentPane().add(controlPanel, BorderLayout.SOUTH);
 
 		GridBagLayout layout = new GridBagLayout();
 		controlPanel.setLayout(layout);
@@ -467,8 +467,6 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		this.setTitle(engine.toString());
 		this.setLocation(10, 10);
 		this.setVisible(true);
-		
-
 
 	}
 
@@ -568,14 +566,14 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		movie = exporter;
 		int endIndex = engine.getNumSlices();
 		int numFrames = endIndex * Integer.parseInt(NumInterps.getText());
-		
-			movie.setupMovie(LayoutArea, numFrames);
-			// make sure we are on the first slice
-			engine.changeToSliceNum(0);
-			// THIS SHOULD BE ON A SEPERATE THREAD SO WE CAN PAUSE
-			// should also record movie layout stats to first frame
-			startMovieRecordThread();
-	
+
+		movie.setupMovie(LayoutArea, numFrames);
+		// make sure we are on the first slice
+		engine.changeToSliceNum(0);
+		// THIS SHOULD BE ON A SEPERATE THREAD SO WE CAN PAUSE
+		// should also record movie layout stats to first frame
+		startMovieRecordThread();
+
 	}
 
 	/**
@@ -585,13 +583,23 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	private void startMovieRecordThread() {
 		Thread movieThread = new Thread() {
 			public void run() {
-				//debug
-				System.out.println("started movie record thread");
-				isTransitionActive = true;
-				recordMovie();
-				movie.finishMovie();
-				movie = null;
-				isTransitionActive = false;
+				// catch throwable here to try to recover from out of memory
+				// errors
+				try {
+					isTransitionActive = true;
+					recordMovie();
+					movie.finishMovie();
+					movie = null;
+					isTransitionActive = false;
+					Control.showStatus("Movie export finished.");
+				} catch (Throwable e) {
+					Control.showError("Error in  movie export:"+e.getMessage());
+					//if not in gui mode, exit
+					if (!Control.isShowGUI()){
+						e.printStackTrace();
+						System.exit(-1);
+					} 
+				}
 			}
 		};
 		movieThread.setName("movie thread");
@@ -856,7 +864,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 					} else {
 						// update the display
 						updateDisplay();
-//						 now the rendering is going to fast, so we have to slow it
+						// now the rendering is going to fast, so we have to
+						// slow it
 						// down
 
 						try {
@@ -915,13 +924,14 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		LayoutArea.repaint();
 		// try to make it updage the controls on mac
 	}
-	
+
 	/**
 	 * returns a reference to the SoniaCanvas used by this layout window
+	 * 
 	 * @author skyebend
 	 * @return the layout area for network rendering in use by this window
 	 */
-	public SoniaCanvas getDisplay(){
+	public SoniaCanvas getDisplay() {
 		return LayoutArea;
 	}
 
@@ -988,12 +998,10 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 			Control.disposeEngine(engine);
 			graphicsSettings = null;
 			this.dispose();
+			Control.updateDisplays();
 		}
 	}
-	
-	
 
-	
 	/**
 	 * reads the browse settings from the gui and stores them in the properties
 	 * object
@@ -1012,7 +1020,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 				NumInterps.getText().trim());
 		browseSettings.setDoubleProperty(BrowsingSettings.FRAME_DELAY,
 				frameDelay.getText().trim());
-		
+
 	}
 
 	/**

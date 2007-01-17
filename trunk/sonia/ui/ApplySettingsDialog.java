@@ -368,6 +368,7 @@ public class ApplySettingsDialog implements ActionListener {
 		settingsDialog.setVisible(true);
 		Apply.requestFocus();
 		// TODO: read the values from the passed settings
+		
 	}
 
 	/**
