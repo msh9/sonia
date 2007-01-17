@@ -61,7 +61,7 @@ import cern.colt.matrix.impl.DenseDoubleMatrix2D;
  * performed. <BR>
  * <BR>
  * What makes this slightly confusing is that, unlike the FR layout, the cooling
- * schedule does not directly linked to the number of primary passes through the
+ * schedule is not directly linked to the number of primary passes through the
  * algorithm. Instead, it controlls the fraction by which the target epsilon is
  * reduced each time the main KK loop reaches its goal. The initial value is
  * that of the worst-positioned node when the layout begins. Obviously, this
@@ -162,8 +162,9 @@ import cern.colt.matrix.impl.DenseDoubleMatrix2D;
  * with more than one node. This means that there is nothing explicitly
  * separating the components, and they sometimes overlap on screen. Several
  * people have reported some success using a "phantom network" to minimally
- * connect the graph in order to avoid the component positioning problem. This
- * approach sounds promising but needs some additional thought and testing.
+ * connect the graph in order to avoid the component positioning problem. 
+ * This trick can be used by entering a non-zero value default edge
+ * weight for non-connected nodes as the "comp. connect" parameter.
  * </P>
  * <P>
  * Kamada and Kawai argue that their layouts are not influenced by initial
@@ -314,6 +315,15 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 		layoutRunner.setPriority(10);
 		control.showStatus("Layout thread running..");
 		layoutRunner.start();
+		if (!control.isShowGUI()){
+			//run faster in batch mode 'cause we don't need to leave time for the gui thread
+		try {
+			layoutRunner.join();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		}
 	}
 
 	/**
