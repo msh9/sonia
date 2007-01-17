@@ -266,8 +266,8 @@ public class QTMovieMaker implements MovieMaker {
 		QTSession.close();
 		isExporting = false;
 		// debug
-		System.out.println("QTMovie export finished. Codec:" + codec
-				+ " Quality:" + quality);
+		//System.out.println("QTMovie export finished. Codec:" + codec
+			//	+ " Quality:" + quality);
 	}
 
 	public boolean isExporting() {
