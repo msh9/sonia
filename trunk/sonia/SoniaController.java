@@ -78,7 +78,7 @@ import cern.colt.matrix.impl.SparseDoubleMatrix2D;
  */
 
 public class SoniaController {
-	public static final String CODE_DATE = "2007-01-16";
+	public static final String CODE_DATE = "2007-01-18";
 
 	public static final String VERSION = "1.1.4";
 

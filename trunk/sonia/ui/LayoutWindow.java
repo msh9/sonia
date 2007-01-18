@@ -1,27 +1,24 @@
 package sonia.ui;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.text.*;
-import java.util.*;
-import java.awt.geom.*;
-import java.beans.PropertyVetoException;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JComponent;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
-import javax.swing.plaf.basic.BasicBorders;
-
-import quicktime.std.qtcomponents.MovieExporter;
 
 import sonia.LayoutSlice;
 import sonia.NodeMover;
@@ -569,7 +566,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 
 		movie.setupMovie(LayoutArea, numFrames);
 		// make sure we are on the first slice
-		engine.changeToSliceNum(0);
+		//engine.changeToSliceNum(0);
+		transitionToSlice(0);
 		// THIS SHOULD BE ON A SEPERATE THREAD SO WE CAN PAUSE
 		// should also record movie layout stats to first frame
 		startMovieRecordThread();
@@ -614,7 +612,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	private void recordMovie() {
 		// double check that a movie exists to record on
 		if (movie != null) {
-			int startIndex = 1;
+			movie.captureImage();
+			int startIndex = 0;
 			int endIndex = engine.getNumSlices();
 			for (int s = startIndex; s < endIndex; s++) {
 				// awkward transition checks if movie is being recorded and

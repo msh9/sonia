@@ -47,6 +47,7 @@ public class LayoutSettings extends PropertySettings {
 	public static final String NUM_TIES =  "Number  of i->j ties";
 	public static final String AVG_TIES = "Avg of i->j ties";
 	public static final String SUM_TIES = "Sum  of i->j ties" ;
+	//TODO: should add a log weight aggregation option
 	
 	
 	
