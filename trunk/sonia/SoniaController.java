@@ -37,6 +37,8 @@ import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.plaf.metal.MetalLookAndFeel;
 import javax.swing.plaf.metal.MetalTheme;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 
 import com.anotherbigidea.flash.readers.SWFReader;
 import com.anotherbigidea.flash.readers.TagParser;
@@ -52,6 +54,7 @@ import sonia.parsers.DotNetParser;
 import sonia.parsers.DotSonParser;
 import sonia.parsers.Parser;
 import sonia.parsers.RJavaParser;
+import sonia.render.XMLCoordRender;
 import sonia.settings.ApplySettings;
 import sonia.settings.BrowsingSettings;
 import sonia.settings.GraphicsSettings;
@@ -793,6 +796,28 @@ public class SoniaController {
 			showError("Unable to export movie with null file name");
 		}
 		return exporter;
+	}
+	
+	/**
+	 * exports an xml discription of the node positions of the current slice
+	 * @param engToExport
+	 */
+	public void exportXML(SoniaLayoutEngine engToExport){
+		XMLCoordRender xmlRender = new XMLCoordRender();
+		SoniaCanvas canvas = engToExport.getLayoutWindow().getDisplay();
+		canvas.getRenderSlice().render(xmlRender, canvas, xmlRender);
+		try {
+			xmlRender.createXML("xmlTest", canvas.getWidth(), canvas.getHeight(), 5, "testing xml file");
+	
+		} catch (TransformerException e) {
+			e.printStackTrace();
+			showError("Unable to create xml file for network:"+e.getMessage());
+		} catch (ParserConfigurationException e) {
+			e.printStackTrace();
+			showError("Unable to create xml file for network:"+e.getMessage());
+		} catch (Exception e){
+			showError("Error saving xml file for network:"+e.getMessage());
+		}
 	}
 
 	/**
