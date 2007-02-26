@@ -110,18 +110,18 @@ import sonia.settings.PropertySettings;
 * is why the .net parser throws up the dialog to ask "parse times as integers."
 * If this is set to true, the end times will all have 0.99999 added to them, so
 * that the interval 1-2 will become 1.0-2.99999 instead of 1.0 to 2.0.
-* @version $Revision: 1.4 $ $Date: 2006-12-02 02:06:24 $
+* @version $Revision: 1.5 $ $Date: 2007-02-26 21:09:00 $
 * @author Skye Bender-deMoll e-mail skyebend@santafe.edu
 */
 public class DotNetParser extends Object implements Parser, ActionListener
 {
   private BufferedReader reader;
-  private Vector nodeList;
-  private Vector arcList;
+  private Vector<NodeAttribute> nodeList;
+  private Vector<ArcAttribute> arcList;
   private boolean combineSameNames = true;
   private boolean parseCoords = true;
   private boolean integerTime = false;
-  private Hashtable nodeIdLookup;
+  private Hashtable<String,Integer> nodeIdLookup;
   private int currentLineNum = 0;
   private Dialog settings;
   private Checkbox combineNames;
@@ -197,9 +197,9 @@ public class DotNetParser extends Object implements Parser, ActionListener
     currentLineNum = 0;
     int numNodes = 0;
     int numArcs = 0;
-    nodeList = new Vector();
-    arcList = new Vector();
-    nodeIdLookup = new Hashtable();
+    nodeList = new Vector<NodeAttribute>();
+    arcList = new Vector<ArcAttribute>();
+    nodeIdLookup = new Hashtable<String,Integer>();
     //first line may start with *Network, in whichcase make it into info string
     String firstLine = reader.readLine();
     currentLineNum ++;
@@ -320,6 +320,10 @@ public class DotNetParser extends Object implements Parser, ActionListener
     // line should be: 1 "NodeLabel" xCoord yCoord paramStrings
     //space delimeted
     StringTokenizer nodeString = new StringTokenizer(line," ");
+    //take a guess if it has coords
+    if (nodeString.countTokens() > 2){
+    	parseCoords = true;
+    }
     if ((nodeString.countTokens() < 2) |
         //check if coordinates parsing is on
         (parseCoords & (nodeString.countTokens() < 4)))
@@ -389,7 +393,7 @@ public class DotNetParser extends Object implements Parser, ActionListener
           //it is not on the list, so add it
         {
           nodeId = nodeNumber;
-          nodeIdLookup.put(new Integer(nodeId),label);
+          nodeIdLookup.put(label, Integer.valueOf(nodeId));
         }
       }
       else
@@ -397,7 +401,7 @@ public class DotNetParser extends Object implements Parser, ActionListener
         //(in case it is needed for a later step)
       {
         nodeId = nodeNumber;
-        nodeIdLookup.put(new Integer(nodeId),label);
+        nodeIdLookup.put(label, Integer.valueOf(nodeId));
       }
 
       //parse coords
@@ -418,24 +422,25 @@ public class DotNetParser extends Object implements Parser, ActionListener
       //NEED TO DISCARD Z, DO COLORS AND ALL SORTS OF HARD STUFF
       //USE Z AS TIME COORD?
       //parse time coordinates
-      String time = "";
+      String time = "0-1"; //default time value
+      Vector timesToParse = new Vector();
       while (nodeString.hasMoreTokens())
       {
-        time = nodeString.nextToken();
+        String tag = nodeString.nextToken();
         //kludge colors in here as well
-        if (time.startsWith("c"))
+        if (tag.startsWith("c"))
         {
          //assume the next token is a string for color
           color = nodeString.nextToken();
         }
 
-        if (time.startsWith("["))
+        if (tag.startsWith("["))
         {
           //strip off the braces
-          time = time.substring(time.indexOf("[")+1,time.indexOf("]"));
+          time = tag.substring(tag.indexOf("[")+1,tag.indexOf("]"));
           //find out if there are commas, meaning we have to add this line
           //several times
-          Vector timesToParse = new Vector();
+          
           if (time.indexOf(",") > 0)
           {
             //put each of the time entries into a list to be parserd later
@@ -449,17 +454,23 @@ public class DotNetParser extends Object implements Parser, ActionListener
           {
             timesToParse.add(time);
           }
-          //parse and make a entry for each time on list
-          for (int t = 0; t<timesToParse.size(); t++)
-          {
-            nodeObsTime = parseStartTime((String)timesToParse.get(t),currentLineNum);
-            nodeEndTime = parseEndTime((String)timesToParse.get(t),currentLineNum);
-            NodeAttribute node = new NodeAttribute(nodeId, label, x,y,nodeObsTime,
-        nodeEndTime,fileAndPath + ":"+nodeNumber);
-            nodeList.add(node);
-            node.setNodeColor(parseColor(color));
-          }
+          
         }
+
+      }
+      //kinda kludgy
+      if (timesToParse.size() == 0){
+    	  timesToParse.add(time); //add a default
+      }
+//    parse and make a entry for each time on list
+      for (int t = 0; t<timesToParse.size(); t++)
+      {
+        nodeObsTime = parseStartTime((String)timesToParse.get(t),currentLineNum);
+        nodeEndTime = parseEndTime((String)timesToParse.get(t),currentLineNum);
+        NodeAttribute node = new NodeAttribute(nodeId, label, x,y,nodeObsTime,
+    nodeEndTime,fileAndPath + ":"+nodeNumber);
+        nodeList.add(node);
+        node.setNodeColor(parseColor(color));
       }
     }
   }
@@ -498,8 +509,8 @@ public class DotNetParser extends Object implements Parser, ActionListener
        throw(new IOException(error));
       }
       //check to make sure start and end node ids exist
-      if ((nodeIdLookup.containsKey(new Integer(fromId))) &
-           (nodeIdLookup.containsKey(new Integer(toId))))
+      if ((nodeIdLookup.containsValue(Integer.valueOf(fromId))) &
+           (nodeIdLookup.containsValue(Integer.valueOf(toId))))
       {
         //parse weight
         try
@@ -516,23 +527,24 @@ public class DotNetParser extends Object implements Parser, ActionListener
 
         //parse all the rest
         //parse time coordinates
-        String time = "";
+        String time = "0-1";
+        Vector timesToParse = new Vector();
         while (arcString.hasMoreTokens())
         {
-          time = arcString.nextToken();
+          String tag = arcString.nextToken();
           //KLUDGE FOR COLOR
-          if (time.startsWith("c"))
+          if (tag.startsWith("c"))
           {
             color = parseColor(arcString.nextToken());
           }
 
-          if (time.startsWith("["))
+          if (tag.startsWith("["))
           {
             //strip off the braces
-            time = time.substring(time.indexOf("[")+1,time.indexOf("]"));
+            time = time.substring(tag.indexOf("[")+1,tag.indexOf("]"));
             //find out if there are commas, meaning we have to add this line
             //several times
-            Vector timesToParse = new Vector();
+            
             if (time.indexOf(",") > 0)
             {
               //put each of the time entries into a list to be parserd later
@@ -546,17 +558,23 @@ public class DotNetParser extends Object implements Parser, ActionListener
             {
               timesToParse.add(time);
             }
-            //parse and make a entry for each time on list
-            for (int t = 0; t<timesToParse.size(); t++)
-            {
-              arcObsTime = parseStartTime((String)timesToParse.get(t),currentLineNum);
-               arcEndTime = parseEndTime((String)timesToParse.get(t),currentLineNum);
-              ArcAttribute arc = new ArcAttribute(arcObsTime, arcEndTime,
-                                        fromId,toId,weight,width);
-              arc.setArcColor(color);
-              arcList.add(arc);
-            }
+           
           }
+        }
+        //kludgy
+        if (timesToParse.size() ==0){
+        	timesToParse.add(time); //add the default time
+        }
+        //parse and make a entry for each time on list
+        for (int t = 0; t<timesToParse.size(); t++)
+        {
+          arcObsTime = parseStartTime((String)timesToParse.get(t),currentLineNum);
+           arcEndTime = parseEndTime((String)timesToParse.get(t),currentLineNum);
+          ArcAttribute arc = new ArcAttribute(arcObsTime, arcEndTime,
+                                    fromId,toId,weight,width);
+          arc.setArcColor(color);
+          arcList.add(arc);
+      
         }
       }
       else
@@ -602,8 +620,8 @@ public class DotNetParser extends Object implements Parser, ActionListener
         throw(new IOException(error));
        }
        //check to make sure start and end node ids exist
-       if ((nodeIdLookup.containsKey(new Integer(fromId))) &
-            (nodeIdLookup.containsKey(new Integer(toId))))
+       if ((nodeIdLookup.containsValue(Integer.valueOf(fromId))) &
+            (nodeIdLookup.containsValue( Integer.valueOf(toId))))
        {
          //parse weight
          try
@@ -620,23 +638,23 @@ public class DotNetParser extends Object implements Parser, ActionListener
 
          //parse all the rest
          //parse time coordinates
-         String time = "";
+         String time = "0-1";
+         Vector timesToParse = new Vector();
          while (arcString.hasMoreTokens())
          {
-           time = arcString.nextToken();
+           String tag = arcString.nextToken();
            //Kludge colors
-           if (time.startsWith("c"))
+           if (tag.startsWith("c"))
            {
              //assume next token is color
              color = parseColor(arcString.nextToken());
            }
-           if (time.startsWith("["))
+           if (tag.startsWith("["))
            {
              //strip off the braces
-             time = time.substring(time.indexOf("[")+1,time.indexOf("]"));
+             time = time.substring(tag.indexOf("[")+1,tag.indexOf("]"));
              //find out if there are commas, meaning we have to add this line
              //several times
-             Vector timesToParse = new Vector();
              if (time.indexOf(",") > 0)
              {
                //put each of the time entries into a list to be parserd later
@@ -650,24 +668,28 @@ public class DotNetParser extends Object implements Parser, ActionListener
              {
                timesToParse.add(time);
              }
-             //parse and make a entry for each time on list
-             for (int t = 0; t<timesToParse.size(); t++)
-             {
-               arcObsTime = parseStartTime((String)timesToParse.get(t),currentLineNum);
-               arcEndTime = parseEndTime((String)timesToParse.get(t),currentLineNum);
-               //make two arcs, one in each direction
-               ArcAttribute oneWay = new ArcAttribute(arcObsTime, arcEndTime,
-                                         fromId,toId,weight,width);
-               ArcAttribute otherWay = new ArcAttribute(oneWay.getObsTime(),
-                   oneWay.getEndTime(),oneWay.getToNodeId(),oneWay.getFromNodeId(),
-                   oneWay.getArcWeight(),oneWay.getArcWidth());
-               oneWay.setArcColor(color);
-               otherWay.setArcColor(color);
-               arcList.add(oneWay);
-               arcList.add(otherWay);
-
-             }
+            
            }
+         }
+         if (timesToParse.size() == 0){
+        	 timesToParse.add(time); //add default time
+         }
+         //parse and make a entry for each time on list
+         for (int t = 0; t<timesToParse.size(); t++)
+         {
+           arcObsTime = parseStartTime((String)timesToParse.get(t),currentLineNum);
+           arcEndTime = parseEndTime((String)timesToParse.get(t),currentLineNum);
+           //make two arcs, one in each direction
+           ArcAttribute oneWay = new ArcAttribute(arcObsTime, arcEndTime,
+                                     fromId,toId,weight,width);
+           ArcAttribute otherWay = new ArcAttribute(oneWay.getObsTime(),
+               oneWay.getEndTime(),oneWay.getToNodeId(),oneWay.getFromNodeId(),
+               oneWay.getArcWeight(),oneWay.getArcWidth());
+           oneWay.setArcColor(color);
+           otherWay.setArcColor(color);
+           arcList.add(oneWay);
+           arcList.add(otherWay);
+
          }
        }
        else
