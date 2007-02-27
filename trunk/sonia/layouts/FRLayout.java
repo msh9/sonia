@@ -152,7 +152,7 @@ public class FRLayout implements NetLayout, Runnable
     engine = eng;
     schedule = new CoolingSchedule(8);
     //schedule.setMaxPasses(maxPasses);
-    maxPasses = Integer.parseInt(settings.getProperty(MAX_PASS));
+   // maxPasses = Integer.parseInt(settings.getProperty(MAX_PASS,maxPasses+""));
 	schedule.setMaxPasses(maxPasses);
     schedule.parseCtlValueString("(0,1.0) (3,0.64) (9,0.33) (17,0.21) (30,0.12) (52,0.08) (74,0.04) (100,0.0)");
     control.showFrame(schedule);
