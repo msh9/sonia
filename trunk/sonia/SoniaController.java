@@ -807,6 +807,8 @@ public class SoniaController {
 		SoniaCanvas canvas = engToExport.getLayoutWindow().getDisplay();
 		canvas.getRenderSlice().render(xmlRender, canvas, xmlRender);
 		try {
+			//debug
+			System.out.println("creating xml");
 			xmlRender.createXML("xmlTest", canvas.getWidth(), canvas.getHeight(), 5, "testing xml file");
 	
 		} catch (TransformerException e) {

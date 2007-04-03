@@ -110,7 +110,7 @@ import sonia.settings.PropertySettings;
 * is why the .net parser throws up the dialog to ask "parse times as integers."
 * If this is set to true, the end times will all have 0.99999 added to them, so
 * that the interval 1-2 will become 1.0-2.99999 instead of 1.0 to 2.0.
-* @version $Revision: 1.5 $ $Date: 2007-02-26 21:09:00 $
+* @version $Revision: 1.6 $ $Date: 2007-04-03 22:37:48 $
 * @author Skye Bender-deMoll e-mail skyebend@santafe.edu
 */
 public class DotNetParser extends Object implements Parser, ActionListener
@@ -423,6 +423,7 @@ public class DotNetParser extends Object implements Parser, ActionListener
       //USE Z AS TIME COORD?
       //parse time coordinates
       String time = "0-1"; //default time value
+      double size = 5;
       Vector timesToParse = new Vector();
       while (nodeString.hasMoreTokens())
       {
@@ -432,6 +433,16 @@ public class DotNetParser extends Object implements Parser, ActionListener
         {
          //assume the next token is a string for color
           color = nodeString.nextToken();
+        }
+        
+        //use the x factor as a the size, since we can't have a differnt aspect ratio
+        if (tag.startsWith("x_fact")){
+        	try {
+        	size = Double.parseDouble(nodeString.nextToken());
+        	} catch (NumberFormatException nfe){
+        		 String error = "Unable to parse token following 'x_fact' as size on line "+currentLineNum;
+        	     throw(new IOException(error));
+        	}
         }
 
         if (tag.startsWith("["))
@@ -469,8 +480,10 @@ public class DotNetParser extends Object implements Parser, ActionListener
         nodeEndTime = parseEndTime((String)timesToParse.get(t),currentLineNum);
         NodeAttribute node = new NodeAttribute(nodeId, label, x,y,nodeObsTime,
     nodeEndTime,fileAndPath + ":"+nodeNumber);
-        nodeList.add(node);
         node.setNodeColor(parseColor(color));
+        node.setNodeSize(size);
+        nodeList.add(node);
+        
       }
     }
   }

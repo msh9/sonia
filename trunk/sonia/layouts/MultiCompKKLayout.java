@@ -209,6 +209,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 	private int maxPasses = 500; // maximum number of loops through the Fruch
 									// layout procedure
 
+	private int maxSubpasses = 10;
 	private int passes;
 
 	private double optDist; // optimal distance for nodes, gets reset later in
@@ -424,6 +425,9 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 		int nNodes = subnet.getNumNodes();
 		control.showStatus("Starting KK main loop...");
 		schedule.reset();
+		
+		//debuging
+		int[] moveRecord = new int[maxPasses+1];
 
 		// sets up kmatrix of forces (optimal [but not always achieveable]
 		// energies?)
@@ -437,6 +441,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 		optDist = Double.parseDouble(settings.getProperty(OPT_DIST));
 		minEpsilon = Double.parseDouble(settings.getProperty(MIN_EPSI));
 		double coolFact = Double.parseDouble(settings.getProperty(COOL_FACT));
+		int repaintN = Integer.parseInt(settings.getProperty(ApplySettings.LAYOUT_REPAINT_N));
 		// do these only apply to the last subnet run?
 		layoutInfo = layoutInfo + "\noptimum distance: " + optDist;
 		layoutInfo = layoutInfo + "\nminimum epsilon: " + minEpsilon;
@@ -458,6 +463,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 		// double epsilon = { initialEnergy / nNodes;
 
 		// figure out which node to start moving first
+		//could make this probabilistic to speed things up. 
 		double deltaM;
 		int maxDeltaMIndex = 0;
 		double maxDeltaM = getDeltaM(0, distMatrix, xPos, yPos);
@@ -474,7 +480,6 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 		schedule.setMaxYvalue(epsilon);
 
 		int passes = 0;
-		int subPasses = 0;
 		// epsilon minimizing loop
 		while ((epsilon > minEpsilon) & noBreak) {
 			// show value on plot
@@ -485,19 +490,25 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 			// the largest deltaM > epsilon..
 			// ALSO BREAKS IF IT STOPS CONVERGING, set as param?
 			while ((maxDeltaM > epsilon)
-					& ((previousMaxDeltaM - maxDeltaM) > 0.1) & noBreak) {
+					//& ((previousMaxDeltaM - maxDeltaM) > 0.1)
+					& noBreak) {
+				
 				double[] deltas;
 				double moveNodeDeltaM = maxDeltaM;
 				double previousDeltaM = moveNodeDeltaM + 1;
 
 				// KK INNER LOOP while the node with the largest energy >
 				// epsilon...
-				while ((moveNodeDeltaM > epsilon) && noBreak) {
+				//COULD ADD MAX NUMBER OF SUB-PASSES FOR MORE SPEED?
+				int subPasses = 0;
+				while (((moveNodeDeltaM > epsilon) & (subPasses < maxSubpasses))
+						& noBreak) {
 					// show subpass on schedule
-					schedule.showPassValue(subPasses);
+					schedule.showPassValue(passes);
 					// also show convergance on schedule
-					schedule.showConvergance(subPasses, moveNodeDeltaM);
-
+					schedule.showConvergance(passes, moveNodeDeltaM);
+					moveRecord[passes]=maxDeltaMIndex;
+					
 					// get the deltas which will move node towards the local
 					// minima
 					deltas = getDeltas(maxDeltaMIndex,distMatrix, xPos,
@@ -509,7 +520,8 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 					// recalculate the deltaM of the node w/ new vals
 					moveNodeDeltaM = getDeltaM(maxDeltaMIndex, distMatrix,xPos, yPos);
 					subPasses++;
-					if (subPasses > maxPasses) {
+					passes++;
+					if (passes > maxPasses) {
 						// break the loop, and tell us
 						control.showStatus("KK inner loop exceeded max passes");
 						control.log("KK inner loop exceeded max passes");
@@ -521,18 +533,26 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 				}// end KK inner loop
 				previousDeltaM = maxDeltaM;
 				// recalculate deltaMs and find node with max
-				maxDeltaMIndex = 0;
-				maxDeltaM = getDeltaM(0, distMatrix,xPos, yPos);
-				for (int i = 1; i < nNodes; i++) {
-					deltaM = getDeltaM(i, distMatrix,xPos, yPos);
-					if (deltaM > maxDeltaM) {
-						maxDeltaM = deltaM;
-						maxDeltaMIndex = i;
+				
+				
+				//testing
+				//pick node at random with some small probability
+				if (control.getUniformRand(0,1) > 0.95){
+					maxDeltaMIndex = (int)Math.round(control.getUniformRand(0,nNodes-1));
+			
+				} else { //pick the node with max
+					maxDeltaMIndex = 0;
+					
+					maxDeltaM = getDeltaM(0, distMatrix,xPos, yPos);
+					for (int i = 1; i < nNodes; i++) {
+						deltaM = getDeltaM(i, distMatrix,xPos, yPos);
+						if (deltaM > maxDeltaM) {
+							maxDeltaM = deltaM;
+							maxDeltaMIndex = i;
+						}
 					}
 				}
-
 				// if set to update display, update on every nth pass
-				int repaintN = Integer.parseInt(settings.getProperty(ApplySettings.LAYOUT_REPAINT_N));
 		          if ((repaintN > 0)&& (passes % repaintN == 0))
 				{
 					// reset the appropriate values of the the slice coords to
@@ -542,14 +562,15 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 						sliceYCoords[subnet.getNetIndex(i)] = yPos[i];
 					}
 
-					 if (settings.getProperty(ApplySettings.RECENTER_TRANSFORM).equals(ApplySettings.RECENTER_DURING))
+					 if (settings.getProperty(ApplySettings.RECENTER_TRANSFORM)
+							 .equals(ApplySettings.RECENTER_DURING))
 			            {
 			              LayoutUtils.centerLayout(slice, (int)width, (int)height, xPos, yPos,
 			            		  Boolean.getBoolean(settings.getProperty(ApplySettings.TRANSFORM_ISOLATE_EXCLUDE)));
 			            }
 					engine.updateDisplays();
 				}
-				passes++;
+				//passes++;
 				// attempt to let redraws of other windows, pause, etc
 				Thread.yield();
 			}// end main KK loop
@@ -567,6 +588,13 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 			// calc the stress WHAT ABOUT ISOLATES?
 			// layoutInfo += "stress: "+NetUtils.getStress(slice)+"\n";
 		}// end epsilon minimizing loop
+		//debuging
+		/*
+		System.out.println("nodes moved:");
+		for (int i = 0; i < moveRecord.length; i++) {
+			System.out.print(moveRecord[i]+",");
+		}
+		*/
 	}
 
 	/**
@@ -674,6 +702,9 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 	 * @return
 	 */
 	private double calcKValue(DoubleMatrix2D distMatrix, int i, int j){
+		//If I changed the weighting on this so that direct ties had
+		//a higher spring tension would it make them more likely to get
+		//picked in the optimization?
 		return springConst / (distMatrix.getQuick(i,j) * distMatrix.getQuick(i,j));
 	}
 	/**

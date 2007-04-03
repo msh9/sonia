@@ -98,7 +98,7 @@ public class XMLCoordRender implements Render {
 	        DocumentBuilder db = dbf.newDocumentBuilder();
 	        DOMImplementation di = db.getDOMImplementation();
 
-	        Document doc = di.createDocument(null, "skyeome.networkimage", null);
+	        Document doc = di.createDocument(null, "soniaimageinfo", null);
 	        Element root = doc.getDocumentElement();
 //	      This element will change in each line
 	    	Element coordBlock = null;

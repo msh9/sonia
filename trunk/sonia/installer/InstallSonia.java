@@ -590,7 +590,7 @@ public class InstallSonia {
 		if (lastSlashIndex >= 0 && lastSlashIndex < address.length() - 1) {
 			return address.substring(lastSlashIndex + 1);
 		} else {
-			return null;
+			return address;
 		}
 	}
 

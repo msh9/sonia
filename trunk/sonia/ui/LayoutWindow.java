@@ -245,6 +245,12 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 				Control.exportFlashMovie(engine, LayoutArea, null);
 			}
 		});
+		
+		exportMenu.add(new AbstractAction("Export XML coords") {
+			public void actionPerformed(ActionEvent arg0) {
+				Control.exportXML(engine);
+			}
+		});
 
 		// this.setFont(controller.getFont());
 		// create layout objects
