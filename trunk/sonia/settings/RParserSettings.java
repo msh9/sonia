@@ -35,6 +35,8 @@ public class RParserSettings extends PropertySettings {
 	public static final String NODE_LABEL = "NODE_LABEL";
 
 	public static final String NODE_COLOR = "NODE_COLOR";
+	
+	public static final String NODE_BORDER_COLOR = "NODE_BORDER_COLOR";
 
 	public static final String NODE_SIZE = "NODE_SIZE";
 	

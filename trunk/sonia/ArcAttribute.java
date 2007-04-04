@@ -45,7 +45,7 @@ public class ArcAttribute implements NetworkEvent
  private double endTime = Double.POSITIVE_INFINITY;  //when arc disapears
  private String arcLabel = "";
  private Color labelColor = Color.darkGray;
- private float labelSize = 8f;
+ private float labelSize = 10f;
  private Color arcColor = Color.darkGray;
  //private Line2D arc = new Line2D.Double();   //the path to draw
 // private GeneralPath headPath = new GeneralPath();

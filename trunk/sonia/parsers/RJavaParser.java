@@ -290,6 +290,8 @@ public class RJavaParser implements Parser {
 						}
 					} else if (edgeToken.startsWith("atl")) { // attributes
 						// TODO: parse attribute of edge from r
+						//debug
+						System.out.println("edge attribute:"+edgeToken);
 
 					} else {
 						String error = "Unrecognized element in master edge list for edge #"
@@ -329,6 +331,7 @@ public class RJavaParser implements Parser {
 					.getProperty(RParserSettings.NODE_COLOR));
 			parserInfo+=" node color fixed as "+fixedColor;
 		} catch (Exception e){}
+		
 		RectangularShape fixedShape = null;
 		//if the shape name variable can be parsed as a shape, assume it is fixed
 		try {

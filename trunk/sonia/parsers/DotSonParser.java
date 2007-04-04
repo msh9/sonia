@@ -886,7 +886,33 @@ public class DotSonParser implements Parser {
 				parseToId(rowArray), parseArcWeight(rowArray),
 				parseArcWidth(rowArray));
 		arc.setArcColor(parseArcColor(rowArray));
+		arc.setArcLabel(parseArcLabel(rowArray));
 		arcList.add(arc);
+	}
+	
+	
+	/**
+	 * parses the arc label if one has been included in the edges section
+	 * otherwise returns "".
+	 * @author skyebend
+	 * @param rowArray
+	 * @return  A string label or an empty string
+	 */
+	private String parseArcLabel(String[] rowArray) {
+		String label="";
+		String labelKey = colMap.getProperty(DotSonColumnMap.ARC_LABEL);
+		if (arcHeaderMap.containsKey(labelKey)){
+			int index = ((Integer) arcHeaderMap.get(labelKey)).intValue();
+			label = rowArray[index];
+			// strip of quotes if there are any
+			if (label.startsWith("\"") | label.startsWith("\'")) {
+				label = label.substring(1);
+			}
+			if (label.endsWith("\"") | label.endsWith("\'")) {
+				label = label.substring(0, label.length() - 1);
+			}
+		}
+		return label;
 	}
 
 	/**
