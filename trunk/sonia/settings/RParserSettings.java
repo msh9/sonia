@@ -45,5 +45,7 @@ public class RParserSettings extends PropertySettings {
 	public static final String NODE_X = "NODE_X";
 	
 	public static final String NODE_Y = "NODE_Y";
+	
+	public static final String ARC_COLOR = "ARC_COLOR";
 
 }

@@ -49,9 +49,9 @@ public class RJavaParser implements Parser {
 
 	private static final String rSuffix = ".rdump";
 
-	private Vector nodeList;
+	private Vector<NodeAttribute> nodeList;
 
-	private Vector arcList;
+	private Vector<ArcAttribute> arcList;
 
 	private boolean isDirected = true;
 
@@ -64,9 +64,11 @@ public class RJavaParser implements Parser {
 	private boolean isRenewal = false;
 
 	// private boolean isBipartite = false;
-	private HashMap galTagMap;
+	private HashMap<String,String> galTagMap;
 
-	private HashSet dynamicVertAttrMap;
+	private HashSet<String> dynamicVertAttrMap;
+	
+	private HashSet<String> dynamicArcAttrMap;
 
 	private int maxNodes = 0;
 
@@ -100,11 +102,13 @@ public class RJavaParser implements Parser {
 			settings.setProperty(RParserSettings.NODE_SHAPE, "circle");
 			settings.setProperty(RParserSettings.NODE_X, "0.0");
 			settings.setProperty(RParserSettings.NODE_Y, "0.0");
+			settings.setProperty(RParserSettings.NODE_COLOR,"gray");
+			settings.setProperty(RParserSettings.ARC_COLOR,"gray");
 
 		}
 		parserInfo = "";
-		nodeList = new Vector();
-		arcList = new Vector();
+		nodeList = new Vector<NodeAttribute>();
+		arcList = new Vector<ArcAttribute>();
 
 		try {
 			// figure out if it is a string or a file
@@ -146,8 +150,8 @@ public class RJavaParser implements Parser {
 			if (mainElements.size() > 4) {
 				etl = (String) mainElements.get(5);
 			}
-			parseEdges(mel, etl);
 			parseGal(gal);
+			parseEdges(mel, etl);
 			parseVal(val);
 
 		} catch (Exception e) {
@@ -169,8 +173,9 @@ public class RJavaParser implements Parser {
 	 * @throws Exception
 	 */
 	private void parseGal(String gal) throws Exception {
-		galTagMap = new HashMap();
-		dynamicVertAttrMap = new HashSet();
+		galTagMap = new HashMap<String,String>();
+		dynamicVertAttrMap = new HashSet<String>();
+		dynamicArcAttrMap = new HashSet<String>();
 		// should start with "gal = list(..."
 		if (!gal.startsWith("gal = ")) {
 			throw new Exception(
@@ -203,6 +208,15 @@ public class RJavaParser implements Parser {
 						.intern());
 			}
 		}
+		//check if there are dynamic arc attributes
+		if (galTagMap.containsKey("dyn.edge.attr.names")) {
+			Iterator keyIter = parseVector(
+					(String) galTagMap.get("dyn.edge.attr.names")).iterator();
+			while (keyIter.hasNext()) {
+				dynamicArcAttrMap.add((stripQuotes((String) keyIter.next()))
+						.intern());
+			}
+		}
 
 	}
 
@@ -222,6 +236,14 @@ public class RJavaParser implements Parser {
 	private void parseEdges(String mel, String etl) throws Exception {
 
 		int edgeCount = 1;
+		
+		//if the color name variable can be parsed as a color, assume it is fixed
+		Color fixedColor = null;
+		try {
+			fixedColor = parseRColor(settings
+					.getProperty(RParserSettings.ARC_COLOR));
+			parserInfo+=" node color fixed as "+fixedColor;
+		} catch (Exception e){}
 
 		Iterator edgeIter = parseList(mel.substring(6)).iterator();
 		// etl may be null if it is not a dynamic network
@@ -233,12 +255,15 @@ public class RJavaParser implements Parser {
 			// need to deal with missing deleted edges when parsing, they will
 			// have NULL values
 			if (!protoEdge.equals("NULL") & !protoEdge.equals("")) {
+				ArcAttribute arc = null;
 				Iterator edgeTokenIter = parseList(protoEdge).iterator();
 				Vector edgeTimes = parseVector(protoTime);
 				int fromId = -1;
 				int toId = -1;
 				double start = 0.0;
 				double end = 1.0;
+				Color ac = fixedColor;
+				
 				try {
 					start = Double.parseDouble((String) edgeTimes.get(0));
 					end = Double.parseDouble((String) edgeTimes.get(1));
@@ -289,9 +314,97 @@ public class RJavaParser implements Parser {
 							throw new Exception(error);
 						}
 					} else if (edgeToken.startsWith("atl")) { // attributes
-						// TODO: parse attribute of edge from r
-						//debug
-						System.out.println("edge attribute:"+edgeToken);
+						
+						Vector edgeAttrs = parseList(edgeToken.substring(6));
+						//do the static edge attributes
+						Iterator attrIter = edgeAttrs.iterator();
+						while (attrIter.hasNext()){
+							String attribute = ((String) attrIter.next()).trim();
+							String attrName = attribute.substring(0,
+									attribute.indexOf("=") - 1).trim();
+							String attrValue = attribute.substring(
+									attribute.indexOf("=") + 1).trim();
+							// only do non-dynamic attributes here
+							
+							if (!dynamicArcAttrMap.contains(attrName.intern())) {
+								if (ac == null && attribute.startsWith(settings
+										.getProperty(RParserSettings.ARC_COLOR))) {
+									ac = parseRColor(attrValue);
+									if (ac == null) {
+										String error = "Unable to parse arc attribute as RGB value or  R color name:"
+												+ attrValue;
+										throw new Exception(error);
+									}
+								}
+							}
+							
+						}
+						
+//						 now that those are set, now loop again for dynamic attributes
+						attrIter = edgeAttrs.iterator();
+						// construct a table of times by attribute values
+						TimedTagBin timeMapper = new TimedTagBin();
+						while (attrIter.hasNext()) {
+							// check if is na
+							// TODO: what do do if node is missing na
+							String attribute = ((String) attrIter.next()).trim();
+							String attrName = attribute.substring(0,
+									attribute.indexOf("=") - 1).trim();
+							String attrValue = attribute.substring(
+									attribute.indexOf("=") + 1).trim();
+							// if attribute is dynamic, need to create a new object with the
+							// apropriate values
+							if (dynamicArcAttrMap.contains(attrName.intern())) {
+								// c(blue, green, 1, 2)
+								// hmm, worrysome, should return somethink like "structure(
+								// c(...."
+								Vector timeData = parseVector(attrValue);
+								int nsteps = timeData.size() / 2;
+								// make node for first range..
+								start = minTime;
+								end = Double.parseDouble(stripQuotes((String) timeData
+										.get(nsteps)));
+								// add an extra time at the end to fudge..
+								timeData.add("" + maxTime);
+								// loop over times and values
+								for (int t = 0; t < nsteps; t++) {
+									attrValue = stripQuotes((String) timeData.get(t));
+									start = end;
+									end = Double.parseDouble(stripQuotes((String) timeData
+											.get(t + nsteps + 1)));
+									timeMapper.addAssociation(start, end, attrName,
+											attrValue);
+								}
+							}
+						}// end dynamic attributes mapping
+//						 NOW LOOP to actually CREATE ARC Attributes in time
+						Iterator timeIter = timeMapper.getBinTimeIter();
+						while (timeIter.hasNext()) {
+							Interval interval = (Interval) timeIter.next();
+							start = interval.start;
+							end = interval.end;
+							Iterator keyvalItr = timeMapper.getBin(interval).iterator();
+							while (keyvalItr.hasNext()) {
+								String[] keyval = (String[]) keyvalItr.next();
+
+								if (keyval[0].startsWith(settings
+										.getProperty(RParserSettings.ARC_COLOR))) {
+									ac = parseRColor(keyval[1]);
+									if (ac == null) {
+										String error = "Unable to parse aattribute as RGB value R color name:"
+												+ keyval[1];
+										throw new Exception(error);
+									}
+								}
+								arc = new ArcAttribute(start, end, fromId, toId,
+										weight, width);
+								arc.setArcColor(ac);
+								arcList.add(arc);
+							}
+						}// end dynamic attribute creation
+						
+						
+						
 
 					} else {
 						String error = "Unrecognized element in master edge list for edge #"
@@ -300,12 +413,13 @@ public class RJavaParser implements Parser {
 					}
 
 				}// end parsing of edge
-
-				ArcAttribute arc = new ArcAttribute(start, end, fromId, toId,
+				if (arc == null){
+					arc = new ArcAttribute(start, end, fromId, toId,
 						weight, width);
-				arcList.add(arc);
+					arcList.add(arc);
+				}
 
-				edgeCount++;
+				edgeCount++; //used for debugging
 			}// end if null loop
 		}// end edge loop
 
