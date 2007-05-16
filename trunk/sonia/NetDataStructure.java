@@ -2,6 +2,7 @@ package sonia;
 
 import java.util.*;
 
+import sonia.mapper.Colormapper;
 import sonia.parsers.DotNetParser;
 import cern.colt.list.IntArrayList;
 
@@ -56,6 +57,8 @@ public class NetDataStructure
   public static int SUM_TIE_VALS = 0;
   public static int AVG_TIE_VALS = 1;
   public static int NUM_TIES = 2;  //should also include max and min?
+  
+  private HashSet nodeDataKeys; //key strings for user data attached to nodes
 
   //this array has an entry for every time an observation was made or an
   //attribute changed so it is >> than the number of nodes
@@ -385,6 +388,39 @@ public class NetDataStructure
   public void setNetInfo(String info)
   {
     netInfo = info;
+  }
+  
+  public Set getUniqueNodeValues(String key){
+	  HashSet unique = new HashSet<Object>();
+	  for (int i=0;i<numNodeEvents;i++)
+	     {
+	       Object value = nodeEventArray[i].getData(key);
+	       unique.add(value);
+	      }
+	  return unique;
+  }
+  
+  public Set getNodeDataKeys(){
+	  if (nodeDataKeys == null){
+		  nodeDataKeys = new HashSet<String>();
+		  nodeDataKeys.add("<nodes have no attached data>");
+	  }
+	  return nodeDataKeys;
+  }
+  
+  public void setNodeDataKeys(HashSet keys){
+	  nodeDataKeys = keys;
+  }
+  
+  /**
+   * this is kind of a hack, should be moved elsewhere
+   * @param map
+   */
+  public void setNodeColormap(Colormapper map){
+	  for (int i=0;i<numNodeEvents;i++)
+	  {
+	       nodeEventArray[i].setColormap(map);
+	  }
   }
 
 

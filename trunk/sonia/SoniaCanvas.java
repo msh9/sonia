@@ -5,6 +5,8 @@ import java.awt.*;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import sonia.mapper.Colormapper;
+import sonia.mapper.DefaultColors;
 import sonia.render.Graphics2DRender;
 import sonia.settings.GraphicsSettings;
 
@@ -41,6 +43,7 @@ public class SoniaCanvas extends JPanel
   private RenderSlice lastRender = null;
   private Graphics2DRender g2dRender;
   private GraphicsSettings settings = null;
+private Colormapper colormapper = null;
   //private Image offScreen;
   private Image ghostImage = null;
   private int drawWidth;
@@ -431,6 +434,15 @@ public GraphicsSettings getSettings() {
 public void setSettings(GraphicsSettings settings) {
 	this.settings = settings;
 	repaint();
+}
+public Colormapper getColormapper() {
+	if (this.colormapper == null){
+		this.colormapper = new DefaultColors();
+	}
+	return colormapper;
+}
+public void setColormapper(Colormapper colormapper) {
+	this.colormapper = colormapper;
 }
 
 

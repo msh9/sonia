@@ -2,12 +2,15 @@ package sonia;
 
 import javax.swing.*;
 
-import java.awt.Graphics2D;
 import java.awt.*;
 import java.awt.geom.*;
 import java.awt.image.*;
 import java.net.*;
+import java.util.HashMap;
+
 import javax.imageio.*;
+
+import sonia.mapper.Colormapper;
 
 
 /**
@@ -70,6 +73,8 @@ public class NodeAttribute implements NetworkEvent{
   private String origFileLoc = "";  //name and line in file that created it
  // private boolean flashNode = false;  //if it should be flashed when it is drawn
   private String effect = NO_EFFECT;
+  private HashMap userData;
+  private Colormapper colormap = null;
 
   //coords not stored here so that they can be accessed more quickly
   //transparency???
@@ -218,9 +223,23 @@ public class NodeAttribute implements NetworkEvent{
   {
    nodeLabel = label;
   }
+  /**
+   * Returns the nodes color, or, if a colormapper has been set, returns the color assigned
+   * to the node by the mapper according to the attribute.
+   * TODO: this should be done at a higher level
+   * @return
+   */
   public Color getNodeColor()
   {
-    return nodeColor;
+	  if (colormap == null){
+		  return nodeColor;
+	  } else {
+		  //get key we are using from the color map
+		  Object key = colormap.getKey();
+		  //get the value of the data from the node
+		  //get the color it is mapped to
+		  return colormap.getColorFor(userData.get(key));
+	  }
   }
   public void setNodeColor(Color c)
   {
@@ -369,6 +388,40 @@ public class NodeAttribute implements NetworkEvent{
    */
   public void SetEffect(String effectKey){
 	   effect = effectKey;
+  }
+  
+  /**
+   * test method for adding an aribitrary key -> data association for this node
+   * @param key
+   * @param datum
+   */
+  public void setData(String key, Object datum){
+	  if (userData == null){
+		  userData = new HashMap<String, Object>();
+	  }
+	  userData.put(key, datum);
+  }
+  
+  /**
+   * test method for getting the value of a data association for this node attribute
+   * @param key
+   * @return the object the key is associated with, otherwise null 
+   */
+  public Object getData(String key){
+	  if (userData != null){
+		 return userData.get(key);
+	  } else {
+		  return null;
+	  }
+  }
+  
+  /**
+   * if the color map is not null, getNodeColor will return the value from the color map, rather than
+   * the nodes color.  ALL NODES SHOULD HAVE THE SAME COLOR MAP, BUT THIS IS NOT ENFORCED
+   * @param map
+   */
+  public void setColormap(Colormapper map){
+	  colormap = map;
   }
 
 

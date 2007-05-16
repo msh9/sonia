@@ -583,6 +583,9 @@ public class SoniaController {
 		networkData.addNodeEvents(parser.getNodeList());
 		networkData.addArcEvents(parser.getArcList());
 		networkData.setNetInfo(parser.getNetInfo());
+		if (parser.getClass().equals(DotSonParser.class)){
+			networkData.setNodeDataKeys(((DotSonParser)parser).getNodeDataKeys());
+		}
 		// print details out to log
 		log("loaded network from " + currentPath + inFile + "\nparser used:"
 				+ parser.getParserInfo() + "\n" + parser.getNumNodeEvents()

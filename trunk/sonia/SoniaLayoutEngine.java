@@ -39,6 +39,7 @@ import sonia.layouts.OrigCoordLayout;
 import sonia.layouts.PILayout;
 import sonia.layouts.RandomFRLayout;
 import sonia.layouts.RubBandFRLayout;
+import sonia.mapper.Colormapper;
 import sonia.movie.MovieMaker;
 import sonia.settings.ApplySettings;
 import sonia.settings.GraphicsSettings;
@@ -984,7 +985,12 @@ public class SoniaLayoutEngine {
 	public double getMinMatrixValue() {
 		return minMatrixValue;
 	}
-
+	
+	public NetDataStructure getNetData(){
+		return netData;
+	}
+	
+	
 	/**
 	 * returns the current LayoutSlice
 	 */
