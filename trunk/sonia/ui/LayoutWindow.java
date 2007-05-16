@@ -25,6 +25,7 @@ import sonia.NodeMover;
 import sonia.SoniaCanvas;
 import sonia.SoniaController;
 import sonia.SoniaLayoutEngine;
+import sonia.mapper.Colormapper;
 import sonia.movie.MovieMaker;
 import sonia.settings.BrowsingSettings;
 import sonia.settings.GraphicsSettings;
@@ -146,6 +147,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	private GraphicsSettings drawSettings;
 
 	private BrowsingSettings browseSettings;
+	
 
 	private SoniaCanvas LayoutArea;
 

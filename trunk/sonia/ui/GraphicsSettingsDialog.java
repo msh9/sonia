@@ -11,6 +11,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -174,6 +175,8 @@ public class GraphicsSettingsDialog {
 	private JComboBox HideArcs;
 
 	private JPanel mainpanel;
+	
+	private JButton nodeColorMap;
 
 	private JButton OK;
 	
@@ -195,7 +198,7 @@ public class GraphicsSettingsDialog {
 		mainpanel.setBorder(new TitledBorder("Graphics Settings"));
 		generalPanel = new JPanel(new GridLayout(6,1));
 		generalPanel.setBorder(new TitledBorder("General Options:"));
-		nodesPanel = new JPanel(new GridLayout(5,1));
+		nodesPanel = new JPanel(new GridLayout(6,1));
 		nodesPanel.setBorder(new TitledBorder("Node Options:"));
 		arcsPanel = new JPanel(new GridLayout(5,1));
 		arcsPanel.setBorder(new TitledBorder("Arc Options:"));
@@ -226,6 +229,7 @@ public class GraphicsSettingsDialog {
 		ArcWidthFactorField.setBorder(new TitledBorder("Arc width factor"));
 		NodeScaleFactorField = new JTextField("1.0", 4);
 		NodeScaleFactorField.setBorder(new TitledBorder("Node scale factor"));
+		nodeColorMap = new JButton("Node Color Map...");
 
 		ArcArrows = new JComboBox(new String[] { GraphicsSettings.ARROW_END,
 				GraphicsSettings.NONE });
@@ -285,6 +289,7 @@ public class GraphicsSettingsDialog {
 		nodesPanel.add(NodeScaleFactorField);
 		nodesPanel.add(NodeTransField);
 		nodesPanel.add(nodeLabels);
+		nodesPanel.add(nodeColorMap);
 		nodesPanel.add(ShowLabelsField);
 		nodesPanel.add(hideNodes);
 
@@ -366,6 +371,16 @@ public class GraphicsSettingsDialog {
 							+ fileAndPath + " " + e.getMessage());
 				}
 			}
+		});
+		nodeColorMap.addActionListener(new ActionListener(){
+
+			public void actionPerformed(ActionEvent arg0) {
+				
+				JFrame colors = ColorMapperPanel.showMapperWindow(canvas.getColormapper(),engine);
+				
+				
+			}
+			
 		});
 		graphicsDialog.getContentPane().add(mainpanel);
 		// graphicsDialog.setBackground(Color.lightGray);

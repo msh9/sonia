@@ -295,6 +295,8 @@ public class DotSonParser implements Parser {
 
 	// control vars
 	private boolean startAsEnd = false;
+	
+	private HashSet nodeDataKeys = new HashSet<String>();
 
 	/**
 	 * Parser for .son files, list based network format which allows column
@@ -443,6 +445,8 @@ public class DotSonParser implements Parser {
 			// make a list of the unrecognized headings
 			if (!knownHeadings.contains(colName)) {
 				unknownHeaders.add(colName);
+				//for now, until we allow other columns to be treated as user data
+				nodeDataKeys.add(colName);
 			}
 			// check for duplicates
 			if (nodeHeaderMap.containsKey(colName)) {
@@ -530,6 +534,14 @@ public class DotSonParser implements Parser {
 						+ reader.getLineNumber() + " Error:" + e.getMessage();
 				throw (new IOException(error));
 			}
+			//do other node data
+			if (unknownHeaders.size() > 0){
+				Iterator dataNames = unknownHeaders.iterator();
+				while (dataNames.hasNext()){
+					String key = (String)dataNames.next();
+					node.setData(key, parseUserData(key,rowArray));
+				}
+			}
 			nodeList.add(node);
 		} else // the row is too short
 		{
@@ -537,6 +549,12 @@ public class DotSonParser implements Parser {
 					+ reader.getLineNumber() + " doesn't have enough entries";
 			throw (new IOException(error));
 		}
+	}
+	
+	private String parseUserData(String name, String[] rowArray){
+		//TODO: and user data info into param settings
+		int index = ((Integer) nodeHeaderMap.get(name)).intValue();
+		return rowArray[index];
 	}
 
 	/**
@@ -1472,5 +1490,9 @@ public class DotSonParser implements Parser {
 			//TODO: need a way to report errors in configuration
 		}
 		
+	}
+	
+	public HashSet getNodeDataKeys(){
+		return nodeDataKeys;
 	}
 }
