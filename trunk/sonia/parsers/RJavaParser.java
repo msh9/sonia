@@ -361,18 +361,18 @@ public class RJavaParser implements Parser {
 								Vector timeData = parseVector(attrValue);
 								int nsteps = timeData.size() / 2;
 								// make node for first range..
-								start = minTime;
-								end = Double.parseDouble(stripQuotes((String) timeData
+								double attrStart = start;
+								double attrEnd = Double.parseDouble(stripQuotes((String) timeData
 										.get(nsteps)));
 								// add an extra time at the end to fudge..
-								timeData.add("" + maxTime);
+								timeData.add("" + end);
 								// loop over times and values
 								for (int t = 0; t < nsteps; t++) {
 									attrValue = stripQuotes((String) timeData.get(t));
-									start = end;
-									end = Double.parseDouble(stripQuotes((String) timeData
+									attrStart = attrEnd;
+									attrEnd = Double.parseDouble(stripQuotes((String) timeData
 											.get(t + nsteps + 1)));
-									timeMapper.addAssociation(start, end, attrName,
+									timeMapper.addAssociation(attrStart, attrEnd, attrName,
 											attrValue);
 								}
 							}
@@ -396,11 +396,11 @@ public class RJavaParser implements Parser {
 										throw new Exception(error);
 									}
 								}
-								arc = new ArcAttribute(start, end, fromId, toId,
-										weight, width);
-								arc.setArcColor(ac);
-								arcList.add(arc);
 							}
+							arc = new ArcAttribute(start, end, fromId, toId,
+									weight, width);
+							arc.setArcColor(ac);
+							arcList.add(arc);
 						}// end dynamic attribute creation
 						
 						
@@ -580,11 +580,11 @@ public class RJavaParser implements Parser {
 				Iterator keyvalItr = timeMapper.getBin(interval).iterator();
 				while (keyvalItr.hasNext()) {
 					String[] keyval = (String[]) keyvalItr.next();
-
 					if (keyval[0].startsWith(settings
 							.getProperty(RParserSettings.NODE_LABEL))) {
 						label = keyval[1];
 					}
+					
 					if (keyval[0].startsWith(settings
 							.getProperty(RParserSettings.NODE_X))) {
 						x = Double.parseDouble(keyval[1]);
@@ -592,7 +592,6 @@ public class RJavaParser implements Parser {
 					if (keyval[0].startsWith(settings
 							.getProperty(RParserSettings.NODE_Y))) {
 						y = Double.parseDouble(keyval[1]);
-						;
 					}
 					if (keyval[0].startsWith(settings
 							.getProperty(RParserSettings.NODE_COLOR))) {
@@ -603,13 +602,13 @@ public class RJavaParser implements Parser {
 							throw new Exception(error);
 						}
 					}
-					node = new NodeAttribute(nodeId, label, x, y, start, end,
-							orgiFile);
-					node.setNodeColor(nc);
-					node.setNodeShape(shape);
-					node.setNodeSize(size);
-					nodeList.add(node);
 				}
+				node = new NodeAttribute(nodeId, label, x, y, start, end,
+						orgiFile);
+				node.setNodeColor(nc);
+				node.setNodeShape(shape);
+				node.setNodeSize(size);
+				nodeList.add(node);
 			}// end dynamic attribute creation
 			// TODO:generates the last value twice?
 			if (node == null) {

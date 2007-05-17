@@ -15,6 +15,12 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.border.TitledBorder;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellEditor;
+import javax.swing.table.TableCellRenderer;
 
 import sonia.parsers.DotSonColumnMap;
 /**
@@ -24,10 +30,13 @@ import sonia.parsers.DotSonColumnMap;
 public class AttributeMapperDialog extends Object{
     
     private ArrayList unmapped;
+    private ArrayList states;
     private DotSonColumnMap map;
     private Dialog dialog;
     private JScrollPane sp;
     private JPanel layoutPanel;
+    private JTable unmappedTable;
+    
     
     private ItemListener choiceListener =  new ItemListener() {
             public void itemStateChanged(ItemEvent e){
@@ -44,6 +53,7 @@ public class AttributeMapperDialog extends Object{
         
         this.unmapped = unmapped;
         this.map = map;
+        states = new ArrayList(unmapped.size());
         //make the dialog
         dialog = new JDialog(new JFrame(),"Unrecognized column names in the input file",true);
         //make new font to help keep layouts consitant across platforms
@@ -107,7 +117,15 @@ public class AttributeMapperDialog extends Object{
         dialog.add(explainLabel,c);
         c.gridx=0;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=1;c.weighty=1;c.fill=GridBagConstraints.BOTH;
         dialog.add(sp,c);
-        c.gridx=0;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
+        c.gridx=0;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=1;c.weighty=1;
+    	c.fill=GridBagConstraints.BOTH;c.anchor=GridBagConstraints.CENTER;
+        unmappedTable = new JTable(fillArray(unmapped),new Object[]{"Input Column Name","Attach to node as user data?"});
+        unmappedTable.setShowGrid(true);
+        unmappedTable.setModel(new udataTableModel());
+       System.out.println("col class "+unmappedTable.getModel().getColumnClass(1));
+        JScrollPane tableScroll = new JScrollPane(unmappedTable);
+        dialog.add(tableScroll,c);
+        c.gridx=0;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
         	c.fill=GridBagConstraints.NONE;c.anchor=GridBagConstraints.CENTER;
         dialog.add(ok,c);
         //dialog.setBackground(Color.lightGray);
@@ -116,6 +134,64 @@ public class AttributeMapperDialog extends Object{
         dialog.setLocation(100,100);
         //dialog.pack();
         dialog.setVisible(true);
+    }
+    
+    private class udataTableModel extends AbstractTableModel{
+
+		@Override
+		public String getColumnName(int column) {
+			if (column == 0){
+				return "Input Column Name";
+			} 
+			return "Attach to node as user data?";
+		}
+
+		public int getRowCount() {
+			return unmapped.size();
+		}
+
+		public int getColumnCount() {
+			return 2;
+		}
+
+		public Object getValueAt(int rowIndex, int columnIndex) {
+		if (columnIndex==0){
+			return unmapped.get(rowIndex);
+		} else if(columnIndex ==1){
+			return states.get(rowIndex);
+		}else{
+			return null;
+		}
+		}
+
+		public Class<?> getColumnClass(int columnIndex) {
+			return getValueAt(0, columnIndex).getClass();
+		}
+
+		@Override
+		public boolean isCellEditable(int rowIndex, int columnIndex) {
+			if (columnIndex == 1){
+				return true;
+			}
+			return false;
+		}
+		 public void setValueAt(Object value, int row, int col) {
+		        states.set(row,value);
+		        fireTableCellUpdated(row, col);
+		    }
+		
+    	
+    }
+    
+    private Object[][] fillArray(ArrayList list){
+    	Object[][] array = new Object[list.size()][2];
+    	states.clear();
+    	for (int i = 0; i < list.size(); i++) {
+			array[i][0]= list.get(i);
+			array[i][1] = new Boolean(true);
+			states.add(i,array[i][1]);
+		}
+    	return array;
     }
     
     

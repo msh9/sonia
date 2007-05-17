@@ -28,10 +28,10 @@ import java.util.Vector;
  */
 public class TimedTagBin {
 
-	private TreeMap binStorage;
+	private TreeMap<Interval,Vector> binStorage;
 
 	public TimedTagBin() {
-		binStorage = new TreeMap(new Comparator(){
+		binStorage = new TreeMap<Interval,Vector>(new Comparator(){
 
 			public int compare(Object arg0, Object arg1) {
 				return ((Interval)arg0).compareTo(((Interval)arg1));
@@ -81,5 +81,26 @@ public class TimedTagBin {
 	public Vector getBin(Interval interval) {
        return (Vector)binStorage.get(interval);
 	}
+
+	@Override
+	public String toString() {
+		String returnString = "{";
+		Iterator keyIter = binStorage.keySet().iterator();
+		while (keyIter.hasNext()){
+			Interval key = (Interval)keyIter.next();
+			returnString += "("+key.start+"-"+key.end+")=>(";
+			Iterator binIter = binStorage.get(key).iterator();
+			while(binIter.hasNext()){
+				 String[] value = (String[])binIter.next();
+				 returnString += value[0]+"="+value[1]+",";
+				
+			}
+			returnString = returnString.substring(0,returnString.length()-1)+"),";
+		}
+	returnString = returnString.substring(0,returnString.length()-1)+"}";
+		return returnString;
+	}
+	
+	
 
 }

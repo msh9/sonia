@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Frame;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -16,6 +17,7 @@ import javax.swing.JButton;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -34,7 +36,7 @@ import sonia.mapper.Colormapper;
 import sonia.mapper.DefaultColors;
 
 public class ColorMapperPanel extends JPanel {
-	private Colormapper mapper;
+	protected Colormapper mapper;
 	protected SoniaLayoutEngine engine;
 	private Object editingValue = null;
 	private Vector<Object> keyData;
@@ -48,13 +50,13 @@ public class ColorMapperPanel extends JPanel {
 	// ui components
 
 	public ColorMapperPanel(Colormapper map,SoniaLayoutEngine engine) {
-		super(new GridLayout(0, 1));
+		super(new BorderLayout());
 		mapper = map;
 		this.engine = engine;
 		keyData = new Vector<Object>(mapper.getValues());
 		
 		table = new JTable(new ColorTableModel());
-		table.setPreferredScrollableViewportSize(new Dimension(500, 70));
+		table.setPreferredScrollableViewportSize(new Dimension(500, 50));
 		// table.setFillsViewportHeight(true);
 
 		// Create the scroll pane and add the table to it.
@@ -83,13 +85,17 @@ public class ColorMapperPanel extends JPanel {
 		add(split);
 		
 		keyData = new Vector<Object>(mapper.getValues());
+		refreshData();
 	}
 	
 	public void refreshData(){
-		mapper.createMapping(engine.getNetData().getUniqueNodeValues((String)keySelector.getSelectedItem()));
+		mapper.setKey((String)keySelector.getSelectedItem());
+		mapper.createMapping(engine.getNetData().
+				getUniqueNodeValues((String)keySelector.getSelectedItem()));
 		keyData.clear();
 		keyData.addAll(mapper.getValues());
-		table.repaint();
+		engine.getNetData().setNodeColormap(mapper);
+		table.repaint();;
 	}
 
 	private class ColorTableModel extends AbstractTableModel {
@@ -252,13 +258,22 @@ public class ColorMapperPanel extends JPanel {
 		}
 	}
 	
-	public static JFrame showMapperWindow(Colormapper mapper, SoniaLayoutEngine eng){
-		JFrame frame = new JFrame("Edit Color Mapping");
+	public static JDialog showMapperWindow(JDialog owner,Colormapper mapper, SoniaLayoutEngine eng){
+		final JDialog frame = new JDialog(owner,"Edit Color Mapping",true);
 		 //Create and set up the content pane.
         JComponent newContentPane = new ColorMapperPanel(mapper,eng);
         newContentPane.setOpaque(true); //content panes must be opaque
         frame.setContentPane(newContentPane);
+        JButton okbutton = new JButton("OK");
+        okbutton.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
+				frame.setVisible(false);
 
+			}
+        });
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(okbutton);
+        newContentPane.add(buttonPanel,BorderLayout.SOUTH);
         //Display the window.
         frame.pack();
         frame.setVisible(true);
@@ -269,6 +284,7 @@ public class ColorMapperPanel extends JPanel {
      * Create the GUI and show it.  For thread safety,
      * this method should be invoked from the
      * event-dispatching thread.
+     * NOT USED, JUST FOR TESTING
      */
     private static void createAndShowGUI() {
         //Create and set up the window.
@@ -289,7 +305,8 @@ public class ColorMapperPanel extends JPanel {
         frame.setContentPane(newContentPane);
 
         //Display the window.
-        frame.pack();
+       // frame.pack();
+        frame.setSize(600,420);
         frame.setVisible(true);
     }
 

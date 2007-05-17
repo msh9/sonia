@@ -176,7 +176,7 @@ public class GraphicsSettingsDialog {
 
 	private JPanel mainpanel;
 	
-	private JButton nodeColorMap;
+	private JCheckBox nodeColorMap;
 
 	private JButton OK;
 	
@@ -229,7 +229,7 @@ public class GraphicsSettingsDialog {
 		ArcWidthFactorField.setBorder(new TitledBorder("Arc width factor"));
 		NodeScaleFactorField = new JTextField("1.0", 4);
 		NodeScaleFactorField.setBorder(new TitledBorder("Node scale factor"));
-		nodeColorMap = new JButton("Node Color Map...");
+		nodeColorMap = new JCheckBox("Node Color Map...");
 
 		ArcArrows = new JComboBox(new String[] { GraphicsSettings.ARROW_END,
 				GraphicsSettings.NONE });
@@ -375,16 +375,19 @@ public class GraphicsSettingsDialog {
 		nodeColorMap.addActionListener(new ActionListener(){
 
 			public void actionPerformed(ActionEvent arg0) {
-				
-				JFrame colors = ColorMapperPanel.showMapperWindow(canvas.getColormapper(),engine);
-				
+				if (nodeColorMap.isSelected()){
+					JDialog colors = ColorMapperPanel.
+					showMapperWindow(graphicsDialog,canvas.getColormapper(),engine);
+				} else {
+					engine.getNetData().setNodeColormap(null);
+				}
 				
 			}
 			
 		});
 		graphicsDialog.getContentPane().add(mainpanel);
 		// graphicsDialog.setBackground(Color.lightGray);
-		graphicsDialog.setSize(500, 350);
+		graphicsDialog.setSize(500, 400);
 
 	}
 

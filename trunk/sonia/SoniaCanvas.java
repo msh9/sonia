@@ -360,7 +360,7 @@ private Colormapper colormapper = null;
 //  }
   public float getArcTransVal()
   {
-    return arcTransVal;
+    return Float.parseFloat(settings.getProperty(GraphicsSettings.ARC_TRANSPARENCY,nodeTransVal+""));
   }
   public float getNodeTransVal()
   {
