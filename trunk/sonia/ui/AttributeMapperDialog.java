@@ -121,8 +121,9 @@ public class AttributeMapperDialog extends Object{
     	c.fill=GridBagConstraints.BOTH;c.anchor=GridBagConstraints.CENTER;
         unmappedTable = new JTable(fillArray(unmapped),new Object[]{"Input Column Name","Attach to node as user data?"});
         unmappedTable.setShowGrid(true);
+        unmappedTable.setShowHorizontalLines(true);
+        unmappedTable.setShowVerticalLines(true);
         unmappedTable.setModel(new udataTableModel());
-       System.out.println("col class "+unmappedTable.getModel().getColumnClass(1));
         JScrollPane tableScroll = new JScrollPane(unmappedTable);
         dialog.add(tableScroll,c);
         c.gridx=0;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
