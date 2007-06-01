@@ -18,7 +18,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
+import javax.swing.plaf.basic.BasicBorders;
 
+import sonia.NetDataStructure;
 import sonia.SoniaController;
 import sonia.layouts.CircleLayout;
 import sonia.layouts.FRLayout;
@@ -61,20 +63,22 @@ import sonia.settings.LayoutSettings;
  * the ability to preview the network data and slice parameters in a
  * "phase-space" plot.
  */
-public class LayoutSettingsDialog extends JDialog implements ActionListener {
+public class LayoutSettingsDialog extends JDialog implements ActionListener , FocusListener{
 	// private Dialog settingsDialog;
 	//private SoniaLayoutEngine engine;
 
 	private SoniaController control;
 
 	private PhasePlot timePlot;
+	
+	private NetDataStructure data;
 
 	// layout elements
 	//private JOptionPane dialoger;
 	
 	private JPanel mainPanel;
 	
-	private JLabel LayoutTypeLabel;
+	private JPanel controlPanel;
 
 	private JComboBox LayoutType; // for choosing which kind of layout
 
@@ -98,7 +102,7 @@ public class LayoutSettingsDialog extends JDialog implements ActionListener {
 
 	private JButton Cancel;
 
-	private JButton Plot;
+	//private JButton Plot;
 
 	// holds the defualt values for start and endtimes
 	private double layoutStartTime = 0.0;
@@ -118,14 +122,18 @@ public class LayoutSettingsDialog extends JDialog implements ActionListener {
 	
 	private LayoutSettings settings;
 
-	public LayoutSettingsDialog(LayoutSettings settings, SoniaController cont, String msg,
+	public LayoutSettingsDialog(LayoutSettings set, SoniaController cont, NetDataStructure netData, String msg,
 			Frame owner) {
 		super(owner,true);
 		control = cont;
+		data = netData;
 		//engine = eng;
-		this.settings = settings;
+		this.settings = set;
+	
 		
-		mainPanel = new JPanel();
+		mainPanel = new JPanel(new BorderLayout());
+		controlPanel = new JPanel();
+		controlPanel.setBorder(new TitledBorder("Slicing Settings"));
 
 		LayoutType = new JComboBox(layoutNames);
 		LayoutType.setBorder(new TitledBorder("layout type:"));
@@ -161,13 +169,23 @@ public class LayoutSettingsDialog extends JDialog implements ActionListener {
 
 		OK = new JButton("Create Layout");
 		Cancel = new JButton("Cancel");
-		Plot = new JButton("Phase Plot...");
+	//	Plot = new JButton("Phase Plot...");
 		saveSettings = new JButton("Save Settings");
+		
+		if (settings == null) {
+			// tell the settings dialog what the start and end times are
+			setDataStartDefault(data.getFirstTime());
+			setDataEndDefault(data.getLastTime());
+			storeSettings();
+			
+		}
+		
+		timePlot = new PhasePlot(null,data,settings );
 
 		//layoutOptions = new JPanel();
 
 		GridBagLayout layout = new GridBagLayout();
-		mainPanel.setLayout(layout);
+		controlPanel.setLayout(layout);
 		GridBagConstraints c = new GridBagConstraints();
 		c.insets = new Insets(2, 5, 2, 5);
 		// add components to the layout GBlayout using constraints
@@ -181,52 +199,62 @@ public class LayoutSettingsDialog extends JDialog implements ActionListener {
 		c.weighty = 1;
 		// this.add(SliceInfoLabel,c);
 		c.fill = GridBagConstraints.VERTICAL;
-		mainPanel.add(sliceSettings, c);
+		controlPanel.add(sliceSettings, c);
 
 		c.gridx = 2;
 		c.gridy = 0;
 		c.gridwidth = 1;
 		c.gridheight = 1;
 		
-		mainPanel.add(AnimateType, c);
+		controlPanel.add(AnimateType, c);
 		c.gridx = 3;
 		c.gridy = 0;
 		c.gridwidth = 1;
 		c.gridheight = 1;
-		mainPanel.add(SliceAggregation, c);
+		controlPanel.add(SliceAggregation, c);
 
 //layout type
 		c.gridx = 4;
 		c.gridy = 0;
 		c.gridheight = 1;
-		mainPanel.add(LayoutType, c);
+		controlPanel.add(LayoutType, c);
 		c.fill = GridBagConstraints.NONE;
 		// buttons
-		c.gridx = 0;
-		c.gridy = 1;
-		c.gridheight = 1;
-		mainPanel.add(Plot, c);
+	//	c.gridx = 0;
+	//	c.gridy = 1;
+	//	c.gridheight = 1;
+	//	controlPanel.add(Plot, c);
 		c.gridx = 1;
 		c.gridy = 1;
 		c.gridheight = 1;
-		mainPanel.add(saveSettings, c);
+		controlPanel.add(saveSettings, c);
 
 		c.gridx = 2;
 		c.gridy = 1;
 		c.gridheight = 1;
-		mainPanel.add(Cancel, c);
+		controlPanel.add(Cancel, c);
 
 		c.gridx =3;
 		c.gridy = 1;
-		mainPanel.add(OK, c);
+		controlPanel.add(OK, c);
+		
+		//add components to the main panel
+		mainPanel.add(controlPanel,BorderLayout.SOUTH);
+		mainPanel.add(timePlot.getContentPane(),BorderLayout.CENTER);
+		
+		
 
 		Cancel.addActionListener(this);
 		OK.addActionListener(this);
-		Plot.addActionListener(this);
+	//	Plot.addActionListener(this);
 		SliceStart.addActionListener(this);
+		SliceStart.addFocusListener(this);
 		SliceEnd.addActionListener(this);
+		SliceEnd.addFocusListener(this);
 		SliceDuration.addActionListener(this);
+		SliceDuration.addFocusListener(this);
 		SliceDelta.addActionListener(this);
+		SliceDelta.addFocusListener(this);
 		saveSettings.addActionListener(this);
 
 		//this.setBackground(Color.lightGray);
@@ -235,6 +263,10 @@ public class LayoutSettingsDialog extends JDialog implements ActionListener {
 		this.setSize(800, 300);
 		// this.show();
 		OK.requestFocus();
+		if (settings != null){
+			readSettings();
+		}
+		
 
 	}
 
@@ -285,6 +317,20 @@ public class LayoutSettingsDialog extends JDialog implements ActionListener {
 		settings.setProperty(LayoutSettings.SLICE_DURATION,SliceDuration.getText().trim());
 		settings.setProperty(LayoutSettings.SLICE_DELTA,SliceDelta.getText().trim());
 	}
+	
+	private void readSettings(){
+		if (settings == null){
+			settings = new LayoutSettings();
+		}
+		LayoutType.setSelectedItem(settings.getProperty(LayoutSettings.LAYOUT_TYPE));
+		AnimateType.setSelectedItem(settings.getProperty(LayoutSettings.ANIMATE_TYPE));
+		SliceAggregation.setSelectedItem(settings.getProperty(LayoutSettings.SLICE_AGGREGATION));
+		SliceStart.setText(settings.getProperty(LayoutSettings.SLICE_START));
+		SliceEnd.setText(settings.getProperty(LayoutSettings.SLICE_END));
+		SliceDuration.setText(settings.getProperty(LayoutSettings.SLICE_DURATION));
+		SliceDelta.setText(settings.getProperty(LayoutSettings.SLICE_DELTA));
+		
+	}
 
 	// ACTION LISTENER //figures out what user did and calls apropriate method
 	public void actionPerformed(ActionEvent evt) {
@@ -300,12 +346,13 @@ public class LayoutSettingsDialog extends JDialog implements ActionListener {
 				timePlot.hide();
 				timePlot = null;
 			}
-		} else if (evt.getSource().equals(Plot)) {
+			settings = null;
+	//	} else if (evt.getSource().equals(Plot)) {
 			//TODO: fix phase plot from layout settings dialog
-			if (timePlot == null) {
+		//	if (timePlot == null) {
 			//	engine.showPhasePlot();
 			//	timePlot = engine.getPhasePlot();
-			}
+		//	}
 		} else if (evt.getSource().equals(saveSettings)) {
 			//TODO:  create better option for choosing output dir for slice settings
 			String fileAndPath = control.getCurrentPath()+"SoniaSliceSettings.prp";
@@ -328,7 +375,8 @@ public class LayoutSettingsDialog extends JDialog implements ActionListener {
 		// display
 		{
 			if (timePlot != null) {
-				timePlot.repaint();
+				storeSettings();
+				repaint();
 			}
 		}
 
@@ -365,5 +413,20 @@ public class LayoutSettingsDialog extends JDialog implements ActionListener {
 	public double getSliceDelta() {
 		return Double.parseDouble(SliceDelta.getText());
 	}
+
+	public void focusGained(FocusEvent arg0) {
+		//don't do anything special
+		((JTextField)arg0.getSource()).selectAll();
+	}
+
+	public void focusLost(FocusEvent arg0) {
+		if (timePlot != null) {
+			storeSettings();
+			repaint();
+		}
+		
+	}
+
+
 
 }

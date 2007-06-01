@@ -607,7 +607,7 @@ public class SoniaController {
 		if (fileLoaded == true) {
 			String engName = getFileName() + " #" + (engines.size() + 1);
 			LayoutSettingsDialog windowSettings = new LayoutSettingsDialog(
-					sliceSettings, this, engName, ui);
+					sliceSettings, this, networkData,engName, ui);
 			if (sliceSettings == null) {
 				// tell the settings dialog what the start and end times for
 				windowSettings.setDataStartDefault(networkData.getFirstTime());
@@ -616,6 +616,8 @@ public class SoniaController {
 			// show the dialog
 			sliceSettings = windowSettings.askUserSettings();
 			createLayout(sliceSettings);
+		} else {
+			showError("File must be loaded before layout can be created");
 		}
 	}
 
@@ -632,16 +634,7 @@ public class SoniaController {
 			// probably should ask for kind of layout here
 			if (isShowGUI() & (sliceSettings == null)) {
 				LayoutSettingsDialog windowSettings = new LayoutSettingsDialog(
-						sliceSettings, this, engName, ui);
-				if (sliceSettings == null) {
-					// tell the settings dialog what the start and end times for
-					// the
-					// data
-					// are
-					windowSettings.setDataStartDefault(networkData
-							.getFirstTime());
-					windowSettings.setDataEndDefault(networkData.getLastTime());
-				}
+						sliceSettings, this,networkData, engName, ui);
 				// show the dialog
 				sliceSettings = windowSettings.askUserSettings();
 			}

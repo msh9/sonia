@@ -3,6 +3,7 @@ package sonia.ui;
 import java.awt.*;
 import java.awt.geom.*;
 import java.awt.event.*;
+
 import cern.colt.list.ObjectArrayList;
 import java.util.*;
 import java.text.NumberFormat;
@@ -103,7 +104,10 @@ public class PhasePlot extends ExportableFrame implements
 		engine = eng;
 		data = dat;
 		settings = set;
-		currentLayout = engine.getLayoutWindow();
+		if (eng != null){
+			currentLayout = engine.getLayoutWindow();
+		}
+		
 		double plotStart = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_START));
 		double plotEnd = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_END));
 		// fudge the end time to make sure things get included..
@@ -163,10 +167,21 @@ public class PhasePlot extends ExportableFrame implements
 		this.addInternalFrameListener(this);
 		drawArea.addMouseMotionListener(this);
 		drawArea.addMouseListener(this);
+		sortBox.addActionListener(new ActionListener(){
+
+			public void actionPerformed(ActionEvent e) {
+				drawArea.repaint();
+				//debug
+				System.out.println("sort checked");
+			}
+		
+		});
 
 		// this.setBackground(Color.lightGray);
 		this.setSize(700, 175);
-		this.setTitle("Phase Plot for " + engine.toString());
+		if (engine != null){
+			this.setTitle("Phase Plot for " + engine.toString());
+		}
 		this.setLocation(200, 200);
 		// this.setVisible(true);
 	}
@@ -219,7 +234,10 @@ public class PhasePlot extends ExportableFrame implements
 			graph.setComposite(AlphaComposite.getInstance(
 					AlphaComposite.SRC_OVER, 0.5f));
 			// drawSlices
-			boolean[] errorSlices = engine.getErrorSlices();
+			boolean[] errorSlices = null;
+			if (engine != null){
+				engine.getErrorSlices();
+			}
 			int numSlices = (int) Math.ceil((plotEnd - plotStart) / sliceDelta);
 			// figure out slices' start and end times
 			double sliceStart = plotStart - dataOffset;
@@ -316,7 +334,11 @@ public class PhasePlot extends ExportableFrame implements
 			}
 
 			// draw the current slice indicator
-			int currentSliceIndex = engine.getCurrentSliceNum();
+			
+			int currentSliceIndex = 0;
+			if (engine != null) {
+				engine.getCurrentSliceNum();
+			}
 			graph.setColor(Color.magenta);
 			sliceRect.setRect((currentSliceIndex * sliceDelta) * scaleFactor
 					+ sidePad, (double) topPad - 1,
@@ -375,7 +397,11 @@ public class PhasePlot extends ExportableFrame implements
 		// compute the data-time where the mouse is
 		double mouseTime = ((double) mouseX - sidePad) / scaleFactor
 				+ dataOffset;
-		MouseTime.setText("Slice#:" + engine.getCurrentSliceNum()
+		int sliceN = 0;
+		if (engine != null){
+			sliceN = engine.getCurrentSliceNum();
+		}
+		MouseTime.setText("Slice#:" + sliceN
 				+ "  Time at Cursor:" + formater.format(mouseTime));
 	}
 
@@ -397,7 +423,7 @@ public class PhasePlot extends ExportableFrame implements
 	 */
 	public void mouseClicked(MouseEvent event) {
 		// first, check to see if the layout is ready
-		if (engine.getErrorSlices() != null) {
+		if (engine != null && engine.getErrorSlices() != null) {
 			int mouseX = event.getX();
 			double plotStart = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_START));
 			double plotEnd = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_END));
@@ -429,7 +455,9 @@ public class PhasePlot extends ExportableFrame implements
 	}
 
 	public void internalFrameClosed(InternalFrameEvent e) {
-		engine.disposePhasePlot();
+		if (engine != null){
+			engine.disposePhasePlot();
+		}
 
 	}
 
