@@ -253,6 +253,11 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 				Control.exportXML(engine);
 			}
 		});
+		exportMenu.add(new AbstractAction("Export GraphML") {
+			public void actionPerformed(ActionEvent arg0) {
+				Control.exportGraphML(engine);
+			}
+		});
 
 		// this.setFont(controller.getFont());
 		// create layout objects

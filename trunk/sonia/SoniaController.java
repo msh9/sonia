@@ -54,6 +54,7 @@ import sonia.parsers.DotNetParser;
 import sonia.parsers.DotSonParser;
 import sonia.parsers.Parser;
 import sonia.parsers.RJavaParser;
+import sonia.render.GraphMLRender;
 import sonia.render.XMLCoordRender;
 import sonia.settings.ApplySettings;
 import sonia.settings.BrowsingSettings;
@@ -815,6 +816,30 @@ public class SoniaController {
 			showError("Unable to create xml file for network:"+e.getMessage());
 		} catch (Exception e){
 			showError("Error saving xml file for network:"+e.getMessage());
+		}
+	}
+	
+	/**
+	 * exports a graphML discription of the node positions of the current slice
+	 * @param engToExport
+	 */
+	public void exportGraphML(SoniaLayoutEngine engToExport){
+		GraphMLRender graphML = new GraphMLRender();
+		SoniaCanvas canvas = engToExport.getLayoutWindow().getDisplay();
+		canvas.getRenderSlice().render(graphML, canvas, graphML);
+		try {
+			//debug
+			System.out.println("creating GraphML xml fle");
+			graphML.createXML("graphMLTest", canvas.getWidth(), canvas.getHeight(), 5, "testing grapmML file");
+	
+		} catch (TransformerException e) {
+			e.printStackTrace();
+			showError("Unable to create GraphML xml file for network:"+e.getMessage());
+		} catch (ParserConfigurationException e) {
+			e.printStackTrace();
+			showError("Unable to create GraphML xml file for network:"+e.getMessage());
+		} catch (Exception e){
+			showError("Error saving GraphML xml file for network:"+e.getMessage());
 		}
 	}
 

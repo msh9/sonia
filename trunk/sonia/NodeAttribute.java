@@ -53,6 +53,7 @@ public class NodeAttribute implements NetworkEvent{
  public static final Color DEFAULT_NODE_COLOR = Color.blue;
  public static final Color DEFAULT_BORDER_COLOR = Color.black;
  public static final Color DEFULAT_LABEL_COLOR = Color.red;
+ public static final double DEFAULT_SIZE = 10.0;
 
   // variables instatiated with defaults
   private int nodeId;   //should never change after instantiation, used for coords
@@ -60,13 +61,13 @@ public class NodeAttribute implements NetworkEvent{
   private double obsTime = 1;  //when this observation was made
   private double endTime = Double.POSITIVE_INFINITY;  //when node disapears
   private String nodeLabel = "Node "+nodeId;
-  private Color labelColor = Color.red;
+  private Color labelColor = DEFULAT_LABEL_COLOR;
   private float labelSize = 10f;
-  private Color nodeColor = Color.blue;
-  private Color borderColor = Color.black;
+  private Color nodeColor = DEFAULT_NODE_COLOR;
+  private Color borderColor = DEFAULT_BORDER_COLOR;
   private float borderWidth = 1.0f;
   //private BasicStroke borderStroke = new BasicStroke(borderWidth);
-  private double nodeSize = 10.0;
+  private double nodeSize = DEFAULT_SIZE;
   private RectangularShape nodeShape = new Ellipse2D.Double();  //not always a rect, but bounds are rect
   private double obsXCoord = 0.0;  //originaly observed cordinates
   private double obsYCoord = 0.0;
