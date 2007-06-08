@@ -70,6 +70,7 @@ public class PhasePlot extends ExportableFrame implements
 		InternalFrameListener, MouseMotionListener, MouseListener {
 	// private Canvas drawArea;
 	private PhasePlotPanel drawArea;
+	private JPanel mainPanel;
 
 	private JCheckBox sortBox;
 
@@ -124,6 +125,7 @@ public class PhasePlot extends ExportableFrame implements
 
 		// make the gui
 		// drawArea = new Canvas();
+		mainPanel = new JPanel(new GridBagLayout());
 		drawArea = new PhasePlotPanel();
 		drawArea.setBorder(new TitledBorder("Timeline view of network"));
 		sortBox = new JCheckBox("Sort Events", eventsSorted);
@@ -136,8 +138,7 @@ public class PhasePlot extends ExportableFrame implements
 		super.setIconifiable(true);
 		super.setClosable(true);
 
-		GridBagLayout layout = new GridBagLayout();
-		this.getContentPane().setLayout(layout);
+		
 		GridBagConstraints c = new GridBagConstraints();
 		c.gridx = 0;
 		c.gridy = 0;
@@ -146,7 +147,7 @@ public class PhasePlot extends ExportableFrame implements
 		c.weightx = 1;
 		c.weighty = 1;
 		c.fill = GridBagConstraints.BOTH;
-		this.getContentPane().add(drawArea, c);
+		mainPanel.add(drawArea, c);
 		c.fill = GridBagConstraints.NONE;
 		c.anchor = GridBagConstraints.SOUTH;
 		c.gridx = 1;
@@ -155,14 +156,15 @@ public class PhasePlot extends ExportableFrame implements
 		c.gridheight = 1;
 		c.weightx = 0.1;
 		c.weighty = 0.1;
-		this.getContentPane().add(sortBox, c);
+		mainPanel.add(sortBox, c);
 		c.gridx = 0;
 		c.gridy = 1;
 		c.gridwidth = 1;
 		c.gridheight = 1;
 		c.weightx = 0.1;
 		c.weighty = 0.1;
-		this.getContentPane().add(MouseTime, c);
+		mainPanel.add(MouseTime, c);
+		this.getContentPane().add(mainPanel);
 		// add the listerners
 		this.addInternalFrameListener(this);
 		drawArea.addMouseMotionListener(this);
@@ -171,11 +173,11 @@ public class PhasePlot extends ExportableFrame implements
 
 			public void actionPerformed(ActionEvent e) {
 				drawArea.repaint();
-				//debug
-				System.out.println("sort checked");
 			}
 		
 		});
+		this.getContentPane().setName("timeline");
+		mainPanel.setName("timeline");
 
 		// this.setBackground(Color.lightGray);
 		this.setSize(700, 175);
@@ -337,7 +339,7 @@ public class PhasePlot extends ExportableFrame implements
 			
 			int currentSliceIndex = 0;
 			if (engine != null) {
-				engine.getCurrentSliceNum();
+				currentSliceIndex = engine.getCurrentSliceNum();
 			}
 			graph.setColor(Color.magenta);
 			sliceRect.setRect((currentSliceIndex * sliceDelta) * scaleFactor
@@ -390,7 +392,7 @@ public class PhasePlot extends ExportableFrame implements
 		int mouseX = event.getX();
 		double plotStart = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_START));
 		double plotEnd = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_END));
-		int plotWidth = this.getWidth() - (2 * sidePad);
+		int plotWidth = drawArea.getWidth() - (2 * sidePad);
 		double dataOffset = plotStart;
 
 		double scaleFactor = (double) plotWidth / (plotEnd - plotStart);
@@ -424,10 +426,11 @@ public class PhasePlot extends ExportableFrame implements
 	public void mouseClicked(MouseEvent event) {
 		// first, check to see if the layout is ready
 		if (engine != null && engine.getErrorSlices() != null) {
+			currentLayout = engine.getLayoutWindow();
 			int mouseX = event.getX();
 			double plotStart = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_START));
 			double plotEnd = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_END));
-			int plotWidth = this.getWidth() - (2 * sidePad);
+			int plotWidth = drawArea.getWidth() - (2 * sidePad);
 			double dataOffset = plotStart;
 			double scaleFactor = (double) plotWidth / (plotEnd - plotStart);
 			// compute the data-time where the mouse is

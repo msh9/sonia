@@ -7,6 +7,7 @@ import java.awt.geom.*;
 import java.awt.image.*;
 import java.net.*;
 import java.util.HashMap;
+import java.util.Set;
 
 import javax.imageio.*;
 
@@ -417,6 +418,19 @@ public class NodeAttribute implements NetworkEvent{
   }
   
   /**
+   * returns the set of key objects that have data mapped to them for this node,
+   * or null if no data has been attached
+   * @author skyebend
+   * @return
+   */
+  public Set getDataKeys(){
+	  if (userData != null){
+		  return userData.keySet();  
+	  }
+	  return null;
+  }
+  
+  /**
    * if the color map is not null, getNodeColor will return the value from the color map, rather than
    * the nodes color.  ALL NODES SHOULD HAVE THE SAME COLOR MAP, BUT THIS IS NOT ENFORCED
    * @param map
@@ -424,6 +438,10 @@ public class NodeAttribute implements NetworkEvent{
   public void setColormap(Colormapper map){
 	  colormap = map;
   }
+
+public String getOrigFileLoc() {
+	return origFileLoc;
+}
 
 
 

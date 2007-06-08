@@ -2,29 +2,39 @@ package sonia.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Insets;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JInternalFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 
 import sonia.LayoutSlice;
+import sonia.NodeInspector;
 import sonia.NodeMover;
 import sonia.SoniaCanvas;
 import sonia.SoniaController;
 import sonia.SoniaLayoutEngine;
+import sonia.layouts.MultiCompKKLayout;
 import sonia.mapper.Colormapper;
 import sonia.movie.MovieMaker;
 import sonia.settings.BrowsingSettings;
@@ -147,11 +157,12 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	private GraphicsSettings drawSettings;
 
 	private BrowsingSettings browseSettings;
-	
 
 	private SoniaCanvas LayoutArea;
 
 	private JPanel controlPanel;
+
+	private JTabbedPane controlePane;
 
 	private JButton ApplyLayout;
 
@@ -263,6 +274,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		// create layout objects
 		controlPanel = new JPanel();
 		controlPanel.setBorder(new EtchedBorder());
+		controlPanel.setName("view");
 		ApplyLayout = new JButton("Apply Layout..");
 		ReApply = new JButton("Re-Apply");
 		Stress = new JButton("Stress");
@@ -311,7 +323,80 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		// c.gridx=0;c.gridy=0;c.gridwidth=7;c.gridheight=1;c.weightx=1;c.weighty=1;
 		// c.fill=c.BOTH;
 		getContentPane().add(LayoutArea, BorderLayout.CENTER);
-		getContentPane().add(controlPanel, BorderLayout.SOUTH);
+	
+		controlePane = new JTabbedPane(JTabbedPane.BOTTOM);
+		controlePane.add(controlPanel,0);
+		
+		NodeInspector inspector = new NodeInspector(Control,engine, LayoutArea);
+		JPanel inspectPanel = inspector.getInspectPanel();
+		inspectPanel.setName("inspect");
+		controlePane.add(inspectPanel,1);
+		
+		JPanel layoutPanel = new JPanel(new GridLayout());
+		layoutPanel.setName("layout");
+		if (engine.getLayout().getClass().equals(MultiCompKKLayout.class)){
+			layoutPanel.add(((MultiCompKKLayout)engine.getLayout()).getSchedule().getContentPane());
+		}
+		controlePane.add(layoutPanel,2);
+		
+		//JPanel timelinePanel = new JPanel(new GridLayout());
+		//timelinePanel.add(engine.getPhasePlot().getContentPane());
+		//timelinePanel.setName("timeline");
+		Component contentPane = engine.getPhasePlot().getContentPane();
+		contentPane.setName("timeline");
+		controlePane.add(contentPane,3);
+		
+		// try to make it so we can tear off tabs
+		
+		controlePane.addMouseMotionListener(new MouseMotionListener(){
+			Point dragStart = null;
+			public void mouseDragged(MouseEvent e) {
+			  
+			  	if (dragStart==null){
+				   dragStart = e.getPoint();
+				   return; // don't do anythin
+				}
+			  	// Get the current position
+			  	Point mousePosition = e.getPoint();
+
+// If the drag distance is big enough, then pass on a tear
+				if (Math.hypot(dragStart.x-mousePosition.x,dragStart.y-mousePosition.y)>50){
+					dragStart=null;
+
+				JInternalFrame frame = new JInternalFrame(
+						controlePane.getSelectedComponent().getName(),true,true,true,true);
+				frame.getContentPane().add(controlePane.getSelectedComponent());
+				frame.setBounds(e.getComponent().getBounds());
+				frame.setLocation(controlePane.getLocationOnScreen());
+				//frame.setLocation(e.getComponent().getLocation());
+				//add a listener (within the listener) that puts the frame back in the tabb if closed
+				frame.addInternalFrameListener(new InternalFrameAdapter(){
+
+					@Override
+					public void internalFrameClosed(InternalFrameEvent e) {
+						Component comp =e.getInternalFrame().getContentPane();
+						comp.setName(e.getInternalFrame().getTitle());
+						controlePane.add(comp);
+					}
+					
+				});
+				Control.showFrame(frame);
+				//System.out.println("frame removed");
+				// e.getComponent().removeMouseMotionListener(this);
+				
+			}
+			}
+
+			public void mouseMoved(MouseEvent e) {
+				dragStart=null;
+				
+			}
+			
+		});
+		
+		
+		
+		getContentPane().add(controlePane, BorderLayout.SOUTH);
 
 		GridBagLayout layout = new GridBagLayout();
 		controlPanel.setLayout(layout);
@@ -479,7 +564,6 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		this.setVisible(true);
 
 	}
-
 	/**
 	 * returns just the layout area with the network
 	 * 
@@ -509,7 +593,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		} else if (evt.getSource().equals(Stability)) {
 			engine.calcStability();
 		} else if (evt.getSource().equals(PhasePlot)) {
-			engine.showPhasePlot();
+			engine.getPhasePlot();
 		} else if (evt.getSource().equals(NextSlice)) {
 			if (!isTransitionActive) {
 				// transitionToSlice(engine.getCurrentSliceNum()+1);
@@ -579,7 +663,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 
 		movie.setupMovie(LayoutArea, numFrames);
 		// make sure we are on the first slice
-		//engine.changeToSliceNum(0);
+		// engine.changeToSliceNum(0);
 		transitionToSlice(0);
 		// THIS SHOULD BE ON A SEPERATE THREAD SO WE CAN PAUSE
 		// should also record movie layout stats to first frame
@@ -604,12 +688,13 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 					isTransitionActive = false;
 					Control.showStatus("Movie export finished.");
 				} catch (Throwable e) {
-					Control.showError("Error in  movie export:"+e.getMessage());
-					//if not in gui mode, exit
-					if (!Control.isShowGUI()){
+					Control.showError("Error in  movie export:"
+							+ e.getMessage());
+					// if not in gui mode, exit
+					if (!Control.isShowGUI()) {
 						e.printStackTrace();
 						System.exit(-1);
-					} 
+					}
 				}
 			}
 		};

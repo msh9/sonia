@@ -91,6 +91,8 @@ public class DotSonColumnMap extends PropertySettings {
 	public static final String ARC_GREEN_RGB = "ARC_GREEN_RGB";
 
 	public static final String ARC_BLUE_RGB = "ARC_BLUE_RGB";
+	
+	public static final String NODE_DATA_KEYS = "NODE_DATA_KEYS";
 
 	/**
 	 * Creates a new instance of ColumnMap with defualt mappings. mappings are

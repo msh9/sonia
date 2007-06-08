@@ -247,26 +247,21 @@ public class SoniaLayoutEngine {
 	}
 
 	/**
-	 * Creates and displays a PhasePlot showing the location of each arc and
+	 * if there is already a phase plot for this engine, it will be returned,
+	 *  otherwise Creates and displays a PhasePlot showing the location of each arc and
 	 * node event in time, and how the slices land.
 	 */
-	public void showPhasePlot() {
+	public PhasePlot getPhasePlot() {
 		// check if it exists
 		if (timePlot == null) {
 			timePlot = new PhasePlot(this, netData, layoutSettings);
 		}
-		control.showFrame(timePlot);
+		//control.showFrame(timePlot);
 		// timePlot.show();
-	}
-
-	/**
-	 * if there is already a phase plot for this engine, it will be returned,
-	 * Otherwise null will be returned.
-	 */
-	public PhasePlot getPhasePlot() {
-
 		return timePlot;
 	}
+
+
 
 	/**
 	 * Sets up the layout and data sctructures, asking netData to generate a
@@ -598,9 +593,12 @@ public class SoniaLayoutEngine {
 		// control.showStatus("Kruskal's Stress:"+stress);
 		if (shepPlot == null) {
 			shepPlot = new StressInfo(control, this);
+			control.showFrame(shepPlot);
+			//TODO: fix stuff with phaseplot redisplay, include in bottom of layout window?
 		}
+		shepPlot.setVisible(true);
 		shepPlot.shepardPlot(getCurrentSlice());
-		control.showFrame(shepPlot);
+		
 	}
 
 	public void calcStability() {
@@ -1081,6 +1079,10 @@ public class SoniaLayoutEngine {
 
 	public void setApplySettings(ApplySettings applySettings) {
 		this.applySettings = applySettings;
+	}
+	
+	public NetLayout getLayout(){
+		return currentLayout;
 	}
 
 }

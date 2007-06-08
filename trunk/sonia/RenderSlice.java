@@ -192,6 +192,7 @@ public class RenderSlice {
 		// then do nodes (so nodes are on top)
 		for (int i = 0; i < nodeEvents.size(); i++) {
 			NodeAttribute node = (NodeAttribute) nodeEvents.get(i);
+			
 			if (canvas.isFlashNew()) {
 				//
 				double flashStart = node.getObsTime();
@@ -203,8 +204,10 @@ public class RenderSlice {
 				}
 			}
 			int index = node.getNodeId() - 1;
-			render.paintNode(node, xCoords[index] + left, yCoords[index] + top,
+			if (!canvas.isHideNodes()){
+				render.paintNode(node, xCoords[index] + left, yCoords[index] + top,
 					canvas.getNodeScaleFact());
+			}
 			// vertex size based label cutoffs
 			boolean showId = canvas.isShowId();
 			boolean showLabels = canvas.isShowLabels();

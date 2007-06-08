@@ -359,7 +359,7 @@ public class SoniaController {
 				fileLoaded = true;
 				showStatus("Parsed file " + currentPath + inFile);
 			} catch (Exception error) {
-				showError("Unable to load file: " + error.getMessage());
+				showError("Unable to load file: "+ error.getCause()+ error.getMessage());
 				fileLoaded = false;
 
 			}

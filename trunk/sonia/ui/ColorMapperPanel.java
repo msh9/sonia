@@ -95,7 +95,8 @@ public class ColorMapperPanel extends JPanel {
 		keyData.clear();
 		keyData.addAll(mapper.getValues());
 		engine.getNetData().setNodeColormap(mapper);
-		table.repaint();;
+		tablePanel.validate();
+		table.repaint();
 	}
 
 	private class ColorTableModel extends AbstractTableModel {
@@ -106,7 +107,7 @@ public class ColorMapperPanel extends JPanel {
 		}
 
 		public int getRowCount() {
-			return mapper.getValues().size();
+			return keyData.size();
 		}
 
 		public String getColumnName(int col) {
@@ -130,7 +131,11 @@ public class ColorMapperPanel extends JPanel {
 		 * would contain text ("true"/"false"), rather than a check box.
 		 */
 		public Class getColumnClass(int c) {
-			return getValueAt(0, c).getClass();
+			
+			if (getValueAt(0, c) != null){
+				return getValueAt(0, c).getClass();
+			}
+			return Object.class;
 		}
 
 		public boolean isCellEditable(int row, int col) {
@@ -155,15 +160,8 @@ public class ColorMapperPanel extends JPanel {
 	private class ColorEditor extends AbstractCellEditor implements
 			TableCellEditor, ActionListener {
 		Color currentColor;
-
 		JButton button;
-
-		//JColorChooser colorChooser;
-
-		//JDialog dialog;
-
 		protected static final String EDIT = "edit";
-
 		private ColorEditor() {
 			// Set up the editor (from the table's point of view),
 			// which is a button.
@@ -189,11 +187,9 @@ public class ColorMapperPanel extends JPanel {
 		public void actionPerformed(ActionEvent e) {
 			if (EDIT.equals(e.getActionCommand())) {
 				// The user has clicked the cell, so
-				// bring up the dialog.
 				//button.setBackground(currentColor);
 				colorChooser.setColor(currentColor);
 				colorChooser.setVisible(true);
-				//dialog.setVisible(true);
 
 				// Make the renderer reappear.
 				fireEditingStopped();

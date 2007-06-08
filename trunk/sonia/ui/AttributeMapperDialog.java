@@ -30,12 +30,14 @@ import sonia.parsers.DotSonColumnMap;
 public class AttributeMapperDialog extends Object{
     
     private ArrayList unmapped;
+    private Object[] headers;
     private ArrayList states;
     private DotSonColumnMap map;
     private Dialog dialog;
     private JScrollPane sp;
     private JPanel layoutPanel;
     private JTable unmappedTable;
+
     
     
     private ItemListener choiceListener =  new ItemListener() {
@@ -48,11 +50,12 @@ public class AttributeMapperDialog extends Object{
     
     
     /** Creates a new instance of AttributeMapperDialog */
-    public AttributeMapperDialog(DotSonColumnMap map, ArrayList unmapped) {
-        
+    public AttributeMapperDialog(DotSonColumnMap map, ArrayList unmapped,
+    		Set headers) {
         
         this.unmapped = unmapped;
         this.map = map;
+        this.headers = headers.toArray();
         states = new ArrayList(unmapped.size());
         //make the dialog
         dialog = new JDialog(new JFrame(),"Unrecognized column names in the input file",true);
@@ -70,6 +73,7 @@ public class AttributeMapperDialog extends Object{
         JButton ok = new JButton("OK");
         ok.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
+            	storeUdata();
                 dialog.setVisible(false);
                 dialog = null;
             }
@@ -119,7 +123,7 @@ public class AttributeMapperDialog extends Object{
         dialog.add(sp,c);
         c.gridx=0;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=1;c.weighty=1;
     	c.fill=GridBagConstraints.BOTH;c.anchor=GridBagConstraints.CENTER;
-        unmappedTable = new JTable(fillArray(unmapped),new Object[]{"Input Column Name","Attach to node as user data?"});
+        unmappedTable = new JTable(fillArray(unmapped,headers),new Object[]{"Input Column Name","Attach to node as user data?"});
         unmappedTable.setShowGrid(true);
         unmappedTable.setShowHorizontalLines(true);
         unmappedTable.setShowVerticalLines(true);
@@ -137,6 +141,22 @@ public class AttributeMapperDialog extends Object{
         dialog.setVisible(true);
     }
     
+    /**
+     * store the slected user data items to the dotSonColumnMap
+     * @author skyebend
+     */
+    private void storeUdata(){
+    	String nodeDataKeys = "";
+    	for (int i = 0; i < unmappedTable.getModel().getRowCount(); i++) {
+    		if (((Boolean)unmappedTable.getModel().getValueAt(i,1)).booleanValue()){ //if it is checked
+    			nodeDataKeys += unmappedTable.getModel().getValueAt(i,0)+",";
+    		}
+		}
+    	//drob the last comma
+    	nodeDataKeys = nodeDataKeys.substring(0,nodeDataKeys.length()-1);
+    	map.put(DotSonColumnMap.NODE_DATA_KEYS,nodeDataKeys);
+    }
+    
     private class udataTableModel extends AbstractTableModel{
 
 		@Override
@@ -148,7 +168,7 @@ public class AttributeMapperDialog extends Object{
 		}
 
 		public int getRowCount() {
-			return unmapped.size();
+			return headers.length;
 		}
 
 		public int getColumnCount() {
@@ -157,7 +177,7 @@ public class AttributeMapperDialog extends Object{
 
 		public Object getValueAt(int rowIndex, int columnIndex) {
 		if (columnIndex==0){
-			return unmapped.get(rowIndex);
+			return headers[rowIndex];
 		} else if(columnIndex ==1){
 			return states.get(rowIndex);
 		}else{
@@ -178,18 +198,21 @@ public class AttributeMapperDialog extends Object{
 		}
 		 public void setValueAt(Object value, int row, int col) {
 		        states.set(row,value);
+		        storeUdata();
 		        fireTableCellUpdated(row, col);
 		    }
 		
     	
     }
     
-    private Object[][] fillArray(ArrayList list){
-    	Object[][] array = new Object[list.size()][2];
+    private Object[][] fillArray(ArrayList unmapped, Set headers){
+    	Object[][] array = new Object[headers.size()][2];
     	states.clear();
-    	for (int i = 0; i < list.size(); i++) {
-			array[i][0]= list.get(i);
-			array[i][1] = new Boolean(true);
+    	Object[] headArray = headers.toArray();
+    	
+    	for (int i = 0; i < headers.size(); i++) {
+			array[i][0]= headArray[i];
+		    array[i][1] = new Boolean(unmapped.contains(headArray[i]));
 			states.add(i,array[i][1]);
 		}
     	return array;

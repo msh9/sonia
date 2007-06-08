@@ -261,7 +261,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 		control = cont;
 		engine = eng;
 		schedule = new CoolingSchedule(2);
-		control.showFrame(schedule);
+		//control.showFrame(schedule);
 	}
 
 	/**
@@ -787,5 +787,9 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 		// need to get rid of layout settigns dialog?
 		schedule.hide();
 		schedule = null;
+	}
+	
+	public CoolingSchedule getSchedule(){
+		return schedule;
 	}
 }

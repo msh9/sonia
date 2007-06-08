@@ -2,6 +2,7 @@ package sonia.ui;
 
 import java.awt.*;
 import java.awt.font.*;
+import java.awt.dnd.DropTarget;
 import java.awt.event.*;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -236,7 +237,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		// frameTest.setVisible(true);
 
 		// construct frame
-		this.setSize(850, 650);
+		this.setSize(850, 700);
 		this.setTitle("SoNIA v" + SoniaController.VERSION);
 		this.setVisible(show);
 		LoadButton.requestFocus();

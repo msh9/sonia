@@ -278,6 +278,7 @@ public class DotSonParser implements Parser {
 
 	private ArrayList unknownHeaders; // holds list of unrecognized column
 										// headers
+	//private ArrayList nodeDataHeaders; //holds list of columns to be attached as node data
 
 	private boolean alphaId = false; // true if alphaIds are being used
 
@@ -361,8 +362,17 @@ public class DotSonParser implements Parser {
 				// debug
 				System.out.println("unknown column headers:" + unknownHeaders);
 				AttributeMapperDialog assignAtter = new AttributeMapperDialog(
-						colMap, unknownHeaders);
+						colMap, unknownHeaders,nodeHeaderMap.keySet());
 
+			}
+			//set up the node user data mappings
+			if (colMap.getProperty(DotSonColumnMap.NODE_DATA_KEYS) != null){
+				StringTokenizer keyKonizer = new StringTokenizer(
+						colMap.getProperty(DotSonColumnMap.NODE_DATA_KEYS),",");
+				while(keyKonizer.hasMoreTokens()){
+					nodeDataKeys.add(keyKonizer.nextToken());
+					
+				}
 			}
 			line = reader.readLine();
 		} else // otherwise, throw error
@@ -446,7 +456,7 @@ public class DotSonParser implements Parser {
 			if (!knownHeadings.contains(colName)) {
 				unknownHeaders.add(colName);
 				//for now, until we allow other columns to be treated as user data
-				nodeDataKeys.add(colName);
+				//nodeDataKeys.add(colName);
 			}
 			// check for duplicates
 			if (nodeHeaderMap.containsKey(colName)) {
@@ -455,6 +465,7 @@ public class DotSonParser implements Parser {
 				throw (new IOException(error));
 			} else {
 				nodeHeaderMap.put(colName, new Integer(n));
+				
 			}
 		}
 		// check if numeric or alphanumeric ids are used
@@ -535,8 +546,8 @@ public class DotSonParser implements Parser {
 				throw (new IOException(error));
 			}
 			//do other node data
-			if (unknownHeaders.size() > 0){
-				Iterator dataNames = unknownHeaders.iterator();
+			if (nodeDataKeys.size() > 0){
+				Iterator dataNames = nodeDataKeys.iterator();
 				while (dataNames.hasNext()){
 					String key = (String)dataNames.next();
 					node.setData(key, parseUserData(key,rowArray));
