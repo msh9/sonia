@@ -674,11 +674,6 @@ public class SoniaController {
 		}
 	}
 
-	/**
-	 */
-	public void pippo() {
-
-	}
 
 	/**
 	 * Not sure if we should have this method as it is for gui..

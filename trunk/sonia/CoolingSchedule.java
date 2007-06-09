@@ -177,7 +177,7 @@ public class CoolingSchedule extends ExportableFrame implements MouseListener,
 		c.gridheight = 1;
 		c.weightx = 0.1;
 		c.weighty = 0.1;
-		this.getContentPane().add(MaxPassField, c);
+		//this.getContentPane().add(MaxPassField, c);
 		c.gridx = 1;
 		c.gridy = 1;
 		c.gridwidth = 1;

@@ -1189,7 +1189,7 @@ public class DotSonParser implements Parser {
 	}
 
 	private Color parseNodeColor(String[] rowArray) throws IOException {
-		Color theColor = Color.white;
+		Color theColor = NodeAttribute.DEFAULT_NODE_COLOR;
 		String colorKey = colMap.getProperty(DotSonColumnMap.NODE_COLOR_NAME);
 		String rKey = colMap.getProperty(DotSonColumnMap.NODE_RED_RGB);
 		String gKey = colMap.getProperty(DotSonColumnMap.NODE_GREEN_RGB);
@@ -1255,7 +1255,7 @@ public class DotSonParser implements Parser {
 	}
 
 	private Color parseLabelColor(String[] rowArray) throws IOException {
-		Color theColor = Color.blue;
+		Color theColor = NodeAttribute.DEFULAT_LABEL_COLOR;
 		String key = colMap.getProperty(DotSonColumnMap.NODE_LABEL_COLOR_NAME);
 		// figure out if and how color is specified
 		int index;
@@ -1268,7 +1268,7 @@ public class DotSonParser implements Parser {
 	}
 
 	private Color parseBorderColor(String[] rowArray) throws IOException {
-		Color theColor = Color.black;
+		Color theColor = NodeAttribute.DEFAULT_BORDER_COLOR;
 		String key = colMap.getProperty(DotSonColumnMap.NODE_BORDER_COLOR_NAME);
 		// figure out if and how color is specified
 		int index;

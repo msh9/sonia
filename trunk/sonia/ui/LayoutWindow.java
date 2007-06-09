@@ -18,12 +18,15 @@ import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JInternalFrame;
+import javax.swing.JMenu;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
@@ -34,6 +37,7 @@ import sonia.NodeMover;
 import sonia.SoniaCanvas;
 import sonia.SoniaController;
 import sonia.SoniaLayoutEngine;
+import sonia.layouts.FRLayout;
 import sonia.layouts.MultiCompKKLayout;
 import sonia.mapper.Colormapper;
 import sonia.movie.MovieMaker;
@@ -238,26 +242,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		engine = layoutEng;
 		drawSettings = settings;
 		browseSettings = browseSet;
-
-		exportMenu.add(new AbstractAction("Export QuickTime Movie...") {
-			public void actionPerformed(ActionEvent arg0) {
-				// Control.exportMovie(engine, null);
-
-				Control.exportQTMovie(engine, LayoutArea, null);
-			}
-		});
-
-		exportMenu.add(new AbstractAction("Export Matricies...") {
-			public void actionPerformed(ActionEvent arg0) {
-				Control.exportMatricies(engine);
-			}
-		});
-
-		exportMenu.add(new AbstractAction("Export Flash Movie...") {
-			public void actionPerformed(ActionEvent arg0) {
-				Control.exportFlashMovie(engine, LayoutArea, null);
-			}
-		});
+		exportMenu.setName("Export Slice");
 		
 		exportMenu.add(new AbstractAction("Export XML coords") {
 			public void actionPerformed(ActionEvent arg0) {
@@ -267,6 +252,27 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		exportMenu.add(new AbstractAction("Export GraphML") {
 			public void actionPerformed(ActionEvent arg0) {
 				Control.exportGraphML(engine);
+			}
+		});
+		JMenu multipleExport = new JMenu("Export Network");
+		menuBar.add(multipleExport);
+		multipleExport.add(new AbstractAction("Export QuickTime Movie...") {
+			public void actionPerformed(ActionEvent arg0) {
+				// Control.exportMovie(engine, null);
+
+				Control.exportQTMovie(engine, LayoutArea, null);
+			}
+		});
+
+		multipleExport.add(new AbstractAction("Export Matricies...") {
+			public void actionPerformed(ActionEvent arg0) {
+				Control.exportMatricies(engine);
+			}
+		});
+
+		multipleExport.add(new AbstractAction("Export Flash Movie...") {
+			public void actionPerformed(ActionEvent arg0) {
+				Control.exportFlashMovie(engine, LayoutArea, null);
 			}
 		});
 
@@ -331,11 +337,15 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		JPanel inspectPanel = inspector.getInspectPanel();
 		inspectPanel.setName("inspect");
 		controlePane.add(inspectPanel,1);
+		controlePane.addChangeListener(inspector);
 		
 		JPanel layoutPanel = new JPanel(new GridLayout());
 		layoutPanel.setName("layout");
+		//UGLY HACK, GET RID OF THIS
 		if (engine.getLayout().getClass().equals(MultiCompKKLayout.class)){
 			layoutPanel.add(((MultiCompKKLayout)engine.getLayout()).getSchedule().getContentPane());
+		} else if (engine.getLayout().getClass().equals(FRLayout.class)){
+			layoutPanel.add(((FRLayout)engine.getLayout()).getSchedule().getContentPane());
 		}
 		controlePane.add(layoutPanel,2);
 		
@@ -347,38 +357,31 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		controlePane.add(contentPane,3);
 		
 		// try to make it so we can tear off tabs
-		
 		controlePane.addMouseMotionListener(new MouseMotionListener(){
 			Point dragStart = null;
 			public void mouseDragged(MouseEvent e) {
-			  
 			  	if (dragStart==null){
 				   dragStart = e.getPoint();
 				   return; // don't do anythin
 				}
 			  	// Get the current position
 			  	Point mousePosition = e.getPoint();
-
 // If the drag distance is big enough, then pass on a tear
 				if (Math.hypot(dragStart.x-mousePosition.x,dragStart.y-mousePosition.y)>50){
 					dragStart=null;
-
 				JInternalFrame frame = new JInternalFrame(
 						controlePane.getSelectedComponent().getName(),true,true,true,true);
 				frame.getContentPane().add(controlePane.getSelectedComponent());
 				frame.setBounds(e.getComponent().getBounds());
 				frame.setLocation(controlePane.getLocationOnScreen());
-				//frame.setLocation(e.getComponent().getLocation());
 				//add a listener (within the listener) that puts the frame back in the tabb if closed
 				frame.addInternalFrameListener(new InternalFrameAdapter(){
-
 					@Override
 					public void internalFrameClosed(InternalFrameEvent e) {
 						Component comp =e.getInternalFrame().getContentPane();
 						comp.setName(e.getInternalFrame().getTitle());
 						controlePane.add(comp);
 					}
-					
 				});
 				Control.showFrame(frame);
 				//System.out.println("frame removed");
@@ -389,13 +392,10 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 
 			public void mouseMoved(MouseEvent e) {
 				dragStart=null;
-				
 			}
-			
 		});
 		
-		
-		
+	
 		getContentPane().add(controlePane, BorderLayout.SOUTH);
 
 		GridBagLayout layout = new GridBagLayout();
@@ -439,7 +439,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		c.gridheight = 1;
 		c.weightx = 0.5;
 		c.weighty = 0.0;
-		controlPanel.add(PhasePlot, c);
+		//controlPanel.add(PhasePlot, c);
 		c.gridx = 5;
 		c.gridy = 1;
 		c.gridwidth = 2;
@@ -1140,5 +1140,6 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		frameDelay.setText(browseSettings.getProperty(
 				BrowsingSettings.FRAME_DELAY, frameDelay.getText().trim()));
 	}
+	
 
 }

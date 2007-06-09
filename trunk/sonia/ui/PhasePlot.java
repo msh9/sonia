@@ -11,6 +11,7 @@ import java.text.NumberFormat;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
@@ -74,7 +75,7 @@ public class PhasePlot extends ExportableFrame implements
 
 	private JCheckBox sortBox;
 
-	private JTextField MouseTime;
+	private JLabel MouseTime;
 
 	private SoniaLayoutEngine engine;
 
@@ -129,9 +130,9 @@ public class PhasePlot extends ExportableFrame implements
 		drawArea = new PhasePlotPanel();
 		drawArea.setBorder(new TitledBorder("Timeline view of network"));
 		sortBox = new JCheckBox("Sort Events", eventsSorted);
-		MouseTime = new JTextField(20);
+		MouseTime = new JLabel("");
 		// MouseTime.setBackground(Color.lightGray);
-		MouseTime.setEditable(false);
+		//MouseTime.setEditable(false);
 		
 		super.setResizable(true);
 		super.setMaximizable(true);

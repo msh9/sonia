@@ -106,7 +106,7 @@ public class Graphics2DRender implements Render {
 		Font startFont = graphics.getFont();
 		// rough label
 		String printLabel = "";
-		graphics.setColor(NodeAttribute.DEFULAT_LABEL_COLOR);
+		graphics.setColor(node.getLabelColor());
 		graphics.setFont(startFont.deriveFont(node.getLabelSize()));
 		if (showId) {
 			printLabel = printLabel + node.getNodeId();

@@ -51,7 +51,7 @@ public class NodeAttribute implements NetworkEvent{
 
  public static final String FLASH_EFFECT = "FLASH_EFFECT";
  public static final String NO_EFFECT = "NO_EFFECT";
- public static final Color DEFAULT_NODE_COLOR = Color.blue;
+ public static final Color DEFAULT_NODE_COLOR = Color.white;
  public static final Color DEFAULT_BORDER_COLOR = Color.black;
  public static final Color DEFULAT_LABEL_COLOR = Color.red;
  public static final double DEFAULT_SIZE = 10.0;
@@ -441,6 +441,15 @@ public class NodeAttribute implements NetworkEvent{
 
 public String getOrigFileLoc() {
 	return origFileLoc;
+}
+
+/**
+ * returns the color that should be used to draw the node's label
+ * @author skyebend
+ * @return
+ */
+public Color getLabelColor() {
+	return labelColor;
 }
 
 
