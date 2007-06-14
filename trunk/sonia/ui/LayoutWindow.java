@@ -275,6 +275,12 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 				Control.exportFlashMovie(engine, LayoutArea, null);
 			}
 		});
+		
+		multipleExport.add(new AbstractAction("Save As DyNetML xml ..") {
+			public void actionPerformed(ActionEvent arg0) {
+				Control.saveDyNetML(engine);
+			}
+		});
 
 		// this.setFont(controller.getFont());
 		// create layout objects

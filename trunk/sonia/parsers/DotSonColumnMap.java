@@ -72,9 +72,9 @@ public class DotSonColumnMap extends PropertySettings {
 
 	public static final String ARC_STARTIME = "ARC_STARTIME";
 
-	public static final String ARC_ENDTIME = "EndTime";
+	public static final String ARC_ENDTIME = "ARC_ENDTIME";
 
-	public static final String FROM_ID = "ARC_ENDTIME";
+	public static final String FROM_ID = "FROM_ID";
 
 	public static final String TO_ID = "TO_ID";
 

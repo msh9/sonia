@@ -65,11 +65,12 @@ public class DLParser implements Parser {
 			StringTokenizer tagkoniser = new StringTokenizer(rawTags, ",");
 			while (tagkoniser.hasMoreTokens()) {
 				String tag = tagkoniser.nextToken();
-				headerTagMap.put(tag.substring(0, tag.indexOf("=") - 1).trim(),
-						tag.substring(tag.indexOf("=") + 1).trim());
+				headerTagMap.put(tag.substring(0, tag.indexOf("=") ).trim(),
+						tag.substring(tag.indexOf("=")+1 ).trim());
 			}
 			// now loop over the tags to see which ones are present
-
+//debug
+			System.out.println("dl tags found:"+headerTagMap);
 			// check that format = edgelist1 (not some other dl file format
 			String format = (String) headerTagMap.get("format");
 			if (format == null) {
@@ -104,7 +105,7 @@ public class DLParser implements Parser {
 			}
 			// next line should be: labels:
 			line = reader.readLine();
-			if (line.equals("labels:")) {
+			if (line.trim().equals("labels:")) {
 				hasLabels = true;
 				// TODO: DL parser should check "labels: embeded" tag.
 			}

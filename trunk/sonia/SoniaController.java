@@ -52,6 +52,7 @@ import sonia.movie.SWFMovieMaker;
 import sonia.parsers.DLParser;
 import sonia.parsers.DotNetParser;
 import sonia.parsers.DotSonParser;
+import sonia.parsers.DyNetMLParser;
 import sonia.parsers.Parser;
 import sonia.parsers.RJavaParser;
 import sonia.render.GraphMLRender;
@@ -349,6 +350,9 @@ public class SoniaController {
 			} else if (fileName.endsWith(".rdump")) {
 				parser = new RJavaParser();
 				parser.configureParser(parserSettings);
+			} else if (fileName.endsWith(".xml")){
+				//TODO:  need to check doctype to figure otu what kind of xml
+				parser = new DyNetMLParser();
 			}
 			// otherwise, try the DotNetParser
 			else {
@@ -892,6 +896,20 @@ public class SoniaController {
 							+ error.toString());
 				}
 			}
+		}
+	}
+	
+	public void saveDyNetML(SoniaLayoutEngine engToSave){
+		showStatus("saving network as dynetml file...");
+		DyNetMLXMLWriter writer = new DyNetMLXMLWriter(this);
+		try {
+			writer.saveXML(engToSave, "DyNetMLTest.xml");
+		} catch (ParserConfigurationException e) {
+			e.printStackTrace();
+			showError("Error writing network as DyNetML xml file:"+e.toString());
+		} catch (TransformerException e) {
+			e.printStackTrace();
+			showError("Error writing network as DyNetML xml file:"+e.toString());
 		}
 	}
 
