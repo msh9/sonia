@@ -83,7 +83,7 @@ import cern.colt.matrix.impl.SparseDoubleMatrix2D;
  */
 
 public class SoniaController {
-	public static final String CODE_DATE = "2007-01-18";
+	public static final String CODE_DATE = "2007-06-14";
 
 	public static final String VERSION = "1.1.4";
 
@@ -601,6 +601,8 @@ public class SoniaController {
 				+ "\n" + "comments from file:" + networkData.getNetInfo());
 		// put it in list of loaded networks
 		networks.add(networkData);
+		
+		
 	}
 
 	/**

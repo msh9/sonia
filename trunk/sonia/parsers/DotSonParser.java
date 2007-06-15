@@ -777,6 +777,7 @@ public class DotSonParser implements Parser {
 			throws IOException {
 		// should be changed to some other shape classes that has more members
 		// and many more shapes included
+		//TODO: replace with a call to shape factory
 		RectangularShape shape;
 		String key = colMap.getProperty(DotSonColumnMap.NODE_SHAPE);
 		if (nodeHeaderMap.containsKey(key)) {

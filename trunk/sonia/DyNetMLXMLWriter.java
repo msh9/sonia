@@ -212,7 +212,11 @@ public class DyNetMLXMLWriter {
 	/**
 	 * color specified as a comma seperated rgb triple
 	 */
-	public static final String RGB_COLOR = "rgbColor";
+	public static final String NODE_RGB_COLOR = "rgbColorNode";
+	
+	public static final String EDGE_RGB_COLOR = "rgbColorEdge";
+	
+	public static final String NODE_BORDER_RGB_COLOR = "rgbColorNodeBorder";
 	
 	public static final String X_COORDS = "xCoords";
 	
@@ -322,19 +326,35 @@ public class DyNetMLXMLWriter {
 				prop.setAttribute(TP, DBL);
 				prop.setAttribute(VAL, nodeAttr.getNodeSize() + "");
 				props.appendChild(prop);
-				
+			
 				//node color
 				prop = doc.createElement(PROP);
 				Color c = nodeAttr.getNodeColor();
-				prop.setAttribute(ID, RGB_COLOR);
+				prop.setAttribute(ID, NODE_RGB_COLOR);
 				prop.setAttribute(TP, STR);
 				prop.setAttribute(VAL, c.getRed()+","+c.getGreen()+","+c.getBlue());
 				props.appendChild(prop);
 				
+				//node shape
 				prop = doc.createElement(PROP);
 				prop.setAttribute(ID, DotSonColumnMap.NODE_SHAPE);
 				prop.setAttribute(TP, STR);
-				prop.setAttribute(VAL, nodeAttr.getNodeShape() + "");
+				prop.setAttribute(VAL, ShapeFactory.getStringFor(nodeAttr.getNodeShape()));
+				props.appendChild(prop);
+				
+				//border width
+				prop = doc.createElement(PROP);
+				prop.setAttribute(ID, DotSonColumnMap.NODE_BORDER_WIDTH);
+				prop.setAttribute(TP, DBL);
+				prop.setAttribute(VAL, nodeAttr.getBorderWidth()+"");
+				props.appendChild(prop);
+				
+				//node border color
+				Color bc =nodeAttr.getBorderColor();
+				prop = doc.createElement(PROP);
+				prop.setAttribute(ID, NODE_BORDER_RGB_COLOR);
+				prop.setAttribute(TP, DBL);
+				prop.setAttribute(VAL, bc.getRed()+","+bc.getGreen()+","+bc.getBlue());
 				props.appendChild(prop);
 				
 				// add rest of properties
@@ -368,9 +388,11 @@ public class DyNetMLXMLWriter {
 			networks.appendChild(graph);
 			graph.setAttribute(ID, g + "");
 			graph.setAttribute("isDirected", "true");
+			
 			// set properties of graph
 			Element props = doc.createElement(PROPS);
 			graph.appendChild(props);
+			
 			// start time of slice
 			Element prop = doc.createElement(PROP);
 			graph.appendChild(prop);
@@ -378,12 +400,14 @@ public class DyNetMLXMLWriter {
 			prop.setAttribute(TP, DBL);
 			prop.setAttribute(VAL, slice.getSliceStart() + "");
 			props.appendChild(prop);
+			
 			// end time of slice
 			prop = doc.createElement(PROP);
 			prop.setAttribute(ID, SLICE_E);
 			prop.setAttribute(TP, DBL);
 			prop.setAttribute(VAL, slice.getSliceEnd() + "");
 			props.appendChild(prop);
+			
 			// need to store xy coords
 			prop = doc.createElement(PROP);
 			prop.setAttribute(ID, X_COORDS);
@@ -463,7 +487,7 @@ public class DyNetMLXMLWriter {
 //				color 
 				Color c = arcattr.getArcColor();
 				prop = doc.createElement(PROP);
-				prop.setAttribute(ID,RGB_COLOR);
+				prop.setAttribute(ID,EDGE_RGB_COLOR);
 				prop.setAttribute(TP,DBL);
 				prop.setAttribute(VAL,c.getRed()+","+c.getGreen()+","+c.getBlue());
 				props.appendChild(prop);
@@ -476,6 +500,9 @@ public class DyNetMLXMLWriter {
 					prop.setAttribute(VAL,arcattr.getArcLabel());
 					props.appendChild(prop);
 				}
+				
+				
+				
 				edge.appendChild(props);
 				
 			} //end slice edges loop

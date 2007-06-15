@@ -133,6 +133,7 @@ public class Graphics2DRender implements Render {
 		float drawWidth = (float) arc.getArcWidth() * widthFactor;
 		graphics.setStroke(getStrokeForWidth(drawWidth, arc.isNegitive()));
 		graphics.setColor(arc.getArcColor());
+		
 		// should correct for width of node (and length of arrow?)
 		// arcLine.setLine(fromX,fromY,toX,toY);
 		arcLine.reset();
