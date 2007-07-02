@@ -12,6 +12,13 @@ import sonia.settings.MovieSettings;
 import sonia.settings.PropertySettings;
 import sonia.settings.RParserSettings;
 
+/**
+ * parses a chuck of text with blocks containing key value associations for 
+ * various  sonia property settings objects.  Returns those objects with
+ * values set as request. 
+ * @author skyebend
+ *
+ */
 public class PropertyBuilder {
 	
 	

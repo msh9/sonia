@@ -144,7 +144,7 @@ public class SoniaLayoutEngine {
 	 * @param name
 	 *            the name of the engine (to show in the window)
 	 */
-	public SoniaLayoutEngine(LayoutSettings settings,ApplySettings apply,
+	public SoniaLayoutEngine(LayoutSettings settings, ApplySettings apply,
 			SoniaController controller, NetDataStructure data, String name) {
 		control = controller;
 		netData = data;
@@ -248,20 +248,18 @@ public class SoniaLayoutEngine {
 
 	/**
 	 * if there is already a phase plot for this engine, it will be returned,
-	 *  otherwise Creates and displays a PhasePlot showing the location of each arc and
-	 * node event in time, and how the slices land.
+	 * otherwise Creates and displays a PhasePlot showing the location of each
+	 * arc and node event in time, and how the slices land.
 	 */
 	public PhasePlot getPhasePlot() {
 		// check if it exists
 		if (timePlot == null) {
 			timePlot = new PhasePlot(this, netData, layoutSettings);
 		}
-		//control.showFrame(timePlot);
+		// control.showFrame(timePlot);
 		// timePlot.show();
 		return timePlot;
 	}
-
-
 
 	/**
 	 * Sets up the layout and data sctructures, asking netData to generate a
@@ -594,11 +592,12 @@ public class SoniaLayoutEngine {
 		if (shepPlot == null) {
 			shepPlot = new StressInfo(control, this);
 			control.showFrame(shepPlot);
-			//TODO: fix stuff with phaseplot redisplay, include in bottom of layout window?
+			// TODO: fix stuff with phaseplot redisplay, include in bottom of
+			// layout window?
 		}
 		shepPlot.setVisible(true);
 		shepPlot.shepardPlot(getCurrentSlice());
-		
+
 	}
 
 	public void calcStability() {
@@ -983,12 +982,11 @@ public class SoniaLayoutEngine {
 	public double getMinMatrixValue() {
 		return minMatrixValue;
 	}
-	
-	public NetDataStructure getNetData(){
+
+	public NetDataStructure getNetData() {
 		return netData;
 	}
-	
-	
+
 	/**
 	 * returns the current LayoutSlice
 	 */
@@ -1080,9 +1078,41 @@ public class SoniaLayoutEngine {
 	public void setApplySettings(ApplySettings applySettings) {
 		this.applySettings = applySettings;
 	}
-	
-	public NetLayout getLayout(){
+
+	public NetLayout getLayout() {
 		return currentLayout;
+	}
+
+	/**
+	 * @author skyebend
+	 * @return
+	 */
+	public LayoutSettings getLayoutSettings() {
+		return layoutSettings;
+	}
+
+	
+
+	/**
+	 * loops over the slices in order and applies the double[] s stored in the
+	 * vectors as the slice coordinates. used to re-create slices when reloading
+	 * a network. Does not check matching between coords and slices
+	 * 
+	 * @author skyebend
+	 * @param xCoordArrays
+	 * @param yCoordArrays
+	 */
+	public void assignCoordinates(Vector xCoordArrays, Vector yCoordArrays) {
+		if (xCoordArrays != null & yCoordArrays != null) {
+			for (int i = 0; i < layoutSlices.size(); i++) {
+				LayoutSlice slice = (LayoutSlice) layoutSlices.get(i);
+				double[] xcoords = (double[]) xCoordArrays.get(i);
+				double[] ycoords = (double[]) yCoordArrays.get(i);
+				for (int n = 0; n < ycoords.length; n++) {
+					slice.setCoords(n, xcoords[n], ycoords[n]);
+				}
+			}
+		}
 	}
 
 }

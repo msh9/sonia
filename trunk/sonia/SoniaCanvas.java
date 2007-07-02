@@ -4,6 +4,8 @@ import java.awt.*;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.LineBorder;
 
 import sonia.mapper.Colormapper;
 import sonia.mapper.DefaultColors;
@@ -79,14 +81,18 @@ private Colormapper colormapper = null;
     engine = eng;
     this.settings = settings;
     //display = window;
-
+    //this.setBorder(new EtchedBorder());
     drawWidth = engine.getDisplayWidth();
     drawHeight = engine.getDisplayHeight();
   //  this.setBackground(Color.white);
   //  offScreen = createImage(drawWidth, drawHeight);
     g2dRender = new Graphics2DRender();
   }
-  public void setRenderSlice(RenderSlice slice)
+  
+  
+
+
+public  void setRenderSlice(RenderSlice slice)
   {
     lastRender=slice;
   }

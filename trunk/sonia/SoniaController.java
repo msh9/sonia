@@ -43,6 +43,7 @@ import javax.xml.transform.TransformerException;
 import com.anotherbigidea.flash.readers.SWFReader;
 import com.anotherbigidea.flash.readers.TagParser;
 import com.anotherbigidea.flash.writers.SWFTagDumper;
+import com.sun.media.sound.AutoConnectSequencer;
 import com.sun.org.apache.bcel.internal.generic.GETSTATIC;
 
 import sonia.movie.MovieMaker;
@@ -85,7 +86,7 @@ import cern.colt.matrix.impl.SparseDoubleMatrix2D;
 public class SoniaController {
 	public static final String CODE_DATE = "2007-06-14";
 
-	public static final String VERSION = "1.1.4";
+	public static final String VERSION = "1.1.5";
 
 	private SoniaInterface ui;
 
@@ -93,7 +94,7 @@ public class SoniaController {
 
 	private ArrayList engines; // holds engines for each layout
 
-	private SoniaLayoutEngine engine;
+	private SoniaLayoutEngine engine; //context for current actions
 
 	private ArrayList networks; // holds NetDataStructures for eachLayout
 
@@ -110,6 +111,8 @@ public class SoniaController {
 	private boolean fileLoaded = false;
 	
 	private boolean verbose = false;
+	
+	private boolean autoCreate = false;
 
 	private boolean paused = false;
 
@@ -175,13 +178,24 @@ public class SoniaController {
 	 */
 	public void showGUI(boolean visable) {
 		showGUI = visable;
-		if (ui != null) {
-			ui.setVisible(visable);
-		}
-		// this is a kludge
-		if (fileLoaded) {
+//		 this is a kludge
+		if (autoCreate) {
 			createLayout(sliceSettings);
 		}
+		if (ui != null) {
+			ui.setVisible(visable);
+			if (engine != null){
+			LayoutWindow display = new LayoutWindow(graphicSettings,
+					browseSettings, this, engine, 500,400);
+			engine.setDisplay(display);
+			ui.addFrame(display);
+			engine.setDisplayWidth(Integer.parseInt(graphicSettings
+					.getProperty(GraphicsSettings.LAYOUT_WIDTH)));
+			engine.setDisplayHeight(Integer.parseInt(graphicSettings
+					.getProperty(GraphicsSettings.LAYOUT_HEIGHT)));
+			}
+		}
+		
 	}
 
 	/**
@@ -351,7 +365,7 @@ public class SoniaController {
 				parser = new RJavaParser();
 				parser.configureParser(parserSettings);
 			} else if (fileName.endsWith(".xml")){
-				//TODO:  need to check doctype to figure otu what kind of xml
+				//TODO:  need to check doctype to figure out what kind of xml
 				parser = new DyNetMLParser();
 			}
 			// otherwise, try the DotNetParser
@@ -361,6 +375,7 @@ public class SoniaController {
 			try {
 				parser.parseNetwork(currentPath + inFile);
 				fileLoaded = true;
+				autoCreate = true;
 				showStatus("Parsed file " + currentPath + inFile);
 			} catch (Exception error) {
 				showError("Unable to load file: "+ error.getCause()+ error.getMessage());
@@ -464,7 +479,7 @@ public class SoniaController {
 					+ graphicSettings);
 		}
 		browseSettings = proper.getBrowsingSettings();
-		if (sliceSettings != null) {
+		if (browseSettings != null) {
 			showStatus("Read layout browsing settings from batch instructions");
 			log("Read layout browsing settings from batch instructions:\n "
 					+ browseSettings);
@@ -602,8 +617,30 @@ public class SoniaController {
 		// put it in list of loaded networks
 		networks.add(networkData);
 		
+		//now check if we are recreating an entire network with layouts
+		if (parser instanceof DyNetMLParser){
+			showStatus("rebuild layouts from data stored in "+inFile);
+			DyNetMLParser reloader = (DyNetMLParser)parser;
+			sliceSettings = reloader.getLayoutSettings();
+			applySettings = reloader.getApplySettings();
+			graphicSettings = reloader.getGraphicsSetttings();
+			browseSettings = reloader.getBrowsingSettings();
+			//turn off auto create 'cause we are going to create here
+			autoCreate = false;
+			log("rebuilt layout from data stored in "+inFile);
+			log(browseSettings+"");
+			log(applySettings+"");
+			log(sliceSettings+"");
+			log(graphicSettings+"");
+			createLayout(sliceSettings);
+			//load in the coordinates
+			engine.assignCoordinates(reloader.getXCoordArrays(),reloader.getYCoordArrays());
+			
+		}
+		
 		
 	}
+	
 
 	/**
 	 * always shows slice setting dialog, then calls create layout
@@ -623,6 +660,14 @@ public class SoniaController {
 			// show the dialog
 			sliceSettings = windowSettings.askUserSettings();
 			createLayout(sliceSettings);
+			LayoutWindow display = new LayoutWindow(graphicSettings,
+					browseSettings, this, engine, 500,400);
+			engine.setDisplay(display);
+			ui.addFrame(display);
+			engine.setDisplayWidth(Integer.parseInt(graphicSettings
+					.getProperty(GraphicsSettings.LAYOUT_WIDTH)));
+			engine.setDisplayHeight(Integer.parseInt(graphicSettings
+					.getProperty(GraphicsSettings.LAYOUT_HEIGHT)));
 		} else {
 			showError("File must be loaded before layout can be created");
 		}
@@ -630,7 +675,7 @@ public class SoniaController {
 
 	/**
 	 * Checks that a file has been loaded, then creates a layout engien for the
-	 * most recently loaded file. Shows slice dialog only if there are now slice
+	 * most recently loaded file. Shows slice dialog only if there are no slice
 	 * settings.
 	 */
 	public void createLayout(LayoutSettings sliceSettings) {
@@ -645,6 +690,7 @@ public class SoniaController {
 				// show the dialog
 				sliceSettings = windowSettings.askUserSettings();
 			}
+			//TODO: this is not thread safe!
 			if (sliceSettings == null){
 				showStatus("layout cancled: null slice settings");
 				return;
@@ -659,21 +705,23 @@ public class SoniaController {
 				graphicSettings = (new GraphicsSettingsDialog(
 						new GraphicsSettings(), this, engine, null, null))
 						.storeSettings();
+				graphicSettings.setProperty(GraphicsSettings.LAYOUT_WIDTH,500+"");
+				graphicSettings.setProperty(GraphicsSettings.LAYOUT_HEIGHT,400+"");
 			}
-			LayoutWindow display = new LayoutWindow(graphicSettings,
-					browseSettings, this, engine, 500, 420);
-			engine.setDisplay(display);
-			ui.addFrame(display);
-			engine.setDisplayWidth(Integer.parseInt(graphicSettings
-					.getProperty(GraphicsSettings.LAYOUT_WIDTH)));
-			engine.setDisplayHeight(Integer.parseInt(graphicSettings
-					.getProperty(GraphicsSettings.LAYOUT_HEIGHT)));
-			// try {
-			// display.setMaximum(true);
-			// } catch (PropertyVetoException e) {
-			// System.out.println("somebody stoped the window from expanding "
-			// + e);
-			// }
+			if (browseSettings == null){
+				//create it here so control has a ref
+				browseSettings = new BrowsingSettings();
+		
+			}
+//			LayoutWindow display = new LayoutWindow(graphicSettings,
+//					browseSettings, this, engine, 500,400);
+//			engine.setDisplay(display);
+//			ui.addFrame(display);
+//			engine.setDisplayWidth(Integer.parseInt(graphicSettings
+//					.getProperty(GraphicsSettings.LAYOUT_WIDTH)));
+//			engine.setDisplayHeight(Integer.parseInt(graphicSettings
+//					.getProperty(GraphicsSettings.LAYOUT_HEIGHT)));
+
 
 		} else {
 			showError("File must be loaded before layout can be created");
@@ -1167,6 +1215,24 @@ public class SoniaController {
 			eng = (SoniaLayoutEngine)engines.get(index);
 		}
 		return eng;
+	}
+	
+	/**
+	 * TODO: this should be moved so that it is engine specific
+	 * @author skyebend
+	 * @return
+	 */
+	public GraphicsSettings getGraphicsSettings(){
+		return graphicSettings;
+	}
+	
+	/**
+	 * TODO: this should be moved so that it is engine specific
+	 * @author skyebend
+	 * @return
+	 */
+	public BrowsingSettings getBrowsingSettings(){
+		return browseSettings;
 	}
 
 }

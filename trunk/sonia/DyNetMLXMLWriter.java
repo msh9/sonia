@@ -36,6 +36,9 @@ import org.w3c.dom.Element;
 import sonia.parsers.DotSonColumnMap;
 import sonia.parsers.DotSonParser;
 import sonia.settings.ApplySettings;
+import sonia.settings.BrowsingSettings;
+import sonia.settings.GraphicsSettings;
+import sonia.settings.LayoutSettings;
 
 /**
  * Class for writing entire network as a DyNetML xml file.
@@ -246,6 +249,8 @@ public class DyNetMLXMLWriter {
 		double start = engine.getSlice(0).getSliceStart();
 		double end = engine.getSlice(engine.getNumSlices() - 1).getSliceEnd();
 		int eventID = 0;
+		
+		//TODO:store log file within xml?
 		// get the set of nodes
 		ArrayList events = data.getEventsFromTo(start, end);
 
@@ -260,7 +265,42 @@ public class DyNetMLXMLWriter {
 		Element metamat = doc.createElement(METAMAT);
 		root.appendChild(metamat);
 		// should add meta info here
-		// TODO: add properties that specify sonia configuration as measures
+		//add properties that specify sonia configuration as measures
+		Element metaMeasures = doc.createElement(MEASURES);
+		metamat.appendChild(metaMeasures);
+		
+		//store the apply settings as if it was a measrure
+		ApplySettings apSet = engine.getCurrentApplySettings();
+		Element applySettings = doc.createElement(MEASURE);
+		applySettings.setAttribute(ID,apSet.getClass().getCanonicalName());
+		applySettings.setAttribute(TP,STR);
+		applySettings.setAttribute(VAL,apSet.toString());
+		metaMeasures.appendChild(applySettings);
+		
+		//store the layout settings as if it was a measrure
+		LayoutSettings laySet = engine.getLayoutSettings();
+		Element layoutSettings = doc.createElement(MEASURE);
+		layoutSettings.setAttribute(ID,laySet.getClass().getCanonicalName());
+		layoutSettings.setAttribute(TP,STR);
+		layoutSettings.setAttribute(VAL,laySet.toString());
+		metaMeasures.appendChild(layoutSettings);
+		
+		//store the graphics settings as if it was a measure
+		GraphicsSettings graphicsSet = control.getGraphicsSettings();
+		Element graphSettings = doc.createElement(MEASURE);
+		graphSettings.setAttribute(ID,graphicsSet.getClass().getCanonicalName());
+		graphSettings.setAttribute(TP,STR);
+		graphSettings.setAttribute(VAL,graphicsSet.toString());
+		metaMeasures.appendChild(graphSettings);
+		
+		//store the browsing settings as if it was a measure
+		BrowsingSettings browseSet = control.getBrowsingSettings();
+		Element browSettings = doc.createElement(MEASURE);
+		browSettings.setAttribute(ID,browseSet.getClass().getCanonicalName());
+		browSettings.setAttribute(TP,STR);
+		browSettings.setAttribute(VAL,browseSet.toString());
+		metaMeasures.appendChild(browSettings);
+		
 		// define nodes
 		Element nodes = doc.createElement(NODES);
 		metamat.appendChild(nodes);

@@ -334,6 +334,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		// set up top level components
 		// c.gridx=0;c.gridy=0;c.gridwidth=7;c.gridheight=1;c.weightx=1;c.weighty=1;
 		// c.fill=c.BOTH;
+		//LayoutArea.setSize(initWidth,initHeight);
+		//LayoutArea.setMinimumSize(new Dimension(initWidth,initHeight));
 		getContentPane().add(LayoutArea, BorderLayout.CENTER);
 	
 		controlePane = new JTabbedPane(JTabbedPane.BOTTOM);
@@ -565,9 +567,10 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 
 		// this.setBackground(Color.lightGray);
 		this.setSize(initWidth, initHeight);
+		///this.pack();
 		this.setTitle(engine.toString());
 		this.setLocation(10, 10);
-		this.setVisible(true);
+		//this.setVisible(true);
 
 	}
 	/**
@@ -1067,8 +1070,11 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		// get the difference between existing layout size and frame size
 		int widthDif = this.getWidth() - LayoutArea.getWidth();
 		int heightDif = this.getHeight() - LayoutArea.getHeight();
-		LayoutArea.setSize(new Dimension(width, height));
+		Dimension dim = new Dimension(width, height);
+		LayoutArea.setSize(dim);
+		LayoutArea.setMaximumSize(dim);
 		this.setSize(width + widthDif, height + heightDif);
+		
 		this.validate();
 	}
 

@@ -20,7 +20,12 @@ import org.xml.sax.SAXException;
 import sonia.ArcAttribute;
 import sonia.DyNetMLXMLWriter;
 import sonia.NodeAttribute;
+import sonia.PropertyBuilder;
 import sonia.ShapeFactory;
+import sonia.settings.ApplySettings;
+import sonia.settings.BrowsingSettings;
+import sonia.settings.GraphicsSettings;
+import sonia.settings.LayoutSettings;
 import sonia.settings.PropertySettings;
 import sonia.ui.AttributeMapperDialog;
 
@@ -52,6 +57,14 @@ public class DyNetMLParser implements Parser {
 	private Vector xCoordArrays = null;
 	
 	private Vector yCoordArrays = null;
+	
+	private ApplySettings appSet = null;
+	
+	private LayoutSettings laySet = null;
+	
+	private GraphicsSettings graphicSet = null;
+	
+	private BrowsingSettings browseSet = null;
 
 	private HashMap<String, Integer> alphaIdMap = null;
 
@@ -123,6 +136,7 @@ public class DyNetMLParser implements Parser {
 			Document document = builder.parse(new File(fileAndPath));
 			// read the file info
 			// read the network level info (params etc if it is a file written
+			parseMetaData(document);
 			// by sonia)
 			// read the nodes
 			parseNodes(document);
@@ -145,6 +159,61 @@ public class DyNetMLParser implements Parser {
 					+ " " + e.getMessage());
 
 		}
+		
+	}
+	
+	
+	/**
+	 * parses the various configuration settings for sonia if the file has
+	 * been saved by sonia
+	 * @author skyebend
+	 * @param doc
+	 */
+	private void parseMetaData(Document doc){
+		//ApplySettings applySet = null;
+		//LayoutSettings laySet = null;
+		
+		NodeList metaMats = doc.getElementsByTagName(DyNetMLXMLWriter.METAMAT);
+		//look for the measures elements
+		for( int m = 0; m< metaMats.getLength(); m++){
+			Node metaMat = metaMats.item(m);
+			NodeList metaKids = metaMat.getChildNodes();
+			for (int k = 0; k<metaKids.getLength(); k++){
+				Node kid = metaKids.item(k);
+				if (kid.getNodeName().equals(DyNetMLXMLWriter.MEASURES)){
+					NodeList measures = kid.getChildNodes();
+					for (int p = 0; p< measures.getLength(); p++){
+						Node measure = measures.item(p);
+						if (measure.getNodeName().equals(DyNetMLXMLWriter.MEASURE)){
+							String id = measure.getAttributes().getNamedItem(DyNetMLXMLWriter.ID).getNodeValue();
+							String value = measure.getAttributes().getNamedItem(DyNetMLXMLWriter.VAL).getNodeValue();
+							//check if it is alayout  setting
+							if (id.equals(ApplySettings.class.getCanonicalName())){
+								PropertyBuilder builder = new PropertyBuilder(value);
+								appSet = builder.getApplySettings();
+							}
+//							check if it is an apply setting
+							else if (id.equals(LayoutSettings.class.getCanonicalName())){
+								PropertyBuilder builder = new PropertyBuilder(value);
+								laySet = builder.getLayoutSettings();
+							}
+							//check if it is a graphics settings
+							else if (id.equals(GraphicsSettings.class.getCanonicalName())){
+								PropertyBuilder builder = new PropertyBuilder(value);
+								graphicSet = builder.getGraphicsSettings();
+							}
+							//check if it is a browsing setting
+							else if (id.equals(BrowsingSettings.class.getCanonicalName())){
+								PropertyBuilder builder = new PropertyBuilder(value);
+								browseSet = builder.getBrowsingSettings();
+							}
+						}
+						
+					}//end measure reading
+				}
+			}
+		}// end meta reading
+		
 	}
 	
 	/**
@@ -160,7 +229,7 @@ public class DyNetMLParser implements Parser {
 		for (int g =0; g<graphs.getLength();g++){
 			xmlGraph = graphs.item(g);
 			String gid = xmlGraph.getAttributes().getNamedItem(DyNetMLXMLWriter.ID).getNodeValue();
-			System.out.println(xmlGraph);
+			//System.out.println(xmlGraph);
 			HashMap graphPropMap = new HashMap<String, String>();
 			NodeList graphKids = xmlGraph.getChildNodes();
 			// look for the properties tag
@@ -178,8 +247,8 @@ public class DyNetMLParser implements Parser {
 								.getNodeValue();
 						String propValue = attrs.getNamedItem(
 								DyNetMLXMLWriter.VAL).getNodeValue();
-						System.out.println("\tgraphPropAttrs:" + propId + " "
-								+ propValue);
+						//System.out.println("\tgraphPropAttrs:" + propId + " "
+						//		+ propValue);
 						graphPropMap.put(propId, propValue);
 
 					}
@@ -231,7 +300,7 @@ public class DyNetMLParser implements Parser {
 		
 //		slice y coord
 		if  (sliceProps.containsKey(DyNetMLXMLWriter.Y_COORDS)){
-			xcoords = arrayify((String)sliceProps.remove(DyNetMLXMLWriter.Y_COORDS));
+			ycoords = arrayify((String)sliceProps.remove(DyNetMLXMLWriter.Y_COORDS));
 			yCoordArrays.add(ycoords);
 		}
 	}
@@ -351,7 +420,7 @@ public class DyNetMLParser implements Parser {
 			
 			// check if this edge already exists
 			if (foundEdges.contains(eid)) {
-				System.out.println("skipped edge " + eid);
+				System.out.println("skipped duplicate of edge with id " + eid);
 				// stop here and don't create the edge again
 				return null;
 			}
@@ -691,13 +760,7 @@ public class DyNetMLParser implements Parser {
 		return array;
 	}
 
-	// main for debugging
-	public static void main(String[] args) throws IOException {
-		DyNetMLParser parser = new DyNetMLParser();
-		parser
-				.parseNetwork("C:/Documents and Settings/skyebend/workspace/SoNIA/DyNetMLTest.xml.xml");
-		System.out.println("nodes:" + parser.getNodeList());
-	}
+	
 
 	public Vector getSliceEnds() {
 		return sliceEnds;
@@ -715,4 +778,19 @@ public class DyNetMLParser implements Parser {
 		return yCoordArrays;
 	}
 
+	public ApplySettings getApplySettings() {
+		return appSet;
+	}
+
+	public GraphicsSettings getGraphicsSetttings() {
+		return graphicSet;
+	}
+
+	public LayoutSettings getLayoutSettings() {
+		return laySet;
+	}
+
+	public BrowsingSettings getBrowsingSettings() {
+		return browseSet;
+	}
 }
