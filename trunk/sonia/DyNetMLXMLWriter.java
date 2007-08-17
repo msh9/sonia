@@ -552,7 +552,7 @@ public class DyNetMLXMLWriter {
 
 		// transform and write out the xml file
 		DOMSource ds = new DOMSource(doc);
-		StreamResult sr = new StreamResult(new File(filename + ".xml"));
+		StreamResult sr = new StreamResult(new File(filename));
 		TransformerFactory tf = TransformerFactory.newInstance();
 		Transformer trans = tf.newTransformer();
 		trans.transform(ds, sr);
