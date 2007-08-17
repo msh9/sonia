@@ -23,6 +23,8 @@ import javax.swing.JOptionPane;
 import javax.swing.RepaintManager;
 import javax.swing.event.InternalFrameEvent;
 
+import org.freehep.util.export.ExportDialog;
+
 
 /**
  * 
@@ -141,6 +143,11 @@ public class ExportableFrame extends JInternalFrame {
 		HEPDialog exportDialog = new HEPDialog("SoNIA");
 		exportDialog.showHEPDialog(this, "Chose file format for export",
 				compToPrint, "NetworkPic");
+		
+		//THIS IS TO USE VERSION freehep 2.1.1
+	//	ExportDialog exportDialog = new ExportDialog();
+	//	exportDialog.showExportDialog(compToPrint, 
+	//			"Chose file format for export...", compToPrint, "export");
 		enableDoubleBuffering(compToPrint);
 	}
 
