@@ -367,20 +367,25 @@ public class SoniaController {
 			} else if (fileName.endsWith(".xml")){
 				//TODO:  need to check doctype to figure out what kind of xml
 				parser = new DyNetMLParser();
-			}
-			// otherwise, try the DotNetParser
-			else {
+			} else if(fileName.endsWith(".net")) {
 				parser = new DotNetParser();
+			} else {
+				parser = null;
+				showError("Unable to determine correct parser from file extension," +
+						" is it the correct file type? (.son, .dl,.net,.rdump,.xml)");
+				
 			}
-			try {
-				parser.parseNetwork(currentPath + inFile);
-				fileLoaded = true;
-				autoCreate = true;
-				showStatus("Parsed file " + currentPath + inFile);
-			} catch (Exception error) {
-				showError("Unable to load file: "+ error.getCause()+ error.getMessage());
-				fileLoaded = false;
-
+			if (parser != null){
+				try {
+					parser.parseNetwork(currentPath + inFile);
+					fileLoaded = true;
+					autoCreate = true;
+					showStatus("Parsed file " + currentPath + inFile);
+				} catch (Exception error) {
+					showError("Unable to load file: "+ error.getCause()+ error.getMessage());
+					fileLoaded = false;
+	
+				}
 			}
 
 			// CHECK IF PARSING WAS SUCCESFULL
@@ -621,7 +626,7 @@ public class SoniaController {
 		
 		//now check if we are recreating an entire network with layouts
 		if (parser instanceof DyNetMLParser){
-			showStatus("rebuild layouts from data stored in "+inFile);
+			showStatus("rebuilding layouts from data stored in "+inFile);
 			DyNetMLParser reloader = (DyNetMLParser)parser;
 			sliceSettings = reloader.getLayoutSettings();
 			applySettings = reloader.getApplySettings();
@@ -637,6 +642,7 @@ public class SoniaController {
 			createLayout(sliceSettings);
 			//load in the coordinates
 			engine.assignCoordinates(reloader.getXCoordArrays(),reloader.getYCoordArrays());
+			
 			
 		}
 		
@@ -715,14 +721,14 @@ public class SoniaController {
 				browseSettings = new BrowsingSettings();
 		
 			}
-//			LayoutWindow display = new LayoutWindow(graphicSettings,
-//					browseSettings, this, engine, 500,400);
-//			engine.setDisplay(display);
-//			ui.addFrame(display);
-//			engine.setDisplayWidth(Integer.parseInt(graphicSettings
-//					.getProperty(GraphicsSettings.LAYOUT_WIDTH)));
-//			engine.setDisplayHeight(Integer.parseInt(graphicSettings
-//					.getProperty(GraphicsSettings.LAYOUT_HEIGHT)));
+			LayoutWindow display = new LayoutWindow(graphicSettings,
+					browseSettings, this, engine, 500,400);
+			engine.setDisplay(display);
+			showFrame((display));
+			engine.setDisplayWidth(Integer.parseInt(graphicSettings
+					.getProperty(GraphicsSettings.LAYOUT_WIDTH)));
+			engine.setDisplayHeight(Integer.parseInt(graphicSettings
+					.getProperty(GraphicsSettings.LAYOUT_HEIGHT)));
 
 
 		} else {
@@ -737,7 +743,11 @@ public class SoniaController {
 	 * @param frame
 	 */
 	public void showFrame(JInternalFrame frame) {
-		ui.addFrame(frame);
+		if (ui != null){
+			ui.addFrame(frame);
+		} else {
+			showError("cannot add frame to UI when ui is null");
+		}
 	}
 
 	/**
@@ -851,13 +861,17 @@ public class SoniaController {
 	 * @param engToExport
 	 */
 	public void exportXML(SoniaLayoutEngine engToExport){
+		String promptString = "Please Choose location and name for the xml coordinate file";
+		String sugestFile = getFileName() + ".xml";
+		String fileName = getOutputFile(sugestFile, promptString);
+		if ((fileName != null) && (getCurrentPath() != null)) {
 		XMLCoordRender xmlRender = new XMLCoordRender();
 		SoniaCanvas canvas = engToExport.getLayoutWindow().getDisplay();
 		canvas.getRenderSlice().render(xmlRender, canvas, xmlRender);
 		try {
 			//debug
 			System.out.println("creating xml");
-			xmlRender.createXML("xmlTest", canvas.getWidth(), canvas.getHeight(), 5, "testing xml file");
+			xmlRender.createXML(getCurrentPath()+fileName, canvas.getWidth(), canvas.getHeight(), 5, "testing xml file");
 	
 		} catch (TransformerException e) {
 			e.printStackTrace();
@@ -868,6 +882,7 @@ public class SoniaController {
 		} catch (Exception e){
 			showError("Error saving xml file for network:"+e.getMessage());
 		}
+		}
 	}
 	
 	/**
@@ -875,13 +890,17 @@ public class SoniaController {
 	 * @param engToExport
 	 */
 	public void exportGraphML(SoniaLayoutEngine engToExport){
+		String promptString = "Please Choose location and name for the GrphML xml file";
+		String sugestFile = getFileName() + ".xml";
+		String fileName = getOutputFile(sugestFile, promptString);
+		if ((fileName != null) && (getCurrentPath() != null)) {
 		GraphMLRender graphML = new GraphMLRender();
 		SoniaCanvas canvas = engToExport.getLayoutWindow().getDisplay();
 		canvas.getRenderSlice().render(graphML, canvas, graphML);
 		try {
 			//debug
 			System.out.println("creating GraphML xml fle");
-			graphML.createXML("graphMLTest", canvas.getWidth(), canvas.getHeight(), 5, "testing grapmML file");
+			graphML.createXML(getCurrentPath()+fileName, canvas.getWidth(), canvas.getHeight(), 5, "testing grapmML file");
 	
 		} catch (TransformerException e) {
 			e.printStackTrace();
@@ -891,6 +910,7 @@ public class SoniaController {
 			showError("Unable to create GraphML xml file for network:"+e.getMessage());
 		} catch (Exception e){
 			showError("Error saving GraphML xml file for network:"+e.getMessage());
+		}
 		}
 	}
 
@@ -952,16 +972,29 @@ public class SoniaController {
 	}
 	
 	public void saveDyNetML(SoniaLayoutEngine engToSave){
-		showStatus("saving network as dynetml file...");
-		DyNetMLXMLWriter writer = new DyNetMLXMLWriter(this);
-		try {
-			writer.saveXML(engToSave, "DyNetMLTest.xml");
-		} catch (ParserConfigurationException e) {
-			e.printStackTrace();
-			showError("Error writing network as DyNetML xml file:"+e.toString());
-		} catch (TransformerException e) {
-			e.printStackTrace();
-			showError("Error writing network as DyNetML xml file:"+e.toString());
+//		show a warning that it may not be readable by future versions
+		
+		 JOptionPane.showMessageDialog(ui, 
+				 "This is a very preliminary version of the DyNetML file format. " +
+				 "Saved files may not work with future versions of SoNIA or with other programs",
+		            "preliminary version of the DyNetML file format", JOptionPane.INFORMATION_MESSAGE);
+
+		String promptString = "Please Choose location and name for the DyNetML xml file";
+		String sugestFile = getFileName() + ".xml";
+		String fileName = getOutputFile(sugestFile, promptString);
+
+		if ((fileName != null) && (getCurrentPath() != null)) {
+			showStatus("saving network as dynetml file...");
+			DyNetMLXMLWriter writer = new DyNetMLXMLWriter(this);
+			try {
+				writer.saveXML(engToSave, getCurrentPath()+fileName);
+			} catch (ParserConfigurationException e) {
+				e.printStackTrace();
+				showError("Error writing network as DyNetML xml file:"+e.toString());
+			} catch (TransformerException e) {
+				e.printStackTrace();
+				showError("Error writing network as DyNetML xml file:"+e.toString());
+			}
 		}
 	}
 
