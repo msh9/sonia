@@ -785,8 +785,10 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 
 	public void disposeLayout() {
 		// need to get rid of layout settigns dialog?
-		schedule.hide();
-		schedule = null;
+		if (schedule != null){
+			schedule.hide();
+			schedule = null;
+		}
 	}
 	
 	public CoolingSchedule getSchedule(){
