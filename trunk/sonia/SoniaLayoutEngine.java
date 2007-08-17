@@ -221,7 +221,7 @@ public class SoniaLayoutEngine {
 		display.setTitle(display.getTitle() + currentLayout.getLayoutType());
 		// TODO: should it update the graphic settings?
 		// make sure the network gets drawn
-		display.updateDisplay();
+		updateDisplays();
 		// try to make the layout window active
 		display.show();
 	}
@@ -410,7 +410,7 @@ public class SoniaLayoutEngine {
 				applyLayoutTo(applySettings, slice);
 				// TODO: decide if there should be a repaint call here,
 				// check the repaintN?
-				display.updateDisplay();
+				updateDisplays();
 				startSlice++;
 				slicesLeft--;
 
@@ -720,8 +720,14 @@ public class SoniaLayoutEngine {
 	 * it. Shuld ask other windows?
 	 */
 	public void updateDisplays() {
+		if (display != null){
 		display.updateDisplay();
 		// should update the cooling scheduele as well? stress plot
+		} else {   //debugging
+			//TODO:fix threading problem here in batch mode
+		 // System.out.println("layout window is null");	
+		}
+		
 
 	}
 

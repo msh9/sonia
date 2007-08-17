@@ -84,7 +84,7 @@ import cern.colt.matrix.impl.SparseDoubleMatrix2D;
  */
 
 public class SoniaController {
-	public static final String CODE_DATE = "2007-06-14";
+	public static final String CODE_DATE = "2007-08-15";
 
 	public static final String VERSION = "1.1.5";
 
@@ -510,6 +510,8 @@ public class SoniaController {
 				log("Read layout settings from batch instructions");
 				createLayout(sliceSettings);
 			}
+			//need to build the layout window, even if we don't show it
+			showGUI(false);
 
 			if ((engine != null) && (applySettings != null)) {
 				engine.setApplySettings(applySettings);
