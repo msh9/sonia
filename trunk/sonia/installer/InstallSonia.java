@@ -55,7 +55,7 @@ public class InstallSonia {
 	//public static final String SONIA_DOWNLOAD_URL = "http://csde.washington.edu/~skyebend/rsonia/current/sonia_1_1_3_unstable.jar";
 	public static final String SONIA_DOWNLOAD_URL = "http://internap.dl.sourceforge.net/sourceforge/sonia/";
 	
-	public static final String SONIA_VERSION_NAME = "sonia_1_1_4.jar";
+	public static final String SONIA_VERSION_NAME = "sonia_1_1_5.jar";
 	
 	public static final String GPL_URL = "http://www.gnu.org/licenses/gpl.txt";
 
