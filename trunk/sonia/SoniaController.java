@@ -253,7 +253,7 @@ public class SoniaController {
 				settingsFile = arg.substring(9);
 			}
 			if (arg.startsWith("batchsettings:")) {
-				batchSettings = arg.substring(6);
+				batchSettings = arg.substring(14);
 			}
 			if (arg.startsWith("runbatch:")) {
 				runBatch = true;
@@ -270,7 +270,8 @@ public class SoniaController {
 
 		// batch overides settings
 		if (!batchSettings.equals("")) {
-			// check if it is a file or a string and try to load it
+			// check if it is a file or a string anda try to load it
+			sonia.log("batchsettings:"+batchSettings);
 			sonia.loadBatchSettings(batchSettings);
 			// this should be an option
 		} else if (!settingsFile.equals("")) {
@@ -278,6 +279,7 @@ public class SoniaController {
 		}
 		// if a file has been passed on the command line, load it
 		if (!inFile.equals("")) {
+			sonia.log("inFile:"+inFile);
 			sonia.loadFile(inFile);
 		} else if (!networkData.equals("")) {
 			sonia.loadData(networkData);
@@ -382,7 +384,7 @@ public class SoniaController {
 					autoCreate = true;
 					showStatus("Parsed file " + currentPath + inFile);
 				} catch (Exception error) {
-					showError("Unable to load file: "+ error.getCause()+ error.getMessage());
+					showError(error.getCause()+" Unable to load file: "+ error.getMessage());
 					fileLoaded = false;
 	
 				}
