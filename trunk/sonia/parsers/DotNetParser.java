@@ -110,7 +110,7 @@ import sonia.settings.PropertySettings;
 * is why the .net parser throws up the dialog to ask "parse times as integers."
 * If this is set to true, the end times will all have 0.99999 added to them, so
 * that the interval 1-2 will become 1.0-2.99999 instead of 1.0 to 2.0.
-* @version $Revision: 1.6 $ $Date: 2007-04-03 22:37:48 $
+* @version $Revision: 1.7 $ $Date: 2007-10-16 05:41:50 $
 * @author Skye Bender-deMoll e-mail skyebend@santafe.edu
 */
 public class DotNetParser extends Object implements Parser, ActionListener
@@ -554,7 +554,7 @@ public class DotNetParser extends Object implements Parser, ActionListener
           if (tag.startsWith("["))
           {
             //strip off the braces
-            time = time.substring(tag.indexOf("[")+1,tag.indexOf("]"));
+            time = tag.substring(tag.indexOf("[")+1,tag.indexOf("]"));
             //find out if there are commas, meaning we have to add this line
             //several times
             
@@ -611,7 +611,6 @@ public class DotNetParser extends Object implements Parser, ActionListener
      double weight;
      double width = 1.0;
      Color color = Color.lightGray;
-
      StringTokenizer arcString = new StringTokenizer(line," ");
      if (arcString.countTokens() < 3)
      {
@@ -651,7 +650,7 @@ public class DotNetParser extends Object implements Parser, ActionListener
 
          //parse all the rest
          //parse time coordinates
-         String time = "0-1";
+         String time = "0-1"; //default is 0 to 1
          Vector timesToParse = new Vector();
          while (arcString.hasMoreTokens())
          {
@@ -721,6 +720,7 @@ public class DotNetParser extends Object implements Parser, ActionListener
   {
     double startTime = 0.0;
     int dashIndex = time.indexOf("-");
+  
     try
       {
         //check if there is a dash
@@ -736,7 +736,7 @@ public class DotNetParser extends Object implements Parser, ActionListener
       }
       catch (NumberFormatException doubleParseEx)
       {
-       String error = "Line"+currentLineNum+" Unable to parse start time coordinate";
+       String error = "Line "+currentLineNum+" Unable to parse start time coordinate";
        throw(new IOException(error));
       }
     return startTime;
