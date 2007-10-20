@@ -31,6 +31,7 @@ import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 
+import sonia.ApplyLayoutTask;
 import sonia.LayoutSlice;
 import sonia.NodeInspector;
 import sonia.NodeMover;
@@ -861,6 +862,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		LayoutSlice currentSlice = engine.getCurrentSlice();
 		// apply layout
 		engine.applyLayoutToCurrent();
+	
+		
 		// Render the entire slice as one block, from start to finish
 		RenderTime.setText("" + currentSlice.getSliceStart());
 		RenderDuration.setText(""

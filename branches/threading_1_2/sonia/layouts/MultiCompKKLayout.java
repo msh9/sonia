@@ -3,13 +3,16 @@ package sonia.layouts;
 import java.util.*;
 import java.lang.Math;
 
+import sonia.ApplyLayoutTask;
 import sonia.CoolingSchedule;
 import sonia.LayoutSlice;
 import sonia.LayoutUtils;
+import sonia.LongTask;
 import sonia.NetUtils;
 import sonia.SoniaController;
 import sonia.SoniaLayoutEngine;
 import sonia.Subnet;
+import sonia.TaskListener;
 import sonia.settings.ApplySettings;
 import sonia.ui.ApplySettingsDialog;
 import cern.colt.list.IntArrayList;
@@ -198,7 +201,7 @@ import cern.colt.matrix.impl.DenseDoubleMatrix2D;
  * </P>
  * 
  */
-public class MultiCompKKLayout implements NetLayout, Runnable {
+public class MultiCompKKLayout implements NetLayout, LongTask {
 	private SoniaController control;
 
 	private SoniaLayoutEngine engine;
@@ -210,7 +213,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 									// layout procedure
 
 	private int maxSubpasses = 10;
-	private int passes;
+	private int totalPasses;
 
 	private double optDist; // optimal distance for nodes, gets reset later in
 							// code
@@ -247,6 +250,8 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 	 * algorithm should be allowed. Value must be parseable as an int.
 	 */
 	public static final String MAX_PASS = "max passes";
+	
+	private HashSet listeners = new HashSet();
 
 	/**
 	 * Instantiates the layout with reference to the main SoniaController and
@@ -304,6 +309,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 		settings = set;
 		//maxPasses = schedule.getMaxUsrPasses();
 		maxPasses = (int)Math.round(Double.parseDouble(settings.getProperty(MAX_PASS)));
+		totalPasses = 0;
 		schedule.setMaxPasses(maxPasses);
 		width = w;
 		height = h;
@@ -312,19 +318,21 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 		sliceXCoords = slice.getXCoords(); // has the real slice's object
 		sliceYCoords = slice.getYCoords();
 		// start algorthem on new thread so that it can be paused, etc
-		Thread layoutRunner = new Thread(this, "KKLayout loop");
-		layoutRunner.setPriority(10);
-		control.showStatus("Layout thread running..");
-		layoutRunner.start();
-		if (!control.isShowGUI()){
-			//run faster in batch mode 'cause we don't need to leave time for the gui thread
-		try {
-			layoutRunner.join();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		}
+		//control.runTask(this);
+		run();
+		//Thread layoutRunner = new Thread(this, "KKLayout loop");
+		//layoutRunner.setPriority(10);
+		//control.showStatus("Layout thread running..");
+		//layoutRunner.start();
+//		if (!control.isShowGUI()){
+//			//run faster in batch mode 'cause we don't need to leave time for the gui thread
+//		try {
+//			layoutRunner.join();
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		}
 	}
 
 	/**
@@ -404,7 +412,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 		}
 
 		engine.finishLayout(settings, this, slice, width, height);
-
+		reportStatus();
 	}
 
 	/**
@@ -443,9 +451,9 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 		double coolFact = Double.parseDouble(settings.getProperty(COOL_FACT));
 		int repaintN = Integer.parseInt(settings.getProperty(ApplySettings.LAYOUT_REPAINT_N));
 		// do these only apply to the last subnet run?
-		layoutInfo = layoutInfo + "\noptimum distance: " + optDist;
-		layoutInfo = layoutInfo + "\nminimum epsilon: " + minEpsilon;
-		layoutInfo = layoutInfo + "\ncool factor: " + coolFact;
+		//layoutInfo = layoutInfo + "\noptimum distance: " + optDist;
+		//layoutInfo = layoutInfo + "\nminimum epsilon: " + minEpsilon;
+		//layoutInfo = layoutInfo + "\ncool factor: " + coolFact;
 		// sets up lMatrix of distance between nodes pairs
 		//DenseDoubleMatrix2D lMatrix = calcLMatrix(distMatrix, optDist);
 		// arrays for quick acess to node coords
@@ -459,7 +467,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 		// epsilon = (nNodes * numEdges)/2;
 		// figure out the initial stat to compare to at the end
 		double initialEnergy = getEnergy(distMatrix, xPos, yPos);
-		layoutInfo = layoutInfo + "\ninitial KK energy: " + initialEnergy;
+		//layoutInfo = layoutInfo + "\ninitial KK energy: " + initialEnergy;
 		// double epsilon = { initialEnergy / nNodes;
 
 		// figure out which node to start moving first
@@ -505,8 +513,10 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 						& noBreak) {
 					// show subpass on schedule
 					schedule.showPassValue(passes);
+					layoutInfo = "pass: "+passes + " max energy: "+maxDeltaM+" ";
 					// also show convergance on schedule
 					schedule.showConvergance(passes, moveNodeDeltaM);
+					
 					moveRecord[passes]=maxDeltaMIndex;
 					
 					// get the deltas which will move node towards the local
@@ -521,6 +531,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 					moveNodeDeltaM = getDeltaM(maxDeltaMIndex, distMatrix,xPos, yPos);
 					subPasses++;
 					passes++;
+					totalPasses++;
 					if (passes > maxPasses) {
 						// break the loop, and tell us
 						control.showStatus("KK inner loop exceeded max passes");
@@ -537,6 +548,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 				
 				//testing
 				//pick node at random with some small probability
+				//TODO: add pickNoise param to give this probability
 				if (control.getUniformRand(0,1) > 0.95){
 					maxDeltaMIndex = (int)Math.round(control.getUniformRand(0,nNodes-1));
 			
@@ -793,5 +805,54 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 	
 	public CoolingSchedule getSchedule(){
 		return schedule;
+	}
+
+	public String getTaskName() {
+		return getLayoutType();
+	}
+
+
+	public void stop() {
+		pause();
+		
+	}
+
+	public String getStatusText() {
+		return getLayoutInfo();
+	}
+
+	public boolean isDurationKnown() {
+		return true;
+	}
+
+	public int maxSteps() {
+	
+		return maxPasses;
+	}
+
+	public int currentStep() {
+		return totalPasses;
+	}
+
+	public boolean isError() {
+		return slice.isError();
+	}
+
+	public boolean isDone() {
+		
+		return slice.isLayoutFinished();
+	}
+
+	public void addTaskEventListener(Object listener) {
+		listeners.add(listener);
+
+	}
+
+	private void reportStatus() {
+		Iterator listeniter = listeners.iterator();
+		while (listeniter.hasNext()) {
+			TaskListener listener = (TaskListener) listeniter.next();
+			listener.taskStatusChanged(this);
+		}
 	}
 }

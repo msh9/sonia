@@ -338,7 +338,7 @@ public class LayoutSlice
   /**
    * checks flag to see if layout is in use by an algorithm
    */
-  public boolean isLayoutFinished()
+  public synchronized boolean isLayoutFinished()
   {
     return layoutFinished;
   }
@@ -346,7 +346,7 @@ public class LayoutSlice
   /**
    * sets flag so that other layouts won't access this slice at the same time
    */
-  public void setLayoutFinished(boolean value)
+  public synchronized void setLayoutFinished(boolean value)
   {
     layoutFinished = value;
     if ((value == true) & (stability != null))

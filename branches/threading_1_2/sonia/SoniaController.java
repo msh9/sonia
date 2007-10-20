@@ -34,6 +34,7 @@ import java.beans.PropertyVetoException;
 
 import javax.swing.JInternalFrame;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.plaf.metal.MetalLookAndFeel;
 import javax.swing.plaf.metal.MetalTheme;
@@ -83,7 +84,7 @@ import cern.colt.matrix.impl.SparseDoubleMatrix2D;
  * the command line, otherwise the last 7 digits of milisecond time are used.
  */
 
-public class SoniaController {
+public class SoniaController implements Runnable{
 	public static final String CODE_DATE = "2007-08-15";
 
 	public static final String VERSION = "1.1.5";
@@ -129,6 +130,8 @@ public class SoniaController {
 	private PropertySettings movieSettings = null;
 
 	private Uniform randomUni; // colt package mersense twister random numbers
+	
+	private TaskRunner taskrunner;
 
 	// NEED TO INCLUDE COLT LISCENCE AGREEMENT
 	private Date date;
@@ -167,6 +170,15 @@ public class SoniaController {
 			// }
 			log("ERROR: unable to initialize random number generator: "
 					+ e.getMessage());
+		}
+		taskrunner = new TaskRunner();
+		taskrunner.addUItoUpdate(ui);
+	}
+	
+	public void runTask(LongTask task){
+		taskrunner.runTask(task);
+		if (isShowGUI()){
+			ui.showTask(task);
 		}
 	}
 
@@ -289,7 +301,8 @@ public class SoniaController {
 		if (runBatch & !batchSettings.equals("")) {
 			sonia.runBatch();
 		} else {
-			sonia.showGUI(true);
+			//sonia.showGUI(true);
+			SwingUtilities.invokeLater(sonia);
 		}
 		} catch (Throwable e) {
 			System.out.println("Error Launching Sonia:"+e.getMessage());
@@ -297,6 +310,11 @@ public class SoniaController {
 			System.exit(-1);
 		}
 
+	}
+	
+	//launched inside gui thread, reads args and decides how to launch
+	public void run(){
+	  showGUI(true);
 	}
 
 	/**
@@ -1098,6 +1116,7 @@ public class SoniaController {
 
 		}
 		ui.repaint();
+		
 	}
 
 	// accessors------------------
@@ -1153,10 +1172,12 @@ public class SoniaController {
 				engine.pause();
 			showStatus("Paused. Press Resume to contine");
 		} else {
+			taskrunner.stopAllTasks();
 			if (engine != null)
 				engine.resume();
 			showStatus("");
 		}
+		
 	}
 
 	/**

@@ -343,25 +343,29 @@ public class SoniaLayoutEngine {
 	 * startApplyLayoutToRemaining()
 	 */
 	public void applyLayoutToRemaining() {
-		Thread layoutRunner = new Thread() {
-			public void run() {
-				// catch errors on this thread
-				try {
-					startApplyLayoutToRemaining();
-				} catch (Throwable t) {
-					control.showError("Error applying layout: "
-							+ t.getMessage());
-					t.printStackTrace();
-					if (!control.isShowGUI()) {
-						// exit the system
-						System.exit(-1);
-					}
-				}
-			}
-		};
-		layoutRunner.setName("apply layout to remaining");
-		layoutRunner.setPriority(5);
-		layoutRunner.start();
+		LongTask multiTask = new MultipleLayoutTask(this);
+		control.runTask(multiTask);
+//		Thread layoutRunner = new Thread() {
+//			public void run() {
+//				// catch errors on this thread
+//				try {
+//					startApplyLayoutToRemaining();
+//					
+//					
+//				} catch (Throwable t) {
+//					control.showError("Error applying layout: "
+//							+ t.getMessage());
+//					t.printStackTrace();
+//					if (!control.isShowGUI()) {
+//						// exit the system
+//						System.exit(-1);
+//					}
+//				}
+//			}
+//		};
+//		layoutRunner.setName("apply layout to remaining");
+//		layoutRunner.setPriority(5);
+//		layoutRunner.start();
 	}
 
 	/**
@@ -486,7 +490,12 @@ public class SoniaLayoutEngine {
 			// makesure the display is current THIS WILL SLOW THINGS DOWN
 			// display.updateDisplay();
 			// ask the layout to calculate the cordinates
-			currentLayout.applyLayoutTo(slice, width, height, settings);
+			//currentLayout.applyLayoutTo(slice, width, height, settings);
+			
+			//ask control to run the layout in a new thread
+			control.runTask(
+					new ApplyLayoutTask(this,currentLayout,width,
+							height,slice,settings));
 
 			// print out layout info to log
 			control.showStatus("Starting layout on slice "
@@ -1096,8 +1105,8 @@ public class SoniaLayoutEngine {
 	public LayoutSettings getLayoutSettings() {
 		return layoutSettings;
 	}
-
 	
+
 
 	/**
 	 * loops over the slices in order and applies the double[] s stored in the

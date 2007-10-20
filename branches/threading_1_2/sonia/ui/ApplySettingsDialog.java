@@ -19,6 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
+import sonia.ApplyLayoutTask;
 import sonia.SoniaController;
 import sonia.SoniaLayoutEngine;
 import sonia.layouts.NetLayout;
@@ -509,7 +510,8 @@ public class ApplySettingsDialog implements ActionListener {
 			} else if (evt.getSource().equals(MultiApply)) {
 				// this will ask ask the dialog for the settings
 				engine.setApplySettings(getSettings());
-				engine.applyLayoutToRemaining();
+			    engine.applyLayoutToRemaining();
+				
 				settingsDialog.setVisible(false);
 			}
 		}
