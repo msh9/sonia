@@ -315,8 +315,8 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 		height = h;
 		layoutInfo = "";
 		// arrays for quick acess to node coords
-		sliceXCoords = slice.getXCoords(); // has the real slice's object
-		sliceYCoords = slice.getYCoords();
+		sliceXCoords = slice.getXCoords(); // DANGEROUS has the real slice's object
+		sliceYCoords = slice.getYCoords(); // modifications will move nodes
 		// start algorthem on new thread so that it can be paused, etc
 		//control.runTask(this);
 		run();
@@ -412,7 +412,6 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 		}
 
 		engine.finishLayout(settings, this, slice, width, height);
-		reportStatus();
 	}
 
 	/**
@@ -430,8 +429,9 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 	 * highest energy (worst position) is located.
 	 */
 	private void KKLoop(Subnet subnet, DoubleMatrix2D distMatrix) {
+
 		int nNodes = subnet.getNumNodes();
-		control.showStatus("Starting KK main loop...");
+		//control.showStatus("Starting KK main loop...");
 		schedule.reset();
 		
 		//debuging
@@ -534,7 +534,7 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 					totalPasses++;
 					if (passes > maxPasses) {
 						// break the loop, and tell us
-						control.showStatus("KK inner loop exceeded max passes");
+					//	control.showStatus("KK inner loop exceeded max passes");
 						control.log("KK inner loop exceeded max passes");
 						layoutInfo = layoutInfo
 								+ "\nKK inner loop exceeded max passes";
@@ -567,6 +567,7 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 				// if set to update display, update on every nth pass
 		          if ((repaintN > 0)&& (passes % repaintN == 0))
 				{
+		        	  //TODO:fix repaint every n function
 					// reset the appropriate values of the the slice coords to
 					// the new subnet coords
 					for (int i = 0; i < nNodes; i++) {
@@ -584,7 +585,7 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 				}
 				//passes++;
 				// attempt to let redraws of other windows, pause, etc
-				Thread.yield();
+				//Thread.yield();
 			}// end main KK loop
 
 			// USE COOLING SCHEDULE HERE!!
@@ -596,6 +597,7 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 			for (int i = 0; i < nNodes; i++) {
 				sliceXCoords[subnet.getNetIndex(i)] = xPos[i];
 				sliceYCoords[subnet.getNetIndex(i)] = yPos[i];
+			
 			}
 			// calc the stress WHAT ABOUT ISOLATES?
 			// layoutInfo += "stress: "+NetUtils.getStress(slice)+"\n";
@@ -653,7 +655,17 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 				/ (xxPartial * yyPartial - xyPartial * yxPartial);
 		deltas[1] = (xxPartial * (-yPartial) - (-xPartial) * yxPartial)
 				/ (xxPartial * yyPartial - xyPartial * yxPartial);
-
+		//catch situation where deltas might be infinate
+		//i think this only occurs when working with components of size two?
+		if (Double.isInfinite(deltas[0]) | Double.isNaN(deltas[0])){
+			deltas[0] = 0;
+			System.out.println("reset infinite kk delta");
+		}
+		if (Double.isInfinite(deltas[1]) | Double.isNaN(deltas[1])){
+			deltas[1] = control.getUniformRand(0,1);
+			System.out.println("reset infinite kk delta");
+		}
+		
 		return deltas;
 	}
 
@@ -735,6 +747,7 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 
 	/**
 	 * set up matrix of spring forces between pairs using K/(d[i][j]^2 )
+	 * @deprecated to run faster use calc K value
 	 */
 	private DenseDoubleMatrix2D calcKMatrix(DoubleMatrix2D distMatrix,
 			double spring) {
@@ -751,6 +764,7 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 
 	/**
 	 * set up matrix of desired edge lengths using L*d[i][j]
+	 * @deprecated use calc L value
 	 */
 	private DenseDoubleMatrix2D calcLMatrix(DoubleMatrix2D distMatrix,
 			double optDist) {
