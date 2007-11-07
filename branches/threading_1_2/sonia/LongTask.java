@@ -22,22 +22,72 @@ package sonia;
  */
 public interface LongTask extends Runnable {
 	
+	/**
+	 * name of the task, probably used in the ui
+	 * @author skyebend
+	 * @return
+	 */
 	public String getTaskName();
 	
+	/**
+	 * tell task to stop asap
+	 * @author skyebend
+	 */
 	public void stop();
 	
+	/**
+	 * returns status text for the running process
+	 * @author skyebend
+	 * @return
+	 */
 	public String getStatusText();
 	
+	/**
+	 * true if it is possible to calculate at least an estimate of the number
+	 * of steps in the task, false if task is indeterminate
+	 * @author skyebend
+	 * @return
+	 */
 	public boolean isDurationKnown();
 	
+	/**
+	 * how many steps the task can take
+	 */
 	public int maxSteps();
 	
+	/**
+	 * what step the task is on
+	 * @author skyebend
+	 * @return
+	 */
 	public int currentStep();
 	
+	/**
+	 * is the task in an error state?
+	 * @author skyebend
+	 * @return
+	 */
 	public boolean isError();
 	
+	/**
+	 * has the task completed / stopped?
+	 * @author skyebend
+	 * @return
+	 */
 	public boolean isDone();
 	
+	/**
+	 * is the task still executing?
+	 * @author skyebend
+	 * @return
+	 */
+	//public boolean isRunning();
+	
+	/**
+	 * give the task an object to notify when changes occur
+	 * @author skyebend
+	 * @param listener
+	 */
 	public void addTaskEventListener(Object listener);
 	
 }

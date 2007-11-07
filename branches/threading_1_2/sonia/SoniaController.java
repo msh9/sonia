@@ -51,6 +51,7 @@ import sonia.movie.MovieMaker;
 import sonia.movie.OldQTMovieMaker;
 import sonia.movie.QTMovieMaker;
 import sonia.movie.SWFMovieMaker;
+import sonia.parsers.ClusterParser;
 import sonia.parsers.DLParser;
 import sonia.parsers.DotNetParser;
 import sonia.parsers.DotSonParser;
@@ -73,6 +74,7 @@ import sonia.ui.MovExportSettingsDialog;
 import sonia.ui.SoniaInterface;
 
 import cern.jet.random.Uniform;
+import cern.colt.list.IntArrayList;
 import cern.colt.matrix.impl.SparseDoubleMatrix2D;
 
 /**
@@ -87,13 +89,13 @@ import cern.colt.matrix.impl.SparseDoubleMatrix2D;
 public class SoniaController implements Runnable{
 	public static final String CODE_DATE = "2007-08-15";
 
-	public static final String VERSION = "1.1.5";
+	public static final String VERSION = "1.2.0";
 
 	private SoniaInterface ui;
 
 	private LogWindow log;
 
-	private ArrayList engines; // holds engines for each layout
+	private ArrayList<SoniaLayoutEngine> engines; // holds engines for each layout
 
 	private SoniaLayoutEngine engine; //context for current actions
 
@@ -200,7 +202,7 @@ public class SoniaController implements Runnable{
 			LayoutWindow display = new LayoutWindow(graphicSettings,
 					browseSettings, this, engine, 500,400);
 			engine.setDisplay(display);
-			ui.addFrame(display);
+			//ui.addFrame(display);
 			engine.setDisplayWidth(Integer.parseInt(graphicSettings
 					.getProperty(GraphicsSettings.LAYOUT_WIDTH)));
 			engine.setDisplayHeight(Integer.parseInt(graphicSettings
@@ -402,8 +404,12 @@ public class SoniaController implements Runnable{
 					autoCreate = true;
 					showStatus("Parsed file " + currentPath + inFile);
 				} catch (Exception error) {
-					showError(error.getCause()+" Unable to load file: "+ error.getMessage());
+//					debug
+					error.printStackTrace();
+					showError("Unable to load file: "+ error.getMessage());
 					fileLoaded = false;
+					
+					
 	
 				}
 			}
@@ -629,6 +635,11 @@ public class SoniaController implements Runnable{
 		// load data from parser into net data
 		networkData.addNodeEvents(parser.getNodeList());
 		networkData.addArcEvents(parser.getArcList());
+		//debug TESTING IF CLUSTERS WILL DISPLAY
+		if (parser instanceof ClusterParser){
+			networkData.addClusterEvents(((ClusterParser)parser).getClusterList());
+		}
+		
 		networkData.setNetInfo(parser.getNetInfo());
 		if (parser.getClass().equals(DotSonParser.class)){
 			networkData.setNodeDataKeys(((DotSonParser)parser).getNodeDataKeys());

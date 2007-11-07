@@ -113,6 +113,9 @@ public class ApplyLayoutTask implements LongTask {
 
 	public void run() {
 		layout.applyLayoutTo(slice,width,height,settings);
+		reportStatus();
 	}
+
+	
 
 }

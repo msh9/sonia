@@ -27,6 +27,7 @@ import java.util.HashMap;
 
 import sonia.ArcAttribute;
 import sonia.NodeAttribute;
+import sonia.NodeClusterAttribute;
 import sonia.RenderSlice;
 
 public class Graphics2DRender implements Render {
@@ -215,6 +216,19 @@ public class Graphics2DRender implements Render {
 		// detecting other arcs to same nodes to curve..
 		graphics.setColor(startColor);
 	}
+	
+	public void paintClusters(NodeClusterAttribute cluster){
+		Color origColor = graphics.getColor();
+		if (cluster.getFillColor() != null){
+			graphics.setColor(cluster.getFillColor());
+			graphics.fill(cluster.getShape());
+		}
+		graphics.setColor(cluster.getBorderColor());
+		graphics.setStroke(getStrokeForWidth(cluster.getWidth(),
+				cluster.isDashed()));
+		graphics.draw(cluster.getShape());
+		graphics.setColor(origColor);
+	}
 
 	public void paintStats(String stats) {
 		// round and format the slice times
@@ -226,12 +240,12 @@ public class Graphics2DRender implements Render {
 	}
 
 	private BasicStroke getStrokeForWidth(float width, boolean isNegitive) {
-		if (isNegitive) {
-			width = width * -1;
-			// TODO: negitive weights not working correctly
+		if (width > 0 & isNegitive){
+			width *= -1;
 		}
-		width = Math.abs(width);
 		Float key = new Float(width);
+	   // TODO: negitive weights not working correctly
+		width = Math.abs(width);
 		if (strokeTable.containsKey(key)) {
 			// return the stroke already made for this width
 			return (BasicStroke) strokeTable.get(key);

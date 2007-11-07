@@ -34,6 +34,7 @@ import java.awt.geom.GeneralPath;
 import java.awt.geom.IllegalPathStateException;
 import java.text.*;
 
+import sonia.render.Graphics2DRender;
 import sonia.render.Render;
 
 /**
@@ -63,9 +64,13 @@ public class RenderSlice {
 
 	private double sliceEnd;
 
-	private Vector nodeEvents;
+	private Vector<NodeAttribute> nodeEvents;
 
-	private Vector arcEvents;
+	private Vector<ArcAttribute> arcEvents;
+	
+	private Vector<NodeClusterAttribute> clusterEvents = null;
+	
+	private double clusterPadding = 10;
 
 	// private double flashWindow = 0.1;
 	// private Line2D arcLine = new Line2D.Double(); //the path to draw
@@ -79,7 +84,7 @@ public class RenderSlice {
 	 * calls on objects
 	 */
 	public RenderSlice(SoniaLayoutEngine engine, double startTime,
-			double endTime, Vector nodes, Vector arcs) {
+			double endTime, Vector<NodeAttribute> nodes, Vector<ArcAttribute> arcs) {
 		layoutEngine = engine;
 		sliceStart = startTime;
 		sliceEnd = endTime;
@@ -94,8 +99,9 @@ public class RenderSlice {
 		layoutEngine = engine;
 		sliceStart = startTime;
 		sliceEnd = endTime;
-		nodeEvents = new Vector();
-		arcEvents = new Vector();
+		nodeEvents = new Vector<NodeAttribute>();
+		arcEvents = new Vector<ArcAttribute>();
+		clusterEvents = new Vector<NodeClusterAttribute>();
 		formater.setMaximumFractionDigits(3);
 		formater.setMinimumFractionDigits(3);
 	}
@@ -106,6 +112,10 @@ public class RenderSlice {
 
 	public void addNodeEvent(NodeAttribute node) {
 		nodeEvents.add(node);
+	}
+	
+	public void addClusterEvent(NodeClusterAttribute cluster){
+		clusterEvents.add(cluster);
 	}
 
 	// loops over all objects and asks them to paint themselves
@@ -126,6 +136,22 @@ public class RenderSlice {
 		// Font originalFont = graphics.getFont();
 
 		render.setDrawingTarget(drawTarget);
+		
+		//CLUSTER EVENT LOOP
+		//for now, just do this if it is graphics 2d render
+		if (render instanceof Graphics2DRender){
+//			 check settings before transparency
+			if (canvas.isArcTrans()) {
+				render.setTransparency(canvas.getNodeTransVal());
+			}
+			Iterator<NodeClusterAttribute> clustiter = clusterEvents.iterator();
+			while (clustiter.hasNext()){
+				NodeClusterAttribute cluster = clustiter.next();
+				cluster.computeShapeFor(xCoords,yCoords,clusterPadding,left,top);
+				((Graphics2DRender)render).paintClusters(cluster);
+			}
+			
+		}
 
 		// first do arcs
 		// KLUDG check to not draw arcs for speed
@@ -223,6 +249,8 @@ public class RenderSlice {
 						showLabels, showId);
 			}
 		}
+		
+	
 
 		// debug show slice stats
 		if (canvas.isShowStats()) {

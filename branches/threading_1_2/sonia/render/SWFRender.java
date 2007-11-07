@@ -312,7 +312,7 @@ public class SWFRender implements Render {
 	}
 
 	/**
-	 * if the draw target is a graphics2D swf it is stored, otherwise ignored
+	 * if the draw target is a flash frame swf it is stored, otherwise ignored
 	 */
 	public void setDrawingTarget(Object drawTarget) {
 		if (drawTarget.getClass().equals(Frame.class)) {

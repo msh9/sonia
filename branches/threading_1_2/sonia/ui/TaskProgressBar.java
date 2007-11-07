@@ -16,6 +16,8 @@ package sonia.ui;
 
 import java.awt.Graphics;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -25,7 +27,7 @@ import javax.swing.border.TitledBorder;
 import sonia.LongTask;
 import sonia.TaskListener;
 
-public class TaskProgressBar extends JPanel {
+public class TaskProgressBar extends JPanel{
 
 	private LongTask task;
 
@@ -47,8 +49,6 @@ public class TaskProgressBar extends JPanel {
 			progress.setIndeterminate(true);
 		}
 		setBorder(new TitledBorder(task.getTaskName()));
-		// ADD THIS AS A LISTENER TO FORCE REPANTS ON STATUS CHANGE?
-		//task.addTaskEventListener(this);
 		add(progress);
 		
 	}
@@ -83,6 +83,7 @@ public class TaskProgressBar extends JPanel {
 	public LongTask getTask() {
 		return task;
 	}
+	
 	
 	
 

@@ -65,6 +65,8 @@ public class NetDataStructure
   private NodeAttribute[] nodeEventArray;
   //likewise for edges
   private ArcAttribute[] arcEventArray;
+  
+  private NodeClusterAttribute[] nodeClusterArray = null;
 
 
   /**
@@ -262,8 +264,21 @@ public class NetDataStructure
          slice.addArcEvent(arcEventArray[i]);
        }
       }
-      //debug
-      //System.out.println("renderSlice contains: "+slice.toString());
+      //do clusters, if there are any
+      if (nodeClusterArray != null){
+    	  for (int i = 0; i < nodeClusterArray.length; i++) {
+    		  double obsTime = nodeClusterArray[i].getObsTime();
+    	       double end = nodeClusterArray[i].getEndTime();
+    	       //include arc in bin if obsTime is within interval (inclusive)
+    	       // (will include relations of lenth shorter than interval)
+    	       //if obsTime before start AND endTime after end of interval
+    	       if(((obsTime >= sliceStart) & (obsTime < sliceEnd))
+    	           | ((obsTime <= sliceStart) & (end >= sliceEnd)))
+    	       {
+    	         slice.addClusterEvent(nodeClusterArray[i]);
+    	       }
+		}
+      }
       return slice;
   }
 
@@ -306,6 +321,11 @@ public class NetDataStructure
       //bug
       control.showError("Wrong number of arc events");
     }
+  }
+  
+  public void addClusterEvents(Vector clusterEvents){
+	  nodeClusterArray = new NodeClusterAttribute[clusterEvents.size()];
+	  clusterEvents.copyInto(nodeClusterArray);
   }
 
   /**

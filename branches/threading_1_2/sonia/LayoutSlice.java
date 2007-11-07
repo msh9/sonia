@@ -26,6 +26,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import cern.colt.matrix.impl.SparseDoubleMatrix2D;
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.list.IntArrayList;
@@ -44,7 +46,7 @@ public class LayoutSlice
   private SparseDoubleMatrix2D arcCountMatrix; //holds number of ij ties (would be nice if it was int..)
   private IntArrayList presentNodes; //idexesof all the nodes present
   private ArrayList nodeEvents;  // ref for acessing the orignial events
-  private boolean layoutFinished = true; //flag for concurency check
+  private AtomicBoolean layoutFinished = new AtomicBoolean(true); //flag for concurency check
   private boolean hasError;  //flag for saying there are layout problems
 
   private StabilityEstimate stability;
@@ -133,6 +135,7 @@ public class LayoutSlice
    */
   public IntArrayList getIsolates()
   {
+	  //TODO: is get isolates alwyas correct?
     //NEED TO CHECK THIS
     //add isolates to isolate list
      IntArrayList isolates = new IntArrayList();
@@ -338,21 +341,21 @@ public class LayoutSlice
   /**
    * checks flag to see if layout is in use by an algorithm
    */
-  public synchronized boolean isLayoutFinished()
+  public  boolean isLayoutFinished()
   {
-    return layoutFinished;
+    return layoutFinished.get();
   }
 
   /**
    * sets flag so that other layouts won't access this slice at the same time
    */
-  public synchronized void setLayoutFinished(boolean value)
+  public  void setLayoutFinished(boolean value)
   {
-    layoutFinished = value;
-    if ((value == true) & (stability != null))
-    {
-      stability.layoutComplete(xCoords,yCoords);
-    }
+    layoutFinished.set(value);
+//    if ((value == true) & (stability != null))
+//    {
+//      stability.layoutComplete(xCoords,yCoords);
+//    }
   }
 
   /**

@@ -433,8 +433,6 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 		int nNodes = subnet.getNumNodes();
 		//control.showStatus("Starting KK main loop...");
 		schedule.reset();
-		
-		//debuging
 		int[] moveRecord = new int[maxPasses+1];
 
 		// sets up kmatrix of forces (optimal [but not always achieveable]

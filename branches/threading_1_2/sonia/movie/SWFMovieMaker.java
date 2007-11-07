@@ -120,6 +120,8 @@ public class SWFMovieMaker implements MovieMaker {
 		shape.line(0,canvas.getHeight());
 		shape.line(0, 0 );
 		currentFrame.placeSymbol(shape, 0,0);
+		//debug
+		System.out.println("swf frame "+canvas.getWidth()+" "+canvas.getHeight());
 	}
 
 	public void captureImage() {

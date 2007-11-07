@@ -290,8 +290,6 @@ public class SoniaInterface extends JFrame implements WindowListener,
 			if(statuscomps[i] instanceof TaskProgressBar){
 				if (((TaskProgressBar)statuscomps[i]).getTask().isDone()){
 					statusPanel.remove(statuscomps[i]);
-					//debug
-					System.out.println("removed task status");
 				}
 			}
 		}

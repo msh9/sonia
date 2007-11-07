@@ -15,6 +15,8 @@
 package sonia;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
@@ -82,7 +84,7 @@ public class TaskRunner implements TaskListener {
 					runningTasks.add(task);
 					// start the task on a new thread
 					// debug
-					System.out.println("starting task " + task.getTaskName());
+					System.out.println(System.currentTimeMillis()+" starting task " + task.getTaskName());
 					threadService.submit(task);
 					//new Thread(task, task.getTaskName()).start();
 					//start the ui updating, if appropriate
@@ -128,18 +130,18 @@ public class TaskRunner implements TaskListener {
 		if (task.isDone()) {
 			runningTasks.remove(task);
 			//debug
-			System.out.println("task "+task.getTaskName()+" is done.");
+			System.out.println(System.currentTimeMillis()+" task "+task.getTaskName()+" is done.");
 			// check if there is a dependent task
 			if (dependencies.containsKey(task)) {
 				// if there is, get it and start on a new thread
 				LongTask newTask = dependencies.remove(task);
-				checkQueue();
+				
 			}
+			checkQueue();
 		}
 		// check if it is error
 		// report status
-		// debug
-		System.out.println("TASK said: "+ task.getStatusText());
+	
 
 	}
 

@@ -435,13 +435,17 @@ public class SoniaLayoutEngine {
 	 * @param slice
 	 *            the slice which the layout will be applied to
 	 */
-	public void applyLayoutTo(ApplySettings settings, LayoutSlice slice) {
+	public synchronized LongTask  applyLayoutTo(ApplySettings settings, LayoutSlice slice) {
+		
 		// check if slice is in use
 		if (!slice.isLayoutFinished()) {
 			control.showError("Slice layout is not finished");
+			return null;
 		} else if (control.isPaused()) {
 			control.showError("Paused. click || or resume to continue");
+			return null;
 		} else {
+			
 
 			// lock slice so other layouts will not be applied
 			// layout must set finished back to true when done.
@@ -493,15 +497,16 @@ public class SoniaLayoutEngine {
 			//currentLayout.applyLayoutTo(slice, width, height, settings);
 			
 			//ask control to run the layout in a new thread
-			control.runTask(
-					new ApplyLayoutTask(this,currentLayout,width,
-							height,slice,settings));
+			LongTask task = new ApplyLayoutTask(this,currentLayout,width,
+					height,slice,settings);
+			control.runTask(task);
 
 			// print out layout info to log
 			control.showStatus("Starting layout on slice "
 					+ layoutSlices.indexOf(slice) + "\tstart time:"
 					+ slice.getSliceStart() + "\tend time:"
 					+ slice.getSliceEnd());
+			return task;
 
 		}
 	}

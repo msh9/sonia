@@ -14,35 +14,48 @@
  */
 package sonia;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.Vector;
 
 import sonia.layouts.NetLayout;
 import sonia.settings.ApplySettings;
 
-public class MultipleLayoutTask implements LongTask, TaskListener{
+public class MultipleLayoutTask implements LongTask, TaskListener {
 
 	private SoniaLayoutEngine engine;
+
 	private ApplySettings applySettings;
+
 	private String status = "preparing to start...";
+
 	private int startSlice = 0;
+
 	private int currentSlice = 0;
-	private int slicesLeft =0;
+
+	private int slicesLeft = 0;
+
 	private int errorSlices = 0;
+
 	private boolean stop = false;
+
 	private boolean isError = false;
+
 	private HashSet listeners = new HashSet();
-	
-	public MultipleLayoutTask(SoniaLayoutEngine engine){
+
+	private Set<Integer> donelist = Collections
+			.synchronizedSet(new HashSet<Integer>());
+
+	public MultipleLayoutTask(SoniaLayoutEngine engine) {
 		this.engine = engine;
 		applySettings = engine.getCurrentApplySettings();
 	}
-	
+
 	public String getTaskName() {
 		return "Applying layout to multiple slices";
 	}
-
 
 	public void stop() {
 		stop = true;
@@ -77,9 +90,9 @@ public class MultipleLayoutTask implements LongTask, TaskListener{
 	 */
 	public void addTaskEventListener(Object listener) {
 		listeners.add(listener);
-		
+
 	}
-	
+
 	private void reportStatus() {
 		Iterator listeniter = listeners.iterator();
 		while (listeniter.hasNext()) {
@@ -87,67 +100,90 @@ public class MultipleLayoutTask implements LongTask, TaskListener{
 			listener.taskStatusChanged(this);
 		}
 	}
-	
-	private void nextSlice(){
-		if ((slicesLeft > 0) & (!stop)){
-			status = "Applying layout to slice " + currentSlice ;
-			currentSlice++;
-			slicesLeft--;
-			//engine.changeToSliceNum(currentSlice);
-			LayoutSlice slice = engine.getCurrentSlice();
-			//layout will run in new thread..
-			engine.applyLayoutTo(applySettings, slice);
+
+	private void nextSlice() {
+		if ((slicesLeft > 0) & (!stop)) {
+			status = "Applying layout to slice " + currentSlice;
+
+			// engine.changeToSliceNum(currentSlice);
+			LayoutSlice slice = engine.getSlice(currentSlice);
+			// layout will run in new thread..
+			LongTask subtask = engine.applyLayoutTo(applySettings, slice);
+			subtask.addTaskEventListener(this);
 		} else {
-			status = "Layouts complete with " + errorSlices
-			+ " error slices";
-			stop =true;
+			status = "Layouts complete with " + errorSlices + " error slices";
+			stop = true;
 			reportStatus();
 		}
 	}
 
 	public void run() {
-// layout to all subsequent layouts
+		// layout to all subsequent layouts
 		// makesure there is a layout chosen
-		if (engine.getLayout() instanceof LongTask){
-			((LongTask)engine.getLayout()).addTaskEventListener(this);
-		}
+
 		errorSlices = 0;
+		donelist.clear();
+
 		startSlice = engine.getCurrentSliceNum();
 		currentSlice = startSlice;
-		 slicesLeft = engine.getNumSlices()- startSlice;
+		slicesLeft = engine.getNumSlices() - startSlice;
+		// kind of a hack, convice it theat the previous slice is done
+		donelist.add(Integer.valueOf(startSlice - 1));
 		// get the settings
 		if (applySettings == null) {
 			applySettings = engine.getCurrentApplySettings();
 		}
 		stop = false;
 		nextSlice();
-	
+
 	}
 
 	/**
-	 * asumes it was posted by a completing layout, checks if layout is done
-	 * so that the next one can be started
+	 * asumes it was posted by a completing layout, checks if layout is done so
+	 * that the next one can be started
 	 */
 	public void taskStatusChanged(LongTask task) {
+	
 		// we assume task update was from the layout
-		
-		if (engine.getSlice(currentSlice).isLayoutFinished()){
-			if (engine.getSlice(currentSlice).isError()) {
-				errorSlices ++;
-				if (applySettings.get(ApplySettings.STOP_ON_ERROR).equals(
-						Boolean.toString(true))) {
-					slicesLeft = 0;
-					isError = true;
-					stop=true;
-					status = "Stopped from error on slice "+currentSlice;
-					reportStatus();
+		if (task instanceof ApplyLayoutTask) {
+			// debug
+			System.out.println("  done slices:" + donelist +slicesLeft+" slices left");
+			if (task.isDone()) {
+				// if (engine.getLayout().) {
+				donelist.add(Integer.valueOf(currentSlice));
+				if (engine.getSlice(currentSlice).isError()) {
+					errorSlices++;
+					// check if we are supposed to stop on errors
+					if (applySettings.get(ApplySettings.STOP_ON_ERROR).equals(
+							Boolean.toString(true))) {
+						slicesLeft = 0;
+						isError = true;
+						stop = true;
+						status = "Stopped from error on slice " + currentSlice;
+						reportStatus();
+						return;
+						// ok, no more layouts today
+					}
+				} // we either done with errors or not stopping so..
+				// check if the previous slice is finished
+				if (donelist.contains(Integer.valueOf(currentSlice - 1))) {
+					// debug
+					System.out.println(" sez prev layout done");
+					currentSlice++;
+					slicesLeft--;
+					nextSlice();
+				} else {
+					// debug
+					System.out.println( " sez prev layout not done");
 				}
+
 			} else {
-				nextSlice();
+				// debug
+				System.out
+						.println("  dang it, Multi layout says task not done");
 			}
-			
 		}
-		
+
 	}
 
 }

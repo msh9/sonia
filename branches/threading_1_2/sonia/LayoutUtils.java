@@ -1,5 +1,6 @@
 package sonia;
 
+import java.util.Arrays;
 import java.util.Vector;
 import cern.colt.list.IntArrayList;
 
@@ -203,8 +204,8 @@ public class LayoutUtils
     double xMin = Double.POSITIVE_INFINITY;
     double yMax = Double.NEGATIVE_INFINITY;
     double yMin = Double.POSITIVE_INFINITY;
-    double centerX = (width / 2.0);
-    double centerY = (height / 2.0);
+  //  double centerX = (width / 2.0);
+  //  double centerY = (height / 2.0);
     // find max and mins
     for (int i =0; i<nNodes; i++)
     {
