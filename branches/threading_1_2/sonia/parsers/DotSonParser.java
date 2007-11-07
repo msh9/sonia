@@ -753,11 +753,11 @@ public class DotSonParser implements ClusterParser {
 		double startTime = 0.0;
 		if (clusterHeaderMap.containsKey(colMap
 				.getProperty(DotSonColumnMap.CLUSTER_STARTTIME))) {
-			int index = ((Integer) nodeHeaderMap.get(colMap
+			int index = ((Integer) clusterHeaderMap.get(colMap
 					.getProperty(DotSonColumnMap.CLUSTER_STARTTIME)))
 					.intValue();
 			try {
-				startTime = Double.parseDouble(rowArray[index]);
+				startTime = Double.parseDouble(rowArray[index].trim());
 			} catch (NumberFormatException doubleParseEx) {
 				String error = "Line " + reader.getLineNumber()
 						+ " Unable to parse cluster start time from column"
@@ -776,7 +776,7 @@ public class DotSonParser implements ClusterParser {
 			int index = ((Integer) clusterHeaderMap.get(colMap
 					.getProperty(DotSonColumnMap.CLUSTER_ENDTIME))).intValue();
 			try {
-				endTime = Double.parseDouble(rowArray[index]);
+				endTime = Double.parseDouble(rowArray[index].trim());
 			} catch (NumberFormatException doubleParseEx) {
 				String error = "Line " + reader.getLineNumber()
 						+ " Unable to parse cluster end time from column"
