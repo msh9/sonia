@@ -303,6 +303,7 @@ public class DotSonParser implements ClusterParser {
 	// headers
 
 	private HashMap<NodeClusterAttribute, String> parentMap;
+	private HashMap<NodeClusterAttribute,Vector> childrenMap;
 
 	// private ArrayList nodeDataHeaders; //holds list of columns to be attached
 	// as node data
@@ -505,6 +506,10 @@ public class DotSonParser implements ClusterParser {
 				.getProperty(DotSonColumnMap.PARENT))) {
 			parentMap = new HashMap<NodeClusterAttribute, String>();
 		}
+		if (clusterHeaderMap.containsKey(colMap
+				.getProperty(DotSonColumnMap.CHILDREN))) {
+			childrenMap = new HashMap<NodeClusterAttribute, Vector>();
+		}
 	}
 
 	/**
@@ -652,7 +657,17 @@ public class DotSonParser implements ClusterParser {
 			NodeClusterAttribute cluster = new NodeClusterAttribute(
 					parseClusterId(rowArray), parseClusterStart(rowArray),
 					parseClusterEnd(rowArray), parseClusterNodes(rowArray));
-			clustIdSet.put(cluster.getId(), cluster);
+			//check if a cluster with this id already exists
+			//THIS CHECK MEANS THAT THE CLUSTERS' ATTRIBUTES CANNOT CHAGE
+			//A NEW CLUSTE MUST BE DEFINED INSTEAD
+			if (clustIdSet.containsKey(cluster.getId())){
+				String error = "Duplicate cluster id '"+cluster.getId()+"' on line "
+				+reader.getLineNumber()+". In order to ensure correct parent-child"
+				+"relations, each culster must have a unique id.";
+				throw new IOException(error); 
+			} else {
+				clustIdSet.put(cluster.getId(), cluster);
+			}
 			// get parent if there is one. we cant set parents until all
 			// clusters
 			// have been read, so we put it on a list
@@ -661,7 +676,12 @@ public class DotSonParser implements ClusterParser {
 			if (parent != null) {
 				parentMap.put(cluster, parent);
 			}
-			// set child if there is one
+			// get children if there are any, cannot set until all clusters
+			//are loaded
+			Vector children = parseClusterChildren(rowArray);
+			if (children != null){
+			   childrenMap.put(cluster,children);	
+			}
 			// set graphics properties
 			cluster.setFillColor(parseClusterFillColor(rowArray));
 			cluster.setBorderColor(parseClusterBorderColor(rowArray));
@@ -736,18 +756,32 @@ public class DotSonParser implements ClusterParser {
 		if (clusterHeaderMap.containsKey(key)) {
 			parentId = rowArray[clusterHeaderMap.get(key).intValue()];
 			// strip off optional encloseing braces
-			if (parentId.startsWith("{")) {
-				parentId = parentId.substring(1);
-			}
-			if (parentId.endsWith("}")) {
-				parentId = parentId.substring(0, parentId.length() - 1);
-			}
+			parentId = trimBraces(parentId);
 			if (parentId.equals("")) {
 				parentId = null;
 			}
 		}
 		return parentId;
 	}
+	
+	private Vector parseClusterChildren(String [] rowArray){
+		Vector<String> children = null;
+		String key = colMap.getProperty(DotSonColumnMap.CHILDREN);
+		if (clusterHeaderMap.containsKey(key)) {
+			String kidStr = rowArray[clusterHeaderMap.get(key).intValue()];
+			// strip off optional encloseing braces
+			kidStr = trimBraces(kidStr);
+			if (!kidStr.equals("")) {
+				children = new Vector<String>();
+			}
+			StringTokenizer kidkonizer = new StringTokenizer(kidStr,",");
+			while (kidkonizer.hasMoreTokens()){
+				children.add(kidkonizer.nextToken());
+			}
+		}
+		return children;
+	}
+	
 
 	private double parseClusterStart(String[] rowArray) throws IOException {
 		double startTime = 0.0;
@@ -897,23 +931,35 @@ public class DotSonParser implements ClusterParser {
 				}
 				clust.setParent(clustIdSet.get(parentId));
 				//temporary hack
-				clustIdSet.get(parentId).addChild(clust);
+				//clustIdSet.get(parentId).addChild(clust);
 			}
 			// loop over children
-//			Iterator kiditer = clust.getChildren().iterator();
-//			while (kiditer.hasNext()) {
-//				NodeClusterAttribute kid = (NodeClusterAttribute) kiditer
-//						.next();
-//				if (!clustIdSet.containsKey(kid.getId())) {
-//					String error = "Cluster id " + clust.getId()
-//							+ " has a child cluster id '" + kid.getId()
-//							+ "' that does not match any cluster";
-//					throw new IOException(error);
-//				}
-//			}
-			// debug
-			System.out.println(clust);
+			Vector children = childrenMap.get(clust);
+			if (children != null){
+			Iterator kiditer = children.iterator();
+			while (kiditer.hasNext()) {
+				String kidId = (String) kiditer.next();
+				if (!clustIdSet.containsKey(kidId)) {
+					String error = "Cluster id " + clust.getId()
+							+ " has a child cluster id '" + kidId
+							+ "' that does not match any cluster";
+					throw new IOException(error);
+				} else {
+					//get the corresponding cluster and add it
+					NodeClusterAttribute kid = clustIdSet.get(kidId);
+					//check that kid's parent matches parent's kid
+					if (kid.getParent()!= null && !kid.getParent().equals(clust)){
+						String error = "Parent and child relations for clusters "+clust.getId()+
+						" and "+ kid.getId() +" do dot match up";
+						throw new IOException(error);
+					}
+					clust.addChild(kid);
+					
+				}
+			}
+			}
 		}
+		infoString += clusterList.size()+" clusters";
 	}
 
 	private String parseUserData(String name, String[] rowArray) {
@@ -1838,6 +1884,24 @@ public class DotSonParser implements ClusterParser {
 		}
 
 	}
+	
+	/**
+	 * trims off starting and ending braces if there are any
+	 * @author skyebend
+	 * @param toTrim
+	 * @return modified string (object is modified in place also)
+	 */
+	private String trimBraces(String toTrim){
+		toTrim.trim();
+		if (toTrim.startsWith("{")) {
+			toTrim = toTrim.substring(1);
+		}
+		if (toTrim.endsWith("}")) {
+			toTrim = toTrim.substring(0, toTrim.length() - 1);
+		}
+		return toTrim;
+	}
+
 
 	public HashSet getNodeDataKeys() {
 		return nodeDataKeys;

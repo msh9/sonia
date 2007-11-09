@@ -158,7 +158,8 @@ public class GeomUtils {
      * @param len the length of the pts array to consider (2 * #points)
      * @return the convex hull of the input points
      */
-    public static float[] convexHull(float[] pts, int len) {
+    public static float[] convexHull(float[] pts) {
+    	int len = pts.length;
         if (len < 6) {
             throw new IllegalArgumentException(
                     "Input must have at least 3 points");

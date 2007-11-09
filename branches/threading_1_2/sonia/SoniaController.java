@@ -99,7 +99,7 @@ public class SoniaController implements Runnable{
 
 	private SoniaLayoutEngine engine; //context for current actions
 
-	private ArrayList networks; // holds NetDataStructures for eachLayout
+	private ArrayList<NetDataStructure> networks; // holds NetDataStructures for eachLayout
 
 	private NetDataStructure networkData;
 
@@ -152,8 +152,8 @@ public class SoniaController implements Runnable{
 		log = new LogWindow(this);
 		// construct new UI and pass a ref
 		ui = new SoniaInterface(this, false);
-		networks = new ArrayList();// to hold nets
-		engines = new ArrayList();
+		networks = new ArrayList<NetDataStructure>();// to hold nets
+		engines = new ArrayList<SoniaLayoutEngine>();
 		log("Log of SoNIA session beginning "
 				+ DateFormat.getDateTimeInstance().format(new Date()));
 		// setup random numbers
@@ -647,7 +647,7 @@ public class SoniaController implements Runnable{
 		// print details out to log
 		log("loaded network from " + currentPath + inFile + "\nparser used:"
 				+ parser.getParserInfo() + "\n" + parser.getNumNodeEvents()
-				+ " node events, " + parser.getNumArcEvents() + " arc events"
+				+ " node events, " + parser.getNumArcEvents() + " arc events "
 				+ "\n" + "smallest time value:" + networkData.getFirstTime()
 				+ "\n" + "largest time value:" + networkData.getLastTime()
 				+ "\n" + "number of unique nodes:" + parser.getMaxNumNodes()

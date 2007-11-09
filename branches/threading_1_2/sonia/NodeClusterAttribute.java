@@ -169,22 +169,38 @@ public class NodeClusterAttribute implements NetworkEvent {
 			// first get the list of points we are gonna include
 			IntArrayList hullnodes = getNodesOfChildren(null);
 			// if 2 or less nodes, don't draw
-			if (hullnodes != null && hullnodes.size() > 3) {
-				float[] inputPoints = new float[hullnodes.size() * 2];
+			if (hullnodes != null){
+				float[] inputPoints = null;
+				if ( hullnodes.size() >= 3) {
+				inputPoints = new float[hullnodes.size() * 2];
 				for (int i = 0; i < hullnodes.size(); i++) {
 					// HACK! cast double to float
-					inputPoints[i * 2] = (float) xCoords[i];
-					inputPoints[(i * 2) + 1] = (float) yCoords[i];
+					inputPoints[i * 2] = (float) xCoords[hullnodes.get(i)-1];
+					inputPoints[(i * 2) + 1] = (float) yCoords[hullnodes.get(i)-1];
 				}
-				float[] hull = GeomUtils.convexHull(inputPoints, hullnodes
-						.size() * 2);
+			
+			} else {
+				//if 2 nodes, just fake a 3rd point between them
+				if (hullnodes.size() == 2){
+					inputPoints = new float[6];
+					//x coords
+					inputPoints[0]=(float) xCoords[hullnodes.get(0)-1];
+					inputPoints[2]=(float) xCoords[hullnodes.get(1)-1];
+					inputPoints[4]=(float) inputPoints[2]+(inputPoints[0]-inputPoints[2])/2
+					+(float)padding;
+					//y coords
+					inputPoints[1]=(float) yCoords[hullnodes.get(0)-1];
+					inputPoints[3]=(float) yCoords[hullnodes.get(1)-1];
+					inputPoints[5]=(float) inputPoints[3]+(inputPoints[1]-inputPoints[3])/2
+					+(float)padding;
+				}
+			}
+				float[] hull = GeomUtils.convexHull(inputPoints);
 				// enlarge the hull to give extra space around the nodes
 				// prolly should be by avg radius of nodes
 				GeomUtils.growPolygon(hull, (float) padding);
 				path = GeomUtils.cardinalSpline(path, hull, 0.1f, true,
 						(float) leftOffset, (float) topOffset);
-			} else {
-				//TODO: 1 or 2 nodes cluster so need to draw a circle or ellipse
 			}
 
 		}
