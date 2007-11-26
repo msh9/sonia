@@ -478,7 +478,19 @@ public class SoniaLayoutEngine {
 					LayoutUtils.copyLayout(prevSlice, slice);
 				}
 
-			} else if (settings.get(ApplySettings.STARTING_COORDS).equals(
+			}else if (settings.get(ApplySettings.STARTING_COORDS).equals(
+					ApplySettings.COORDS_FROM_NEXT)) {
+				// make sure there is a previous slice
+				if (thisIndex < layoutSlices.size()) {
+					LayoutSlice nextSlice = (LayoutSlice) layoutSlices
+							.get(thisIndex + 1);
+					// ASSUMES SLICES ARE THE SAME SIZE AND IN SAME ORDER!!
+					// ALSO ASSUMES PREVIOUS SLICE IS FINISHED
+					LayoutUtils.copyLayout(nextSlice, slice);
+				}
+
+			} 
+			else if (settings.get(ApplySettings.STARTING_COORDS).equals(
 					ApplySettings.COORDS_FROM_FILE)) {
 				// since slices is initialized with coords from orig file,
 				// get a new slice with the same times, and copy the coords

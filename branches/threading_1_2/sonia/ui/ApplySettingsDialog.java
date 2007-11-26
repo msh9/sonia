@@ -135,7 +135,7 @@ public class ApplySettingsDialog implements ActionListener {
 				+ engine.getCurrentSlice().getSliceStart() + "-"
 				+ engine.getCurrentSlice().getSliceEnd() + "]";
 		startChoice = new JComboBox(new Object[] { ApplySettings.COORDS_RANDOM,
-				ApplySettings.COORDS_FROM_PREV, ApplySettings.COORDS_FROM_FILE,
+				ApplySettings.COORDS_FROM_PREV,ApplySettings.COORDS_FROM_NEXT, ApplySettings.COORDS_FROM_FILE,
 				ApplySettings.COORDS_CURRENT, ApplySettings.COORDS_CIRCLE });
 		startChoice.setBorder(new TitledBorder("Starting Coordinates"));
 
