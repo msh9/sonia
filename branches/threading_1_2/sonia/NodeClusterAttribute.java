@@ -20,6 +20,7 @@ import java.awt.Stroke;
 import java.awt.geom.GeneralPath;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -40,6 +41,10 @@ public class NodeClusterAttribute implements NetworkEvent {
 	private double startTime;
 
 	private double endTime;
+	
+	private int cachedKidSize = -1;
+	
+	public static final SizeCompararer sizeComparer = new SizeCompararer();
 
 	/**
 	 * optionaly holds id of a cluster with a higher cluster level that encloses
@@ -109,6 +114,7 @@ public class NodeClusterAttribute implements NetworkEvent {
 			}
 		} 
 		found.addAllOf(clusterdNodes);
+		cachedKidSize = found.size();
 		return found;
 	}
 
@@ -145,6 +151,43 @@ public class NodeClusterAttribute implements NetworkEvent {
 		}
 
 		return returnVal;
+	}
+	
+	/**
+	 * used to sort clusters by size
+	 * @author skyebend
+	 *
+	 */
+	public static final class SizeCompararer implements Comparator{
+		public int compare(Object o1, Object o2) {
+			int val = 0;
+			if (o1 instanceof NodeClusterAttribute & o2 instanceof NodeClusterAttribute){
+				NodeClusterAttribute clust1 = (NodeClusterAttribute)o1;
+				NodeClusterAttribute clust2 = (NodeClusterAttribute)o2;
+				if (clust1.totalNumNodes() > clust2.totalNumNodes()){
+					return -1;
+				} else if (clust1.totalNumNodes() < clust2.totalNumNodes()){
+					return 1;
+				}
+					
+			}
+			return val;
+		}
+		
+	}
+	
+	/**
+	 * returns the total number of nodes, including nodes in child clusters.
+	 * This is cached value computed when getNodesOfChildren is called. 
+	 * @author skyebend
+	 * @return
+	 */
+	public int totalNumNodes(){
+		if (children == null){
+			return clusterdNodes.size();
+		} else {
+			return cachedKidSize;
+		}
 	}
 
 	/**

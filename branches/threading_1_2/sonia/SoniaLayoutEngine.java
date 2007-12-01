@@ -61,7 +61,7 @@ import cern.colt.matrix.impl.SparseDoubleMatrix2D;
  * settings. Ideally, the engine should be stand alone enough that it could be
  * called by a script, with no gui.
  */
-public class SoniaLayoutEngine {
+public class SoniaLayoutEngine implements TaskListener{
 	private SoniaController control;
 
 	private NetDataStructure netData;
@@ -343,29 +343,13 @@ public class SoniaLayoutEngine {
 	 * startApplyLayoutToRemaining()
 	 */
 	public void applyLayoutToRemaining() {
-		LongTask multiTask = new MultipleLayoutTask(this);
+		LongTask multiTask = new MultipleLayoutTask(this,false);
 		control.runTask(multiTask);
-//		Thread layoutRunner = new Thread() {
-//			public void run() {
-//				// catch errors on this thread
-//				try {
-//					startApplyLayoutToRemaining();
-//					
-//					
-//				} catch (Throwable t) {
-//					control.showError("Error applying layout: "
-//							+ t.getMessage());
-//					t.printStackTrace();
-//					if (!control.isShowGUI()) {
-//						// exit the system
-//						System.exit(-1);
-//					}
-//				}
-//			}
-//		};
-//		layoutRunner.setName("apply layout to remaining");
-//		layoutRunner.setPriority(5);
-//		layoutRunner.start();
+	}
+	
+	public void applyLayoutToPrevious(){
+		LongTask multiTask = new MultipleLayoutTask(this,true);
+		control.runTask(multiTask);
 	}
 
 	/**
@@ -511,6 +495,9 @@ public class SoniaLayoutEngine {
 			//ask control to run the layout in a new thread
 			LongTask task = new ApplyLayoutTask(this,currentLayout,width,
 					height,slice,settings);
+			//register thelayout window to get task updates. 
+			//TODO: only register ui updats if in gui mode
+			task.addTaskEventListener(this);
 			control.runTask(task);
 
 			// print out layout info to log
@@ -748,7 +735,9 @@ public class SoniaLayoutEngine {
 	public void updateDisplays() {
 		if (display != null){
 		display.updateDisplay();
+		//TODO: should make this smatter so it only updates the needed display
 		// should update the cooling scheduele as well? stress plot
+		repaintDisplays();
 		} else {   //debugging
 			//TODO:fix threading problem here in batch mode
 		 // System.out.println("layout window is null");	
@@ -1145,6 +1134,10 @@ public class SoniaLayoutEngine {
 				}
 			}
 		}
+	}
+
+	public void taskStatusChanged(LongTask task) {
+		repaintDisplays();
 	}
 
 }

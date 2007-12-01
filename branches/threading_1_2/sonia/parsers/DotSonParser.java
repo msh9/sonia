@@ -502,14 +502,10 @@ public class DotSonParser implements ClusterParser {
 					.valueOf(n));
 		}
 		// check if using parents
-		if (clusterHeaderMap.containsKey(colMap
-				.getProperty(DotSonColumnMap.PARENT))) {
-			parentMap = new HashMap<NodeClusterAttribute, String>();
-		}
-		if (clusterHeaderMap.containsKey(colMap
-				.getProperty(DotSonColumnMap.CHILDREN))) {
-			childrenMap = new HashMap<NodeClusterAttribute, Vector>();
-		}
+		
+		parentMap = new HashMap<NodeClusterAttribute, String>();
+		childrenMap = new HashMap<NodeClusterAttribute, Vector>();
+		
 	}
 
 	/**

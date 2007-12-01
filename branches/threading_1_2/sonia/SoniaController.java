@@ -198,16 +198,16 @@ public class SoniaController implements Runnable{
 		}
 		if (ui != null) {
 			ui.setVisible(visable);
-			if (engine != null){
-			LayoutWindow display = new LayoutWindow(graphicSettings,
-					browseSettings, this, engine, 500,400);
-			engine.setDisplay(display);
-			//ui.addFrame(display);
-			engine.setDisplayWidth(Integer.parseInt(graphicSettings
-					.getProperty(GraphicsSettings.LAYOUT_WIDTH)));
-			engine.setDisplayHeight(Integer.parseInt(graphicSettings
-					.getProperty(GraphicsSettings.LAYOUT_HEIGHT)));
-			}
+//			if (engine != null){
+//			LayoutWindow display = new LayoutWindow(graphicSettings,
+//					browseSettings, this, engine, 500,400);
+//			engine.setDisplay(display);
+//			//ui.addFrame(display);
+//			engine.setDisplayWidth(Integer.parseInt(graphicSettings
+//					.getProperty(GraphicsSettings.LAYOUT_WIDTH)));
+//			engine.setDisplayHeight(Integer.parseInt(graphicSettings
+//					.getProperty(GraphicsSettings.LAYOUT_HEIGHT)));
+//			}
 		}
 		
 	}
@@ -699,14 +699,14 @@ public class SoniaController implements Runnable{
 			// show the dialog
 			sliceSettings = windowSettings.askUserSettings();
 			createLayout(sliceSettings);
-			LayoutWindow display = new LayoutWindow(graphicSettings,
-					browseSettings, this, engine, 500,400);
-			engine.setDisplay(display);
-			ui.addFrame(display);
-			engine.setDisplayWidth(Integer.parseInt(graphicSettings
-					.getProperty(GraphicsSettings.LAYOUT_WIDTH)));
-			engine.setDisplayHeight(Integer.parseInt(graphicSettings
-					.getProperty(GraphicsSettings.LAYOUT_HEIGHT)));
+//			LayoutWindow display = new LayoutWindow(graphicSettings,
+//					browseSettings, this, engine, 500,400);
+//			engine.setDisplay(display);
+//			ui.addFrame(display);
+//			engine.setDisplayWidth(Integer.parseInt(graphicSettings
+//					.getProperty(GraphicsSettings.LAYOUT_WIDTH)));
+//			engine.setDisplayHeight(Integer.parseInt(graphicSettings
+//					.getProperty(GraphicsSettings.LAYOUT_HEIGHT)));
 		} else {
 			showError("File must be loaded before layout can be created");
 		}
@@ -717,7 +717,8 @@ public class SoniaController implements Runnable{
 	 * most recently loaded file. Shows slice dialog only if there are no slice
 	 * settings.
 	 */
-	public void createLayout(LayoutSettings sliceSettings) {
+	public LayoutWindow createLayout(LayoutSettings sliceSettings) {
+		LayoutWindow display = null;
 		// should make sure there is some network data
 		if (fileLoaded) {
 
@@ -732,7 +733,7 @@ public class SoniaController implements Runnable{
 			//TODO: this is not thread safe!
 			if (sliceSettings == null){
 				showStatus("layout cancled: null slice settings");
-				return;
+				return display;
 			}
 			engine = new SoniaLayoutEngine(sliceSettings, applySettings,this, networkData,
 					engName);
@@ -752,7 +753,7 @@ public class SoniaController implements Runnable{
 				browseSettings = new BrowsingSettings();
 		
 			}
-			LayoutWindow display = new LayoutWindow(graphicSettings,
+			 display = new LayoutWindow(graphicSettings,
 					browseSettings, this, engine, 500,400);
 			engine.setDisplay(display);
 			showFrame((display));
@@ -765,6 +766,7 @@ public class SoniaController implements Runnable{
 		} else {
 			showError("File must be loaded before layout can be created");
 		}
+		return display;
 	}
 
 

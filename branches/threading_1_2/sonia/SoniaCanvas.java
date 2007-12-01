@@ -67,6 +67,7 @@ private Colormapper colormapper = null;
   private float arcWidthFact = 1.0f;
   private float arcTransVal = 0.5f;
   private float nodeTransVal = 0.5f;
+  private float clusterTransVal = 0.5f;
   private float nodeScaleFact = 1.0f;
  // private boolean hideNodes = false;
  // private boolean hideArcs = false;
@@ -356,6 +357,10 @@ public  void setRenderSlice(RenderSlice slice)
   {
     return getNodeTransVal() != 1.0;
   }
+  public boolean isClusterTrans(){
+	  return getClusterTransVal() != 1.0;
+  }
+  
 //  public void setArcTrans(boolean onOff)
 //  {
 //    arcTrans = onOff;
@@ -366,11 +371,15 @@ public  void setRenderSlice(RenderSlice slice)
 //  }
   public float getArcTransVal()
   {
-    return Float.parseFloat(settings.getProperty(GraphicsSettings.ARC_TRANSPARENCY,nodeTransVal+""));
+    return Float.parseFloat(settings.getProperty(GraphicsSettings.ARC_TRANSPARENCY,arcTransVal+""));
   }
   public float getNodeTransVal()
   {
     return Float.parseFloat(settings.getProperty(GraphicsSettings.NODE_TRANSPARENCY,nodeTransVal+""));
+  }
+  public float getClusterTransVal()
+  {
+    return Float.parseFloat(settings.getProperty(GraphicsSettings.CLUSTER_TRANSPARENCY,clusterTransVal+""));
   }
 //  public void setArcTransVal(float trans)
 //  {

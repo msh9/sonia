@@ -150,9 +150,13 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		JScrollPane statusScroller = new JScrollPane(statusPanel);
 		statusScroller.setBorder(new CompoundBorder(new BevelBorder(
 				BevelBorder.LOWERED), new TitledBorder("Status:")));
-		
-		
-		statusPanel.add(statusText);
+		GridBagConstraints c = new GridBagConstraints();
+		c.insets = new Insets(2, 2, 2, 2);
+		c.anchor = GridBagConstraints.WEST;
+		c.gridx = 0;c.gridy = 0;
+		statusPanel.add(PauseButton,c);
+		c.gridx = 0;c.gridy = 1;
+		statusPanel.add(statusText,c);
 		// StatusText.setColumns(30);
 
 		workPane = new JDesktopPane();
@@ -167,12 +171,6 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		vsplit.setDividerLocation(500);
 		
 		// LAYOUT
-		
-		
-		GridBagConstraints c = new GridBagConstraints();
-		c.insets = new Insets(2, 2, 2, 2);
-		c.anchor = GridBagConstraints.WEST;
-
 		// add components to the layout GBlayout using constraints
 		// buttons
 		c.gridx = 0;
@@ -198,13 +196,13 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		c.weightx = 0.1;
 		c.weighty = 0.1;
 		menuPane.add(LayoutButton, c);
-		c.gridx = 0;
-		c.gridy = 2;
-		c.gridwidth = 1;
-		c.gridheight = 1;
-		c.weightx = 0.1;
-		c.weighty = 0.1;
-		menuPane.add(PauseButton, c);
+//		c.gridx = 0;
+//		c.gridy = 2;
+//		c.gridwidth = 1;
+//		c.gridheight = 1;
+//		c.weightx = 0.1;
+//		c.weighty = 0.1;
+//		menuPane.add(PauseButton, c);
 		c.gridx = 0;
 		c.gridy = 3;
 		c.gridwidth = 3;
@@ -286,13 +284,13 @@ public class SoniaInterface extends JFrame implements WindowListener,
 	public void showTask(LongTask task){
 		TaskProgressBar taskbar = new TaskProgressBar(task);
 		Component[] statuscomps = statusPanel.getComponents();
-		for (int i = 0; i < statuscomps.length; i++) {
-			if(statuscomps[i] instanceof TaskProgressBar){
-				if (((TaskProgressBar)statuscomps[i]).getTask().isDone()){
-					statusPanel.remove(statuscomps[i]);
-				}
-			}
-		}
+//		for (int i = 0; i < statuscomps.length; i++) {
+//			if(statuscomps[i] instanceof TaskProgressBar){
+//				if (((TaskProgressBar)statuscomps[i]).getTask().isDone()){
+//					statusPanel.remove(statuscomps[i]);
+//				}
+//			}
+//		}
 		GridBagConstraints c= new GridBagConstraints();
 		c.gridy=statuscomps.length+1;
 		c.fill=GridBagConstraints.BOTH;
@@ -304,6 +302,14 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		//update all the status components
 		//TODO: make this smarter, only update task that changed
 		//statusPanel.validate();
+		Component[] statuscomps = statusPanel.getComponents();
+		for (int i = 0; i < statuscomps.length; i++) {
+			if(statuscomps[i] instanceof TaskProgressBar){
+				if (((TaskProgressBar)statuscomps[i]).getTask().isDone()){
+					statusPanel.remove(statuscomps[i]);
+				}
+			}
+		}
 		statusPanel.repaint();
 		//control.updateDisplays();
 	}

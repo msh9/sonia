@@ -18,6 +18,10 @@ import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.Date;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -30,9 +34,10 @@ import sonia.TaskListener;
 public class TaskProgressBar extends JPanel{
 
 	private LongTask task;
-
+    private Date startTime = new Date();
 	private JProgressBar progress;
 	private JButton close;
+	private static final NumberFormat format = DecimalFormat.getInstance();
 
 	/**
 	 * progressbar that acts as a renter for a task
@@ -59,7 +64,8 @@ public class TaskProgressBar extends JPanel{
 			setVisible(false);
 			getParent().remove(this);
 		} else {
-		progress.setString("tsk_"+task.hashCode()+":"+task.getStatusText());
+			String runtime = format.format((System.currentTimeMillis()-startTime.getTime())/1000);
+		progress.setString(runtime+" sec:"+task.getStatusText());
 		progress.setIndeterminate(true);
 
 		progress.setIndeterminate(false);

@@ -14,22 +14,15 @@
  */
 package sonia;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Executor;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.LinkedBlockingQueue;
 
-import javax.swing.SwingUtilities;
 
-import com.sun.corba.se.spi.ior.IOR;
 
 /**
  * maitains a queue of tasks and there dependencies. Controls and monitors their
@@ -40,23 +33,25 @@ import com.sun.corba.se.spi.ior.IOR;
  */
 public class TaskRunner implements TaskListener {
 
-	private ArrayBlockingQueue<LongTask> tasks;
-	private ArrayBlockingQueue<LongTask> runningTasks;
+	private LinkedBlockingQueue<LongTask> tasks;
+
+	private LinkedBlockingQueue<LongTask> runningTasks;
 
 	private HashMap<LongTask, LongTask> dependencies;
 
 	private Vector<TaskListener> UIs;
-	
+
 	private static UIRunner uiRunner;
-	
+
 	private static ExecutorService threadService;
 
 	public TaskRunner() {
-		tasks = new ArrayBlockingQueue<LongTask>(10);
-		runningTasks = new ArrayBlockingQueue<LongTask>(10);
+		tasks = new LinkedBlockingQueue<LongTask>();
+		runningTasks = new LinkedBlockingQueue<LongTask>();
 		dependencies = new HashMap<LongTask, LongTask>();
 		UIs = new Vector<TaskListener>();
-		threadService = Executors.newFixedThreadPool(5);
+		threadService = Executors.newSingleThreadExecutor();
+
 	}
 
 	/**
@@ -83,18 +78,16 @@ public class TaskRunner implements TaskListener {
 					tasks.remove(task);
 					runningTasks.add(task);
 					// start the task on a new thread
-					// debug
-					System.out.println(System.currentTimeMillis()+" starting task " + task.getTaskName());
 					threadService.submit(task);
-					//new Thread(task, task.getTaskName()).start();
-					//start the ui updating, if appropriate
+					// new Thread(task, task.getTaskName()).start();
+					// start the ui updating, if appropriate
 					runUIupdater();
 				}
 			}
 			Iterator<LongTask> runiter = runningTasks.iterator();
-			while (runiter.hasNext()){
+			while (runiter.hasNext()) {
 				LongTask task = runiter.next();
-				if (task.isDone()){
+				if (task.isDone()) {
 					runningTasks.remove(task);
 				}
 			}
@@ -120,7 +113,7 @@ public class TaskRunner implements TaskListener {
 		while (taskiter.hasNext()) {
 			LongTask task = (LongTask) taskiter.next();
 			task.stop();
-			//TODO: should kill the uiRunner here
+			// TODO: should kill the uiRunner here
 		}
 		runningTasks.clear();
 	}
@@ -129,19 +122,16 @@ public class TaskRunner implements TaskListener {
 		// check if it is done
 		if (task.isDone()) {
 			runningTasks.remove(task);
-			//debug
-			System.out.println(System.currentTimeMillis()+" task "+task.getTaskName()+" is done.");
 			// check if there is a dependent task
 			if (dependencies.containsKey(task)) {
 				// if there is, get it and start on a new thread
 				LongTask newTask = dependencies.remove(task);
-				
+
 			}
 			checkQueue();
 		}
 		// check if it is error
 		// report status
-	
 
 	}
 
@@ -154,63 +144,66 @@ public class TaskRunner implements TaskListener {
 	public void addUItoUpdate(TaskListener ui) {
 		UIs.add(ui);
 	}
-	
+
 	/**
-	 * class that loops and sleeps on the ui thread, updating all regestrid ui stuff
+	 * class that loops and sleeps on the ui thread, updating all regestrid ui
+	 * stuff
+	 * 
 	 * @author skyebend
-	 *
+	 * 
 	 */
-	public class UIRunner implements Runnable{
+	public class UIRunner implements Runnable {
 		private boolean isRunning = false;
+
 		public void run() {
 			isRunning = true;
 			// while there are still tasks waiting
 			while (runningTasks.size() > 0) {
 				// for each task waiting or running
-			//	Iterator taskIter = tasks.iterator();
-			//	while (taskIter.hasNext()) {
-			//		LongTask task = (LongTask) taskIter.next();
-					Iterator listeniter = UIs.iterator();
-					// loop over listeing uis and update
-					while (listeniter.hasNext()) {
-						TaskListener listener = (TaskListener) listeniter
-								.next();
-						listener.taskStatusChanged(null);
-					}
-			//	}
+				Iterator listeniter = UIs.iterator();
+				// loop over listeing uis and update
+				while (listeniter.hasNext()) {
+					TaskListener listener = (TaskListener) listeniter.next();
+					listener.taskStatusChanged(null);
+				}
+				// }
 				try {
-					//TODO: UI update thread should stop if tasks paused
-					//Thread.yield();
+					// TODO: UI update thread should stop if tasks paused
+					// Thread.yield();
 					Thread.sleep(500);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 			}
-			isRunning=false;
+			isRunning = false;
 		}
-		
-		public boolean isRunning(){
+
+		public boolean isRunning() {
 			return isRunning;
 		}
-	} //end ui runner inncer class
+	} // end ui runner inncer class
 
 	/**
-	 * runs a process on the SHOULD BE ON MAIN SWING THREAD? to update ui
+	 * runs a process on and independent (not on event thread) to update ui
 	 * 
 	 * @author skyebend
 	 */
 	private void runUIupdater() {
 		// check if there are any uis registerd
 		if (UIs.size() > 0) {
-			// launch a thread on the swing ui thread that will
-			// check for ui updates every half second
-			if (uiRunner == null){ uiRunner = new UIRunner();
+			// launch a thread to check for ui updates every half second
+			if (uiRunner == null) {
+				uiRunner = new UIRunner();
 			}
-			if (!uiRunner.isRunning()){
-				//lauch ui runner on on swing Ui thread
-				//SwingUtilities.invokeLater(uiRunner);
-				threadService.submit(uiRunner);
-				//new Thread(uiRunner, "UIupdater").start();
+			if (!uiRunner.isRunning()) {
+				// lauch ui runner on on swing Ui thread
+				// WTF, doesn't work at all
+				// SwingUtilities.invokeLater(uiRunner);
+				// threadService.submit(uiRunner); //'causes ordering problems
+				// if on a single thread
+				// SO, we launch on its own thread so queue doesn't interfere
+				// not swing ui, but at least not event distpatch thread
+				new Thread(uiRunner, "UIupdater").start();
 			}
 		}
 

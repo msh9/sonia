@@ -464,7 +464,7 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 		// FIGURE OUT COOLING SCHEDULE
 		// epsilon = (nNodes * numEdges)/2;
 		// figure out the initial stat to compare to at the end
-		double initialEnergy = getEnergy(distMatrix, xPos, yPos);
+//		double initialEnergy = getEnergy(distMatrix, xPos, yPos);
 		//layoutInfo = layoutInfo + "\ninitial KK energy: " + initialEnergy;
 		// double epsilon = { initialEnergy / nNodes;
 
@@ -486,12 +486,13 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 		schedule.setMaxYvalue(epsilon);
 
 		int passes = 0;
+		int minSteps = 0;
 		// epsilon minimizing loop
 		while ((epsilon > minEpsilon) & noBreak) {
 			// show value on plot
 			schedule.showYValue(epsilon);
 
-			double previousMaxDeltaM = maxDeltaM + 1;
+			//double previousMaxDeltaM = maxDeltaM + 1;
 			// KAMADA-KAWAI LOOP: while the deltaM of the node with
 			// the largest deltaM > epsilon..
 			// ALSO BREAKS IF IT STOPS CONVERGING, set as param?
@@ -501,7 +502,7 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 				
 				double[] deltas;
 				double moveNodeDeltaM = maxDeltaM;
-				double previousDeltaM = moveNodeDeltaM + 1;
+				//double previousDeltaM = moveNodeDeltaM + 1;
 
 				// KK INNER LOOP while the node with the largest energy >
 				// epsilon...
@@ -510,13 +511,13 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 				while (((moveNodeDeltaM > epsilon) & (subPasses < maxSubpasses))
 						& noBreak) {
 					// show subpass on schedule
+					
 					schedule.showPassValue(passes);
-					layoutInfo = "pass: "+passes + " max energy: "+maxDeltaM+" ";
+					layoutInfo = "pass: "+passes+" max energy: "+maxDeltaM+" ";
 					// also show convergance on schedule
 					schedule.showConvergance(passes, moveNodeDeltaM);
 					
 					moveRecord[passes]=maxDeltaMIndex;
-					
 					// get the deltas which will move node towards the local
 					// minima
 					deltas = getDeltas(maxDeltaMIndex,distMatrix, xPos,
@@ -524,14 +525,14 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 					// set coords of node to old coords + changes
 					xPos[maxDeltaMIndex] += deltas[0];
 					yPos[maxDeltaMIndex] += deltas[1];
-					previousDeltaM = moveNodeDeltaM;
+					//previousDeltaM = moveNodeDeltaM;
 					// recalculate the deltaM of the node w/ new vals
 					moveNodeDeltaM = getDeltaM(maxDeltaMIndex, distMatrix,xPos, yPos);
 					subPasses++;
 					passes++;
 					totalPasses++;
 					if (passes > maxPasses) {
-						// break the loop, and tell us
+				    // break the loop, and tell us
 					//	control.showStatus("KK inner loop exceeded max passes");
 						control.log("KK inner loop exceeded max passes");
 						layoutInfo = layoutInfo
@@ -540,9 +541,8 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 						noBreak = false;
 					}
 				}// end KK inner loop
-				previousDeltaM = maxDeltaM;
+	
 				// recalculate deltaMs and find node with max
-				
 				
 				//testing
 				//pick node at random with some small probability
@@ -581,15 +581,12 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 			            }
 					engine.updateDisplays();
 				}
-				//passes++;
-				// attempt to let redraws of other windows, pause, etc
-				//Thread.yield();
+		  
 			}// end main KK loop
 
 			// USE COOLING SCHEDULE HERE!!
 			epsilon -= epsilon * coolFact; // default is 1/4
-			// epsilon = epsilon * schedule.getTempFactor(passes);
-
+		
 			// reset the appropriate values of the the slice coords to
 			// the new subnet coords
 			for (int i = 0; i < nNodes; i++) {
@@ -599,14 +596,18 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 			}
 			// calc the stress WHAT ABOUT ISOLATES?
 			// layoutInfo += "stress: "+NetUtils.getStress(slice)+"\n";
+			//this is here to deal with cases where can't reach minimum value by 
+			//taking fractions of epsilon, so we won't get stuck in the loop
+			minSteps++;
+			if ( minSteps > maxPasses){
+				control.log("KK outer loop took more than max passes steps to reach target epsilon");
+				layoutInfo = layoutInfo
+						+ "\nKK outer loop took more than max passes steps to reach target epsilon";
+				slice.setError(true);
+				noBreak = false;
+			}
 		}// end epsilon minimizing loop
-		//debuging
-		/*
-		System.out.println("nodes moved:");
-		for (int i = 0; i < moveRecord.length; i++) {
-			System.out.print(moveRecord[i]+",");
-		}
-		*/
+		//debuging	
 	}
 
 	/**

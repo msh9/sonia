@@ -95,6 +95,12 @@ public class ApplySettings extends PropertySettings {
 	 * slice
 	 */
 	public static final String COORDS_FROM_PREV = "from previous slice";
+	
+	/**
+	 * value for starting coords indicating to use the coords from the next 
+	 * slice in time
+	 */
+	public static final String COORDS_FROM_NEXT = "from next slice";
 
 	/**
 	 * value for starting coords indicates to position in a circle

@@ -42,15 +42,18 @@ public class MultipleLayoutTask implements LongTask, TaskListener {
 	private boolean stop = false;
 
 	private boolean isError = false;
+	
+	private boolean reverse = false;
 
 	private HashSet listeners = new HashSet();
 
 	private Set<Integer> donelist = Collections
 			.synchronizedSet(new HashSet<Integer>());
 
-	public MultipleLayoutTask(SoniaLayoutEngine engine) {
+	public MultipleLayoutTask(SoniaLayoutEngine engine, boolean backwards) {
 		this.engine = engine;
 		applySettings = engine.getCurrentApplySettings();
+		reverse = backwards;
 	}
 
 	public String getTaskName() {
@@ -117,6 +120,8 @@ public class MultipleLayoutTask implements LongTask, TaskListener {
 		}
 	}
 
+	
+
 	public void run() {
 		// layout to all subsequent layouts
 		// makesure there is a layout chosen
@@ -125,15 +130,20 @@ public class MultipleLayoutTask implements LongTask, TaskListener {
 		donelist.clear();
 
 		startSlice = engine.getCurrentSliceNum();
-		currentSlice = startSlice;
-		slicesLeft = engine.getNumSlices() - startSlice;
-		// kind of a hack, convice it theat the previous slice is done
-		donelist.add(Integer.valueOf(startSlice - 1));
-		// get the settings
+		currentSlice = startSlice; 
+// get the settings
 		if (applySettings == null) {
 			applySettings = engine.getCurrentApplySettings();
 		}
 		stop = false;
+		if (reverse){ // we are doing slices in reverse order
+			slicesLeft = startSlice;
+			donelist.add(Integer.valueOf(startSlice+1));
+		} else {
+			slicesLeft = engine.getNumSlices() - startSlice;
+			// kind of a hack, convice it theat the previous slice is done
+			donelist.add(Integer.valueOf(startSlice - 1));
+		}
 		nextSlice();
 
 	}
@@ -146,8 +156,6 @@ public class MultipleLayoutTask implements LongTask, TaskListener {
 	
 		// we assume task update was from the layout
 		if (task instanceof ApplyLayoutTask) {
-			// debug
-			System.out.println("  done slices:" + donelist +slicesLeft+" slices left");
 			if (task.isDone()) {
 				// if (engine.getLayout().) {
 				donelist.add(Integer.valueOf(currentSlice));
@@ -166,21 +174,22 @@ public class MultipleLayoutTask implements LongTask, TaskListener {
 					}
 				} // we either done with errors or not stopping so..
 				// check if the previous slice is finished
-				if (donelist.contains(Integer.valueOf(currentSlice - 1))) {
-					// debug
-					System.out.println(" sez prev layout done");
-					currentSlice++;
-					slicesLeft--;
-					nextSlice();
+				if (reverse){
+					if (donelist.contains(Integer.valueOf(currentSlice - 1))) {
+						currentSlice++;
+						slicesLeft--;
+						nextSlice();
+					} 
 				} else {
-					// debug
-					System.out.println( " sez prev layout not done");
+					if (donelist.contains(Integer.valueOf(currentSlice + 1))) {
+						currentSlice--;
+						slicesLeft--;
+						nextSlice();
+					} 
 				}
 
 			} else {
-				// debug
-				System.out
-						.println("  dang it, Multi layout says task not done");
+
 			}
 		}
 

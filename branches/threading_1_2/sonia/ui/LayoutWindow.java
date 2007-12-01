@@ -33,11 +33,13 @@ import javax.swing.event.InternalFrameListener;
 
 import sonia.ApplyLayoutTask;
 import sonia.LayoutSlice;
+import sonia.LongTask;
 import sonia.NodeInspector;
 import sonia.NodeMover;
 import sonia.SoniaCanvas;
 import sonia.SoniaController;
 import sonia.SoniaLayoutEngine;
+import sonia.TaskListener;
 import sonia.layouts.FRLayout;
 import sonia.layouts.MultiCompKKLayout;
 import sonia.mapper.Colormapper;
@@ -1155,6 +1157,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		frameDelay.setText(browseSettings.getProperty(
 				BrowsingSettings.FRAME_DELAY, frameDelay.getText().trim()));
 	}
+	
 	
 
 }

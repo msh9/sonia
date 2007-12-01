@@ -141,15 +141,19 @@ public class RenderSlice {
 		//for now, just do this if it is graphics 2d render
 		if (render instanceof Graphics2DRender){
 //			 check settings before transparency
-			if (canvas.isArcTrans()) {
-				render.setTransparency(canvas.getNodeTransVal());
+			if (canvas.isClusterTrans()) {
+				render.setTransparency(canvas.getClusterTransVal());
 			}
+			//TODO: sort clusters to order by size before drawing. 
+			List<NodeClusterAttribute> list = clusterEvents.subList(0,clusterEvents.size());
+			Collections.sort(list, NodeClusterAttribute.sizeComparer);
 			Iterator<NodeClusterAttribute> clustiter = clusterEvents.iterator();
 			while (clustiter.hasNext()){
 				NodeClusterAttribute cluster = clustiter.next();
 				cluster.computeShapeFor(xCoords,yCoords,clusterPadding,left,top);
 				((Graphics2DRender)render).paintClusters(cluster);
 			}
+		
 			
 		}
 
