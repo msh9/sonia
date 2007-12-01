@@ -103,6 +103,8 @@ public class ApplySettingsDialog implements ActionListener {
 	private JButton Cancel;
 
 	private JButton MultiApply;
+	
+	private JButton reverseApply;
 
 	private JCheckBox ErrorStop;
 
@@ -157,9 +159,10 @@ public class ApplySettingsDialog implements ActionListener {
 		rescaleChoice.setBorder(new TitledBorder("Rescaling"));
 		IsolateExclude = new JCheckBox("Exclude Isolates in transform", false);
 
-		Apply = new JButton("Apply");
+		Apply = new JButton("Apply to current");
 		Cancel = new JButton("Cancel");
-		MultiApply = new JButton("Apply to Remaining");
+		MultiApply = new JButton("Apply to remaining -->");
+		reverseApply = new JButton("<-- Apply in reverse");
 		saveSettings = new JButton("Save Settings");
 		ErrorStop = new JCheckBox("Stop on Layout Errors");
 
@@ -250,7 +253,7 @@ public class ApplySettingsDialog implements ActionListener {
 		c.gridx = 1;
 		c.gridy = 1;
 		c.gridwidth = 1;
-		c.gridheight = 4;
+		c.gridheight = 5;
 		c.weightx = 1;
 		c.weighty = 0;
 		mainPanel.add(transformProps, c);
@@ -268,9 +271,12 @@ public class ApplySettingsDialog implements ActionListener {
 		mainPanel.add(Apply, c);
 		c.gridx = 2;
 		c.gridy = 3;
-		mainPanel.add(saveSettings, c);
+		mainPanel.add(reverseApply, c);
 		c.gridx = 2;
 		c.gridy = 4;
+		mainPanel.add(saveSettings, c);
+		c.gridx = 2;
+		c.gridy = 5;
 		mainPanel.add(Cancel, c);
 
 		// add any addl compondents from the layout
@@ -307,7 +313,7 @@ public class ApplySettingsDialog implements ActionListener {
 		c.gridx = 0;
 		c.gridy = 1;
 		c.gridwidth = 1;
-		c.gridheight = 4;
+		c.gridheight = 5;
 		c.weightx = 1;
 		c.weighty = 1;
 		c.fill = GridBagConstraints.VERTICAL;
@@ -316,6 +322,7 @@ public class ApplySettingsDialog implements ActionListener {
 		Cancel.addActionListener(this);
 		Apply.addActionListener(this);
 		MultiApply.addActionListener(this);
+		reverseApply.addActionListener(this);
 		saveSettings.addActionListener(this);
 
 		// settingsDialog.setBackground(Color.lightGray);
@@ -501,17 +508,18 @@ public class ApplySettingsDialog implements ActionListener {
 		} else {
 			// read the values from the dialog and set them in engine
 			// setValuesFromDialog();
-
+			engine.setApplySettings(getSettings());
 			// now figure out if is apply or multi
 			if (evt.getSource().equals(Apply)) {
-				engine.setApplySettings(getSettings());
 				engine.applyLayoutTo(getSettings(), engine.getCurrentSlice());
 				settingsDialog.setVisible(false);
-			} else if (evt.getSource().equals(MultiApply)) {
-				// this will ask ask the dialog for the settings
-				engine.setApplySettings(getSettings());
+			} 
+			if (evt.getSource().equals(reverseApply)) {
+			    engine.applyLayoutToPrevious();
+				settingsDialog.setVisible(false);
+			}
+			else if (evt.getSource().equals(MultiApply)) {
 			    engine.applyLayoutToRemaining();
-				
 				settingsDialog.setVisible(false);
 			}
 		}

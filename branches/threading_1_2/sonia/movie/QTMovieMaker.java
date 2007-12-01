@@ -20,6 +20,8 @@ import java.awt.image.BufferedImage;
 import java.awt.image.PixelGrabber;
 import java.io.File;
 
+import javax.naming.ldap.Control;
+
 import quicktime.QTException;
 import quicktime.QTSession;
 import quicktime.io.OpenMovieFile;
@@ -40,6 +42,7 @@ import quicktime.std.movies.media.VideoMedia;
 import quicktime.util.QTHandle;
 import quicktime.util.RawEncodedImage;
 import sonia.SoniaCanvas;
+import sonia.SoniaController;
 import sonia.render.Graphics2DRender;
 import sonia.settings.MovieSettings;
 
@@ -114,6 +117,8 @@ public class QTMovieMaker implements MovieMaker {
 	private Graphics2DRender renderer;
 
 	private SoniaCanvas canvas;
+	
+	private SoniaController control;
 
 	private boolean isExporting = false;
 
@@ -125,9 +130,10 @@ public class QTMovieMaker implements MovieMaker {
 
 	private int codecType = StdQTConstants.kAnimationCodecType;
 
-	public QTMovieMaker(String fileAndPath) {
+	public QTMovieMaker(SoniaController control, String fileAndPath) {
 		fileName = fileAndPath;
 		renderer = new Graphics2DRender();
+		this.control = control;
 	}
 
 	public void setupMovie(SoniaCanvas canvas, int frames) throws Exception {
@@ -236,8 +242,7 @@ public class QTMovieMaker implements MovieMaker {
 					imgDesc, 1, syncSample ? 0
 							: StdQTConstants.mediaSampleNotSync);
 		} catch (StdQTException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			control.showError(e.getMessage());
 		}
 
 		// debug
@@ -257,17 +262,16 @@ public class QTMovieMaker implements MovieMaker {
 			//set.showDialog();
 
 		} catch (StdQTException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			control.showError(e.getMessage());
 		} catch (QTException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			control.showError(e.getMessage());
 		}
 		QTSession.close();
 		isExporting = false;
 		// debug
-		//System.out.println("QTMovie export finished. Codec:" + codec
-			//	+ " Quality:" + quality);
+		control.log("QTMovie export finished to file "+fileName+
+				"\n  Codec:" + codec+ " Quality:" + quality);
+		control.showStatus("Finished exporting QT movie");
 	}
 
 	public boolean isExporting() {

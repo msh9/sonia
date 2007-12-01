@@ -868,7 +868,7 @@ public class SoniaController implements Runnable{
 		if (fileName != null) {
 			
 			try {
-				 exporter = new QTMovieMaker(fileName);
+				 exporter = new QTMovieMaker(this,fileName);
 
 					// also ask about export formats
 				 if (movieSettings == null & isShowGUI()){

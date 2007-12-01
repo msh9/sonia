@@ -73,11 +73,14 @@ public class MultipleLayoutTask implements LongTask, TaskListener {
 	}
 
 	public int maxSteps() {
+		if (reverse){
+			return startSlice;
+		}
 		return engine.getNumSlices() - startSlice;
 	}
 
 	public int currentStep() {
-		return currentSlice;
+		return Math.abs(startSlice-currentSlice);
 	}
 
 	public boolean isError() {
@@ -116,8 +119,9 @@ public class MultipleLayoutTask implements LongTask, TaskListener {
 		} else {
 			status = "Layouts complete with " + errorSlices + " error slices";
 			stop = true;
-			reportStatus();
+			
 		}
+		reportStatus();
 	}
 
 	
@@ -137,7 +141,7 @@ public class MultipleLayoutTask implements LongTask, TaskListener {
 		}
 		stop = false;
 		if (reverse){ // we are doing slices in reverse order
-			slicesLeft = startSlice;
+			slicesLeft = startSlice+1;
 			donelist.add(Integer.valueOf(startSlice+1));
 		} else {
 			slicesLeft = engine.getNumSlices() - startSlice;
@@ -157,6 +161,7 @@ public class MultipleLayoutTask implements LongTask, TaskListener {
 		// we assume task update was from the layout
 		if (task instanceof ApplyLayoutTask) {
 			if (task.isDone()) {
+			
 				// if (engine.getLayout().) {
 				donelist.add(Integer.valueOf(currentSlice));
 				if (engine.getSlice(currentSlice).isError()) {
@@ -175,14 +180,14 @@ public class MultipleLayoutTask implements LongTask, TaskListener {
 				} // we either done with errors or not stopping so..
 				// check if the previous slice is finished
 				if (reverse){
-					if (donelist.contains(Integer.valueOf(currentSlice - 1))) {
-						currentSlice++;
+					if (donelist.contains(Integer.valueOf(currentSlice + 1))) {
+						currentSlice--;
 						slicesLeft--;
 						nextSlice();
 					} 
 				} else {
-					if (donelist.contains(Integer.valueOf(currentSlice + 1))) {
-						currentSlice--;
+					if (donelist.contains(Integer.valueOf(currentSlice - 1))) {
+						currentSlice++;
 						slicesLeft--;
 						nextSlice();
 					} 

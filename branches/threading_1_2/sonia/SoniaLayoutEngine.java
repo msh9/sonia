@@ -768,7 +768,9 @@ public class SoniaLayoutEngine implements TaskListener{
 	 *            the SoniaMovieMaker to save the movie frames to
 	 */
 	public void makeMovie(MovieMaker exporter) throws Exception {
-		display.makeMovie(exporter);
+		//display.makeMovie(exporter);
+		MovieExportTask movieTask = new MovieExportTask(this,exporter);
+		control.runTask(movieTask);
 	}
 
 	/**

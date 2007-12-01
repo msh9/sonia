@@ -595,7 +595,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	 *            the event indicating the source of the action
 	 */
 	public void actionPerformed(ActionEvent evt) {
-
+     
 		if (evt.getSource().equals(ApplyLayout)) {
 			applyLayout();
 		} else if (evt.getSource().equals(ReApply)) {
@@ -676,7 +676,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		movie.setupMovie(LayoutArea, numFrames);
 		// make sure we are on the first slice
 		// engine.changeToSliceNum(0);
-		transitionToSlice(0);
+		transitionToSlice(0,null);
 		// THIS SHOULD BE ON A SEPERATE THREAD SO WE CAN PAUSE
 		// should also record movie layout stats to first frame
 		startMovieRecordThread();
@@ -728,7 +728,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 			for (int s = startIndex; s < endIndex; s++) {
 				// awkward transition checks if movie is being recorded and
 				// saves theframe
-				transitionToSlice(s);
+				transitionToSlice(s,null);
 				// make it so that movie recording can be stopped if something
 				// goes wrong
 				if (Control.isPaused()) {
@@ -768,7 +768,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		for (int s = startIndex + 1; s < endIndex; s++) {
 			// check for pause
 			if (!Control.isPaused()) {
-				transitionToSlice(s);
+				transitionToSlice(s,null);
 			}
 		}
 	}
@@ -784,7 +784,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 			public void run() {
 				// set flag so no other transitions will start
 				isTransitionActive = true;
-				transitionToSlice(destSlice);
+				transitionToSlice(destSlice,null);
 				isTransitionActive = false;
 			}
 		};
@@ -804,7 +804,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 			public void run() {
 				// set flag so no other transitions will start
 				isTransitionActive = true;
-				transitionToSlice(destSlice);
+				transitionToSlice(destSlice,null);
 				isTransitionActive = false;
 			}
 		};
@@ -919,7 +919,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	 * @param number
 	 *            the slice number to transition to.
 	 */
-	public void transitionToSlice(int number) {
+	public void transitionToSlice(int number, MovieMaker movie) {
 		LayoutArea.saveImageForGhost();
 		// check if should do interpolation
 		engine.setInterpFrames(Integer.parseInt(NumInterps.getText()));
