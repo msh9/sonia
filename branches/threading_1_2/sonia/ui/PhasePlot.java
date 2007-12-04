@@ -75,7 +75,7 @@ public class PhasePlot extends ExportableFrame implements
 
 	private JCheckBox sortBox;
 
-	private JLabel MouseTime;
+	//private JLabel MouseTime;
 
 	private SoniaLayoutEngine engine;
 
@@ -130,7 +130,7 @@ public class PhasePlot extends ExportableFrame implements
 		drawArea = new PhasePlotPanel();
 		drawArea.setBorder(new TitledBorder("Timeline view of network"));
 		sortBox = new JCheckBox("Sort Events", eventsSorted);
-		MouseTime = new JLabel("");
+	//	MouseTime = new JLabel("");
 		// MouseTime.setBackground(Color.lightGray);
 		//MouseTime.setEditable(false);
 		
@@ -143,7 +143,7 @@ public class PhasePlot extends ExportableFrame implements
 		GridBagConstraints c = new GridBagConstraints();
 		c.gridx = 0;
 		c.gridy = 0;
-		c.gridwidth = 2;
+		c.gridwidth = 1;
 		c.gridheight = 1;
 		c.weightx = 1;
 		c.weighty = 1;
@@ -152,7 +152,7 @@ public class PhasePlot extends ExportableFrame implements
 		c.fill = GridBagConstraints.NONE;
 		c.anchor = GridBagConstraints.SOUTH;
 		c.gridx = 1;
-		c.gridy = 1;
+		c.gridy = 0;
 		c.gridwidth = 1;
 		c.gridheight = 1;
 		c.weightx = 0.1;
@@ -164,7 +164,7 @@ public class PhasePlot extends ExportableFrame implements
 		c.gridheight = 1;
 		c.weightx = 0.1;
 		c.weighty = 0.1;
-		mainPanel.add(MouseTime, c);
+	//	mainPanel.add(MouseTime, c);
 		this.getContentPane().add(mainPanel);
 		// add the listerners
 		this.addInternalFrameListener(this);
@@ -404,7 +404,9 @@ public class PhasePlot extends ExportableFrame implements
 		if (engine != null){
 			sliceN = engine.getCurrentSliceNum();
 		}
-		MouseTime.setText("Slice#:" + sliceN
+//		MouseTime.setText("Slice#:" + sliceN
+//				+ "  Time at Cursor:" + formater.format(mouseTime));
+		drawArea.setToolTipText("Slice#:" + sliceN
 				+ "  Time at Cursor:" + formater.format(mouseTime));
 	}
 

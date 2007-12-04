@@ -130,6 +130,7 @@ public class SoniaController implements Runnable{
 	private PropertySettings parserSettings = null;
 
 	private PropertySettings movieSettings = null;
+	
 
 	private Uniform randomUni; // colt package mersense twister random numbers
 	
@@ -1305,5 +1306,7 @@ public class SoniaController implements Runnable{
 	public BrowsingSettings getBrowsingSettings(){
 		return browseSettings;
 	}
+
+
 
 }

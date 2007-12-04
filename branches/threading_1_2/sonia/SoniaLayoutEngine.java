@@ -132,6 +132,8 @@ public class SoniaLayoutEngine implements TaskListener{
 	private double maxMatrixValue;
 
 	private double minMatrixValue;
+	
+	private  boolean isTransitionActive = false; // indicates if a thread is animating
 
 	/**
 	 * Class responsible for maintaining data structures for layouts,
@@ -1140,6 +1142,19 @@ public class SoniaLayoutEngine implements TaskListener{
 
 	public void taskStatusChanged(LongTask task) {
 		repaintDisplays();
+	}
+	
+	public synchronized boolean isTransitionActive() {
+		return isTransitionActive;
+	}
+
+	/**
+	 * indicates if a thread is currently running an animation with this engine
+	 * @author skyebend
+	 * @param isTransitionActive
+	 */
+	public synchronized void setTransitionActive(boolean isTransitionActive) {
+		this.isTransitionActive = isTransitionActive;
 	}
 
 }

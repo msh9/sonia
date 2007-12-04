@@ -11,6 +11,9 @@ import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 
@@ -31,11 +34,14 @@ import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 
+import cern.colt.Arrays;
+
 import sonia.ApplyLayoutTask;
 import sonia.LayoutSlice;
 import sonia.LongTask;
 import sonia.NodeInspector;
 import sonia.NodeMover;
+import sonia.PlayAnimationTask;
 import sonia.SoniaCanvas;
 import sonia.SoniaController;
 import sonia.SoniaLayoutEngine;
@@ -213,8 +219,13 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	// private JLabel LayoutLabel;
 
 	private boolean movingNodes = false;
+	
+	private JPanel stressPanel;
+	private JPanel inspectPanel;
+	private JPanel layoutPanel;
+	private JPanel timelinePane ;
 
-	private boolean isTransitionActive = false; // indicates if a thread is
+	
 
 	// animating
 
@@ -334,6 +345,9 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		this.getContentPane().setLayout(new BorderLayout());
 
 		// add components to the layout GBlayout using constraints
+		//will reuse this object for many layouts
+		GridBagConstraints c = new GridBagConstraints();
+		c.insets = new Insets(0, 2, 0, 2);
 		// set up top level components
 		// c.gridx=0;c.gridy=0;c.gridwidth=7;c.gridheight=1;c.weightx=1;c.weighty=1;
 		// c.fill=c.BOTH;
@@ -345,27 +359,51 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		controlePane.add(controlPanel,0);
 		
 		NodeInspector inspector = new NodeInspector(Control,engine, LayoutArea);
-		JPanel inspectPanel = inspector.getInspectPanel();
+		inspectPanel = inspector.getInspectPanel();
 		inspectPanel.setName("inspect");
 		controlePane.add(inspectPanel,1);
 		controlePane.addChangeListener(inspector);
 		
-		JPanel layoutPanel = new JPanel(new GridLayout());
+		layoutPanel = new JPanel(new GridBagLayout());
 		layoutPanel.setName("layout");
 		//UGLY HACK, GET RID OF THIS
+		c.gridx=0;c.gridy=0;c.gridwidth=2;c.fill=GridBagConstraints.BOTH;c.weightx=1;c.weighty=1;
 		if (engine.getLayout().getClass().equals(MultiCompKKLayout.class)){
-			layoutPanel.add(((MultiCompKKLayout)engine.getLayout()).getSchedule().getContentPane());
+			layoutPanel.add(((MultiCompKKLayout)engine.getLayout()).getSchedule().getContentPane(),c);
 		} else if (engine.getLayout().getClass().equals(FRLayout.class)){
-			layoutPanel.add(((FRLayout)engine.getLayout()).getSchedule().getContentPane());
+			layoutPanel.add(((FRLayout)engine.getLayout()).getSchedule().getContentPane(),c);
 		}
+		
+		c.gridx=0;c.gridy=1;c.gridwidth=1;c.weightx=.1;c.weighty=.1;c.fill=GridBagConstraints.NONE;
+		layoutPanel.add(ApplyLayout,c);
+		c.gridx=1;c.gridy=1;c.gridwidth=1;
+		layoutPanel.add(ReApply,c);
 		controlePane.add(layoutPanel,2);
 		
 		//JPanel timelinePanel = new JPanel(new GridLayout());
 		//timelinePanel.add(engine.getPhasePlot().getContentPane());
 		//timelinePanel.setName("timeline");
-		Component contentPane = engine.getPhasePlot().getContentPane();
-		contentPane.setName("timeline");
-		controlePane.add(contentPane,3);
+		timelinePane = new JPanel(new GridBagLayout());
+		c.gridx=0;c.gridy=0;c.gridwidth=5;c.fill=GridBagConstraints.BOTH;c.weightx=1;c.weighty=1;
+		timelinePane.add(engine.getPhasePlot().getContentPane(),c);
+		timelinePane.setName("timeline");
+		c.gridx=0;c.gridy=1;c.gridwidth=1;c.weightx=.1;c.weighty=0;c.fill=GridBagConstraints.NONE;
+		timelinePane.add(PrevSlice,c);
+		c.gridx=1;c.gridy=1;
+		timelinePane.add(LayoutNum,c);
+		c.gridx=2;c.gridy=1;
+		timelinePane.add(NextSlice,c);
+		c.gridx=3;c.gridy=1;
+		timelinePane.add(PlayAll,c);
+		c.gridx=4;c.gridy=1;
+		timelinePane.add(Pause,c);
+		controlePane.add(timelinePane,3);
+		
+		//stress panel
+		stressPanel = new JPanel(new GridBagLayout());
+		stressPanel.setName("stress");
+		stressPanel.add(Stress);
+		controlePane.add(stressPanel,4);
 		
 		// try to make it so we can tear off tabs
 		controlePane.addMouseMotionListener(new MouseMotionListener(){
@@ -411,32 +449,31 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 
 		GridBagLayout layout = new GridBagLayout();
 		controlPanel.setLayout(layout);
-		GridBagConstraints c = new GridBagConstraints();
 		c.insets = new Insets(0, 2, 0, 2);
 		// c.fill=c.NONE;
 
 		// buttons
-		c.gridx = 0;
-		c.gridy = 1;
-		c.gridwidth = 1;
-		c.gridheight = 1;
-		c.weightx = 0.5;
-		c.weighty = 0.0;
-		controlPanel.add(ApplyLayout, c);
-		c.gridx = 0;
-		c.gridy = 2;
-		c.gridwidth = 1;
-		c.gridheight = 1;
-		c.weightx = 0.5;
-		c.weighty = 0.0;
-		controlPanel.add(ReApply, c);
-		c.gridx = 2;
-		c.gridy = 1;
-		c.gridwidth = 1;
-		c.gridheight = 1;
-		c.weightx = 0.5;
-		c.weighty = 0.0;
-		controlPanel.add(Stress, c);
+//		c.gridx = 0;
+//		c.gridy = 1;
+//		c.gridwidth = 1;
+//		c.gridheight = 1;
+//		c.weightx = 0.5;
+//		c.weighty = 0.0;
+//		controlPanel.add(ApplyLayout, c);
+//		c.gridx = 0;
+//		c.gridy = 2;
+//		c.gridwidth = 1;
+//		c.gridheight = 1;
+//		c.weightx = 0.5;
+//		c.weighty = 0.0;
+//		controlPanel.add(ReApply, c);
+//		c.gridx = 2;
+//		c.gridy = 1;
+//		c.gridwidth = 1;
+//		c.gridheight = 1;
+//		c.weightx = 0.5;
+//		c.weighty = 0.0;
+	
 		c.gridx = 1;
 		c.gridy = 1;
 		c.gridwidth = 1;
@@ -468,41 +505,37 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		// buttons and controls
 		// c.gridx=1;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
 		// add(LayoutLabel,c);
-		c.gridx = 2;
-		c.gridy = 2;
-		c.gridwidth = 1;
-		c.gridheight = 1;
-		c.weightx = 0.1;
-		c.weighty = 0.0;
-		controlPanel.add(LayoutNum, c);
-		c.gridx = 3;
-		c.gridy = 2;
-		c.gridwidth = 1;
-		c.gridheight = 1;
-		c.weightx = 0.1;
-		c.weighty = 0.0;
-		controlPanel.add(PrevSlice, c);
-		c.gridx = 4;
-		c.gridy = 2;
-		c.gridwidth = 1;
-		c.gridheight = 1;
-		c.weightx = 0.1;
-		c.weighty = 0.0;
-		controlPanel.add(NextSlice, c);
-		c.gridx = 5;
-		c.gridy = 2;
-		c.gridwidth = 1;
-		c.gridheight = 1;
-		c.weightx = 0.1;
-		c.weighty = 0.0;
-		controlPanel.add(Pause, c);
-		c.gridx = 6;
-		c.gridy = 2;
-		c.gridwidth = 1;
-		c.gridheight = 1;
-		c.weightx = 0.1;
-		c.weighty = 0.0;
-		controlPanel.add(PlayAll, c);
+		c.gridx = 2;c.gridy = 2;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.1;c.weighty = 0.0;
+		//add to the 
+//		controlPanel.add(LayoutNum, c);
+//		c.gridx = 3;
+//		c.gridy = 2;
+//		c.gridwidth = 1;
+//		c.gridheight = 1;
+//		c.weightx = 0.1;
+//		c.weighty = 0.0;
+//		controlPanel.add(PrevSlice, c);
+//		c.gridx = 4;
+//		c.gridy = 2;
+//		c.gridwidth = 1;
+//		c.gridheight = 1;
+//		c.weightx = 0.1;
+//		c.weighty = 0.0;
+//		controlPanel.add(NextSlice, c);
+//		c.gridx = 5;
+//		c.gridy = 2;
+//		c.gridwidth = 1;
+//		c.gridheight = 1;
+//		c.weightx = 0.1;
+//		c.weighty = 0.0;
+//		controlPanel.add(Pause, c);
+//		c.gridx = 6;
+//		c.gridy = 2;
+//		c.gridwidth = 1;
+//		c.gridheight = 1;
+//		c.weightx = 0.1;
+//		c.weighty = 0.0;
+//		controlPanel.add(PlayAll, c);
 
 		// c.gridx=1;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
 		// add(RenderLabel,c);
@@ -564,6 +597,42 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		// NEED A LISTENER FOR THE TXT FIELD
 
 		addInternalFrameListener(this);
+		//add key listener to map arrow keys to next and prev
+		controlePane.addKeyListener( new KeyAdapter(){
+			public void keyPressed(KeyEvent k){
+				if (k.getKeyCode() == KeyEvent.VK_RIGHT){
+					startFwdTransThread();
+				}
+				if (k.getKeyCode()== KeyEvent.VK_LEFT){
+					startRevTransThread();
+				}
+				if (k.getKeyCode()== KeyEvent.VK_DOWN){
+					transitionToSlice(0,null);
+				}
+				if (k.getKeyCode()== KeyEvent.VK_UP){
+					transitionToSlice(engine.getNumSlices()-1,null);
+				}
+				if (k.getKeyCode()== KeyEvent.VK_ENTER){
+					if (k.isShiftDown()){
+						applyLayout();
+					} else {
+					 reApplyLayout();
+					}
+				}
+				if (k.getKeyCode()== KeyEvent.VK_SPACE){
+				if(engine.isTransitionActive()){
+					Control.setPaused(true);
+				} else if (Control.isPaused()){
+					Control.setPaused(false);
+				} else {
+				   // startPlayThread();
+					playAll();
+				}
+					
+				}
+				k.consume();
+			}
+		});
 
 		// read settings from the browsng properties
 		fetchBrowseSettings();
@@ -573,6 +642,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		///this.pack();
 		this.setTitle(engine.toString());
 		this.setLocation(10, 10);
+		controlePane.setSelectedComponent(layoutPanel);
+		controlePane.requestFocusInWindow();
 		//this.setVisible(true);
 
 	}
@@ -607,13 +678,14 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		} else if (evt.getSource().equals(PhasePlot)) {
 			engine.getPhasePlot();
 		} else if (evt.getSource().equals(NextSlice)) {
-			if (!isTransitionActive) {
+			if (!engine.isTransitionActive()) {
 				// transitionToSlice(engine.getCurrentSliceNum()+1);
 				startFwdTransThread();
 			}
 		} else if (evt.getSource().equals(PlayAll)) {
-			if (!isTransitionActive) {
-				startPlayThread();
+			if (!engine.isTransitionActive()) {
+				//startPlayThread();
+				playAll();
 			}
 		} else if (evt.getSource().equals(Pause)) {
 			if (Control.isPaused()) {
@@ -624,26 +696,26 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 				Pause.setText("[||]");
 			}
 		} else if (evt.getSource().equals(PrevSlice)) {
-			if (!isTransitionActive) {
+			if (!engine.isTransitionActive()) {
 				startRevTransThread();
 			}
 		} else if (evt.getSource().equals(ViewOptions)) {
 			graphicsSettings.showDialog();
 			updateDisplay();
 		} else if (evt.getSource().equals(LayoutNum)) {
-			if (!isTransitionActive) {
+			if (!engine.isTransitionActive()) {
 				goToSlice(Integer.parseInt(LayoutNum.getText()));
 			}
 		} else if (evt.getSource().equals(RenderTime)) {
-			if (!isTransitionActive) {
+			if (!engine.isTransitionActive()) {
 				renderCurrentSettings();
 			}
 		} else if (evt.getSource().equals(RenderDuration)) {
-			if (!isTransitionActive) {
+			if (!engine.isTransitionActive()) {
 				renderCurrentSettings();
 			}
 		} else if (evt.getSource().equals(NumInterps)) {
-			if (!isTransitionActive) {
+			if (!engine.isTransitionActive()) {
 				engine.setInterpFrames(Integer.parseInt(NumInterps.getText()));
 				// allso reset the render duration
 				LayoutSlice slice = engine.getCurrentSlice();
@@ -653,7 +725,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 				renderCurrentSettings();
 			}
 		} else if (evt.getSource().equals(MoveNodes)) {
-			if (!isTransitionActive) {
+			if (!engine.isTransitionActive()) {
 				moveNodes();
 			}
 		}
@@ -668,109 +740,116 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	 * @param exporter
 	 *            the SoniaMovieMaker which will record the images
 	 */
-	public void makeMovie(MovieMaker exporter) throws Exception {
-		movie = exporter;
-		int endIndex = engine.getNumSlices();
-		int numFrames = endIndex * Integer.parseInt(NumInterps.getText());
-
-		movie.setupMovie(LayoutArea, numFrames);
-		// make sure we are on the first slice
-		// engine.changeToSliceNum(0);
-		transitionToSlice(0,null);
-		// THIS SHOULD BE ON A SEPERATE THREAD SO WE CAN PAUSE
-		// should also record movie layout stats to first frame
-		startMovieRecordThread();
-
-	}
+//	public void makeMovie(MovieMaker exporter) throws Exception {
+//		movie = exporter;
+//		int endIndex = engine.getNumSlices();
+//		int numFrames = endIndex * Integer.parseInt(NumInterps.getText());
+//
+//		movie.setupMovie(LayoutArea, numFrames);
+//		// make sure we are on the first slice
+//		// engine.changeToSliceNum(0);
+//		transitionToSlice(0,null);
+//		// THIS SHOULD BE ON A SEPERATE THREAD SO WE CAN PAUSE
+//		// should also record movie layout stats to first frame
+//		startMovieRecordThread();
+//
+//	}
 
 	/**
 	 * Creates a new thread to run the movie recording, calls the recordMovie
 	 * method, called by makeMove.
 	 */
-	private void startMovieRecordThread() {
-		Thread movieThread = new Thread() {
-			public void run() {
-				// catch throwable here to try to recover from out of memory
-				// errors
-				try {
-					isTransitionActive = true;
-					recordMovie();
-					movie.finishMovie();
-					movie = null;
-					isTransitionActive = false;
-					Control.showStatus("Movie export finished.");
-				} catch (Throwable e) {
-					Control.showError("Error in  movie export:"
-							+ e.getMessage());
-					// if not in gui mode, exit
-					if (!Control.isShowGUI()) {
-						e.printStackTrace();
-						System.exit(-1);
-					}
-				}
-			}
-		};
-		movieThread.setName("movie thread");
-		movieThread.setPriority(10);
-		movieThread.start();
-	}
+//	private void startMovieRecordThread() {
+//		Thread movieThread = new Thread() {
+//			public void run() {
+//				// catch throwable here to try to recover from out of memory
+//				// errors
+//				try {
+//					isTransitionActive = true;
+//					recordMovie();
+//					movie.finishMovie();
+//					movie = null;
+//					isTransitionActive = false;
+//					Control.showStatus("Movie export finished.");
+//				} catch (Throwable e) {
+//					Control.showError("Error in  movie export:"
+//							+ e.getMessage());
+//					// if not in gui mode, exit
+//					if (!Control.isShowGUI()) {
+//						e.printStackTrace();
+//						System.exit(-1);
+//					}
+//				}
+//			}
+//		};
+//		movieThread.setName("movie thread");
+//		movieThread.setPriority(10);
+//		movieThread.start();
+//	}
 
 	/**
 	 * Transitions through the layouts, recording the image to the movie file.
 	 * Called by the movie thread.
 	 */
-	private void recordMovie() {
-		// double check that a movie exists to record on
-		if (movie != null) {
-			movie.captureImage();
-			int startIndex = 0;
-			int endIndex = engine.getNumSlices();
-			for (int s = startIndex; s < endIndex; s++) {
-				// awkward transition checks if movie is being recorded and
-				// saves theframe
-				transitionToSlice(s,null);
-				// make it so that movie recording can be stopped if something
-				// goes wrong
-				if (Control.isPaused()) {
-					break;
-				}
-			}
-		}
-
-	}
+//	private void recordMovie() {
+//		// double check that a movie exists to record on
+//		if (movie != null) {
+//			movie.captureImage();
+//			int startIndex = 0;
+//			int endIndex = engine.getNumSlices();
+//			for (int s = startIndex; s < endIndex; s++) {
+//				// awkward transition checks if movie is being recorded and
+//				// saves theframe
+//				transitionToSlice(s,null);
+//				// make it so that movie recording can be stopped if something
+//				// goes wrong
+//				if (Control.isPaused()) {
+//					break;
+//				}
+//			}
+//		}
+//
+//	}
 
 	/**
 	 * Creates a thread to animate playback in the layout window, which calls
 	 * playAll.
 	 */
-	private void startPlayThread() {
-		// should have a method to make sure nothing else tries to change the
-		// display at the same time
-		Thread playThread = new Thread() {
-			public void run() {
-				isTransitionActive = true;
-				playAll();
-				isTransitionActive = false;
-			}
-		};
-		playThread.setName("play thread");
-		playThread.setPriority(10);
-		playThread.start();
-	}
+//	private void startPlayThread() {
+//		// should have a method to make sure nothing else tries to change the
+//		// display at the same time
+//		Thread playThread = new Thread() {
+//			public void run() {
+//				isTransitionActive = true;
+//				playAll();
+//				isTransitionActive = false;
+//			}
+//		};
+//		playThread.setName("play thread");
+//		playThread.setPriority(10);
+//		playThread.start();
+//	}
 
 	/**
 	 * Transitions through the slices, starting at the current slice. Called by
 	 * the play thread. Uses transitionToSlice.
 	 */
-	private void playAll() {
-		int startIndex = engine.getCurrentSliceNum();
-		int endIndex = engine.getNumSlices();
-		for (int s = startIndex + 1; s < endIndex; s++) {
-			// check for pause
-			if (!Control.isPaused()) {
-				transitionToSlice(s,null);
-			}
-		}
+	public void playAll() {
+		selectPane(timelinePane);
+//		int startIndex = engine.getCurrentSliceNum();
+//		int endIndex = engine.getNumSlices();
+//		isTransitionActive = true;
+//		for (int s = startIndex + 1; s < endIndex; s++) {
+//			// check for pause
+//			if (!Control.isPaused()) {
+//				transitionToSlice(s,null);
+//			} else {
+//				break;
+//			}
+//		}
+//		isTransitionActive = false;
+		PlayAnimationTask playTask = new PlayAnimationTask(engine);
+		Control.runTask(playTask);
 	}
 
 	/**
@@ -783,9 +862,9 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 
 			public void run() {
 				// set flag so no other transitions will start
-				isTransitionActive = true;
+				engine.setTransitionActive(true);
 				transitionToSlice(destSlice,null);
-				isTransitionActive = false;
+				engine.setTransitionActive(false);
 			}
 		};
 		transThread.setName("transition thread");
@@ -803,9 +882,9 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 
 			public void run() {
 				// set flag so no other transitions will start
-				isTransitionActive = true;
+				engine.setTransitionActive(true);
 				transitionToSlice(destSlice,null);
-				isTransitionActive = false;
+				engine.setTransitionActive(false);
 			}
 		};
 		transThread.setName("transition thread");
@@ -831,6 +910,21 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 			MoveNodes.setText("Move Nodes");
 		}
 	}
+	
+	
+	/**
+	 * flips to the specified component in the jtabbed pane, if it exists
+	 * @author skyebend
+	 * @param pane
+	 */
+	private boolean selectPane(JComponent pane){
+		try{
+			controlePane.setSelectedComponent(pane);
+		} catch (IllegalArgumentException e){
+			return false;
+		}
+		return true;
+	}
 
 	// this should be moved to the controller
 	/**
@@ -841,6 +935,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		engine.changeToSliceNum(Integer.parseInt(LayoutNum.getText()));
 		// get that slice
 		LayoutSlice currentSlice = engine.getCurrentSlice();
+//		show  the layout
+		selectPane(layoutPanel);
 		// apply layout
 		engine.showApplyLayoutSettings();
 		// Render the entire slice as one block, from start to finish
@@ -849,6 +945,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 				+ (currentSlice.getSliceEnd() - currentSlice.getSliceStart()));
 		LayoutArea.setRenderSlice(engine.getRenderSlice(currentSlice
 				.getSliceStart(), currentSlice.getSliceEnd()));
+		
 		updateDisplay();
 	}
 
@@ -862,6 +959,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		engine.changeToSliceNum(Integer.parseInt(LayoutNum.getText()));
 		// get that slice
 		LayoutSlice currentSlice = engine.getCurrentSlice();
+//		show  the layout
+		selectPane(layoutPanel);
 		// apply layout
 		engine.applyLayoutToCurrent();
 	
