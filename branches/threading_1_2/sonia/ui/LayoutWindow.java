@@ -196,6 +196,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	private JButton Pause;
 
 	private JButton ViewOptions;
+	
+	private JButton zoom;
 
 	private JButton MoveNodes;
 
@@ -312,18 +314,19 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		Pause = new JButton("||");
 		ViewOptions = new JButton("View Options..");
 		MoveNodes = new JButton("Move Nodes");
+		zoom = new JButton("Rescale");
 
-		RenderTime = new JTextField("0", 8);
+		RenderTime = new JTextField("0", 4);
 		RenderTime.setBorder(new TitledBorder("render time"));
 		RenderTime.setToolTipText("Start of current render time bin");
-		RenderDuration = new JTextField("0.1", 5);
-		RenderDuration.setBorder(new TitledBorder("duration:"));
+		RenderDuration = new JTextField("0.1", 3);
+		RenderDuration.setBorder(new TitledBorder("duration"));
 		RenderDuration.setToolTipText("Size of time bin used for viewing");
-		renderOffset = new JTextField("0", 5);
+		renderOffset = new JTextField("0", 3);
 		renderOffset.setBorder(new TitledBorder("offset"));
 		renderOffset.setToolTipText("position of render start within slice");
-		LayoutNum = new JTextField("0", 8);
-		LayoutNum.setBorder(new TitledBorder("Layout (slice) #:"));
+		LayoutNum = new JTextField("0", 3);
+		LayoutNum.setBorder(new TitledBorder("slice"));
 		LayoutNum.setToolTipText("Index of slices used for coordinates");
 		// LayoutLabel = new JLabel("Layout (slice) #:");
 		LayoutArea = new SoniaCanvas(drawSettings, engine);
@@ -333,12 +336,12 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 				Control, engine, null, LayoutArea);
 
 		// NumInterpLabel = new JLabel("num. interp frames");
-		NumInterps = new JTextField("10", 5);
-		NumInterps.setBorder(new TitledBorder("num. interp frames"));
+		NumInterps = new JTextField("10", 3);
+		NumInterps.setBorder(new TitledBorder("interp frames"));
 		NumInterps
 				.setToolTipText("How many in-between frames to use in transition");
-		frameDelay = new JTextField("30", 5);
-		frameDelay.setBorder(new TitledBorder("frame delay"));
+		frameDelay = new JTextField("30", 3);
+		frameDelay.setBorder(new TitledBorder("delay"));
 		frameDelay.setToolTipText("How long to wait between frames");
 
 		// LAYOUT
@@ -384,7 +387,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		//timelinePanel.add(engine.getPhasePlot().getContentPane());
 		//timelinePanel.setName("timeline");
 		timelinePane = new JPanel(new GridBagLayout());
-		c.gridx=0;c.gridy=0;c.gridwidth=5;c.fill=GridBagConstraints.BOTH;c.weightx=1;c.weighty=1;
+		c.gridx=0;c.gridy=0;c.gridwidth=10;c.fill=GridBagConstraints.BOTH;c.weightx=1;c.weighty=1;
 		timelinePane.add(engine.getPhasePlot().getContentPane(),c);
 		timelinePane.setName("timeline");
 		c.gridx=0;c.gridy=1;c.gridwidth=1;c.weightx=.1;c.weighty=0;c.fill=GridBagConstraints.NONE;
@@ -398,6 +401,16 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		c.gridx=4;c.gridy=1;
 		timelinePane.add(Pause,c);
 		controlePane.add(timelinePane,3);
+		c.gridx = 5;
+		timelinePane.add(RenderTime, c);
+		c.gridx = 6;
+		timelinePane.add(RenderDuration, c);
+		c.gridx = 7;
+		timelinePane.add(renderOffset, c);
+		c.gridx = 8;
+		timelinePane.add(NumInterps, c);
+		c.gridx = 9;
+		timelinePane.add(frameDelay, c);
 		
 		//stress panel
 		stressPanel = new JPanel(new GridBagLayout());
@@ -539,43 +552,43 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 
 		// c.gridx=1;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
 		// add(RenderLabel,c);
-		c.gridx = 2;
-		c.gridy = 3;
-		c.gridwidth = 1;
-		c.gridheight = 1;
-		c.weightx = 0.1;
-		c.weighty = 0.0;
-		controlPanel.add(RenderTime, c);
-		// c.gridx=3;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
-		// add(DurationLabel,c);
-		c.gridx = 3;
-		c.gridy = 3;
-		c.gridwidth = 1;
-		c.gridheight = 1;
-		c.weightx = 0.1;
-		c.weighty = 0.0;
-		controlPanel.add(RenderDuration, c);
-		c.gridx = 4;
-		c.gridy = 3;
-		c.gridwidth = 1;
-		c.gridheight = 1;
-		c.weightx = 0.1;
-		c.weighty = 0.0;
-		controlPanel.add(renderOffset, c);
-		c.gridx = 5;
-		c.gridy = 3;
-		c.gridwidth = 1;
-		c.gridheight = 1;
-		c.weightx = 0.1;
-		c.weighty = 0.0;
-		controlPanel.add(NumInterps, c);
-		c.gridx = 6;
-		c.gridy = 3;
-		c.gridwidth = 1;
-		c.gridheight = 1;
-		c.weightx = 0.1;
-		c.weighty = 0.0;
-		controlPanel.add(frameDelay, c);
+//		c.gridx = 2;
+//		c.gridy = 3;
+//		c.gridwidth = 1;
+//		c.gridheight = 1;
+//		c.weightx = 0.1;
+//		c.weighty = 0.0;
+//		controlPanel.add(RenderTime, c);
+//		// c.gridx=3;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
+//		// add(DurationLabel,c);
+//		c.gridx = 3;
+//		c.gridy = 3;
+//		c.gridwidth = 1;
+//		c.gridheight = 1;
+//		c.weightx = 0.1;
+//		c.weighty = 0.0;
+//		controlPanel.add(RenderDuration, c);
+//		c.gridx = 4;
+//		c.gridy = 3;
+//		c.gridwidth = 1;
+//		c.gridheight = 1;
+//		c.weightx = 0.1;
+//		c.weighty = 0.0;
+//		controlPanel.add(renderOffset, c);
+//		c.gridx = 5;
+//		c.gridy = 3;
+//		c.gridwidth = 1;
+//		c.gridheight = 1;
+//		c.weightx = 0.1;
+//		c.weighty = 0.0;
+//		controlPanel.add(NumInterps, c);
+//		c.gridx = 6;
+//		c.gridy = 3;
+//		c.gridwidth = 1;
+//		c.gridheight = 1;
+//		c.weightx = 0.1;
+//		c.weighty = 0.0;
+//		controlPanel.add(frameDelay, c);
 
 		// add action listeners for button clicks
 		ApplyLayout.addActionListener(this);
@@ -594,6 +607,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		RenderDuration.addActionListener(this);
 		LayoutNum.addActionListener(this);
 		NumInterps.addActionListener(this);
+		zoom.addActionListener(this);
 		// NEED A LISTENER FOR THE TXT FIELD
 
 		addInternalFrameListener(this);
@@ -973,6 +987,17 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 				.getSliceStart(), currentSlice.getSliceEnd()));
 		updateDisplay();
 	}
+	
+	public void showRender(double renderStart, double renderEnd){
+		LayoutArea.setRenderSlice(engine.getRenderSlice(renderStart,renderEnd));
+		// update the text fields
+		RenderTime.setText("" + renderStart);
+		RenderDuration.setText(""
+				+ (renderEnd - renderStart));
+		
+		// now ask the network to redraw isteslf
+		updateDisplay();
+	}
 
 	/**
 	 * Changes the layout to the specified slice (both in the layout engine and
@@ -996,15 +1021,10 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		// make sure the coords are correct
 		engine.setCoordsToSlice(number);
 		// Render the entire slice as one block, from start to finish
-		LayoutArea.setRenderSlice(engine.getRenderSlice(currentSlice
-				.getSliceStart(), currentSlice.getSliceEnd()));
-		// update the text fields
-		RenderTime.setText("" + currentSlice.getSliceStart());
-		RenderDuration.setText(""
-				+ (currentSlice.getSliceEnd() - currentSlice.getSliceStart()));
+		showRender(currentSlice
+				.getSliceStart(), currentSlice.getSliceEnd());
 		LayoutNum.setText("" + engine.getCurrentSliceNum());
-		// now ask the network to redraw isteslf
-		updateDisplay();
+		
 	}
 
 	/**
@@ -1132,6 +1152,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		// LayoutArea.updateDisplay(graph,true);
 		// LayoutArea.paintComponent(graph);
 		LayoutArea.repaint();
+		timelinePane.repaint();
 		// try to make it updage the controls on mac
 	}
 

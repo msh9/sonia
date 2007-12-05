@@ -99,6 +99,8 @@ public class PhasePlot extends ExportableFrame implements
 	private double renderStart = -1;
 
 	private double renderEnd = -1;
+	
+	private Rectangle2D.Double renderRect = new Rectangle2D.Double();
 
 	public PhasePlot(SoniaLayoutEngine eng, NetDataStructure dat,
 			LayoutSettings set) {
@@ -204,6 +206,15 @@ public class PhasePlot extends ExportableFrame implements
 		 * 
 		 */
 		private static final long serialVersionUID = 1L;
+		
+		private Rectangle2D.Double sliceRect = new Rectangle2D.Double();
+		
+		// lines to indicate start and finish
+		private Line2D.Double startLine = new Line2D.Double();
+		private Line2D.Double endLine = new Line2D.Double();
+		private Line2D phaseBar = new Line2D.Double();
+		private BasicStroke twoStroke = new BasicStroke(2.0f);
+		private BasicStroke threeStroke = new BasicStroke(3.0f);
 
 		public void paintComponent(Graphics g) {
 			super.paintComponent(g);
@@ -223,7 +234,7 @@ public class PhasePlot extends ExportableFrame implements
 					| plotEnd == Double.POSITIVE_INFINITY) {
 				graph.setColor(Color.red);
 				graph.drawString(
-						"Cannot display phase plot with infinate start or end",
+						"Cannot display phase plot with infinite start or end",
 						sidePad, xAxis - 30);
 				return;
 			}
@@ -245,10 +256,7 @@ public class PhasePlot extends ExportableFrame implements
 			// figure out slices' start and end times
 			double sliceStart = plotStart - dataOffset;
 			// rect's coords are to upper left corner, x,y,w,h
-			Rectangle2D.Double sliceRect = new Rectangle2D.Double();
-			// lines to indicate start and finish
-			Line2D.Double startLine = new Line2D.Double();
-			Line2D.Double endLine = new Line2D.Double();
+		
 			for (int s = 0; s < numSlices; s++) {
 				// set the back ground to white, but red if slice has error
 				graph.setColor(Color.white);
@@ -294,9 +302,8 @@ public class PhasePlot extends ExportableFrame implements
 				}
 			}
 
-			graph.setStroke(new BasicStroke(2.0f));
+			graph.setStroke(twoStroke);
 
-			Line2D phaseBar = new Line2D.Double();
 			// draw the events on the window
 			for (int i = 0; i < events.size(); i++) {
 				NetworkEvent event = (NetworkEvent) events.get(i);
@@ -324,17 +331,8 @@ public class PhasePlot extends ExportableFrame implements
 
 			graph.setComposite(AlphaComposite.getInstance(
 					AlphaComposite.SRC_OVER, 0.9f));
-			graph.setStroke(new BasicStroke(3.0f));
-
-			if ((renderStart >= 0) & (renderEnd >= 0)) {
-				// draw the current render indicator
-				graph.setColor(Color.orange);
-				sliceRect.setRect((renderStart - dataOffset) * scaleFactor
-						+ sidePad, (double) topPad - 3.0,
-						(renderEnd - renderStart) * scaleFactor,
-						(double) plotHeight + 6.0);
-				graph.draw(sliceRect);
-			}
+			graph.setStroke(threeStroke);
+//		
 
 			// draw the current slice indicator
 			
@@ -345,8 +343,32 @@ public class PhasePlot extends ExportableFrame implements
 			graph.setColor(Color.magenta);
 			sliceRect.setRect((currentSliceIndex * sliceDelta) * scaleFactor
 					+ sidePad, (double) topPad - 1,
-					sliceDuration * scaleFactor, (double) plotHeight + 2);
+					sliceDuration * scaleFactor, (double) plotHeight +2);
 			graph.draw(sliceRect);
+			graph.drawString("slice",(int)sliceRect.x,(int)(sliceRect.y+sliceRect.height+8));
+			
+			// draw the current render indicator
+				if ((renderStart >= 0) & (renderEnd >= 0)) {
+					renderRect.setRect((renderStart - dataOffset) * scaleFactor
+							+ sidePad,  topPad-1,
+							(renderEnd - renderStart) * scaleFactor,
+							 plotHeight+2 );
+					//draw a white overlay to gray out data not being displayed
+					graph.setComposite(AlphaComposite.getInstance(
+							AlphaComposite.SRC_OVER, 0.7f));
+					graph.setColor(Color.white);
+					sliceRect.setFrame(sidePad,sliceRect.y,renderRect.x-sidePad,plotHeight+2);
+					graph.fill(sliceRect);
+					sliceRect.setFrame(renderRect.x+renderRect.width,
+							sliceRect.y,plotWidth -(renderRect.x+renderRect.width)+sidePad,plotHeight+2);
+					graph.fill(sliceRect);
+					//draw the indicator
+					graph.setColor(Color.orange);
+					graph.draw(renderRect);
+					graph.drawString("render",(int)renderRect.x,
+							(int)(renderRect.y-2));
+				
+				}
 
 			// and draw the scale on to check things
 			graph.setComposite(AlphaComposite.getInstance(
@@ -408,18 +430,79 @@ public class PhasePlot extends ExportableFrame implements
 //				+ "  Time at Cursor:" + formater.format(mouseTime));
 		drawArea.setToolTipText("Slice#:" + sliceN
 				+ "  Time at Cursor:" + formater.format(mouseTime));
+		//set cursors to indicate timeline is editable
+		if (renderRect.contains(event.getPoint())){
+			
+		 if (renderRect.x+renderRect.width-2 <= event.getX()){
+			drawArea.setCursor(Cursor.getPredefinedCursor(Cursor.E_RESIZE_CURSOR));
+		 } else {
+			 drawArea.setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
+		 }
+		} else {
+			drawArea.setCursor(Cursor.getDefaultCursor());
+		}
 	}
+	
+	//variables for doing drag ui
+	private boolean renderDrag = false;
+	private boolean renderResize = false;
+	private double dragStartX = 0;
+	private double dragStartWidth = renderRect.width;
+	private int mouseStartX = 0;
 
 	public void mouseDragged(MouseEvent event) {
+		if (renderResize){
+			renderRect.setFrame(renderRect.x,
+					renderRect.y,dragStartWidth-(mouseStartX - event.getX()),renderRect.height);
+			renderEnd = coordToTime(renderRect.x+renderRect.width);
+		} else if (renderDrag){
+			renderRect.setFrame(dragStartX - (mouseStartX - event.getX()),
+					renderRect.y,renderRect.width,renderRect.height);
+			renderStart = coordToTime(renderRect.x);
+			renderEnd = coordToTime(renderRect.x+renderRect.width);
+		}
+		drawArea.repaint();
 	}
 
 	public void mouseEntered(MouseEvent event) {
 	}
 
 	public void mouseReleased(MouseEvent event) {
+		if (renderDrag | renderResize){
+		 renderDrag = false;
+		 renderResize = false;
+		 //figure out how much it moved
+		 currentLayout.showRender(renderStart,renderEnd);
+		}
 	}
 
 	public void mousePressed(MouseEvent event) {
+		if (renderRect.contains(event.getPoint()) ){
+			if (renderRect.x+renderRect.width-2 <= event.getX()){
+				renderResize = true;
+			} else {
+			 renderDrag = true;
+			}
+			dragStartX = renderRect.x;
+			mouseStartX = event.getX();
+			dragStartWidth = renderRect.width;
+		}
+	}
+	
+	/**
+	 * converts a plot coordinate into the appropriate time coordinate
+	 * @author skyebend
+	 * @param coord
+	 * @return
+	 */
+	private double coordToTime(double coord){
+		double plotStart = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_START));
+		double plotEnd = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_END));
+		int plotWidth = drawArea.getWidth() - (2 * sidePad);
+		double dataOffset = plotStart;
+		double scaleFactor = (double) plotWidth / (plotEnd - plotStart);
+		// compute the data-time where the mouse is
+		return((double) coord - sidePad) / scaleFactor+ dataOffset;
 	}
 
 	/**
@@ -430,17 +513,8 @@ public class PhasePlot extends ExportableFrame implements
 		// first, check to see if the layout is ready
 		if (engine != null && engine.getErrorSlices() != null) {
 			currentLayout = engine.getLayoutWindow();
-			int mouseX = event.getX();
-			double plotStart = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_START));
-			double plotEnd = Double.parseDouble(settings.getProperty(LayoutSettings.SLICE_END));
-			int plotWidth = drawArea.getWidth() - (2 * sidePad);
-			double dataOffset = plotStart;
-			double scaleFactor = (double) plotWidth / (plotEnd - plotStart);
-			// compute the data-time where the mouse is
-			double mouseTime = ((double) mouseX - sidePad) / scaleFactor
-					+ dataOffset;
 			// get the slice index
-			int index = getSliceIndexFromTime(mouseTime);
+			int index = getSliceIndexFromTime(coordToTime(event.getX()));
 			// check if it is valid
 			if (index >= 0) {
 				// ask layout to change the slice

@@ -1181,12 +1181,12 @@ public class SoniaController implements Runnable{
 	 */
 	public void setPaused(boolean state) {
 		paused = state;
+		taskrunner.stopAllTasks();
 		if (paused) {
 			if (engine != null)
 				engine.pause();
 			showStatus("Paused. Press Resume to contine");
 		} else {
-			taskrunner.stopAllTasks();
 			if (engine != null)
 				engine.resume();
 			showStatus("");

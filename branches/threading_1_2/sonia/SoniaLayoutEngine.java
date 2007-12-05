@@ -754,6 +754,7 @@ public class SoniaLayoutEngine implements TaskListener{
 	private void repaintDisplays() {
 
 		if (timePlot != null) {
+			timePlot.validate();
 			timePlot.repaint();
 		}
 		if (shepPlot != null) {
