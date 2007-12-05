@@ -537,7 +537,6 @@ public class NetUtils {
 		}
 		return distMatrix;
 	}
-
 	
 
 	/**

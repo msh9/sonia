@@ -378,5 +378,62 @@ public class LayoutUtils
      slice.setCoords(index,originX+x,originY+y);
    }
   }
+  
+	/**
+	 * scales the layout up or down (dilates or contracts) around the center
+	 * of the layout (not the coordinate origin)
+	 * @author skyebend
+	 * @param slice  the slice to transform the coords of
+	 * @param width  the width of the layout
+	 * @param height the height of the layout
+	 * @param scaleFactor the scaling factor
+	 */
+	public static void scaleLayout(LayoutSlice slice,double scaleFactor,int width,int height){
+		double[] xCoords = slice.getXCoords();
+		double[] yCoords = slice.getYCoords();
+		double halfw = width/2;
+		double halfh = height/2;
+		for (int i = 0; i < yCoords.length; i++) {
+			xCoords[i]= ((xCoords[i]-halfw)*scaleFactor)+halfw;
+			yCoords[i]= ((yCoords[i]-halfh)*scaleFactor)+halfh;
+		}
+	}
+	
+	public static void rotateLayout(LayoutSlice slice, double degrees, int width, int height){
+
+   //convert degrees to radians
+		double theta = Math.toRadians(degrees);
+		//translate origin to center of layout
+		//rotate
+		//traslate orgin back
+		double[] x = slice.getXCoords();
+		double[] y = slice.getYCoords();
+		for (int i = 0; i < y.length; i++) {
+			double xt = x[i] - width/2;
+			double yt = y[i] - height/2;
+			double d = Math.sqrt(xt*xt+yt*yt); //ofset distance from point i to origin
+			double th1 = Math.atan(xt/yt); //angle betwen point i  and x axis
+			if (yt <0 )d*= -1; //half to flip signs if y is negitive
+			x[i]= (d * Math.sin(th1-theta)) + width / 2;
+			y[i]= (d * Math.cos(th1-theta)) + height / 2;
+		}
+	}
+	
+	/**
+	 * shifts the layout by the specified number of pixels
+	 * @author skyebend
+	 * @param slice slice to transform
+	 * @param deltaX  pixels to shift in the x direction
+	 * @param deltaY  pixels to shift in tye y diection 
+	 */
+	public static void panLayout(LayoutSlice slice, int deltaX, int deltaY){
+		double[] x = slice.getXCoords();
+		double[] y = slice.getYCoords();
+		for (int i = 0; i < y.length; i++) {
+			x[i]=x[i]+deltaX;
+			y[i] = y[i]+deltaY;
+		}
+	}
+
 
 }

@@ -3,17 +3,17 @@ package sonia.ui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 
@@ -28,24 +28,20 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 
-import cern.colt.Arrays;
 
-import sonia.ApplyLayoutTask;
 import sonia.LayoutSlice;
-import sonia.LongTask;
+import sonia.LayoutUtils;
 import sonia.NodeInspector;
 import sonia.NodeMover;
 import sonia.PlayAnimationTask;
 import sonia.SoniaCanvas;
 import sonia.SoniaController;
 import sonia.SoniaLayoutEngine;
-import sonia.TaskListener;
 import sonia.layouts.FRLayout;
 import sonia.layouts.MultiCompKKLayout;
 import sonia.mapper.Colormapper;
@@ -198,6 +194,12 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	private JButton ViewOptions;
 	
 	private JButton zoom;
+	private JTextField zoomFactor;
+	
+	private JButton rotate;
+	private JTextField degrees;
+	private JButton pan;
+	private MouseAdapter panner = null;
 
 	private JButton MoveNodes;
 
@@ -314,8 +316,16 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		Pause = new JButton("||");
 		ViewOptions = new JButton("View Options..");
 		MoveNodes = new JButton("Move Nodes");
-		zoom = new JButton("Rescale");
-
+		zoom = new JButton("Scale layout");
+		zoomFactor = new JTextField("1.5",3);
+		zoomFactor.setBorder(new TitledBorder("factor"));
+		zoomFactor.setToolTipText("factor by which the current slice's layout should be enlarge or reduced");
+		rotate = new JButton("Rotate layout");
+		degrees = new JTextField("45",3);
+		degrees.setBorder(new TitledBorder("degrees"));
+		degrees.setToolTipText("degrees that the current slice's layout should be rotated");
+		pan = new JButton("Pan layout");
+		
 		RenderTime = new JTextField("0", 4);
 		RenderTime.setBorder(new TitledBorder("render time"));
 		RenderTime.setToolTipText("Start of current render time bin");
@@ -464,50 +474,24 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		controlPanel.setLayout(layout);
 		c.insets = new Insets(0, 2, 0, 2);
 		// c.fill=c.NONE;
+		c.gridx = 0;c.gridy = 0;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;c.weighty = 0.0;
+		controlPanel.add(ViewOptions, c);
 
 		// buttons
-//		c.gridx = 0;
-//		c.gridy = 1;
-//		c.gridwidth = 1;
-//		c.gridheight = 1;
-//		c.weightx = 0.5;
-//		c.weighty = 0.0;
-//		controlPanel.add(ApplyLayout, c);
-//		c.gridx = 0;
-//		c.gridy = 2;
-//		c.gridwidth = 1;
-//		c.gridheight = 1;
-//		c.weightx = 0.5;
-//		c.weighty = 0.0;
-//		controlPanel.add(ReApply, c);
-//		c.gridx = 2;
-//		c.gridy = 1;
-//		c.gridwidth = 1;
-//		c.gridheight = 1;
-//		c.weightx = 0.5;
-//		c.weighty = 0.0;
+		c.gridx = 1;c.gridy = 0;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;	c.weighty = 0.0;
+		controlPanel.add(zoom, c);
+		
+		c.gridx = 2;c.gridy = 0;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;c.weighty = 0.0;
+		controlPanel.add(zoomFactor, c);
+		
+		c.gridx = 1;c.gridy = 1;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;c.weighty = 0.0;
+		controlPanel.add(rotate, c);
 	
-		c.gridx = 1;
-		c.gridy = 1;
-		c.gridwidth = 1;
-		c.gridheight = 1;
-		c.weightx = 0.5;
-		c.weighty = 0.0;
-		// add(Stability,c);
-		c.gridx = 3;
-		c.gridy = 1;
-		c.gridwidth = 2;
-		c.gridheight = 1;
-		c.weightx = 0.5;
-		c.weighty = 0.0;
-		//controlPanel.add(PhasePlot, c);
-		c.gridx = 5;
-		c.gridy = 1;
-		c.gridwidth = 2;
-		c.gridheight = 1;
-		c.weightx = 0.5;
-		c.weighty = 0.0;
-		controlPanel.add(ViewOptions, c);
+		c.gridx = 2;c.gridy = 1;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;c.weighty = 0.0;
+		controlPanel.add(degrees,c);
+		c.gridx = 1;c.gridy = 2;c.gridwidth = 2;c.gridheight = 1;c.weightx = 0.5;c.weighty = 0.0;
+		controlPanel.add(pan, c);
+	
 		c.gridx = 0;
 		c.gridy = 3;
 		c.gridwidth = 1;
@@ -608,6 +592,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		LayoutNum.addActionListener(this);
 		NumInterps.addActionListener(this);
 		zoom.addActionListener(this);
+		rotate.addActionListener(this);
+		pan.addActionListener(this);
 		// NEED A LISTENER FOR THE TXT FIELD
 
 		addInternalFrameListener(this);
@@ -741,6 +727,50 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		} else if (evt.getSource().equals(MoveNodes)) {
 			if (!engine.isTransitionActive()) {
 				moveNodes();
+			}
+		} else if (evt.getSource().equals(zoom)){
+			double factor = Double.parseDouble(zoomFactor.getText());
+			LayoutUtils.scaleLayout(engine.getCurrentSlice(),factor,
+					engine.getDisplayWidth(),engine.getDisplayHeight());
+			Control.log("scaled layout for slice "+engine.getCurrentSliceNum()
+					+" by a factor of "+factor);
+			updateDisplay();
+		} else if (evt.getSource().equals(rotate)){
+			double deg = Double.parseDouble(degrees.getText());
+			LayoutUtils.rotateLayout(engine.getCurrentSlice(),deg,
+					engine.getDisplayWidth(),engine.getDisplayHeight());
+			Control.log("rotated layout for slice "+engine.getCurrentSliceNum()
+					+" by "+deg+" degrees.");
+			updateDisplay();
+		} else if (evt.getSource().equals(pan)){
+			if (panner == null){
+				pan.setText("Stop panning");
+				engine.setTransitionActive(true);
+				panner = new MouseAdapter(){
+					int deltax=0;
+					int deltay=0;
+					Point press = null;
+					@Override
+					public void mousePressed(MouseEvent e) {
+						press = e.getPoint();
+					}
+					@Override
+					public void mouseReleased(MouseEvent e) {
+						Point release = e.getPoint();
+						deltax = release.x - press.x;
+						deltay = release.y - press.y;
+						LayoutUtils.panLayout(engine.getCurrentSlice(),deltax,deltay);
+						updateDisplay();
+					}
+				};
+				LayoutArea.addMouseListener(panner);
+				LayoutArea.setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
+			} else {
+				pan.setText("Pan Layout");
+				LayoutArea.removeMouseListener(panner);
+				panner = null;
+				LayoutArea.setCursor(Cursor.getDefaultCursor());
+				engine.setTransitionActive(false);
 			}
 		}
 		recordBrowseSettings();
@@ -961,6 +991,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 				.getSliceStart(), currentSlice.getSliceEnd()));
 		
 		updateDisplay();
+		controlePane.setSelectedComponent(layoutPanel);
+		controlePane.requestFocusInWindow();
 	}
 
 	/**
@@ -986,6 +1018,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		LayoutArea.setRenderSlice(engine.getRenderSlice(currentSlice
 				.getSliceStart(), currentSlice.getSliceEnd()));
 		updateDisplay();
+		controlePane.setSelectedComponent(layoutPanel);
+		controlePane.requestFocusInWindow();
 	}
 	
 	public void showRender(double renderStart, double renderEnd){
