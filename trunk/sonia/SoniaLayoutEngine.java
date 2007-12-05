@@ -61,7 +61,7 @@ import cern.colt.matrix.impl.SparseDoubleMatrix2D;
  * settings. Ideally, the engine should be stand alone enough that it could be
  * called by a script, with no gui.
  */
-public class SoniaLayoutEngine {
+public class SoniaLayoutEngine implements TaskListener{
 	private SoniaController control;
 
 	private NetDataStructure netData;
@@ -132,6 +132,8 @@ public class SoniaLayoutEngine {
 	private double maxMatrixValue;
 
 	private double minMatrixValue;
+	
+	private  boolean isTransitionActive = false; // indicates if a thread is animating
 
 	/**
 	 * Class responsible for maintaining data structures for layouts,
@@ -343,25 +345,13 @@ public class SoniaLayoutEngine {
 	 * startApplyLayoutToRemaining()
 	 */
 	public void applyLayoutToRemaining() {
-		Thread layoutRunner = new Thread() {
-			public void run() {
-				// catch errors on this thread
-				try {
-					startApplyLayoutToRemaining();
-				} catch (Throwable t) {
-					control.showError("Error applying layout: "
-							+ t.getMessage());
-					t.printStackTrace();
-					if (!control.isShowGUI()) {
-						// exit the system
-						System.exit(-1);
-					}
-				}
-			}
-		};
-		layoutRunner.setName("apply layout to remaining");
-		layoutRunner.setPriority(5);
-		layoutRunner.start();
+		LongTask multiTask = new MultipleLayoutTask(this,false);
+		control.runTask(multiTask);
+	}
+	
+	public void applyLayoutToPrevious(){
+		LongTask multiTask = new MultipleLayoutTask(this,true);
+		control.runTask(multiTask);
 	}
 
 	/**
@@ -431,13 +421,17 @@ public class SoniaLayoutEngine {
 	 * @param slice
 	 *            the slice which the layout will be applied to
 	 */
-	public void applyLayoutTo(ApplySettings settings, LayoutSlice slice) {
+	public synchronized LongTask  applyLayoutTo(ApplySettings settings, LayoutSlice slice) {
+		
 		// check if slice is in use
 		if (!slice.isLayoutFinished()) {
 			control.showError("Slice layout is not finished");
+			return null;
 		} else if (control.isPaused()) {
 			control.showError("Paused. click || or resume to continue");
+			return null;
 		} else {
+			
 
 			// lock slice so other layouts will not be applied
 			// layout must set finished back to true when done.
@@ -470,7 +464,19 @@ public class SoniaLayoutEngine {
 					LayoutUtils.copyLayout(prevSlice, slice);
 				}
 
-			} else if (settings.get(ApplySettings.STARTING_COORDS).equals(
+			}else if (settings.get(ApplySettings.STARTING_COORDS).equals(
+					ApplySettings.COORDS_FROM_NEXT)) {
+				// make sure there is a previous slice
+				if (thisIndex < layoutSlices.size()) {
+					LayoutSlice nextSlice = (LayoutSlice) layoutSlices
+							.get(thisIndex + 1);
+					// ASSUMES SLICES ARE THE SAME SIZE AND IN SAME ORDER!!
+					// ALSO ASSUMES PREVIOUS SLICE IS FINISHED
+					LayoutUtils.copyLayout(nextSlice, slice);
+				}
+
+			} 
+			else if (settings.get(ApplySettings.STARTING_COORDS).equals(
 					ApplySettings.COORDS_FROM_FILE)) {
 				// since slices is initialized with coords from orig file,
 				// get a new slice with the same times, and copy the coords
@@ -486,13 +492,22 @@ public class SoniaLayoutEngine {
 			// makesure the display is current THIS WILL SLOW THINGS DOWN
 			// display.updateDisplay();
 			// ask the layout to calculate the cordinates
-			currentLayout.applyLayoutTo(slice, width, height, settings);
+			//currentLayout.applyLayoutTo(slice, width, height, settings);
+			
+			//ask control to run the layout in a new thread
+			LongTask task = new ApplyLayoutTask(this,currentLayout,width,
+					height,slice,settings);
+			//register thelayout window to get task updates. 
+			//TODO: only register ui updats if in gui mode
+			task.addTaskEventListener(this);
+			control.runTask(task);
 
 			// print out layout info to log
 			control.showStatus("Starting layout on slice "
 					+ layoutSlices.indexOf(slice) + "\tstart time:"
 					+ slice.getSliceStart() + "\tend time:"
 					+ slice.getSliceEnd());
+			return task;
 
 		}
 	}
@@ -722,7 +737,9 @@ public class SoniaLayoutEngine {
 	public void updateDisplays() {
 		if (display != null){
 		display.updateDisplay();
+		//TODO: should make this smatter so it only updates the needed display
 		// should update the cooling scheduele as well? stress plot
+		repaintDisplays();
 		} else {   //debugging
 			//TODO:fix threading problem here in batch mode
 		 // System.out.println("layout window is null");	
@@ -737,6 +754,7 @@ public class SoniaLayoutEngine {
 	private void repaintDisplays() {
 
 		if (timePlot != null) {
+			timePlot.validate();
 			timePlot.repaint();
 		}
 		if (shepPlot != null) {
@@ -753,7 +771,9 @@ public class SoniaLayoutEngine {
 	 *            the SoniaMovieMaker to save the movie frames to
 	 */
 	public void makeMovie(MovieMaker exporter) throws Exception {
-		display.makeMovie(exporter);
+		//display.makeMovie(exporter);
+		MovieExportTask movieTask = new MovieExportTask(this,exporter);
+		control.runTask(movieTask);
 	}
 
 	/**
@@ -1096,8 +1116,8 @@ public class SoniaLayoutEngine {
 	public LayoutSettings getLayoutSettings() {
 		return layoutSettings;
 	}
-
 	
+
 
 	/**
 	 * loops over the slices in order and applies the double[] s stored in the
@@ -1119,6 +1139,23 @@ public class SoniaLayoutEngine {
 				}
 			}
 		}
+	}
+
+	public void taskStatusChanged(LongTask task) {
+		repaintDisplays();
+	}
+	
+	public synchronized boolean isTransitionActive() {
+		return isTransitionActive;
+	}
+
+	/**
+	 * indicates if a thread is currently running an animation with this engine
+	 * @author skyebend
+	 * @param isTransitionActive
+	 */
+	public synchronized void setTransitionActive(boolean isTransitionActive) {
+		this.isTransitionActive = isTransitionActive;
 	}
 
 }

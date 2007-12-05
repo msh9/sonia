@@ -34,6 +34,7 @@ import java.beans.PropertyVetoException;
 
 import javax.swing.JInternalFrame;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.plaf.metal.MetalLookAndFeel;
 import javax.swing.plaf.metal.MetalTheme;
@@ -50,6 +51,7 @@ import sonia.movie.MovieMaker;
 import sonia.movie.OldQTMovieMaker;
 import sonia.movie.QTMovieMaker;
 import sonia.movie.SWFMovieMaker;
+import sonia.parsers.ClusterParser;
 import sonia.parsers.DLParser;
 import sonia.parsers.DotNetParser;
 import sonia.parsers.DotSonParser;
@@ -72,6 +74,7 @@ import sonia.ui.MovExportSettingsDialog;
 import sonia.ui.SoniaInterface;
 
 import cern.jet.random.Uniform;
+import cern.colt.list.IntArrayList;
 import cern.colt.matrix.impl.SparseDoubleMatrix2D;
 
 /**
@@ -83,20 +86,20 @@ import cern.colt.matrix.impl.SparseDoubleMatrix2D;
  * the command line, otherwise the last 7 digits of milisecond time are used.
  */
 
-public class SoniaController {
+public class SoniaController implements Runnable{
 	public static final String CODE_DATE = "2007-08-15";
 
-	public static final String VERSION = "1.1.5";
+	public static final String VERSION = "1.2.0";
 
 	private SoniaInterface ui;
 
 	private LogWindow log;
 
-	private ArrayList engines; // holds engines for each layout
+	private ArrayList<SoniaLayoutEngine> engines; // holds engines for each layout
 
 	private SoniaLayoutEngine engine; //context for current actions
 
-	private ArrayList networks; // holds NetDataStructures for eachLayout
+	private ArrayList<NetDataStructure> networks; // holds NetDataStructures for eachLayout
 
 	private NetDataStructure networkData;
 
@@ -127,8 +130,11 @@ public class SoniaController {
 	private PropertySettings parserSettings = null;
 
 	private PropertySettings movieSettings = null;
+	
 
 	private Uniform randomUni; // colt package mersense twister random numbers
+	
+	private TaskRunner taskrunner;
 
 	// NEED TO INCLUDE COLT LISCENCE AGREEMENT
 	private Date date;
@@ -147,8 +153,8 @@ public class SoniaController {
 		log = new LogWindow(this);
 		// construct new UI and pass a ref
 		ui = new SoniaInterface(this, false);
-		networks = new ArrayList();// to hold nets
-		engines = new ArrayList();
+		networks = new ArrayList<NetDataStructure>();// to hold nets
+		engines = new ArrayList<SoniaLayoutEngine>();
 		log("Log of SoNIA session beginning "
 				+ DateFormat.getDateTimeInstance().format(new Date()));
 		// setup random numbers
@@ -168,6 +174,15 @@ public class SoniaController {
 			log("ERROR: unable to initialize random number generator: "
 					+ e.getMessage());
 		}
+		taskrunner = new TaskRunner();
+		taskrunner.addUItoUpdate(ui);
+	}
+	
+	public void runTask(LongTask task){
+		taskrunner.runTask(task);
+		if (isShowGUI()){
+			ui.showTask(task);
+		}
 	}
 
 	/**
@@ -184,16 +199,16 @@ public class SoniaController {
 		}
 		if (ui != null) {
 			ui.setVisible(visable);
-			if (engine != null){
-			LayoutWindow display = new LayoutWindow(graphicSettings,
-					browseSettings, this, engine, 500,400);
-			engine.setDisplay(display);
-			ui.addFrame(display);
-			engine.setDisplayWidth(Integer.parseInt(graphicSettings
-					.getProperty(GraphicsSettings.LAYOUT_WIDTH)));
-			engine.setDisplayHeight(Integer.parseInt(graphicSettings
-					.getProperty(GraphicsSettings.LAYOUT_HEIGHT)));
-			}
+//			if (engine != null){
+//			LayoutWindow display = new LayoutWindow(graphicSettings,
+//					browseSettings, this, engine, 500,400);
+//			engine.setDisplay(display);
+//			//ui.addFrame(display);
+//			engine.setDisplayWidth(Integer.parseInt(graphicSettings
+//					.getProperty(GraphicsSettings.LAYOUT_WIDTH)));
+//			engine.setDisplayHeight(Integer.parseInt(graphicSettings
+//					.getProperty(GraphicsSettings.LAYOUT_HEIGHT)));
+//			}
 		}
 		
 	}
@@ -289,7 +304,8 @@ public class SoniaController {
 		if (runBatch & !batchSettings.equals("")) {
 			sonia.runBatch();
 		} else {
-			sonia.showGUI(true);
+			//sonia.showGUI(true);
+			SwingUtilities.invokeLater(sonia);
 		}
 		} catch (Throwable e) {
 			System.out.println("Error Launching Sonia:"+e.getMessage());
@@ -297,6 +313,11 @@ public class SoniaController {
 			System.exit(-1);
 		}
 
+	}
+	
+	//launched inside gui thread, reads args and decides how to launch
+	public void run(){
+	  showGUI(true);
 	}
 
 	/**
@@ -384,8 +405,12 @@ public class SoniaController {
 					autoCreate = true;
 					showStatus("Parsed file " + currentPath + inFile);
 				} catch (Exception error) {
-					showError(error.getCause()+" Unable to load file: "+ error.getMessage());
+//					debug
+					error.printStackTrace();
+					showError("Unable to load file: "+ error.getMessage());
 					fileLoaded = false;
+					
+					
 	
 				}
 			}
@@ -611,6 +636,11 @@ public class SoniaController {
 		// load data from parser into net data
 		networkData.addNodeEvents(parser.getNodeList());
 		networkData.addArcEvents(parser.getArcList());
+		//debug TESTING IF CLUSTERS WILL DISPLAY
+		if (parser instanceof ClusterParser){
+			networkData.addClusterEvents(((ClusterParser)parser).getClusterList());
+		}
+		
 		networkData.setNetInfo(parser.getNetInfo());
 		if (parser.getClass().equals(DotSonParser.class)){
 			networkData.setNodeDataKeys(((DotSonParser)parser).getNodeDataKeys());
@@ -618,7 +648,7 @@ public class SoniaController {
 		// print details out to log
 		log("loaded network from " + currentPath + inFile + "\nparser used:"
 				+ parser.getParserInfo() + "\n" + parser.getNumNodeEvents()
-				+ " node events, " + parser.getNumArcEvents() + " arc events"
+				+ " node events, " + parser.getNumArcEvents() + " arc events "
 				+ "\n" + "smallest time value:" + networkData.getFirstTime()
 				+ "\n" + "largest time value:" + networkData.getLastTime()
 				+ "\n" + "number of unique nodes:" + parser.getMaxNumNodes()
@@ -670,14 +700,14 @@ public class SoniaController {
 			// show the dialog
 			sliceSettings = windowSettings.askUserSettings();
 			createLayout(sliceSettings);
-			LayoutWindow display = new LayoutWindow(graphicSettings,
-					browseSettings, this, engine, 500,400);
-			engine.setDisplay(display);
-			ui.addFrame(display);
-			engine.setDisplayWidth(Integer.parseInt(graphicSettings
-					.getProperty(GraphicsSettings.LAYOUT_WIDTH)));
-			engine.setDisplayHeight(Integer.parseInt(graphicSettings
-					.getProperty(GraphicsSettings.LAYOUT_HEIGHT)));
+//			LayoutWindow display = new LayoutWindow(graphicSettings,
+//					browseSettings, this, engine, 500,400);
+//			engine.setDisplay(display);
+//			ui.addFrame(display);
+//			engine.setDisplayWidth(Integer.parseInt(graphicSettings
+//					.getProperty(GraphicsSettings.LAYOUT_WIDTH)));
+//			engine.setDisplayHeight(Integer.parseInt(graphicSettings
+//					.getProperty(GraphicsSettings.LAYOUT_HEIGHT)));
 		} else {
 			showError("File must be loaded before layout can be created");
 		}
@@ -688,7 +718,8 @@ public class SoniaController {
 	 * most recently loaded file. Shows slice dialog only if there are no slice
 	 * settings.
 	 */
-	public void createLayout(LayoutSettings sliceSettings) {
+	public LayoutWindow createLayout(LayoutSettings sliceSettings) {
+		LayoutWindow display = null;
 		// should make sure there is some network data
 		if (fileLoaded) {
 
@@ -703,7 +734,7 @@ public class SoniaController {
 			//TODO: this is not thread safe!
 			if (sliceSettings == null){
 				showStatus("layout cancled: null slice settings");
-				return;
+				return display;
 			}
 			engine = new SoniaLayoutEngine(sliceSettings, applySettings,this, networkData,
 					engName);
@@ -723,7 +754,7 @@ public class SoniaController {
 				browseSettings = new BrowsingSettings();
 		
 			}
-			LayoutWindow display = new LayoutWindow(graphicSettings,
+			 display = new LayoutWindow(graphicSettings,
 					browseSettings, this, engine, 500,400);
 			engine.setDisplay(display);
 			showFrame((display));
@@ -736,6 +767,7 @@ public class SoniaController {
 		} else {
 			showError("File must be loaded before layout can be created");
 		}
+		return display;
 	}
 
 
@@ -837,7 +869,7 @@ public class SoniaController {
 		if (fileName != null) {
 			
 			try {
-				 exporter = new QTMovieMaker(fileName);
+				 exporter = new QTMovieMaker(this,fileName);
 
 					// also ask about export formats
 				 if (movieSettings == null & isShowGUI()){
@@ -1098,6 +1130,7 @@ public class SoniaController {
 
 		}
 		ui.repaint();
+		
 	}
 
 	// accessors------------------
@@ -1148,6 +1181,7 @@ public class SoniaController {
 	 */
 	public void setPaused(boolean state) {
 		paused = state;
+		taskrunner.stopAllTasks();
 		if (paused) {
 			if (engine != null)
 				engine.pause();
@@ -1157,6 +1191,7 @@ public class SoniaController {
 				engine.resume();
 			showStatus("");
 		}
+		
 	}
 
 	/**
@@ -1271,5 +1306,7 @@ public class SoniaController {
 	public BrowsingSettings getBrowsingSettings(){
 		return browseSettings;
 	}
+
+
 
 }

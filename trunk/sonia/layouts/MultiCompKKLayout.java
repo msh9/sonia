@@ -3,13 +3,16 @@ package sonia.layouts;
 import java.util.*;
 import java.lang.Math;
 
+import sonia.ApplyLayoutTask;
 import sonia.CoolingSchedule;
 import sonia.LayoutSlice;
 import sonia.LayoutUtils;
+import sonia.LongTask;
 import sonia.NetUtils;
 import sonia.SoniaController;
 import sonia.SoniaLayoutEngine;
 import sonia.Subnet;
+import sonia.TaskListener;
 import sonia.settings.ApplySettings;
 import sonia.ui.ApplySettingsDialog;
 import cern.colt.list.IntArrayList;
@@ -198,7 +201,7 @@ import cern.colt.matrix.impl.DenseDoubleMatrix2D;
  * </P>
  * 
  */
-public class MultiCompKKLayout implements NetLayout, Runnable {
+public class MultiCompKKLayout implements NetLayout, LongTask {
 	private SoniaController control;
 
 	private SoniaLayoutEngine engine;
@@ -210,7 +213,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 									// layout procedure
 
 	private int maxSubpasses = 10;
-	private int passes;
+	private int totalPasses;
 
 	private double optDist; // optimal distance for nodes, gets reset later in
 							// code
@@ -247,6 +250,8 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 	 * algorithm should be allowed. Value must be parseable as an int.
 	 */
 	public static final String MAX_PASS = "max passes";
+	
+	private HashSet listeners = new HashSet();
 
 	/**
 	 * Instantiates the layout with reference to the main SoniaController and
@@ -304,27 +309,30 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 		settings = set;
 		//maxPasses = schedule.getMaxUsrPasses();
 		maxPasses = (int)Math.round(Double.parseDouble(settings.getProperty(MAX_PASS)));
+		totalPasses = 0;
 		schedule.setMaxPasses(maxPasses);
 		width = w;
 		height = h;
 		layoutInfo = "";
 		// arrays for quick acess to node coords
-		sliceXCoords = slice.getXCoords(); // has the real slice's object
-		sliceYCoords = slice.getYCoords();
+		sliceXCoords = slice.getXCoords(); // DANGEROUS has the real slice's object
+		sliceYCoords = slice.getYCoords(); // modifications will move nodes
 		// start algorthem on new thread so that it can be paused, etc
-		Thread layoutRunner = new Thread(this, "KKLayout loop");
-		layoutRunner.setPriority(10);
-		control.showStatus("Layout thread running..");
-		layoutRunner.start();
-		if (!control.isShowGUI()){
-			//run faster in batch mode 'cause we don't need to leave time for the gui thread
-		try {
-			layoutRunner.join();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		}
+		//control.runTask(this);
+		run();
+		//Thread layoutRunner = new Thread(this, "KKLayout loop");
+		//layoutRunner.setPriority(10);
+		//control.showStatus("Layout thread running..");
+		//layoutRunner.start();
+//		if (!control.isShowGUI()){
+//			//run faster in batch mode 'cause we don't need to leave time for the gui thread
+//		try {
+//			layoutRunner.join();
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		}
 	}
 
 	/**
@@ -404,7 +412,6 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 		}
 
 		engine.finishLayout(settings, this, slice, width, height);
-
 	}
 
 	/**
@@ -422,11 +429,10 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 	 * highest energy (worst position) is located.
 	 */
 	private void KKLoop(Subnet subnet, DoubleMatrix2D distMatrix) {
+
 		int nNodes = subnet.getNumNodes();
-		control.showStatus("Starting KK main loop...");
+		//control.showStatus("Starting KK main loop...");
 		schedule.reset();
-		
-		//debuging
 		int[] moveRecord = new int[maxPasses+1];
 
 		// sets up kmatrix of forces (optimal [but not always achieveable]
@@ -443,9 +449,9 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 		double coolFact = Double.parseDouble(settings.getProperty(COOL_FACT));
 		int repaintN = Integer.parseInt(settings.getProperty(ApplySettings.LAYOUT_REPAINT_N));
 		// do these only apply to the last subnet run?
-		layoutInfo = layoutInfo + "\noptimum distance: " + optDist;
-		layoutInfo = layoutInfo + "\nminimum epsilon: " + minEpsilon;
-		layoutInfo = layoutInfo + "\ncool factor: " + coolFact;
+		//layoutInfo = layoutInfo + "\noptimum distance: " + optDist;
+		//layoutInfo = layoutInfo + "\nminimum epsilon: " + minEpsilon;
+		//layoutInfo = layoutInfo + "\ncool factor: " + coolFact;
 		// sets up lMatrix of distance between nodes pairs
 		//DenseDoubleMatrix2D lMatrix = calcLMatrix(distMatrix, optDist);
 		// arrays for quick acess to node coords
@@ -458,8 +464,8 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 		// FIGURE OUT COOLING SCHEDULE
 		// epsilon = (nNodes * numEdges)/2;
 		// figure out the initial stat to compare to at the end
-		double initialEnergy = getEnergy(distMatrix, xPos, yPos);
-		layoutInfo = layoutInfo + "\ninitial KK energy: " + initialEnergy;
+//		double initialEnergy = getEnergy(distMatrix, xPos, yPos);
+		//layoutInfo = layoutInfo + "\ninitial KK energy: " + initialEnergy;
 		// double epsilon = { initialEnergy / nNodes;
 
 		// figure out which node to start moving first
@@ -480,12 +486,13 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 		schedule.setMaxYvalue(epsilon);
 
 		int passes = 0;
+		int minSteps = 0;
 		// epsilon minimizing loop
 		while ((epsilon > minEpsilon) & noBreak) {
 			// show value on plot
 			schedule.showYValue(epsilon);
 
-			double previousMaxDeltaM = maxDeltaM + 1;
+			//double previousMaxDeltaM = maxDeltaM + 1;
 			// KAMADA-KAWAI LOOP: while the deltaM of the node with
 			// the largest deltaM > epsilon..
 			// ALSO BREAKS IF IT STOPS CONVERGING, set as param?
@@ -495,7 +502,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 				
 				double[] deltas;
 				double moveNodeDeltaM = maxDeltaM;
-				double previousDeltaM = moveNodeDeltaM + 1;
+				//double previousDeltaM = moveNodeDeltaM + 1;
 
 				// KK INNER LOOP while the node with the largest energy >
 				// epsilon...
@@ -504,11 +511,13 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 				while (((moveNodeDeltaM > epsilon) & (subPasses < maxSubpasses))
 						& noBreak) {
 					// show subpass on schedule
+					
 					schedule.showPassValue(passes);
+					layoutInfo = "pass: "+passes+" max energy: "+maxDeltaM+" ";
 					// also show convergance on schedule
 					schedule.showConvergance(passes, moveNodeDeltaM);
-					moveRecord[passes]=maxDeltaMIndex;
 					
+					moveRecord[passes]=maxDeltaMIndex;
 					// get the deltas which will move node towards the local
 					// minima
 					deltas = getDeltas(maxDeltaMIndex,distMatrix, xPos,
@@ -516,14 +525,15 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 					// set coords of node to old coords + changes
 					xPos[maxDeltaMIndex] += deltas[0];
 					yPos[maxDeltaMIndex] += deltas[1];
-					previousDeltaM = moveNodeDeltaM;
+					//previousDeltaM = moveNodeDeltaM;
 					// recalculate the deltaM of the node w/ new vals
 					moveNodeDeltaM = getDeltaM(maxDeltaMIndex, distMatrix,xPos, yPos);
 					subPasses++;
 					passes++;
+					totalPasses++;
 					if (passes > maxPasses) {
-						// break the loop, and tell us
-						control.showStatus("KK inner loop exceeded max passes");
+				    // break the loop, and tell us
+					//	control.showStatus("KK inner loop exceeded max passes");
 						control.log("KK inner loop exceeded max passes");
 						layoutInfo = layoutInfo
 								+ "\nKK inner loop exceeded max passes";
@@ -531,12 +541,12 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 						noBreak = false;
 					}
 				}// end KK inner loop
-				previousDeltaM = maxDeltaM;
+	
 				// recalculate deltaMs and find node with max
-				
 				
 				//testing
 				//pick node at random with some small probability
+				//TODO: add pickNoise param to give this probability
 				if (control.getUniformRand(0,1) > 0.95){
 					maxDeltaMIndex = (int)Math.round(control.getUniformRand(0,nNodes-1));
 			
@@ -555,6 +565,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 				// if set to update display, update on every nth pass
 		          if ((repaintN > 0)&& (passes % repaintN == 0))
 				{
+		        	  //TODO:fix repaint every n function
 					// reset the appropriate values of the the slice coords to
 					// the new subnet coords
 					for (int i = 0; i < nNodes; i++) {
@@ -570,31 +581,33 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 			            }
 					engine.updateDisplays();
 				}
-				//passes++;
-				// attempt to let redraws of other windows, pause, etc
-				Thread.yield();
+		  
 			}// end main KK loop
 
 			// USE COOLING SCHEDULE HERE!!
 			epsilon -= epsilon * coolFact; // default is 1/4
-			// epsilon = epsilon * schedule.getTempFactor(passes);
-
+		
 			// reset the appropriate values of the the slice coords to
 			// the new subnet coords
 			for (int i = 0; i < nNodes; i++) {
 				sliceXCoords[subnet.getNetIndex(i)] = xPos[i];
 				sliceYCoords[subnet.getNetIndex(i)] = yPos[i];
+			
 			}
 			// calc the stress WHAT ABOUT ISOLATES?
 			// layoutInfo += "stress: "+NetUtils.getStress(slice)+"\n";
+			//this is here to deal with cases where can't reach minimum value by 
+			//taking fractions of epsilon, so we won't get stuck in the loop
+			minSteps++;
+			if ( minSteps > maxPasses){
+				control.log("KK outer loop took more than max passes steps to reach target epsilon");
+				layoutInfo = layoutInfo
+						+ "\nKK outer loop took more than max passes steps to reach target epsilon";
+				slice.setError(true);
+				noBreak = false;
+			}
 		}// end epsilon minimizing loop
-		//debuging
-		/*
-		System.out.println("nodes moved:");
-		for (int i = 0; i < moveRecord.length; i++) {
-			System.out.print(moveRecord[i]+",");
-		}
-		*/
+		//debuging	
 	}
 
 	/**
@@ -641,7 +654,17 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 				/ (xxPartial * yyPartial - xyPartial * yxPartial);
 		deltas[1] = (xxPartial * (-yPartial) - (-xPartial) * yxPartial)
 				/ (xxPartial * yyPartial - xyPartial * yxPartial);
-
+		//catch situation where deltas might be infinate
+		//i think this only occurs when working with components of size two?
+		if (Double.isInfinite(deltas[0]) | Double.isNaN(deltas[0])){
+			deltas[0] = 0;
+			System.out.println("reset infinite kk delta");
+		}
+		if (Double.isInfinite(deltas[1]) | Double.isNaN(deltas[1])){
+			deltas[1] = control.getUniformRand(0,1);
+			System.out.println("reset infinite kk delta");
+		}
+		
 		return deltas;
 	}
 
@@ -723,6 +746,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 
 	/**
 	 * set up matrix of spring forces between pairs using K/(d[i][j]^2 )
+	 * @deprecated to run faster use calc K value
 	 */
 	private DenseDoubleMatrix2D calcKMatrix(DoubleMatrix2D distMatrix,
 			double spring) {
@@ -739,6 +763,7 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 
 	/**
 	 * set up matrix of desired edge lengths using L*d[i][j]
+	 * @deprecated use calc L value
 	 */
 	private DenseDoubleMatrix2D calcLMatrix(DoubleMatrix2D distMatrix,
 			double optDist) {
@@ -793,5 +818,54 @@ public class MultiCompKKLayout implements NetLayout, Runnable {
 	
 	public CoolingSchedule getSchedule(){
 		return schedule;
+	}
+
+	public String getTaskName() {
+		return getLayoutType();
+	}
+
+
+	public void stop() {
+		pause();
+		
+	}
+
+	public String getStatusText() {
+		return getLayoutInfo();
+	}
+
+	public boolean isDurationKnown() {
+		return true;
+	}
+
+	public int maxSteps() {
+	
+		return maxPasses;
+	}
+
+	public int currentStep() {
+		return totalPasses;
+	}
+
+	public boolean isError() {
+		return slice.isError();
+	}
+
+	public boolean isDone() {
+		
+		return slice.isLayoutFinished();
+	}
+
+	public void addTaskEventListener(Object listener) {
+		listeners.add(listener);
+
+	}
+
+	private void reportStatus() {
+		Iterator listeniter = listeners.iterator();
+		while (listeniter.hasNext()) {
+			TaskListener listener = (TaskListener) listeniter.next();
+			listener.taskStatusChanged(this);
+		}
 	}
 }

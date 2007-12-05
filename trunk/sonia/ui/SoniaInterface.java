@@ -19,15 +19,20 @@ import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
+import javax.swing.ProgressMonitor;
 import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.plaf.FontUIResource;
 
+import sonia.LongTask;
 import sonia.SoniaController;
+import sonia.TaskListener;
 
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>
@@ -81,7 +86,7 @@ import sonia.SoniaController;
  */
 
 public class SoniaInterface extends JFrame implements WindowListener,
-		ActionListener
+		ActionListener, TaskListener
 // ItemListener
 {
 	private SoniaController control;
@@ -99,15 +104,17 @@ public class SoniaInterface extends JFrame implements WindowListener,
 
 	// private JButton SaveButton;
 
-	private JTextArea StatusText;
+	private JTextArea statusText;
+	
+	private JPanel statusPanel;
 
 	private JDesktopPane workPane;
 
 	private JPanel menuPane;
 
-	private Font msgFont;
-
-	private Font errorFont;
+	
+	
+	private ProgressMonitor monitor;
 
 	public SoniaInterface(SoniaController theController, boolean show) {
 		control = theController;
@@ -126,7 +133,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		PauseButton = new JButton("Pause");
 		MovieButton = new JButton("Export Movie ...");
 		// SaveButton = new JButton("Save to File...");
-		StatusText = new JTextArea(
+		statusText = new JTextArea(
 				"   Welcome to SoNIA "
 						+ SoniaController.VERSION
 						+ " (code date "
@@ -134,27 +141,36 @@ public class SoniaInterface extends JFrame implements WindowListener,
 						+ ")\n"
 						+ "   For help and information, please visit http://sonia.stanford.edu"
 						+ "  or send questions/bugs to sonia-users@lists.sourceforge.net",
-				1, 50);
+				1, 25);
 		// StatusText.setBackground(Color.white);
-		StatusText.setEditable(false);
-		StatusText.setBorder(new CompoundBorder(new BevelBorder(
+		statusText.setEditable(false);
+		statusText.setLineWrap(true);
+		statusText.setWrapStyleWord(true);
+		statusPanel = new JPanel(new GridBagLayout());
+		JScrollPane statusScroller = new JScrollPane(statusPanel);
+		statusScroller.setBorder(new CompoundBorder(new BevelBorder(
 				BevelBorder.LOWERED), new TitledBorder("Status:")));
-		StatusText.setLineWrap(true);
-		StatusText.setWrapStyleWord(true);
+		GridBagConstraints c = new GridBagConstraints();
+		c.insets = new Insets(2, 2, 2, 2);
+		c.anchor = GridBagConstraints.WEST;
+		c.gridx = 0;c.gridy = 0;
+		statusPanel.add(PauseButton,c);
+		c.gridx = 0;c.gridy = 1;
+		statusPanel.add(statusText,c);
 		// StatusText.setColumns(30);
 
 		workPane = new JDesktopPane();
 		workPane.setBorder(new TitledBorder("Layouts:"));
 		workPane.setSize(300, 250);
 		workPane.setVisible(true);
-
-		// LAYOUT
+		
 		GridBagLayout layout = new GridBagLayout();
 		menuPane = new JPanel(layout);
-		GridBagConstraints c = new GridBagConstraints();
-		c.insets = new Insets(2, 2, 2, 2);
-		c.anchor = GridBagConstraints.WEST;
-
+//		a horizontal split for the menu stuff
+		JSplitPane vsplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT,menuPane,statusScroller);
+		vsplit.setDividerLocation(500);
+		
+		// LAYOUT
 		// add components to the layout GBlayout using constraints
 		// buttons
 		c.gridx = 0;
@@ -164,7 +180,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		c.weightx = 1;
 		c.weighty = 1;
 		c.fill = GridBagConstraints.BOTH;
-		menuPane.add(StatusText, c);
+		//menuPane.add(statusPanel, c);
 		c.fill = GridBagConstraints.NONE;
 		c.gridx = 0;
 		c.gridy = 0;
@@ -180,27 +196,13 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		c.weightx = 0.1;
 		c.weighty = 0.1;
 		menuPane.add(LayoutButton, c);
-		c.gridx = 0;
-		c.gridy = 2;
-		c.gridwidth = 1;
-		c.gridheight = 1;
-		c.weightx = 0.1;
-		c.weighty = 0.1;
-		menuPane.add(PauseButton, c);
-		// c.gridx = 0;
-		// c.gridy = 2;
-		// c.gridwidth = 1;
-		// c.gridheight = 1;
-		// c.weightx = 0.1;
-		// c.weighty = 0.1; // movie is now a menu item on the layout window
-		// menuPane.add(MovieButton, c);
-		// c.gridx = 1;
-		// c.gridy = 2;
-		// c.gridwidth = 1;
-		// c.gridheight = 1;
-		// c.weightx = 0.1;
-		// c.weighty = 0.1;
-		// menuPane.add(SaveButton, c);
+//		c.gridx = 0;
+//		c.gridy = 2;
+//		c.gridwidth = 1;
+//		c.gridheight = 1;
+//		c.weightx = 0.1;
+//		c.weighty = 0.1;
+//		menuPane.add(PauseButton, c);
 		c.gridx = 0;
 		c.gridy = 3;
 		c.gridwidth = 3;
@@ -218,14 +220,14 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		// MovieButton.addActionListener(this);
 
 		getContentPane().setLayout(new BorderLayout());
-		JSplitPane jsp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, menuPane,
+		JSplitPane jsp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, vsplit,
 				workPane);
 		jsp.setOneTouchExpandable(true);
 		jsp.setDividerLocation(250);
 		getContentPane().add(jsp, BorderLayout.CENTER);
 		// add(workPane, BorderLayout.CENTER);
 		// add(menuPane, BorderLayout.WEST);
-		getContentPane().add(StatusText, BorderLayout.SOUTH);
+		//getContentPane().add(statusScroller, BorderLayout.SOUTH);
 
 		addWindowListener(this);
 		// setBackground(Color.lightGray);
@@ -260,10 +262,10 @@ public class SoniaInterface extends JFrame implements WindowListener,
 	 * Displays the passed text as a message in the status window
 	 */
 	public void showStatus(String text) {
-		StatusText.setForeground(Color.black);
-		StatusText.setText("");
-		StatusText.setText("  " + text);
-		StatusText.setCaretPosition(0);
+		statusText.setForeground(Color.black);
+		statusText.setText("");
+		statusText.setText("  " + text);
+		statusText.setCaretPosition(0);
 	}
 
 	/**
@@ -272,11 +274,44 @@ public class SoniaInterface extends JFrame implements WindowListener,
 	 */
 	public void showError(String text) {
 		(Toolkit.getDefaultToolkit()).beep();
-		StatusText.setForeground(Color.red);
-		StatusText.setText("");
-		StatusText.setText("  " + text);
-		StatusText.setCaretPosition(0);
+		statusText.setForeground(Color.red);
+		statusText.setText("");
+		statusText.setText("  " + text);
+		statusText.setCaretPosition(0);
 		
+	}
+	
+	public void showTask(LongTask task){
+		TaskProgressBar taskbar = new TaskProgressBar(task);
+		Component[] statuscomps = statusPanel.getComponents();
+//		for (int i = 0; i < statuscomps.length; i++) {
+//			if(statuscomps[i] instanceof TaskProgressBar){
+//				if (((TaskProgressBar)statuscomps[i]).getTask().isDone()){
+//					statusPanel.remove(statuscomps[i]);
+//				}
+//			}
+//		}
+		GridBagConstraints c= new GridBagConstraints();
+		c.gridy=statuscomps.length+1;
+		c.fill=GridBagConstraints.BOTH;
+		statusPanel.add(taskbar,c);
+		statusPanel.revalidate();
+		statusPanel.repaint();
+	}
+	public void taskStatusChanged(LongTask task) {
+		//update all the status components
+		//TODO: make this smarter, only update task that changed
+		//statusPanel.validate();
+		Component[] statuscomps = statusPanel.getComponents();
+		for (int i = 0; i < statuscomps.length; i++) {
+			if(statuscomps[i] instanceof TaskProgressBar){
+				if (((TaskProgressBar)statuscomps[i]).getTask().isDone()){
+					statusPanel.remove(statuscomps[i]);
+				}
+			}
+		}
+		statusPanel.repaint();
+		//control.updateDisplays();
 	}
 
 	/**
@@ -319,10 +354,10 @@ public class SoniaInterface extends JFrame implements WindowListener,
 			LayoutButton.requestFocus();
 		} else if (evt.getActionCommand().equals("Pause")) {
 			control.setPaused(true);
-			PauseButton.setLabel("Resume");
+			PauseButton.setText("Resume");
 		} else if (evt.getActionCommand().equals("Resume")) {
 			control.setPaused(false);
-			PauseButton.setLabel("Pause");
+			PauseButton.setText("Pause");
 		} else if (evt.getActionCommand().equals("Create Layout...")) {
 			// should launch this on a new thread?
 			control.createNewLayout();
@@ -394,4 +429,6 @@ public class SoniaInterface extends JFrame implements WindowListener,
 
 	public void windowOpened(WindowEvent evt) {
 	}
+
+	
 }

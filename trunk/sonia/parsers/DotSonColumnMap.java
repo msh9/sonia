@@ -93,6 +93,18 @@ public class DotSonColumnMap extends PropertySettings {
 	public static final String ARC_BLUE_RGB = "ARC_BLUE_RGB";
 	
 	public static final String NODE_DATA_KEYS = "NODE_DATA_KEYS";
+	// keys for cluster related cols
+	public static final String CLUSTER_ID = "CLUSTER_ID";
+	public static final String CLUSTER_WEIGHT = "CLUSTER_WEIGHT";
+	public static final String PARENT = "PARENT";
+	public static final String CHILDREN = "CHILDREN";
+	public static final String NODE_IDS = "NODE_IDS";
+	public static final String CLUSTER_STARTTIME = "CLUSTER_STARTTIME";
+	public static final String CLUSTER_ENDTIME = "CLUSTER_ENDTIME";
+	public static final String CLUSTER_FILL_COLOR = "CLUSTER_FILL_COLOR";
+	public static final String CLUSTER_BORDER_COLOR = "CLUSTER_BORDER_COLOR";
+	
+	
 
 	/**
 	 * Creates a new instance of ColumnMap with defualt mappings. mappings are
@@ -129,6 +141,17 @@ public class DotSonColumnMap extends PropertySettings {
 		setProperty(ARC_RED_RGB , "RedRGB");
 		setProperty(ARC_GREEN_RGB , "GreenRGB");
 		setProperty(ARC_BLUE_RGB , "BlueRGB");
+		//clusters
+		setProperty(CLUSTER_ID,"ClusterId");
+		setProperty(CLUSTER_WEIGHT,"ClusterWeight");
+		setProperty(PARENT,"Parent");
+		setProperty(CHILDREN,"Children");
+		setProperty(NODE_IDS,"NodeIds");
+		setProperty(CLUSTER_STARTTIME,"StartTime");
+		setProperty(CLUSTER_ENDTIME,"EndTime");
+		setProperty(CLUSTER_FILL_COLOR,"Color");
+		setProperty(CLUSTER_BORDER_COLOR,"BorderColor");
+		
 //		Iterator keyIter = getMapKeys().iterator();
 //		while (keyIter.hasNext()){
 //			String key = (String)keyIter.next();

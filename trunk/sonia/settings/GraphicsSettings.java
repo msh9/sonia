@@ -119,6 +119,11 @@ public class GraphicsSettings extends PropertySettings {
 	 */
 	public static final String ARC_LABELS = "arc labels";
 	
+	/**
+	 * key for value giving transparency of clusters
+	 */
+	public static final String CLUSTER_TRANSPARENCY = "cluster transparency";
+	
 	//-------------------values-----------------
 	
 	public static final String NONE = "none";

@@ -120,6 +120,10 @@ public class GraphicsSettingsDialog {
 	private JPanel arcsPanel;
 
 	private JPanel nodesPanel;
+	
+	private JPanel clustersPanel;
+	
+	private JTextField clusterTrans;
 
 	private JCheckBox AntiAlias;
 
@@ -150,36 +154,18 @@ public class GraphicsSettingsDialog {
 	private JComboBox arcLabels;
 
 	private JTextField ShowLabelsField; // show labels based on node size
-
-
 	private JCheckBox ShowStats;
-
-
-
 	private JCheckBox GhostSlice;
-
-
-
 	private JTextField WindowWidth;
-
-
 
 	private JTextField WindowHeight;
 
-
-
 	private JTextField FlashDuration;
-
 	private JComboBox hideNodes;
-
 	private JComboBox HideArcs;
-
 	private JPanel mainpanel;
-	
 	private JCheckBox nodeColorMap;
-
 	private JButton OK;
-	
 	private JButton Save;
 	private JButton Apply;
 
@@ -203,6 +189,8 @@ public class GraphicsSettingsDialog {
 		arcsPanel = new JPanel(new GridLayout(5,1));
 		arcsPanel.setBorder(new TitledBorder("Arc Options:"));
 		nodesPanel.setMinimumSize(new Dimension(150,arcsPanel.getHeight()));
+		clustersPanel = new JPanel(new GridLayout(2,2));
+		clustersPanel.setBorder(new TitledBorder("Cluster Options"));
 
 		AntiAlias = new JCheckBox("AntiAlias graphics (slower)", true);
 
@@ -218,6 +206,8 @@ public class GraphicsSettingsDialog {
 		ArcTransField.setBorder(new TitledBorder("Arc Transparency"));
 		NodeTransField = new JTextField("0.5", 3);
 		NodeTransField.setBorder(new TitledBorder("Node transparency"));
+		clusterTrans = new JTextField("0.5",3);
+		clusterTrans.setBorder(new TitledBorder("Cluster transparency"));
 		nodeLabels = new JComboBox(new String[] { GraphicsSettings.LABELS,
 				GraphicsSettings.IDS, GraphicsSettings.NONE });
 		nodeLabels.setBorder(new TitledBorder("Node labeling"));
@@ -277,6 +267,11 @@ public class GraphicsSettingsDialog {
 		c.weightx = .5;
 		c.weighty = .5;
 		mainpanel.add(arcsPanel, c);
+		c.gridx = 3;
+		c.gridy = 0;
+		c.weightx = 1;
+		c.weighty = .5;
+		mainpanel.add(clustersPanel, c);
 
 		generalPanel.add(AntiAlias);
 		generalPanel.add(ShowStats);
@@ -299,6 +294,9 @@ public class GraphicsSettingsDialog {
 		arcsPanel.add(ArcArrows);
 		arcsPanel.add(arcLabels);
 		arcsPanel.add(HideArcs);
+		
+		//cluster options
+		clustersPanel.add(clusterTrans);
 
 		// c.gridx=0;c.gridy=10;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
 		// graphicsDialog.add(ShowAxes,c);
@@ -434,6 +432,7 @@ public class GraphicsSettingsDialog {
 		settings.put(GraphicsSettings.ARROW_STYLE, ArcArrows.getSelectedItem());
 		settings.put(GraphicsSettings.ARC_LABELS, arcLabels.getSelectedItem());
 		settings.put(GraphicsSettings.HIDE_ARCS, HideArcs.getSelectedItem());
+		settings.put(GraphicsSettings.CLUSTER_TRANSPARENCY, clusterTrans.getText().trim());
 		return settings;
 	}
 
@@ -489,6 +488,9 @@ public class GraphicsSettingsDialog {
 		HideArcs.setSelectedItem(settings
 				.getProperty(GraphicsSettings.HIDE_ARCS, (String) HideArcs
 						.getSelectedItem()));
+		clusterTrans.setText(settings.getProperty(
+				GraphicsSettings.CLUSTER_TRANSPARENCY, clusterTrans.getText()
+						.trim()));
 
 	}
 

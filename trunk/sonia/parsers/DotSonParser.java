@@ -6,8 +6,11 @@ import java.net.*;
 import java.awt.Color;
 import java.awt.geom.*;
 
+import cern.colt.list.IntArrayList;
+
 import sonia.ArcAttribute;
 import sonia.NodeAttribute;
+import sonia.NodeClusterAttribute;
 import sonia.settings.PropertySettings;
 import sonia.ui.AttributeMapperDialog;
 
@@ -252,40 +255,66 @@ import sonia.ui.AttributeMapperDialog;
  *
  * <\tt>
  */
-public class DotSonParser implements Parser {
+public class DotSonParser implements ClusterParser {
 
 	// vars for returned vals
 	private LineNumberReader reader;
 
-	private Vector nodeList;
+	private Vector<NodeAttribute> nodeList;
 
-	private Vector arcList;
+	private Vector<ArcAttribute> arcList;
+
+	private Vector<NodeClusterAttribute> clusterList;
 
 	// private boolean combineSameNames = true;
 	private boolean parseCoords = true;
 
 	// private boolean integerTime = false;
-	private HashSet idSet;
+	private HashSet<Integer> idSet;
 
-	private HashMap nodeHeaderMap; // holds associateion between column labels
-									// and index
+	private HashMap<String, NodeClusterAttribute> clustIdSet;
 
-	private HashMap arcHeaderMap; // holds associateion between column labels
-									// and index
+	private HashMap<String, Integer> nodeHeaderMap; // holds association
 
-	private HashMap alphaIdMap; // holds association between non-numeric ids and
-								// numeric ids
+	// between column labels
 
-	private ArrayList unknownHeaders; // holds list of unrecognized column
-										// headers
-	//private ArrayList nodeDataHeaders; //holds list of columns to be attached as node data
+	// and index
+
+	private HashMap<String, Integer> arcHeaderMap; // holds association
+
+	// between column labels
+
+	// and index
+	/*
+	 * holds association between column labels and index for cluster section
+	 */
+	private HashMap<String, Integer> clusterHeaderMap;
+
+	private HashMap<String, Integer> alphaIdMap; // holds association between
+
+	// non-numeric ids and
+
+	// numeric ids
+
+	private ArrayList<String> unknownHeaders; // holds list of unrecognized
+
+	// column
+
+	// headers
+
+	private HashMap<NodeClusterAttribute, String> parentMap;
+	private HashMap<NodeClusterAttribute,Vector> childrenMap;
+
+	// private ArrayList nodeDataHeaders; //holds list of columns to be attached
+	// as node data
 
 	private boolean alphaId = false; // true if alphaIds are being used
 
-	private int currentLineNum = 0;
+	// private int currentLineNum = 0;
 
 	private String originalFile; // path and name of the file it was loaded
-									// from
+
+	// from
 
 	private String infoString = "";
 
@@ -296,8 +325,8 @@ public class DotSonParser implements Parser {
 
 	// control vars
 	private boolean startAsEnd = false;
-	
-	private HashSet nodeDataKeys = new HashSet<String>();
+
+	private HashSet<String> nodeDataKeys = new HashSet<String>();
 
 	/**
 	 * Parser for .son files, list based network format which allows column
@@ -327,18 +356,20 @@ public class DotSonParser implements Parser {
 		// currentLineNum = 0;
 
 		originalFile = fileAndPath;
-		int numNodes = 0;
-		int numArcs = 0;
-		nodeList = new Vector();
-		arcList = new Vector();
-		idSet = new HashSet();
-		
+		// int numNodes = 0;
+		// int numArcs = 0;
+		nodeList = new Vector<NodeAttribute>();
+		arcList = new Vector<ArcAttribute>();
+		clusterList = new Vector<NodeClusterAttribute>();
+		idSet = new HashSet<Integer>();
+		clustIdSet = new HashMap<String, NodeClusterAttribute>();
+
 		if (colMap == null) {
 			colMap = new DotSonColumnMap(); // use default colmn mappingings
 		} else {
 			wasMappingSpecified = true;
 		}
-		
+
 		// open connection to file
 		reader = new LineNumberReader(new FileReader(fileAndPath));
 
@@ -357,21 +388,21 @@ public class DotSonParser implements Parser {
 			parseNodeColHeader(line);
 			// Only show the column mapping dialog if there are unknown headers
 			// and nothing was included on the command ine
-			//TODO: what if the users wants to edit the colum mappings?
+			// TODO: what if the users wants to edit the colum mappings?
 			if ((unknownHeaders.size() > 0) & !wasMappingSpecified) {
 				// debug
 				System.out.println("unknown column headers:" + unknownHeaders);
 				AttributeMapperDialog assignAtter = new AttributeMapperDialog(
-						colMap, unknownHeaders,nodeHeaderMap.keySet());
+						colMap, unknownHeaders, nodeHeaderMap.keySet());
 
 			}
-			//set up the node user data mappings
-			if (colMap.getProperty(DotSonColumnMap.NODE_DATA_KEYS) != null){
-				StringTokenizer keyKonizer = new StringTokenizer(
-						colMap.getProperty(DotSonColumnMap.NODE_DATA_KEYS),",");
-				while(keyKonizer.hasMoreTokens()){
+			// set up the node user data mappings
+			if (colMap.getProperty(DotSonColumnMap.NODE_DATA_KEYS) != null) {
+				StringTokenizer keyKonizer = new StringTokenizer(colMap
+						.getProperty(DotSonColumnMap.NODE_DATA_KEYS), ",");
+				while (keyKonizer.hasMoreTokens()) {
 					nodeDataKeys.add(keyKonizer.nextToken());
-					
+
 				}
 			}
 			line = reader.readLine();
@@ -390,7 +421,9 @@ public class DotSonParser implements Parser {
 		while (line != null) {
 			// check if we've gotten to arcs yet
 			if (line.startsWith(colMap.getProperty(DotSonColumnMap.FROM_ID))
-					| line.startsWith(colMap.getProperty(DotSonColumnMap.TO_ID))) {
+					| line
+							.startsWith(colMap
+									.getProperty(DotSonColumnMap.TO_ID))) {
 				break;
 			} else if (line.startsWith("//")) {
 				infoString += line + "\n";
@@ -418,9 +451,13 @@ public class DotSonParser implements Parser {
 			}
 		}
 
-		// parse arcs until EOF or
+		// parse arcs until EOF or we get to the clusters
 		while (line != null) {
-			if (line.startsWith("//")) {
+			if (line.startsWith(colMap.getProperty(DotSonColumnMap.CLUSTER_ID))) {
+				parseNodeClusterHeader(line);
+				line = reader.readLine();
+				break;
+			} else if (line.startsWith("//")) {
 				infoString += line + "\n";
 				line = reader.readLine();
 			} else {
@@ -428,10 +465,47 @@ public class DotSonParser implements Parser {
 				line = reader.readLine();
 			}
 		}
-		// include edges?
+		// now parse any clusters
+		while (line != null) {
+			if (line.startsWith("//")) {
+				infoString += line + "\n";
+				line = reader.readLine();
+			} else {
+				parseClusterRow(line);
+				line = reader.readLine();
+			}
+		}
+
+		// verify that the clusters all point to real data
+		validateClusters();
 
 		// cleanup
 		reader.close();
+	}
+
+	/**
+	 * parses the tab delmlited column header for node clusters, stores tokens
+	 * in cluster header map so parsing methods know what column of data to read
+	 * from
+	 * 
+	 * @author skyebend
+	 * @param header
+	 */
+	private void parseNodeClusterHeader(String header) {
+		// tokenize the string
+		StringTokenizer clusterHeaderTokens = new StringTokenizer(header, "\t");
+		int numCols = clusterHeaderTokens.countTokens();
+		clusterHeaderMap = new HashMap<String, Integer>();
+		// copy cols into map
+		for (int n = 0; n < numCols; n++) {
+			clusterHeaderMap.put(clusterHeaderTokens.nextToken(), Integer
+					.valueOf(n));
+		}
+		// check if using parents
+		
+		parentMap = new HashMap<NodeClusterAttribute, String>();
+		childrenMap = new HashMap<NodeClusterAttribute, Vector>();
+		
 	}
 
 	/**
@@ -443,20 +517,21 @@ public class DotSonParser implements Parser {
 	 */
 	private void parseNodeColHeader(String header) throws IOException {
 		// make a list of all the unrecognized column headings
-		unknownHeaders = new ArrayList();
+		unknownHeaders = new ArrayList<String>();
 		Collection knownHeadings = colMap.values();
 		// tokenize the string
 		StringTokenizer headerTokens = new StringTokenizer(header, "\t");
 		int numCols = headerTokens.countTokens();
-		nodeHeaderMap = new HashMap();
+		nodeHeaderMap = new HashMap<String, Integer>();
 		// copy cols into map
 		for (int n = 0; n < numCols; n++) {
 			String colName = headerTokens.nextToken();
 			// make a list of the unrecognized headings
 			if (!knownHeadings.contains(colName)) {
 				unknownHeaders.add(colName);
-				//for now, until we allow other columns to be treated as user data
-				//nodeDataKeys.add(colName);
+				// for now, until we allow other columns to be treated as user
+				// data
+				// nodeDataKeys.add(colName);
 			}
 			// check for duplicates
 			if (nodeHeaderMap.containsKey(colName)) {
@@ -464,19 +539,22 @@ public class DotSonParser implements Parser {
 						+ colName;
 				throw (new IOException(error));
 			} else {
-				nodeHeaderMap.put(colName, new Integer(n));
-				
+				nodeHeaderMap.put(colName, Integer.valueOf(n));
+
 			}
 		}
 		// check if numeric or alphanumeric ids are used
-		if (nodeHeaderMap.containsKey(colMap.getProperty(DotSonColumnMap.ALPHA_ID))
-				& nodeHeaderMap.containsKey(colMap.getProperty(DotSonColumnMap.NODE_ID))) {
+		if (nodeHeaderMap.containsKey(colMap
+				.getProperty(DotSonColumnMap.ALPHA_ID))
+				& nodeHeaderMap.containsKey(colMap
+						.getProperty(DotSonColumnMap.NODE_ID))) {
 			String error = "Node column headings cannot contain both \"AlphaID\" and \"NodeId\".";
 			throw (new IOException(error));
-		} else if (nodeHeaderMap.containsKey(colMap.getProperty(DotSonColumnMap.ALPHA_ID))) {
+		} else if (nodeHeaderMap.containsKey(colMap
+				.getProperty(DotSonColumnMap.ALPHA_ID))) {
 			// we are using alpha ids
 			alphaId = true;
-			alphaIdMap = new HashMap();
+			alphaIdMap = new HashMap<String, Integer>();
 		}
 
 	}
@@ -492,10 +570,10 @@ public class DotSonParser implements Parser {
 		// tokenize the string
 		StringTokenizer arcHeaderTokens = new StringTokenizer(arcHeader, "\t");
 		int numCols = arcHeaderTokens.countTokens();
-		arcHeaderMap = new HashMap();
+		arcHeaderMap = new HashMap<String, Integer>();
 		// copy cols into map
 		for (int n = 0; n < numCols; n++) {
-			arcHeaderMap.put(arcHeaderTokens.nextToken(), new Integer(n));
+			arcHeaderMap.put(arcHeaderTokens.nextToken(), Integer.valueOf(n));
 		}
 	}
 
@@ -523,13 +601,13 @@ public class DotSonParser implements Parser {
 			}
 
 			NodeAttribute node = new NodeAttribute(parseNodeId(rowArray), // id
-																			// of
-																			// node
+					// of
+					// node
 					parseNodeLabel(rowArray), parseXCoord(rowArray),
 					parseYCoord(rowArray), parseNodeStart(rowArray),
 					parseNodeEnd(rowArray), originalFile + ":line "
 							+ reader.getLineNumber()); // location line of
-														// orginal file
+			// orginal file
 			node.setNodeColor(parseNodeColor(rowArray));
 			node.setNodeSize(parseNodeSize(rowArray));
 			node.setNodeShape(parseNodeShape(rowArray));
@@ -537,7 +615,7 @@ public class DotSonParser implements Parser {
 			node.setLabelColor(parseLabelColor(rowArray));
 			node.setBorderWidth(parseBorderWidth(rowArray));
 			try // url may be invalid, problem creating icon, or network
-				// unreachable
+			// unreachable
 			{
 				node.setIconURL(parseIconURL(rowArray));
 			} catch (Exception e) {
@@ -545,12 +623,12 @@ public class DotSonParser implements Parser {
 						+ reader.getLineNumber() + " Error:" + e.getMessage();
 				throw (new IOException(error));
 			}
-			//do other node data
-			if (nodeDataKeys.size() > 0){
+			// do other node data
+			if (nodeDataKeys.size() > 0) {
 				Iterator dataNames = nodeDataKeys.iterator();
-				while (dataNames.hasNext()){
-					String key = (String)dataNames.next();
-					node.setData(key, parseUserData(key,rowArray));
+				while (dataNames.hasNext()) {
+					String key = (String) dataNames.next();
+					node.setData(key, parseUserData(key, rowArray));
 				}
 			}
 			nodeList.add(node);
@@ -561,9 +639,327 @@ public class DotSonParser implements Parser {
 			throw (new IOException(error));
 		}
 	}
+
+	private void parseClusterRow(String row) throws IOException {
+		// tokenize the row
+		StringTokenizer rowTokens = new StringTokenizer(row, "\t");
+		int nCols = rowTokens.countTokens();
+		String[] rowArray = new String[nCols];
+		// check if there are enough tokens
+		if (nCols >= clusterHeaderMap.size()) {
+			for (int n = 0; n < nCols; n++) {
+				rowArray[n] = rowTokens.nextToken();
+			}
+			NodeClusterAttribute cluster = new NodeClusterAttribute(
+					parseClusterId(rowArray), parseClusterStart(rowArray),
+					parseClusterEnd(rowArray), parseClusterNodes(rowArray));
+			//check if a cluster with this id already exists
+			//THIS CHECK MEANS THAT THE CLUSTERS' ATTRIBUTES CANNOT CHAGE
+			//A NEW CLUSTE MUST BE DEFINED INSTEAD
+			if (clustIdSet.containsKey(cluster.getId())){
+				String error = "Duplicate cluster id '"+cluster.getId()+"' on line "
+				+reader.getLineNumber()+". In order to ensure correct parent-child"
+				+"relations, each culster must have a unique id.";
+				throw new IOException(error); 
+			} else {
+				clustIdSet.put(cluster.getId(), cluster);
+			}
+			// get parent if there is one. we cant set parents until all
+			// clusters
+			// have been read, so we put it on a list
+			// to process with the verifyClusters()
+			String parent = parseClusterParent(rowArray);
+			if (parent != null) {
+				parentMap.put(cluster, parent);
+			}
+			// get children if there are any, cannot set until all clusters
+			//are loaded
+			Vector children = parseClusterChildren(rowArray);
+			if (children != null){
+			   childrenMap.put(cluster,children);	
+			}
+			// set graphics properties
+			cluster.setFillColor(parseClusterFillColor(rowArray));
+			cluster.setBorderColor(parseClusterBorderColor(rowArray));
+			clusterList.add(cluster);
+
+		} else // the row is too short
+		{
+			String error = "Unable to parse cluster: Line "
+					+ reader.getLineNumber() + " has wrong number of columns, "
+					+ "perhaps a {} placeholder for an empty set is missing? ";
+			throw (new IOException(error));
+		}
+	}
+
+	private String parseClusterId(String[] rowArray) throws IOException {
+		String clusterID = "";
+		String key = colMap.getProperty(DotSonColumnMap.CLUSTER_ID);
+		if (clusterHeaderMap.containsKey(key)) {
+			int index = ((Integer) clusterHeaderMap.get(key)).intValue();
+			// get cluster ID from row
+			clusterID = rowArray[index];
+		} else // something is teribly wrong
+		{
+			String error = "line " + reader.getLineNumber()
+					+ " Cluster column headings must begin with"
+					+ DotSonColumnMap.CLUSTER_ID + ".";
+			throw (new IOException(error));
+		}
+		// check it isn't blank
+		if (clusterID.equals("")) {
+			String error = "line " + reader.getLineNumber()
+					+ "Each cluster must have an id.";
+			throw (new IOException(error));
+		}
+		return clusterID;
+	}
 	
-	private String parseUserData(String name, String[] rowArray){
-		//TODO: and user data info into param settings
+	private Color parseClusterFillColor(String[] rowArray) throws IOException {
+		Color theColor = NodeClusterAttribute.DEFAULT_FILL_COLOR;
+		String key = colMap.getProperty(DotSonColumnMap.CLUSTER_FILL_COLOR);
+		// figure out if and how color is specified
+		int index;
+		if (clusterHeaderMap.containsKey(key)) {
+			index = ((Integer) clusterHeaderMap.get(key)).intValue();
+			theColor = parseColorName(rowArray[index]);
+		}
+		return theColor;
+	}
+	
+	private Color parseClusterBorderColor(String[] rowArray) throws IOException {
+		Color theColor = NodeClusterAttribute.DEFAULT_BORDER_COLOR;
+		String key = colMap.getProperty(DotSonColumnMap.CLUSTER_BORDER_COLOR);
+		// figure out if and how color is specified
+		int index;
+		if (clusterHeaderMap.containsKey(key)) {
+			index = ((Integer) clusterHeaderMap.get(key)).intValue();
+			theColor = parseColorName(rowArray[index]);
+		}
+		return theColor;
+	}
+
+	/**
+	 * parses parent as string,
+	 * 
+	 * @author skyebend
+	 * @param rowArray
+	 * @return
+	 */
+	private String parseClusterParent(String[] rowArray) {
+		String parentId = null;
+		String key = colMap.getProperty(DotSonColumnMap.PARENT);
+		if (clusterHeaderMap.containsKey(key)) {
+			parentId = rowArray[clusterHeaderMap.get(key).intValue()];
+			// strip off optional encloseing braces
+			parentId = trimBraces(parentId);
+			if (parentId.equals("")) {
+				parentId = null;
+			}
+		}
+		return parentId;
+	}
+	
+	private Vector parseClusterChildren(String [] rowArray){
+		Vector<String> children = null;
+		String key = colMap.getProperty(DotSonColumnMap.CHILDREN);
+		if (clusterHeaderMap.containsKey(key)) {
+			String kidStr = rowArray[clusterHeaderMap.get(key).intValue()];
+			// strip off optional encloseing braces
+			kidStr = trimBraces(kidStr);
+			if (!kidStr.equals("")) {
+				children = new Vector<String>();
+			}
+			StringTokenizer kidkonizer = new StringTokenizer(kidStr,",");
+			while (kidkonizer.hasMoreTokens()){
+				children.add(kidkonizer.nextToken());
+			}
+		}
+		return children;
+	}
+	
+
+	private double parseClusterStart(String[] rowArray) throws IOException {
+		double startTime = 0.0;
+		if (clusterHeaderMap.containsKey(colMap
+				.getProperty(DotSonColumnMap.CLUSTER_STARTTIME))) {
+			int index = ((Integer) clusterHeaderMap.get(colMap
+					.getProperty(DotSonColumnMap.CLUSTER_STARTTIME)))
+					.intValue();
+			try {
+				startTime = Double.parseDouble(rowArray[index].trim());
+			} catch (NumberFormatException doubleParseEx) {
+				String error = "Line " + reader.getLineNumber()
+						+ " Unable to parse cluster start time from column"
+						+ colMap.getProperty(DotSonColumnMap.CLUSTER_STARTTIME)
+						+ ":" + rowArray[index];
+				throw (new IOException(error));
+			}
+		}
+		return startTime;
+	}
+
+	private double parseClusterEnd(String[] rowArray) throws IOException {
+		double endTime = Double.POSITIVE_INFINITY;
+		if (clusterHeaderMap.containsKey(colMap
+				.getProperty(DotSonColumnMap.CLUSTER_ENDTIME))) {
+			int index = ((Integer) clusterHeaderMap.get(colMap
+					.getProperty(DotSonColumnMap.CLUSTER_ENDTIME))).intValue();
+			try {
+				endTime = Double.parseDouble(rowArray[index].trim());
+			} catch (NumberFormatException doubleParseEx) {
+				String error = "Line " + reader.getLineNumber()
+						+ " Unable to parse cluster end time from column"
+						+ colMap.getProperty(DotSonColumnMap.CLUSTER_ENDTIME)
+						+ ":" + rowArray[index];
+				throw (new IOException(error));
+			}
+		} else if (startAsEnd) // if there is no end time, and we arn't using
+		// defualt use the start time
+		{
+			endTime = parseClusterStart(rowArray);
+		}
+		return endTime;
+	}
+
+	/**
+	 * get the numeric ids of of the nodes grouped by this cluster
+	 * 
+	 * @author skyebend
+	 * @param rowArray
+	 * @return
+	 */
+	private IntArrayList parseClusterNodes(String[] rowArray)
+			throws IOException {
+		if (clusterHeaderMap.containsKey(colMap
+				.getProperty(DotSonColumnMap.NODE_IDS))) {
+			// check that it is defined
+			int index = ((Integer) clusterHeaderMap.get(colMap
+					.getProperty(DotSonColumnMap.NODE_IDS))).intValue();
+			IntArrayList nodeIds = new IntArrayList();
+			String clustChunk = rowArray[index];
+			if (!clustChunk.equals("") & !clustChunk.equals("{}")) {
+				// strip off optional encloseing braces
+				if (clustChunk.startsWith("{")) {
+					clustChunk = clustChunk.substring(1);
+				}
+				if (clustChunk.endsWith("}")) {
+					clustChunk = clustChunk.substring(0,
+							clustChunk.length() - 1);
+				}
+
+				// if it isn't missing, tokenize with ,
+				StringTokenizer idkonizer = new StringTokenizer(clustChunk, ",");
+				// see if we are doing alpha or numeric ids
+				// if alphpa
+				if (nodeHeaderMap.containsKey(colMap
+						.getProperty(DotSonColumnMap.ALPHA_ID))) {
+					while (idkonizer.hasMoreTokens()) {
+						String idStr = idkonizer.nextToken();
+						// strip off quotes if there are any
+						if (idStr.startsWith("\"") | idStr.startsWith("\'")) {
+							idStr = idStr.substring(1);
+						}
+						if (idStr.endsWith("\"") | idStr.endsWith("\'")) {
+							idStr = idStr.substring(0, idStr.length() - 1);
+						}
+						if (!alphaIdMap.containsKey(idStr)) {
+							String error = "Id '"
+									+ idStr
+									+ "' in cluster's node list does not match with any node id. line "
+									+ reader.getLineNumber();
+							throw new IOException(error);
+						} else {
+							int id = alphaIdMap.get(idStr);
+							nodeIds.add(id);
+						}
+					}
+				} else { // assume numeric
+					while (idkonizer.hasMoreTokens()) {
+						String idStr = idkonizer.nextToken();
+						try {
+							int id = Integer.parseInt(idStr);
+							// if the id is not in the hashset, add it
+							if (!idSet.contains(Integer.valueOf(id))) {
+								String error = "Id '"
+										+ idStr
+										+ "' in cluster's node list does not match with any node id. line "
+										+ reader.getLineNumber();
+								throw new IOException(error);
+							}
+							nodeIds.add(id);
+
+						} catch (NumberFormatException e) {
+							String error = "Unable to parse the cluster node id '"
+									+ idStr
+									+ "' as an integer on line  "
+									+ reader.getLineNumber();
+							throw new IOException(error);
+						}
+					}
+				}
+			}
+			// check that each node exists in the ids
+			return nodeIds;
+		} else {
+			return null;
+		}
+
+	}
+
+	/**
+	 * check that any parent and child clustes given do point to real clusters
+	 * 
+	 * @author skyebend
+	 */
+	private void validateClusters() throws IOException {
+		Iterator clustIter = clusterList.iterator();
+		while (clustIter.hasNext()) {
+			NodeClusterAttribute clust = (NodeClusterAttribute) clustIter
+					.next();
+			String parentId = parentMap.get(clust);
+			if (parentId != null) {
+				if (!clustIdSet.containsKey(parentId)) {
+					String error = "Cluster id " + clust.getId()
+							+ " has a parent cluster id '" + parentId
+							+ "' that does not match any cluster";
+					throw new IOException(error);
+				}
+				clust.setParent(clustIdSet.get(parentId));
+				//temporary hack
+				//clustIdSet.get(parentId).addChild(clust);
+			}
+			// loop over children
+			Vector children = childrenMap.get(clust);
+			if (children != null){
+			Iterator kiditer = children.iterator();
+			while (kiditer.hasNext()) {
+				String kidId = (String) kiditer.next();
+				if (!clustIdSet.containsKey(kidId)) {
+					String error = "Cluster id " + clust.getId()
+							+ " has a child cluster id '" + kidId
+							+ "' that does not match any cluster";
+					throw new IOException(error);
+				} else {
+					//get the corresponding cluster and add it
+					NodeClusterAttribute kid = clustIdSet.get(kidId);
+					//check that kid's parent matches parent's kid
+					if (kid.getParent()!= null && !kid.getParent().equals(clust)){
+						String error = "Parent and child relations for clusters "+clust.getId()+
+						" and "+ kid.getId() +" do dot match up";
+						throw new IOException(error);
+					}
+					clust.addChild(kid);
+					
+				}
+			}
+			}
+		}
+		infoString += clusterList.size()+" clusters";
+	}
+
+	private String parseUserData(String name, String[] rowArray) {
+		// TODO: and user data info into param settings
 		int index = ((Integer) nodeHeaderMap.get(name)).intValue();
 		return rowArray[index];
 	}
@@ -582,15 +978,17 @@ public class DotSonParser implements Parser {
 	 */
 	private double parseNodeStart(String[] rowArray) throws IOException {
 		double startTime = 0.0;
-		if (nodeHeaderMap.containsKey(colMap.getProperty(DotSonColumnMap.NODE_STARTIME))) {
-			int index = ((Integer) nodeHeaderMap
-					.get(colMap.getProperty(DotSonColumnMap.NODE_STARTIME))).intValue();
+		if (nodeHeaderMap.containsKey(colMap
+				.getProperty(DotSonColumnMap.NODE_STARTIME))) {
+			int index = ((Integer) nodeHeaderMap.get(colMap
+					.getProperty(DotSonColumnMap.NODE_STARTIME))).intValue();
 			try {
 				startTime = Double.parseDouble(rowArray[index]);
 			} catch (NumberFormatException doubleParseEx) {
 				String error = "Line " + reader.getLineNumber()
 						+ " Unable to parse node start time from column"
-						+ colMap.getProperty(DotSonColumnMap.NODE_STARTIME) + ":" + rowArray[index];
+						+ colMap.getProperty(DotSonColumnMap.NODE_STARTIME)
+						+ ":" + rowArray[index];
 				throw (new IOException(error));
 			}
 		}
@@ -613,19 +1011,21 @@ public class DotSonParser implements Parser {
 	 */
 	private double parseNodeEnd(String[] rowArray) throws IOException {
 		double endTime = Double.POSITIVE_INFINITY;
-		if (nodeHeaderMap.containsKey(colMap.getProperty(DotSonColumnMap.NODE_ENDTIME))) {
-			int index = ((Integer) nodeHeaderMap
-					.get(colMap.getProperty(DotSonColumnMap.NODE_ENDTIME))).intValue();
+		if (nodeHeaderMap.containsKey(colMap
+				.getProperty(DotSonColumnMap.NODE_ENDTIME))) {
+			int index = ((Integer) nodeHeaderMap.get(colMap
+					.getProperty(DotSonColumnMap.NODE_ENDTIME))).intValue();
 			try {
 				endTime = Double.parseDouble(rowArray[index]);
 			} catch (NumberFormatException doubleParseEx) {
 				String error = "Line " + reader.getLineNumber()
 						+ " Unable to parse node end time from column"
-						+ colMap.getProperty(DotSonColumnMap.NODE_ENDTIME) + ":" + rowArray[index];
+						+ colMap.getProperty(DotSonColumnMap.NODE_ENDTIME)
+						+ ":" + rowArray[index];
 				throw (new IOException(error));
 			}
 		} else if (startAsEnd) // if there is no end time, and we arn't using
-								// defualt use the start time
+		// defualt use the start time
 		{
 			endTime = parseNodeStart(rowArray);
 		}
@@ -648,16 +1048,14 @@ public class DotSonParser implements Parser {
 		String key = colMap.getProperty(DotSonColumnMap.NODE_X_COORD);
 		if (parseCoords) {
 			if (nodeHeaderMap.containsKey(key)) {
-				int index = ((Integer) nodeHeaderMap
-						.get(key)).intValue();
+				int index = ((Integer) nodeHeaderMap.get(key)).intValue();
 				try {
 					xCoord = Double.parseDouble(rowArray[index]);
 
 				} catch (NumberFormatException doubleParseEx) {
 					String error = "Line " + reader.getLineNumber()
-							+ " Unable to parse X coordinate from column"
-							+ key + ":"
-							+ rowArray[index];
+							+ " Unable to parse X coordinate from column" + key
+							+ ":" + rowArray[index];
 					throw (new IOException(error));
 				}
 			}
@@ -681,16 +1079,14 @@ public class DotSonParser implements Parser {
 		String key = colMap.getProperty(DotSonColumnMap.NODE_Y_COORD);
 		if (parseCoords) {
 			if (nodeHeaderMap.containsKey(key)) {
-				int index = ((Integer) nodeHeaderMap
-						.get(key)).intValue();
+				int index = ((Integer) nodeHeaderMap.get(key)).intValue();
 				try {
 					yCoord = Double.parseDouble(rowArray[index]);
 
 				} catch (NumberFormatException doubleParseEx) {
 					String error = "Line" + reader.getLineNumber()
-							+ " Unable to parse Y coordinate from column"
-							+ key+ ":"
-							+ rowArray[index];
+							+ " Unable to parse Y coordinate from column" + key
+							+ ":" + rowArray[index];
 					throw (new IOException(error));
 				}
 			}
@@ -711,8 +1107,7 @@ public class DotSonParser implements Parser {
 		String label = "";
 		String key = colMap.getProperty(DotSonColumnMap.NODE_LABEL);
 		if (nodeHeaderMap.containsKey(key)) {
-			int index = ((Integer) nodeHeaderMap
-					.get(key)).intValue();
+			int index = ((Integer) nodeHeaderMap.get(key)).intValue();
 			label = rowArray[index];
 			// strip of quotes if there are any
 			if (label.startsWith("\"") | label.startsWith("\'")) {
@@ -740,15 +1135,14 @@ public class DotSonParser implements Parser {
 		double size = 10; // size is in pixels
 		String key = colMap.getProperty(DotSonColumnMap.NODE_SIZE);
 		if (nodeHeaderMap.containsKey(key)) {
-			int index = ((Integer) nodeHeaderMap.get(key))
-					.intValue();
+			int index = ((Integer) nodeHeaderMap.get(key)).intValue();
 			// try to parse node ID from row
 			try {
 				size = Double.parseDouble(rowArray[index]);
 			} catch (NumberFormatException e) {
-				String error = "Unable to parse node size from column"
-						+ key + " on line "
-						+ reader.getLineNumber() + " : " + rowArray[index];
+				String error = "Unable to parse node size from column" + key
+						+ " on line " + reader.getLineNumber() + " : "
+						+ rowArray[index];
 				throw (new IOException(error));
 			}
 			// make sure it is positive
@@ -777,12 +1171,11 @@ public class DotSonParser implements Parser {
 			throws IOException {
 		// should be changed to some other shape classes that has more members
 		// and many more shapes included
-		//TODO: replace with a call to shape factory
+		// TODO: replace with a call to shape factory
 		RectangularShape shape;
 		String key = colMap.getProperty(DotSonColumnMap.NODE_SHAPE);
 		if (nodeHeaderMap.containsKey(key)) {
-			int index = ((Integer) nodeHeaderMap
-					.get(key)).intValue();
+			int index = ((Integer) nodeHeaderMap.get(key)).intValue();
 			// try to parse node ID from row
 			if (rowArray[index].equalsIgnoreCase("square")
 					| rowArray[index].equalsIgnoreCase("rect")) {
@@ -792,8 +1185,8 @@ public class DotSonParser implements Parser {
 				shape = new Ellipse2D.Double();
 			} else {
 				String error = "Unable to parse NodeShape \"" + rowArray[index]
-						+ "\" from column" + key
-						+ " on line " + reader.getLineNumber() + "\n"
+						+ "\" from column" + key + " on line "
+						+ reader.getLineNumber() + "\n"
 						+ "currently, shape must be \"square\" or \"circle\"";
 				throw (new IOException(error));
 			}
@@ -820,8 +1213,7 @@ public class DotSonParser implements Parser {
 		String key = colMap.getProperty(DotSonColumnMap.NODE_ID);
 		String alphaKey = colMap.getProperty(DotSonColumnMap.ALPHA_ID);
 		if (nodeHeaderMap.containsKey(key)) {
-			int index = ((Integer) nodeHeaderMap.get(key))
-					.intValue();
+			int index = ((Integer) nodeHeaderMap.get(key)).intValue();
 			// try to parse node ID from row
 			try {
 				nodeID = Integer.parseInt(rowArray[index]);
@@ -835,7 +1227,7 @@ public class DotSonParser implements Parser {
 							+ "Numeric node ids must be integers greater than zero";
 					throw (new IOException(error));
 				}
-				Integer ID = new Integer(nodeID);
+				Integer ID = Integer.valueOf(nodeID);
 				// if the id is not in the hashset, add it
 				if (!idSet.contains(ID)) {
 					idSet.add(ID);
@@ -856,8 +1248,7 @@ public class DotSonParser implements Parser {
 			// node id exists, uses that value. If does not exist, creates the
 			// next id
 			// and adds it to the alphaIdMap. So does not check values
-			int index = ((Integer) nodeHeaderMap.get(alphaKey))
-					.intValue();
+			int index = ((Integer) nodeHeaderMap.get(alphaKey)).intValue();
 			String stringID = (String) rowArray[index];
 			// check if id exists for the string id
 			if (alphaIdMap.containsKey(stringID)) {
@@ -867,7 +1258,7 @@ public class DotSonParser implements Parser {
 			// if it doesn't exist, add it
 			else {
 				nodeID = idSet.size() + 1;
-				Integer ID = new Integer(nodeID);
+				Integer ID = Integer.valueOf(nodeID);
 				alphaIdMap.put(stringID, ID);
 				idSet.add(ID);
 			}
@@ -919,19 +1310,19 @@ public class DotSonParser implements Parser {
 		arc.setArcLabel(parseArcLabel(rowArray));
 		arcList.add(arc);
 	}
-	
-	
+
 	/**
 	 * parses the arc label if one has been included in the edges section
 	 * otherwise returns "".
+	 * 
 	 * @author skyebend
 	 * @param rowArray
-	 * @return  A string label or an empty string
+	 * @return A string label or an empty string
 	 */
 	private String parseArcLabel(String[] rowArray) {
-		String label="";
+		String label = "";
 		String labelKey = colMap.getProperty(DotSonColumnMap.ARC_LABEL);
-		if (arcHeaderMap.containsKey(labelKey)){
+		if (arcHeaderMap.containsKey(labelKey)) {
 			int index = ((Integer) arcHeaderMap.get(labelKey)).intValue();
 			label = rowArray[index];
 			// strip of quotes if there are any
@@ -960,8 +1351,7 @@ public class DotSonParser implements Parser {
 		int fromId = -1;
 		String fromKey = colMap.getProperty(DotSonColumnMap.FROM_ID);
 		if (arcHeaderMap.containsKey(fromKey)) {
-			int index = ((Integer) arcHeaderMap.get(fromKey))
-					.intValue();
+			int index = ((Integer) arcHeaderMap.get(fromKey)).intValue();
 			// check if alpha or numeric ids
 			if (alphaId) {
 				// get the id
@@ -987,12 +1377,12 @@ public class DotSonParser implements Parser {
 				// try to parse node ID from row
 				try {
 					fromId = Integer.parseInt(rowArray[index]);
-					Integer ID = new Integer(fromId);
+					Integer ID = Integer.valueOf(fromId);
 					// make sure there is a corresponding ID
 					if (!idSet.contains(ID)) {
 						String error = "Unable to link FromId on line "
-								+ reader.getLineNumber() + "column "
-								+ fromKey + " : "
+								+ reader.getLineNumber() + "column " + fromKey
+								+ " : "
 								+ "There is no NodeId corresponding to FromID "
 								+ fromId;
 						throw (new IOException(error));
@@ -1035,8 +1425,7 @@ public class DotSonParser implements Parser {
 		int toId = -1;
 		String toKey = colMap.getProperty(DotSonColumnMap.TO_ID);
 		if (arcHeaderMap.containsKey(toKey)) {
-			int index = ((Integer) arcHeaderMap.get(toKey))
-					.intValue();
+			int index = ((Integer) arcHeaderMap.get(toKey)).intValue();
 			// check if alpha or numeric ids
 			if (alphaId) {
 				// get the id
@@ -1060,7 +1449,7 @@ public class DotSonParser implements Parser {
 				// try to parse node ID from row
 				try {
 					toId = Integer.parseInt(rowArray[index]);
-					Integer ID = new Integer(toId);
+					Integer ID = Integer.valueOf(toId);
 					// make sure there is a corresponding ID
 					if (!idSet.contains(ID)) {
 						String error = "Unable to link ToId on line "
@@ -1096,15 +1485,14 @@ public class DotSonParser implements Parser {
 		double weight = 1;
 		String weightKey = colMap.getProperty(DotSonColumnMap.ARC_WEIGHT);
 		if (arcHeaderMap.containsKey(weightKey)) {
-			int index = ((Integer) arcHeaderMap.get(weightKey))
-					.intValue();
+			int index = ((Integer) arcHeaderMap.get(weightKey)).intValue();
 			// try to parse node ID from row
 			try {
 				weight = Double.parseDouble(rowArray[index]);
 			} catch (NumberFormatException doubleParseEx) {
 				String error = "Line " + reader.getLineNumber() + "column "
-						+ weightKey
-						+ " Unable to parse ArcWeight:" + rowArray[index];
+						+ weightKey + " Unable to parse ArcWeight:"
+						+ rowArray[index];
 				throw (new IOException(error));
 			}
 		}
@@ -1115,15 +1503,13 @@ public class DotSonParser implements Parser {
 		double width = 1;
 		String key = colMap.getProperty(DotSonColumnMap.ARC_WIDTH);
 		if (arcHeaderMap.containsKey(key)) {
-			int index = ((Integer) arcHeaderMap.get(key))
-					.intValue();
+			int index = ((Integer) arcHeaderMap.get(key)).intValue();
 			// try to parse node ID from row
 			try {
 				width = Double.parseDouble(rowArray[index]);
 			} catch (NumberFormatException doubleParseEx) {
 				String error = "Line " + reader.getLineNumber() + "column "
-						+ key
-						+ " Unable to parse ArcWidth:" + rowArray[index];
+						+ key + " Unable to parse ArcWidth:" + rowArray[index];
 				throw (new IOException(error));
 			}
 		}
@@ -1134,14 +1520,13 @@ public class DotSonParser implements Parser {
 		double startTime = 0.0;
 		String key = colMap.getProperty(DotSonColumnMap.ARC_STARTIME);
 		if (arcHeaderMap.containsKey(key)) {
-			int index = ((Integer) arcHeaderMap
-					.get(key)).intValue();
+			int index = ((Integer) arcHeaderMap.get(key)).intValue();
 			try {
 				startTime = Double.parseDouble(rowArray[index]);
 			} catch (NumberFormatException doubleParseEx) {
 				String error = "Line " + reader.getLineNumber() + "column "
-						+ key
-						+ " Unable to parse arc start time:" + rowArray[index];
+						+ key + " Unable to parse arc start time:"
+						+ rowArray[index];
 				throw (new IOException(error));
 			}
 		}
@@ -1152,18 +1537,17 @@ public class DotSonParser implements Parser {
 		double endTime = Double.POSITIVE_INFINITY;
 		String key = colMap.getProperty(DotSonColumnMap.ARC_ENDTIME);
 		if (arcHeaderMap.containsKey(key)) {
-			int index = ((Integer) arcHeaderMap
-					.get(key)).intValue();
+			int index = ((Integer) arcHeaderMap.get(key)).intValue();
 			try {
 				endTime = Double.parseDouble(rowArray[index]);
 			} catch (NumberFormatException doubleParseEx) {
 				String error = "Line " + reader.getLineNumber() + "column "
-						+ key
-						+ " Unable to parse arc end time:" + rowArray[index];
+						+ key + " Unable to parse arc end time:"
+						+ rowArray[index];
 				throw (new IOException(error));
 			}
 		} else if (startAsEnd) // if there is no end time, and we arn't using
-								// defualt use the start time
+		// defualt use the start time
 		{
 			endTime = parseArcStart(rowArray);
 		}
@@ -1175,7 +1559,7 @@ public class DotSonParser implements Parser {
 	private void checkForMissingNodes() throws IOException {
 		int setSize = idSet.size();
 		for (int n = 1; n <= setSize; n++) {
-			Integer compareInt = new Integer(n);
+			Integer compareInt = Integer.valueOf(n);
 			if (!idSet.contains(compareInt)) {
 				// there is a missing ID, so throw error
 				String error = "There is a gap in the sequence of NodeIds, "
@@ -1198,8 +1582,7 @@ public class DotSonParser implements Parser {
 		// figure out if and how color is specified
 		int index;
 		if (nodeHeaderMap.containsKey(colorKey)) {
-			index = ((Integer) nodeHeaderMap
-					.get(colorKey)).intValue();
+			index = ((Integer) nodeHeaderMap.get(colorKey)).intValue();
 			theColor = parseColorName(rowArray[index]);
 		} else {
 			// check for each of the RGB colums
@@ -1208,42 +1591,36 @@ public class DotSonParser implements Parser {
 			float blue = 0.0f;
 			// check for red
 			if (nodeHeaderMap.containsKey(rKey)) {
-				int indexR = ((Integer) nodeHeaderMap
-						.get(rKey)).intValue();
+				int indexR = ((Integer) nodeHeaderMap.get(rKey)).intValue();
 				try {
 					red = Float.parseFloat(rowArray[indexR]);
 				} catch (NumberFormatException e) {
 					String error = "Line " + reader.getLineNumber() + "column "
-							+ rKey
-							+ " Unable to parse RedRGB value:"
+							+ rKey + " Unable to parse RedRGB value:"
 							+ rowArray[indexR];
 					throw (new IOException(error));
 				}
 			}
 			// check for green
 			if (nodeHeaderMap.containsKey(gKey)) {
-				int indexG = ((Integer) nodeHeaderMap
-						.get(gKey)).intValue();
+				int indexG = ((Integer) nodeHeaderMap.get(gKey)).intValue();
 				try {
 					green = Float.parseFloat(rowArray[indexG]);
 				} catch (NumberFormatException e) {
 					String error = "Line " + reader.getLineNumber() + "column "
-							+ gKey
-							+ " Unable to parse GreenRGB value:"
+							+ gKey + " Unable to parse GreenRGB value:"
 							+ rowArray[indexG];
 					throw (new IOException(error));
 				}
 			}
 			// check for blue
 			if (nodeHeaderMap.containsKey(bKey)) {
-				int indexB = ((Integer) nodeHeaderMap
-						.get(bKey)).intValue();
+				int indexB = ((Integer) nodeHeaderMap.get(bKey)).intValue();
 				try {
 					blue = Float.parseFloat(rowArray[indexB]);
 				} catch (NumberFormatException e) {
 					String error = "Line " + reader.getLineNumber() + "column "
-							+ bKey
-							+ " Unable to parse BlueRGB value:"
+							+ bKey + " Unable to parse BlueRGB value:"
 							+ rowArray[indexB];
 					throw (new IOException(error));
 				}
@@ -1261,8 +1638,7 @@ public class DotSonParser implements Parser {
 		// figure out if and how color is specified
 		int index;
 		if (nodeHeaderMap.containsKey(key)) {
-			index = ((Integer) nodeHeaderMap
-					.get(key)).intValue();
+			index = ((Integer) nodeHeaderMap.get(key)).intValue();
 			theColor = parseColorName(rowArray[index]);
 		}
 		return theColor;
@@ -1274,8 +1650,7 @@ public class DotSonParser implements Parser {
 		// figure out if and how color is specified
 		int index;
 		if (nodeHeaderMap.containsKey(key)) {
-			index = ((Integer) nodeHeaderMap
-					.get(key)).intValue();
+			index = ((Integer) nodeHeaderMap.get(key)).intValue();
 			theColor = parseColorName(rowArray[index]);
 		}
 		return theColor;
@@ -1286,14 +1661,13 @@ public class DotSonParser implements Parser {
 		String key = colMap.getProperty(DotSonColumnMap.NODE_BORDER_WIDTH);
 		int index;
 		if (nodeHeaderMap.containsKey(key)) {
-			index = ((Integer) nodeHeaderMap
-					.get(key)).intValue();
+			index = ((Integer) nodeHeaderMap.get(key)).intValue();
 			try {
 				width = Double.parseDouble(rowArray[index]);
 			} catch (NumberFormatException doubleParseEx) {
 				String error = "Line " + reader.getLineNumber() + " column "
-						+ key
-						+ " Unable to parse BorderWidth:" + rowArray[index];
+						+ key + " Unable to parse BorderWidth:"
+						+ rowArray[index];
 				throw (new IOException(error));
 			}
 		}
@@ -1306,8 +1680,7 @@ public class DotSonParser implements Parser {
 		String key = colMap.getProperty(DotSonColumnMap.NODE_ICON_URL);
 
 		if (nodeHeaderMap.containsKey(key)) {
-			index = ((Integer) nodeHeaderMap.get(key))
-					.intValue();
+			index = ((Integer) nodeHeaderMap.get(key)).intValue();
 			// "null" string indicates no image URL provided, otherwise check
 			// for a proper URL
 			if (!(rowArray[index].equals("null"))) {
@@ -1315,8 +1688,8 @@ public class DotSonParser implements Parser {
 					url = new URL(rowArray[index]);
 				} catch (MalformedURLException urlParseEx) {
 					String error = "Line " + reader.getLineNumber()
-							+ " column " + key
-							+ " Unable to parse IconURL: " + rowArray[index];
+							+ " column " + key + " Unable to parse IconURL: "
+							+ rowArray[index];
 					throw (new IOException(error));
 				}
 			}
@@ -1328,9 +1701,10 @@ public class DotSonParser implements Parser {
 		Color theColor = Color.gray;
 		// figure out if and how color is specified
 		int index;
-		if (arcHeaderMap.containsKey(colMap.getProperty(DotSonColumnMap.ARC_COLOR_NAME))) {
-			index = ((Integer) arcHeaderMap.get(colMap.getProperty(DotSonColumnMap.ARC_COLOR_NAME)))
-					.intValue();
+		if (arcHeaderMap.containsKey(colMap
+				.getProperty(DotSonColumnMap.ARC_COLOR_NAME))) {
+			index = ((Integer) arcHeaderMap.get(colMap
+					.getProperty(DotSonColumnMap.ARC_COLOR_NAME))).intValue();
 			theColor = parseColorName(rowArray[index]);
 		} else {
 			// check for each of the RGB colums
@@ -1338,9 +1712,10 @@ public class DotSonParser implements Parser {
 			float green = 0.0f;
 			float blue = 0.0f;
 			// check for red
-			if (arcHeaderMap.containsKey(colMap.getProperty(DotSonColumnMap.ARC_RED_RGB))) {
-				int indexR = ((Integer) arcHeaderMap
-						.get(colMap.getProperty(DotSonColumnMap.ARC_RED_RGB))).intValue();
+			if (arcHeaderMap.containsKey(colMap
+					.getProperty(DotSonColumnMap.ARC_RED_RGB))) {
+				int indexR = ((Integer) arcHeaderMap.get(colMap
+						.getProperty(DotSonColumnMap.ARC_RED_RGB))).intValue();
 				try {
 					red = Float.parseFloat(rowArray[indexR]);
 				} catch (NumberFormatException e) {
@@ -1352,9 +1727,11 @@ public class DotSonParser implements Parser {
 				}
 			}
 			// check for green
-			if (arcHeaderMap.containsKey(colMap.getProperty(DotSonColumnMap.ARC_GREEN_RGB))) {
-				int indexG = ((Integer) arcHeaderMap
-						.get(colMap.getProperty(DotSonColumnMap.ARC_GREEN_RGB))).intValue();
+			if (arcHeaderMap.containsKey(colMap
+					.getProperty(DotSonColumnMap.ARC_GREEN_RGB))) {
+				int indexG = ((Integer) arcHeaderMap.get(colMap
+						.getProperty(DotSonColumnMap.ARC_GREEN_RGB)))
+						.intValue();
 				try {
 					green = Float.parseFloat(rowArray[indexG]);
 				} catch (NumberFormatException e) {
@@ -1366,9 +1743,10 @@ public class DotSonParser implements Parser {
 				}
 			}
 			// check for blue
-			if (arcHeaderMap.containsKey(colMap.getProperty(DotSonColumnMap.ARC_BLUE_RGB))) {
-				int indexB = ((Integer) arcHeaderMap
-						.get(colMap.getProperty(DotSonColumnMap.ARC_BLUE_RGB))).intValue();
+			if (arcHeaderMap.containsKey(colMap
+					.getProperty(DotSonColumnMap.ARC_BLUE_RGB))) {
+				int indexB = ((Integer) arcHeaderMap.get(colMap
+						.getProperty(DotSonColumnMap.ARC_BLUE_RGB))).intValue();
 				try {
 					blue = Float.parseFloat(rowArray[indexB]);
 				} catch (NumberFormatException e) {
@@ -1412,7 +1790,7 @@ public class DotSonParser implements Parser {
 	}
 
 	private Color parseColorName(String text) throws IOException {
-		//TODO: extend color names to full list from pajek?
+		// TODO: extend color names to full list from pajek?
 		Color theColor = Color.white;
 		if (text.equalsIgnoreCase("Black")) {
 			theColor = Color.black;
@@ -1490,21 +1868,42 @@ public class DotSonParser implements Parser {
 		return details;
 	}
 
-
 	/**
 	 * casts to DotSonColmnMap and uses to controll column labling
 	 */
 	public void configureParser(PropertySettings settings) {
-		//check type of settings
-		if (settings instanceof DotSonColumnMap){
-			this.colMap = (DotSonColumnMap)settings;
+		// check type of settings
+		if (settings instanceof DotSonColumnMap) {
+			this.colMap = (DotSonColumnMap) settings;
 		} else {
-			//TODO: need a way to report errors in configuration
+			// TODO: need a way to report errors in configuration
 		}
-		
+
 	}
 	
-	public HashSet getNodeDataKeys(){
+	/**
+	 * trims off starting and ending braces if there are any
+	 * @author skyebend
+	 * @param toTrim
+	 * @return modified string (object is modified in place also)
+	 */
+	private String trimBraces(String toTrim){
+		toTrim.trim();
+		if (toTrim.startsWith("{")) {
+			toTrim = toTrim.substring(1);
+		}
+		if (toTrim.endsWith("}")) {
+			toTrim = toTrim.substring(0, toTrim.length() - 1);
+		}
+		return toTrim;
+	}
+
+
+	public HashSet getNodeDataKeys() {
 		return nodeDataKeys;
+	}
+
+	public Vector getClusterList() {
+		return clusterList;
 	}
 }
