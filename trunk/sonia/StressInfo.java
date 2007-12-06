@@ -176,8 +176,8 @@ public class StressInfo extends ExportableFrame
     yDataMin = Double.POSITIVE_INFINITY;
     yDataTotal = 0;
     //getCurrent layout coords from engine NOT THE SAME INDICIES AS SUBNET COORDS
-    double[] layX = engine.getCurrentXCoords();
-    double[] layY = engine.getCurrentYCoords();
+    double[] layX = slice.getXCoords();//engine.getCurrentXCoords();
+    double[] layY = slice.getYCoords(); //engine.getCurrentYCoords();
     //lists to hold the data points
     layDist = new DoubleArrayList();
     matDist = new DoubleArrayList();
@@ -236,8 +236,9 @@ public class StressInfo extends ExportableFrame
     }//end of component loop
 
     //rescale the distances to make roughly square
+    //and to deal with the fact that units are differnt
    double scaleFactor = yDataTotal/xDataTotal;
-    for (int n=0;n<layDist.size() ;n++ )
+   for (int n=0;n<layDist.size() ;n++ )
     {
     layDist.set(n,layDist.get(n)*scaleFactor);
 

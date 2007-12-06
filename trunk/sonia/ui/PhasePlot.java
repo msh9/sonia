@@ -74,6 +74,7 @@ public class PhasePlot extends ExportableFrame implements
 	private JPanel mainPanel;
 
 	private JCheckBox sortBox;
+	private JCheckBox offBox;
 
 	//private JLabel MouseTime;
 
@@ -131,7 +132,9 @@ public class PhasePlot extends ExportableFrame implements
 		mainPanel = new JPanel(new GridBagLayout());
 		drawArea = new PhasePlotPanel();
 		drawArea.setBorder(new TitledBorder("Timeline view of network"));
-		sortBox = new JCheckBox("Sort Events", eventsSorted);
+		sortBox = new JCheckBox("Sort", eventsSorted);
+		offBox = new JCheckBox("Hide");
+		offBox.setToolTipText("disables timeline to improve speed");
 	//	MouseTime = new JLabel("");
 		// MouseTime.setBackground(Color.lightGray);
 		//MouseTime.setEditable(false);
@@ -146,7 +149,7 @@ public class PhasePlot extends ExportableFrame implements
 		c.gridx = 0;
 		c.gridy = 0;
 		c.gridwidth = 1;
-		c.gridheight = 1;
+		c.gridheight = 2;
 		c.weightx = 1;
 		c.weighty = 1;
 		c.fill = GridBagConstraints.BOTH;
@@ -157,16 +160,16 @@ public class PhasePlot extends ExportableFrame implements
 		c.gridy = 0;
 		c.gridwidth = 1;
 		c.gridheight = 1;
-		c.weightx = 0.1;
-		c.weighty = 0.1;
+		c.weightx = 0;
+		c.weighty = 0;
 		mainPanel.add(sortBox, c);
-		c.gridx = 0;
+		c.gridx = 1;
 		c.gridy = 1;
 		c.gridwidth = 1;
 		c.gridheight = 1;
-		c.weightx = 0.1;
-		c.weighty = 0.1;
-	//	mainPanel.add(MouseTime, c);
+		c.weightx = 0;
+		c.weighty = 0;
+		mainPanel.add(offBox, c);
 		this.getContentPane().add(mainPanel);
 		// add the listerners
 		this.addInternalFrameListener(this);
@@ -218,6 +221,9 @@ public class PhasePlot extends ExportableFrame implements
 
 		public void paintComponent(Graphics g) {
 			super.paintComponent(g);
+			if (offBox.isSelected()){
+				g.drawString("timeline off",20,20);
+			} else {
 			Graphics2D graph = (Graphics2D) g;
 			int topPad = sidePad + 10;
 			int xAxis = this.getHeight() - xAxisPad;
@@ -376,6 +382,7 @@ public class PhasePlot extends ExportableFrame implements
 			graph.setColor(Color.black);
 			graph.drawString(plotStart + "", sidePad, xAxis + 10);
 			graph.drawString(plotEnd + "", this.getWidth() - 40, xAxis + 10);
+			}
 
 		}
 	}

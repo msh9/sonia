@@ -71,6 +71,8 @@ public class RenderSlice {
 	private Vector<NodeClusterAttribute> clusterEvents = null;
 	
 	private double clusterPadding = 10;
+	
+	private double fps= 0;
 
 	// private double flashWindow = 0.1;
 	// private Line2D arcLine = new Line2D.Double(); //the path to draw
@@ -117,11 +119,21 @@ public class RenderSlice {
 	public void addClusterEvent(NodeClusterAttribute cluster){
 		clusterEvents.add(cluster);
 	}
+	
+	/**
+	 * gets the number of seconds it took to render the last frame
+	 * @author skyebend
+	 * @return
+	 */
+	public double getFps(){
+		return fps;
+	}
 
 	// loops over all objects and asks them to paint themselves
 	public void render(Object drawTarget, SoniaCanvas canvas, Render render)
-
 	{
+		//get time to calc render duration
+		long rendStart = System.currentTimeMillis();
 		// need to calc new coords for nodes from layout slices
 		// STORE COORDS SO THEY DON'T HAVE TO BE RECALC'D EACH TIME?
 		// SHOULD IT BE START OR END OF SLICE?
@@ -266,7 +278,8 @@ public class RenderSlice {
 			// graphics.drawString("
 			// layout:"+layoutEngine.getLayoutInfo(),5,20);
 		}
-
+		//record how long it took
+		fps = 1/((System.currentTimeMillis() - rendStart)/1000+0.00000001);
 	}
 
 	// private BasicStroke getStrokeForWidth(float width, boolean isNegitive){

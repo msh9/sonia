@@ -1,5 +1,6 @@
 package sonia;
 
+import java.awt.Color;
 import java.util.*;
 
 import com.sun.corba.se.impl.orbutil.DenseIntMapImpl;
@@ -581,67 +582,65 @@ public class NetUtils {
 	// returns a version of kruskal's stress
 	// SUMMATION ROUND-OFF PROBLEM!!
 	// should just use corelation between the two matricies?
-	public static double getStress(LayoutSlice slice) {
-		int nNodes = slice.getMaxNumNodes();
-		double[] xCoords = slice.getXCoords();
-		double[] yCoords = slice.getYCoords();
-		// assume original was similarity, so reverse it to get dissim
-		double[] maxMin = getMatrixMaxMin(NetUtils.getMatrix(slice));
-		DoubleMatrix2D reverseMatrix = getReverse(NetUtils
-				.getMatrix(slice), maxMin[0], maxMin[1]);
-		// symetrize before all pairs shortest path.. (should allow for floyed
-		// instead of dijkstra)
-		reverseMatrix = NetUtils.getSymMaxMatrix(reverseMatrix);
-		DenseDoubleMatrix2D distMatrix = getAllShortPathMatrix(reverseMatrix);
-		DenseDoubleMatrix2D obsMatrix = new DenseDoubleMatrix2D(distMatrix
-				.rows(), distMatrix.rows());
+	
+	/**
+	 * scale factor gives are correction because layout screen distances
+	 * are not in the same units as the matrix distas, this should be the "optdist" param
+	 */
+	public static double getStress(LayoutSlice slice, double scaleFactor, SoniaLayoutEngine engine) {
 
-		double stress = 0.0;
-		double xDiff;
-		double yDiff;
-		double obs;
-		double dij;
-		double scaleFact = 0.0; // for rescaling from coordinate space ~ optDist
-		double stressScale = 0.0; // stress denominator
-		double dijTotal = 0.0; // to adjust for coordinate transform
-		double obsTotal = 0.0;
+	    //getCurrent layout coords from engine NOT THE SAME INDICIES AS SUBNET COORDS
+	    double[] layX = slice.getXCoords();//engine.getCurrentXCoords();
+	    double[] layY = slice.getYCoords(); //engine.getCurrentYCoords();
+	    
+	   // double scaleFactor = 20;//yDataTotal/xDataTotal;
+	    //lists to hold the data points
+	   double stressSum = 0;
+	   double denomSum = 0;
+	  
+	    //need to run seperately on each component!
+	    ArrayList components = NetUtils.getComponents(NetUtils.getSymMaxMatrix(slice),true);
+	    Iterator compIter = components.iterator();
+	    while (compIter.hasNext())
+	    {
+	      Subnet subnet = (Subnet)compIter.next();
+	      if (subnet.getNumNodes() > 1)  //ignore isolates
+	      {
+	        //the raw similarities matrix
+	        //the all-pairs-shortest path distances from disimilaritise
+	        DenseDoubleMatrix2D pathDist =
+	            NetUtils.getAllShortPathMatrix(NetUtils.getReverse(subnet.getMatrix(),
+	            engine.getMaxMatrixVal(),engine.getMinMatrixValue()));
+	        //debug
+	        //System.out.println(distances.toString());
 
-		// loop over links to get values for a scale factor
-		for (int i = 0; i < nNodes; i++) {
-			for (int j = 0; j < nNodes; j++) {
-				xDiff = xCoords[i] - xCoords[j];
-				yDiff = yCoords[i] - yCoords[j];
-				// obs distance = sqrt of xDiff squared + yDiff squared
-				obs = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
-				// put the value in the obs matrix so we won't have to calc
-				// again
-				obsMatrix.setQuick(i, j, obs);
-				// desired distance is the i,j th entry in the matrix
-				dij = distMatrix.getQuick(i, j);
-				dijTotal += dij;
-				obsTotal += obs;
-			}
-		}
-		// compute the scale factor to correct for coordinate spaces
-		scaleFact = obsTotal / dijTotal;
-		// sum over all i and j
-		for (int i = 0; i < nNodes; i++) {
-			for (int j = 0; j < nNodes; j++) {
-				obs = obsMatrix.getQuick(i, j) / scaleFact;
-				// desired distance is the i,j th entry in the matrix
-				dij = distMatrix.getQuick(i, j);
-				// the square of the differnces
-				stress += (obs - dij) * (obs - dij);
-				stressScale += dij * dij;
-			}
+	        int nPoints = pathDist.rows();
 
-		}
-		stress = Math.sqrt(stress / scaleFact); // *(dijTotal/obsTotal);
-		// debug
-		System.out.println(distMatrix.toString());
-		System.out.println(obsMatrix.toString());
-		System.out.println("scaleFact:" + scaleFact);
-		System.out.println("stress:" + stress);
-		return stress;
+	        for (int i=0;i<nPoints ;i++ )
+	        {
+	          int subIndexI = subnet.getNetIndex(i);
+	          for (int j=i+1;j<nPoints ;j++ ) //only loops over upper triangel of matrix
+	          {
+	            int subIndexJ = subnet.getNetIndex(j);
+	            //compute the distance on the layout from coords
+	            double layoutDist = Math.sqrt((layX[subIndexI]-layX[subIndexJ])*
+	            		(layX[subIndexI]-layX[subIndexJ]) +
+	                (layY[subIndexI] -layY[subIndexJ])*(layY[subIndexI] -layY[subIndexJ]))/scaleFactor;
+	            //get the "desired" distance from the matrix
+	            double matrixDist = pathDist.getQuick(i,j);
+                
+	            stressSum+= (layoutDist-matrixDist)*(layoutDist-matrixDist);
+		        denomSum += matrixDist*matrixDist;
+
+	    
+	          }
+	        }
+	      }
+	    }//end of component loop
+	    //need to rescale the layout distances 'cause the are not in the same units..
+	   
+	     
+
+		return Math.sqrt(stressSum/denomSum);
 	}
 }

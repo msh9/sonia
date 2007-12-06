@@ -8,6 +8,7 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.MenuBar;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -21,6 +22,7 @@ import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JInternalFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -228,6 +230,11 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	private JPanel inspectPanel;
 	private JPanel layoutPanel;
 	private JPanel timelinePane ;
+	
+	private JLabel fpsInfo;
+	
+	private StressTimeline stressline;
+	
 
 	
 
@@ -299,6 +306,11 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 				Control.saveDyNetML(engine);
 			}
 		});
+		
+		//menu that just used to dispaly info
+		fpsInfo = new JLabel("          fps:");
+		menuBar.add(fpsInfo);
+		
 
 		// this.setFont(controller.getFont());
 		// create layout objects
@@ -425,7 +437,12 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		//stress panel
 		stressPanel = new JPanel(new GridBagLayout());
 		stressPanel.setName("stress");
-		stressPanel.add(Stress);
+		c.gridx=0;c.gridy=0;c.gridwidth=1;c.weightx=.1;c.weighty=0;c.fill=GridBagConstraints.NONE;
+		stressPanel.add(Stress,c);
+		stressline = new StressTimeline(engine);
+		c.gridx=0;c.gridy=1;c.gridwidth=1;c.weightx=1;c.weighty=1;c.fill=GridBagConstraints.BOTH;
+		stressPanel.add(stressline,c);
+
 		controlePane.add(stressPanel,4);
 		
 		// try to make it so we can tear off tabs
@@ -489,20 +506,15 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	
 		c.gridx = 2;c.gridy = 1;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;c.weighty = 0.0;
 		controlPanel.add(degrees,c);
-		c.gridx = 1;c.gridy = 2;c.gridwidth = 2;c.gridheight = 1;c.weightx = 0.5;c.weighty = 0.0;
+		c.gridx = 1;c.gridy = 2;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;c.weighty = 0.0;
 		controlPanel.add(pan, c);
 	
-		c.gridx = 0;
-		c.gridy = 3;
-		c.gridwidth = 1;
-		c.gridheight = 1;
-		c.weightx = 0.5;
-		c.weighty = 0.0;
+		c.gridx = 2;c.gridy = 2;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;c.weighty = 0.0;
 		controlPanel.add(MoveNodes, c);
 		// buttons and controls
 		// c.gridx=1;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
 		// add(LayoutLabel,c);
-		c.gridx = 2;c.gridy = 2;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.1;c.weighty = 0.0;
+		c.gridx = 3;c.gridy = 2;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.1;c.weighty = 0.0;
 		//add to the 
 //		controlPanel.add(LayoutNum, c);
 //		c.gridx = 3;
@@ -1188,6 +1200,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		LayoutArea.repaint();
 		timelinePane.repaint();
 		// try to make it updage the controls on mac
+		//fpsInfo.setText("         fps:"+LayoutArea.getRenderSlice().getFps());
 	}
 
 	/**

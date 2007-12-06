@@ -65,12 +65,13 @@ import javax.swing.table.TableCellRenderer;
  * Manages mouseovers that allow inspecting the properties of nodes and the data
  * that may be attached
  */
-public class NodeInspector implements MouseListener, ChangeListener {
+public class NodeInspector implements MouseListener, ChangeListener, MouseMotionListener {
 	private SoniaController control;
 
 	private SoniaLayoutEngine engine;
 
-	private JComponent frame;
+	//private JComponent frame;
+	private SoniaCanvas canvas;
 
 	private LayoutSlice slice;
 
@@ -151,7 +152,7 @@ public class NodeInspector implements MouseListener, ChangeListener {
 			JComponent frm) {
 		control = cont;
 		engine = eng;
-		frame = frm;
+		//frame = frm;
 
 		format = NumberFormat.getInstance(Locale.ENGLISH);
 		format.setMaximumFractionDigits(3);
@@ -166,8 +167,10 @@ public class NodeInspector implements MouseListener, ChangeListener {
 
 	public void activate() {
 		slice = engine.getCurrentSlice();
+		canvas = engine.getLayoutWindow().getDisplay();
 		// add this as a lister to the frame to
-		frame.addMouseListener(this);
+		canvas.addMouseListener(this);
+		canvas.addMouseMotionListener(this);
 		xCoords = engine.getCurrentXCoords();
 		yCoords = engine.getCurrentYCoords();
 		nodeView = engine.getRenderSlice(slice.getSliceStart(), slice
@@ -178,7 +181,10 @@ public class NodeInspector implements MouseListener, ChangeListener {
 	}
 
 	public void deactivate() {
-		frame.removeMouseListener(this);
+		if (canvas != null){
+		canvas.removeMouseListener(this);
+		canvas.removeMouseMotionListener(this);
+		}
 		inspecting = false;
 		selectedIndex = -1;
 	}
@@ -238,7 +244,7 @@ public class NodeInspector implements MouseListener, ChangeListener {
 
 	private void hiliteSelected() {
 		// TODO: hiliting is broken, should move into render slice
-		Graphics2D graphics = (Graphics2D) frame.getGraphics();
+		Graphics2D graphics = (Graphics2D) canvas.getGraphics();
 		graphics.setColor(Color.black);
 		graphics.setXORMode(Color.white);
 		// now draw the hilighting
@@ -532,6 +538,23 @@ public class NodeInspector implements MouseListener, ChangeListener {
 			setText("r="+newColor.getRed()+",g="+newColor.getGreen()+",b="+newColor.getBlue());
 			return this;
 		}
+	}
+
+	public void mouseDragged(MouseEvent e) {
+		
+	}
+
+	public void mouseMoved(MouseEvent e) {
+		int found = getTarget(e.getX(), e.getY());
+		if (found >= 0){
+			//set the tool tip with the label of that node
+			NodeAttribute node = (NodeAttribute)nodeEvents.get(found);
+			canvas.setToolTipText(node.getNodeLabel());
+			
+		} else {
+			canvas.setToolTipText(null);
+		}
+		
 	}
 
 }
