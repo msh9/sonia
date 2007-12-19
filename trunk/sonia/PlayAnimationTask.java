@@ -90,6 +90,7 @@ public class PlayAnimationTask implements LongTask {
 
 
 	public void run() {
+		try{
 		LayoutWindow window = engine.getLayoutWindow();
 		currentSlice = engine.getCurrentSliceNum();
 		int endIndex = engine.getNumSlices();
@@ -105,6 +106,10 @@ public class PlayAnimationTask implements LongTask {
 				reportStatus();
 				break;
 			}
+		}
+		} catch (Exception e){
+			status = "Error in play thread: "+e.getMessage();
+			e.printStackTrace();
 		}
 		stop=true;
 		engine.setTransitionActive(false);

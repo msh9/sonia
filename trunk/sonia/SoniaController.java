@@ -174,7 +174,7 @@ public class SoniaController implements Runnable{
 			log("ERROR: unable to initialize random number generator: "
 					+ e.getMessage());
 		}
-		taskrunner = new TaskRunner();
+		taskrunner = new TaskRunner(this);
 		taskrunner.addUItoUpdate(ui);
 	}
 	

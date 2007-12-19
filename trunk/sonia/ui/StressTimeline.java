@@ -24,12 +24,14 @@ import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.lang.reflect.Array;
+import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Collections;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
+import javax.swing.text.NumberFormatter;
 
 import sonia.NetUtils;
 import sonia.SoniaLayoutEngine;
@@ -42,7 +44,11 @@ public class StressTimeline extends JPanel {
 	private int sidePad = 20;
 	private int xAxisPad = 20;
 	private double[] stressPoints = null;
+	private double[] corPoints = null;
+	private double[] ddcm = null;
 	private JButton calcAll = new JButton("Calc all");
+	
+	private static NumberFormat format = NumberFormat.getInstance();
 	
 	
 	
@@ -86,6 +92,7 @@ public class StressTimeline extends JPanel {
 			double sMax = 0;
 			double sMin = 0;//Double.POSITIVE_INFINITY;
 			double sMean = 0;
+			//compute stats for stress
 			for (int i = 0; i < stressPoints.length; i++) {
 				if (!Double.isNaN(stressPoints[i])){
 					sMax = Math.max(sMax,stressPoints[i]);
@@ -95,7 +102,20 @@ public class StressTimeline extends JPanel {
 			}
 			sMean = sMean / stressPoints.length;
 			double xSF = (double) plotWidth / stressPoints.length;
-			double ySF = (double) plotHeight / (sMax-sMin);;
+			double ySF = (double) plotHeight / (sMax-sMin);
+			//compute stats for ddcm score
+			double dMax = 0;
+			double dMean = 0;
+			
+			for (int i = 0; i < ddcm.length; i++) {
+				if (!Double.isNaN(ddcm[i]) & !Double.isInfinite(ddcm[i])){
+					dMax = Math.max(dMax,ddcm[i]);
+				//	sMin = Math.min(sMin,stressPoints[i]);
+					dMean += ddcm[i];
+				}
+			}
+			dMean = dMean / ddcm.length;
+			double dSF =(double) plotHeight / dMax;
 
 			graph.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
 					RenderingHints.VALUE_ANTIALIAS_ON);
@@ -103,12 +123,15 @@ public class StressTimeline extends JPanel {
 			graph.setColor(Color.gray);
 			graph.drawLine(sidePad,plotHeight+topPad,sidePad+plotWidth,plotHeight+topPad);
 			graph.drawLine(sidePad,plotHeight+topPad,sidePad,topPad);
-			graph.drawString(""+sMax,2,topPad);
-			graph.drawString("0.0",2,topPad+plotHeight);
+			
+			graph.setColor(Color.CYAN);
+			//draw plot labels
+			graph.drawString(""+format.format(sMax),3,topPad);
+			graph.drawString("0.0",3,topPad+plotHeight);
 			//drawMean
-			graph.setColor(Color.lightGray);
 			graph.drawLine(sidePad,plotHeight+topPad -(int)(sMean*ySF),
 					sidePad+plotWidth,plotHeight+topPad -(int)(sMean*ySF));
+			graph.drawString(""+format.format(sMean),3,plotHeight+topPad-(int)(sMean*ySF));
 			//draw points
 			graph.setColor(Color.CYAN);
 			int x = sidePad;
@@ -120,6 +143,24 @@ public class StressTimeline extends JPanel {
 				y = plotHeight+topPad -(int)(ySF*stressPoints[i]);
 				graph.drawLine(xOld,yOld,x,y);
 			}
+			//draw points for movement measure
+			graph.setColor(Color.ORANGE);
+			graph.drawLine(sidePad,plotHeight+topPad -(int)(dMean*dSF),
+					sidePad+plotWidth,plotHeight+topPad -(int)(dMean*dSF));
+			graph.drawString(""+format.format(dMean),plotWidth,plotHeight+topPad-(int)(dMean*dSF));
+			graph.drawString(""+format.format(dMax),plotWidth,topPad);
+			graph.drawString("0.0",plotWidth,topPad+plotHeight);
+			 x = sidePad;
+			 y=plotHeight+topPad;
+			for (int i = 0; i < ddcm.length; i++) {
+				int xOld = x;
+				int yOld = y;
+				x = (int)(xSF*i)+sidePad;
+				y = plotHeight+topPad -(int)(dSF*ddcm[i]);
+				if(!Double.isInfinite(ddcm[i])){
+					graph.drawLine(xOld,yOld,x,y);
+				}
+			}
 		}
 		}
 	}
@@ -128,6 +169,9 @@ public class StressTimeline extends JPanel {
 		if( stressPoints == null){
 			stressPoints = new double[engine.getNumSlices()];
 		}
+		if (ddcm == null){
+			ddcm = new double[engine.getNumSlices()];
+		}
 		if (engine.getLayout() instanceof MultiCompKKLayout){
 			double scaleFactor = Double.parseDouble(
 					engine.getCurrentApplySettings().getProperty(MultiCompKKLayout.OPT_DIST));
@@ -135,7 +179,17 @@ public class StressTimeline extends JPanel {
 				stressPoints[i] = NetUtils.getStress(engine.getSlice(i),scaleFactor,engine);
 			}
 		}
+		//calc the movement stresss between sucessive slices
+		double scaleFactor = Double.parseDouble(
+				engine.getCurrentApplySettings().getProperty(MultiCompKKLayout.OPT_DIST));
+		double matMax = engine.getMaxMatrixVal();
+		double matMin = engine.getMinMatrixValue();
+		for (int i = 0; i < ddcm.length-1; i++) {
+			ddcm[i] = NetUtils.getTimeDistortion(engine.getSlice(i),engine.getSlice(i+1),
+					scaleFactor,matMax,matMin);
+		}
 		System.out.println(" stress for each slice:\n"+Arrays.toString(stressPoints));
+		System.out.println(" ddcm for each slice:\n"+Arrays.toString(ddcm));
 		repaint();
 	}
 	

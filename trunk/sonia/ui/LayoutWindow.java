@@ -319,7 +319,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		controlPanel.setName("view");
 		ApplyLayout = new JButton("Apply Layout..");
 		ReApply = new JButton("Re-Apply");
-		Stress = new JButton("Stress");
+		Stress = new JButton("Slice Stress...");
 		PhasePlot = new JButton("PhasePlot");
 		Stability = new JButton("Stability");
 		NextSlice = new JButton(">|");
@@ -490,7 +490,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		GridBagLayout layout = new GridBagLayout();
 		controlPanel.setLayout(layout);
 		c.insets = new Insets(0, 2, 0, 2);
-		// c.fill=c.NONE;
+		c.fill=c.NONE;
 		c.gridx = 0;c.gridy = 0;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;c.weighty = 0.0;
 		controlPanel.add(ViewOptions, c);
 

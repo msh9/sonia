@@ -495,7 +495,7 @@ public class SoniaLayoutEngine implements TaskListener{
 			//currentLayout.applyLayoutTo(slice, width, height, settings);
 			
 			//ask control to run the layout in a new thread
-			LongTask task = new ApplyLayoutTask(this,currentLayout,width,
+			LongTask task = new ApplyLayoutTask(control,this,currentLayout,width,
 					height,slice,settings);
 			//register thelayout window to get task updates. 
 			//TODO: only register ui updats if in gui mode

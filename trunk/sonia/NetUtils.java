@@ -579,11 +579,115 @@ public class NetUtils {
 		return value;
 	}
 
-	// returns a version of kruskal's stress
-	// SUMMATION ROUND-OFF PROBLEM!!
-	// should just use corelation between the two matricies?
 	
 	/**
+	 *  comparison of distances between slices as sum of differences between
+	 *  coordiante arrays. only compares each node to its position in the second 
+	 *  slice.  
+	 *  TODO: corret to ignore comparisons for missing nodes
+	 * 
+	 */
+	public static double getLayoutDistance(LayoutSlice slice1, LayoutSlice slice2){
+		double[] x1 = slice1.getXCoords();
+		double[] x2 = slice2.getXCoords();
+		double[] y1 = slice1.getYCoords();
+		double[] y2 = slice2.getYCoords();
+		double stress= 0;
+		for (int i = 0; i < y2.length; i++) {
+			 double layoutDist = Math.sqrt((x1[i]-x2[i])*
+	            		(x1[i]-x2[i]) +
+	                (y1[i] -y2[i])*(y1[i] -y2[i]));
+			 stress += layoutDist;
+	          
+		}
+		return stress;
+	}
+	
+	/**
+	 * computes the distances between the matricies in two sucessive slices
+	 * @author skyebend
+	 * @param slice1
+	 * @param slice2
+	 * @return
+	 */
+	public double getMatrixDistance(LayoutSlice slice1, LayoutSlice slice2){
+		double distance = 0;
+		SparseDoubleMatrix2D mat1 =getMatrix(slice1);
+		SparseDoubleMatrix2D mat2 =getMatrix(slice2);
+		
+		for (int i = 0; i < mat1.rows(); i++) {
+			for (int j = 0; j < mat1.columns(); j++) {
+				distance += Math.abs(mat1.getQuick(i,j)-mat2.getQuick(i,j));
+			}
+		}
+		return distance;
+	}
+	
+	/** 
+	 * compares the magnitute of changs in matricies to changes on the layout.  
+	 * All layout distances (including self) compared for each node)
+	 * @author skyebend
+	 * @param slice1
+	 * @param slice2
+	 * @param scaleFactor
+	 * @param matMax
+	 * @param matMin
+	 * @return
+	 */
+	public static double getTimeDistortion(LayoutSlice slice1, LayoutSlice slice2,
+			double scaleFactor,double matMax, double matMin){
+		
+		//SparseDoubleMatrix2D mat1 =getMatrix(slice1);
+		//SparseDoubleMatrix2D mat2 =getMatrix(slice2);
+		DenseDoubleMatrix2D mat1 =
+            NetUtils.getAllShortPathMatrix(NetUtils.getReverse(getMatrix(slice1),matMax
+            ,matMin));
+		DenseDoubleMatrix2D mat2 =
+            NetUtils.getAllShortPathMatrix(NetUtils.getReverse(getMatrix(slice2),matMax
+            ,matMin));
+		double[] x1 = slice1.getXCoords();
+		double[] x2 = slice2.getXCoords();
+		double[] y1 = slice1.getYCoords();
+		double[] y2 = slice2.getYCoords();
+		double stressSum = 0;
+		double denomSum = 0;
+		double layoutChange;
+		double matrixChange;
+		for (int i = 0; i < mat1.rows(); i++) {
+			for (int j = 0; j < mat1.columns(); j++) {
+				layoutChange = Math.sqrt((x1[i]-x2[j])*(x1[i]-x2[j]) +
+	                (y1[i] -y2[j])*(y1[i] -y2[j]))/scaleFactor;
+				 //if either matrixes distances are infinate we don't have 
+				 //info to compute location, so assume it should not have moved
+				 if (Double.isInfinite(mat1.getQuick(i,j)) 
+						 & Double.isInfinite(mat2.getQuick(i,j))){
+				//	 matrixChange = 0;
+					 break;
+					 //SHOULD ONLY COUNT SELF RELATIONS
+					 //but if either one is infinity, include the 
+					 //non-infinate half in the comparison
+				 } else if (Double.isInfinite(mat1.getQuick(i,j))) {
+					 matrixChange = mat2.getQuick(i,j);
+				}else if (Double.isInfinite(mat2.getQuick(i,j))){
+					matrixChange = mat1.getQuick(i,j);
+//				if (Double.isInfinite(mat1.getQuick(i,j)) 
+//						 | Double.isInfinite(mat2.getQuick(i,j))){
+//					//dont count this relation
+//					break;
+				 } else {
+					 matrixChange = Math.abs(mat1.getQuick(i,j)-mat2.getQuick(i,j));
+				 }
+			     stressSum+= (layoutChange-matrixChange)*(layoutChange-matrixChange);
+			      denomSum += matrixChange*matrixChange;
+			   
+			}
+		}
+		if (stressSum == 0 & denomSum ==0) return 0;
+		return Math.sqrt(stressSum/denomSum);
+	}
+	
+	/**
+	 * returns a version of kruskal's stress
 	 * scale factor gives are correction because layout screen distances
 	 * are not in the same units as the matrix distas, this should be the "optdist" param
 	 */

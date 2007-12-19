@@ -16,6 +16,7 @@ import java.util.StringTokenizer;
 
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
@@ -474,9 +475,14 @@ public class CoolingSchedule extends ExportableFrame implements MouseListener,
 	 * points accordingly.
 	 */
 	public void setValues() {
-		TextPrompter prompter = new TextPrompter(null, getCtlValString(),
-				"Enter schedule points (pass,factor)");
-		parseCtlValueString(prompter.getUserString());
+		//TextPrompter prompter = new TextPrompter(null, getCtlValString(),
+		//		"Enter schedule points (pass,factor)");
+		String result = JOptionPane.showInputDialog("Enter schedule points (pass,factor)",
+				getCtlValString());
+		//parseCtlValueString(prompter.getUserString());
+		if (result != null){
+			parseCtlValueString(result);
+		}
 	}
 
 	/**

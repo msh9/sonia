@@ -311,6 +311,8 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 		maxPasses = (int)Math.round(Double.parseDouble(settings.getProperty(MAX_PASS)));
 		totalPasses = 0;
 		schedule.setMaxPasses(maxPasses);
+		//hack to move the cooling bar
+		schedule.parseCtlValueString("(0,0)("+maxPasses+",0)");
 		width = w;
 		height = h;
 		layoutInfo = "";

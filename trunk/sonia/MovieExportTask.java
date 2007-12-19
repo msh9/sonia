@@ -102,11 +102,12 @@ public class MovieExportTask implements LongTask {
 
 
 	public void run() {
+		try {
 		LayoutWindow window = engine.getLayoutWindow();
 		int endIndex = engine.getNumSlices();
 		
 		int numFrames = endIndex * engine.getInterpFrames();
-		try {
+		
 			maker.setupMovie(window.getDisplay(), numFrames);
 			window.transitionToSlice(0,null);
 			maker.captureImage();
@@ -131,7 +132,7 @@ public class MovieExportTask implements LongTask {
 			reportStatus();
 		} catch (Exception e) {
 			isError = true;
-			status = "Movie export error:"+e.getMessage();
+			status = "Movie export error: "+e.getMessage();
 			stop = true;
 			reportStatus();
 		}

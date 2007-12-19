@@ -28,7 +28,6 @@ public class ApplyLayoutTask implements LongTask {
 
 	//private String name = "Apply ";
 
-	private Boolean error = false;
 
 	private Boolean stopped = false;
 
@@ -39,9 +38,11 @@ public class ApplyLayoutTask implements LongTask {
 	private ApplySettings settings;
 	private LayoutSlice slice;
 	private int maxSteps = -1;
+	private SoniaController control;
+	private String status = "";
 
 
-	public ApplyLayoutTask(SoniaLayoutEngine engine, NetLayout layout,
+	public ApplyLayoutTask(SoniaController cont, SoniaLayoutEngine engine, NetLayout layout,
 			int width, int height, LayoutSlice slice, ApplySettings settings) {
 		this.engine = engine;
 		this.layout = layout;
@@ -49,6 +50,7 @@ public class ApplyLayoutTask implements LongTask {
 		this.height = height;
 		this.slice = slice;
 		this.settings = settings;
+		this.control = cont;
 	}
 
 	public String getTaskName() {
@@ -64,7 +66,7 @@ public class ApplyLayoutTask implements LongTask {
 	}
 
 	public String getStatusText() {
-		return layout.getLayoutInfo();
+		return status+layout.getLayoutInfo();
 	}
 
 	public boolean isDurationKnown() {
@@ -85,7 +87,6 @@ public class ApplyLayoutTask implements LongTask {
 	public int currentStep() {
 		if (layout instanceof MultiCompKKLayout){
 			return ((MultiCompKKLayout)layout).currentStep();
-			
 		}
 		return 0;
 	}
@@ -112,7 +113,18 @@ public class ApplyLayoutTask implements LongTask {
 	}
 
 	public void run() {
-		layout.applyLayoutTo(slice,width,height,settings);
+		try{
+			layout.applyLayoutTo(slice,width,height,settings);
+			
+		} catch (Throwable t){
+			String er = " Error during layout: "
+				+t.getClass().getSimpleName()+": "+t.getMessage();
+			control.showError(er);
+			status = er;
+			slice.setError(true);
+			slice.setLayoutFinished(true);
+			t.printStackTrace();
+		}
 		reportStatus();
 	}
 

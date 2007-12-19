@@ -18,9 +18,13 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 
 
 
@@ -44,13 +48,17 @@ public class TaskRunner implements TaskListener {
 	private static UIRunner uiRunner;
 
 	private static ExecutorService threadService;
+	
+	private SoniaController control;
 
-	public TaskRunner() {
+	public TaskRunner(SoniaController control) {
 		tasks = new LinkedBlockingQueue<LongTask>();
 		runningTasks = new LinkedBlockingQueue<LongTask>();
 		dependencies = new HashMap<LongTask, LongTask>();
 		UIs = new Vector<TaskListener>();
 		threadService = Executors.newSingleThreadExecutor();
+     
+		this.control = control;
 
 	}
 
@@ -68,6 +76,8 @@ public class TaskRunner implements TaskListener {
 	 * a new thread
 	 * 
 	 * @author skyebend
+	 * @throws  
+	 * @throws InterruptedException 
 	 */
 	private void checkQueue() {
 		if (tasks.size() > 0) {
@@ -119,6 +129,11 @@ public class TaskRunner implements TaskListener {
 	}
 
 	public void taskStatusChanged(LongTask task) {
+		// check if it is error
+		if (task.isError()){
+			control.showError(task.getStatusText());
+			System.out.println("task error:"+task.getStatusText());
+		}
 		// check if it is done
 		if (task.isDone()) {
 			runningTasks.remove(task);
@@ -130,7 +145,7 @@ public class TaskRunner implements TaskListener {
 			}
 			checkQueue();
 		}
-		// check if it is error
+		
 		// report status
 
 	}

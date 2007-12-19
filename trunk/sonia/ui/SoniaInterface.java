@@ -278,6 +278,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		statusText.setText("");
 		statusText.setText("  " + text);
 		statusText.setCaretPosition(0);
+		statusText.repaint();
 		
 	}
 	
