@@ -25,7 +25,7 @@ import javax.swing.event.InternalFrameListener;
 
 import sonia.layouts.NetLayout;
 import sonia.ui.ExportableFrame;
-import sonia.ui.TextPrompter;
+
 
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>

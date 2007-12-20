@@ -222,7 +222,7 @@ public class PhasePlot extends ExportableFrame implements
 		public void paintComponent(Graphics g) {
 			super.paintComponent(g);
 			if (offBox.isSelected()){
-				g.drawString("timeline off",20,20);
+				g.drawString("Timeline hidden for faster animation",20,40);
 			} else {
 			Graphics2D graph = (Graphics2D) g;
 			int topPad = sidePad + 10;

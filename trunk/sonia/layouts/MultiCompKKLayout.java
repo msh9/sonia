@@ -565,12 +565,8 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 				
 				//testing
 				//pick node at random with some small probability
-				//TODO: add pickNoise param to give this probability
 				if (control.getUniformRand(0,1) < rePickProb){
 					maxDeltaMIndex = (int)Math.round(control.getUniformRand(0,nNodes-1));
-					//debug
-					System.out.println("used random");
-			
 				} else { //pick the node with max
 					maxDeltaMIndex = 0;
 					

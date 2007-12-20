@@ -145,10 +145,11 @@ public class ExportableFrame extends JInternalFrame {
 				compToPrint, "NetworkPic");
 		
 		//THIS IS TO USE VERSION freehep 2.1.1
-	//	ExportDialog exportDialog = new ExportDialog();
-	//	exportDialog.showExportDialog(compToPrint, 
-	//			"Chose file format for export...", compToPrint, "export");
-		enableDoubleBuffering(compToPrint);
+		//AS SOON AS THEY FIX THE JPG EXPORT PROBLEM
+		//ExportDialog exportDialog = new ExportDialog();
+	// exportDialog.showExportDialog(compToPrint, 
+		//		"Chose file format for export...", compToPrint, "export");
+		//enableDoubleBuffering(compToPrint);
 	}
 
 	protected void disableDoubleBuffering(JComponent comp) {
