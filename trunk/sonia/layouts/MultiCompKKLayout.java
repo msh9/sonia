@@ -213,6 +213,7 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 									// layout procedure
 
 	private int maxSubpasses = 10;
+	private double rePickProb = 0.05;
 	private int totalPasses;
 
 	private double optDist; // optimal distance for nodes, gets reset later in
@@ -250,6 +251,18 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 	 * algorithm should be allowed. Value must be parseable as an int.
 	 */
 	public static final String MAX_PASS = "max passes";
+	
+	/**
+	 * property key for value of max number of tries to move a single node
+	 * to get below the epsilon value
+	 */
+	public static final String SUB_PASSES = "max sub passes";
+	
+	/**
+	 * key for value specifying how likely it is to pick a random 
+	 * node instead of the worst-energy node
+	 */
+	public static final String REPICK_PROB = "re-pick probability";
 	
 	private HashSet listeners = new HashSet();
 
@@ -289,6 +302,8 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 		settings.addLayoutProperty(SPRNG_CONST, 1.0);
 		settings.addLayoutProperty(COOL_FACT, 0.25);
 		settings.addLayoutProperty(COMP_CONN, 0.0);
+		settings.addLayoutProperty(SUB_PASSES, 10);
+		settings.addLayoutProperty(REPICK_PROB,0.5);
 	}
 
 	/**
@@ -312,7 +327,7 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 		totalPasses = 0;
 		schedule.setMaxPasses(maxPasses);
 		//hack to move the cooling bar
-		schedule.parseCtlValueString("(0,0)("+maxPasses+",0)");
+		schedule.parseCtlValueString("(0,0) ("+maxPasses+",0)");
 		width = w;
 		height = h;
 		layoutInfo = "";
@@ -350,6 +365,8 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 		noBreak = true;
 		// test code to connect with phtom links
 		double replaceWeight = Double.parseDouble(settings.getProperty(COMP_CONN));
+		rePickProb =  Double.parseDouble(settings.getProperty(REPICK_PROB));
+		maxSubpasses = (int)Double.parseDouble(settings.getProperty(SUB_PASSES));
 		if (replaceWeight > 0) {
 			IntArrayList includeAll = new IntArrayList(slice.getMaxNumNodes());
 			for (int i = 0; i < slice.getMaxNumNodes(); i++) {
@@ -549,8 +566,10 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 				//testing
 				//pick node at random with some small probability
 				//TODO: add pickNoise param to give this probability
-				if (control.getUniformRand(0,1) > 0.95){
+				if (control.getUniformRand(0,1) < rePickProb){
 					maxDeltaMIndex = (int)Math.round(control.getUniformRand(0,nNodes-1));
+					//debug
+					System.out.println("used random");
 			
 				} else { //pick the node with max
 					maxDeltaMIndex = 0;

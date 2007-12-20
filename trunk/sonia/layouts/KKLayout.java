@@ -74,22 +74,25 @@ public class KKLayout implements NetLayout, Runnable
   {
     control = cont;
     schedule = new CoolingSchedule(5);
-    control.showFrame(schedule);
+    //control.showFrame(schedule);
   }
   public void setupLayoutProperties(ApplySettingsDialog settings){}
 
+  /**
+   * no longer launches thread,  thread is run via layout task
+   */
   public void applyLayoutTo(LayoutSlice s, int w, int h,
                             ApplySettings set)
   {
-    slice = s;
-    settings = set;
+   slice = s;
+       settings = set;
     maxPasses = schedule.getMaxUsrPasses();
     width = w;
     height = h;
     //start algorthem on new thread so that it can be paused, etc
-    Thread layoutRunner = new Thread(this,"KKLayout loop");
-    layoutRunner.setPriority(10);
-    layoutRunner.start();
+//    Thread layoutRunner = new Thread(this,"KKLayout loop");
+//    layoutRunner.setPriority(10);
+//    layoutRunner.start();
   }
 
   public void run()
