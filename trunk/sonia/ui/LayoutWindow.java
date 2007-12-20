@@ -191,7 +191,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 
 	private JButton PlayAll;
 
-	private JButton Pause;
+	//private JButton Pause;
 
 	private JButton ViewOptions;
 	
@@ -324,8 +324,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		Stability = new JButton("Stability");
 		NextSlice = new JButton(">|");
 		PrevSlice = new JButton("|<");
-		PlayAll = new JButton(">");
-		Pause = new JButton("||");
+		PlayAll = new JButton("> / ||");
+		//Pause = new JButton("||");
 		ViewOptions = new JButton("View Options..");
 		MoveNodes = new JButton("Move Nodes");
 		zoom = new JButton("Scale layout");
@@ -412,26 +412,26 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		c.gridx=0;c.gridy=0;c.gridwidth=10;c.fill=GridBagConstraints.BOTH;c.weightx=1;c.weighty=1;
 		timelinePane.add(engine.getPhasePlot().getContentPane(),c);
 		timelinePane.setName("timeline");
-		c.gridx=0;c.gridy=1;c.gridwidth=1;c.weightx=.1;c.weighty=0;c.fill=GridBagConstraints.NONE;
+		c.gridx=0;c.gridy=1;c.gridwidth=1;c.weightx=0;c.weighty=0;c.fill=GridBagConstraints.NONE;
 		timelinePane.add(PrevSlice,c);
 		c.gridx=1;c.gridy=1;
-		timelinePane.add(LayoutNum,c);
-		c.gridx=2;c.gridy=1;
 		timelinePane.add(NextSlice,c);
-		c.gridx=3;c.gridy=1;
+		c.gridx=2;c.gridy=1;
 		timelinePane.add(PlayAll,c);
-		c.gridx=4;c.gridy=1;
-		timelinePane.add(Pause,c);
+		//c.gridx=4;c.gridy=1;
+		//timelinePane.add(Pause,c);
 		controlePane.add(timelinePane,3);
-		c.gridx = 5;
+		c.gridx = 3;c.weightx=1;c.fill=GridBagConstraints.BOTH;
+		timelinePane.add(LayoutNum,c);
+		c.gridx=4;
 		timelinePane.add(RenderTime, c);
-		c.gridx = 6;
+		c.gridx = 5;
 		timelinePane.add(RenderDuration, c);
-		c.gridx = 7;
+		c.gridx = 6;
 		timelinePane.add(renderOffset, c);
-		c.gridx = 8;
+		c.gridx = 7;
 		timelinePane.add(NumInterps, c);
-		c.gridx = 9;
+		c.gridx = 8;
 		timelinePane.add(frameDelay, c);
 		
 		//stress panel
@@ -596,7 +596,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		MoveNodes.addActionListener(this);
 		NextSlice.addActionListener(this);
 		PrevSlice.addActionListener(this);
-		Pause.addActionListener(this);
+	//	Pause.addActionListener(this);
 		PlayAll.addActionListener(this);
 
 		RenderTime.addActionListener(this);
@@ -612,6 +612,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		//add key listener to map arrow keys to next and prev
 		controlePane.addKeyListener( new KeyAdapter(){
 			public void keyPressed(KeyEvent k){
+				Control.setPaused(false);
 				if (k.getKeyCode() == KeyEvent.VK_RIGHT){
 					startFwdTransThread();
 				}
@@ -695,22 +696,21 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 				startFwdTransThread();
 			}
 		} else if (evt.getSource().equals(PlayAll)) {
-			if (!engine.isTransitionActive()) {
-				//startPlayThread();
-				playAll();
-			}
-		} else if (evt.getSource().equals(Pause)) {
 			if (Control.isPaused()) {
 				Control.setPaused(false);
-				Pause.setText("||");
-			} else {
-				Control.setPaused(true);
-				Pause.setText("[||]");
 			}
+			if (!engine.isTransitionActive()) {
+				
+				//startPlayThread();
+				playAll();
+			} else {
+					Control.setPaused(true);
+				}
 		} else if (evt.getSource().equals(PrevSlice)) {
 			if (!engine.isTransitionActive()) {
 				startRevTransThread();
-			}
+			} 
+			
 		} else if (evt.getSource().equals(ViewOptions)) {
 			graphicsSettings.showDialog();
 			updateDisplay();
@@ -786,6 +786,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 			}
 		}
 		recordBrowseSettings();
+		controlePane.requestFocusInWindow();
 	}
 
 	/**
@@ -964,6 +965,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 			mover.endMoveNodes();
 			mover = null;
 			MoveNodes.setText("Move Nodes");
+			controlePane.requestFocusInWindow();
 		}
 	}
 	
@@ -1043,6 +1045,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		
 		// now ask the network to redraw isteslf
 		updateDisplay();
+		controlePane.requestFocusInWindow();
 	}
 
 	/**
