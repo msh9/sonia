@@ -4,6 +4,7 @@ import java.awt.*;
 import java.awt.font.*;
 import java.awt.dnd.DropTarget;
 import java.awt.event.*;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.*;
@@ -100,7 +101,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 
 	private JButton PauseButton;
 
-	private JButton MovieButton;
+	private JButton HelpButton;
 
 	// private JButton SaveButton;
 
@@ -131,7 +132,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		LoadButton = new JButton("Load Files...");
 		LayoutButton = new JButton("Create Layout...");
 		PauseButton = new JButton("Pause");
-		MovieButton = new JButton("Export Movie ...");
+		HelpButton = new JButton("Help ...");
 		// SaveButton = new JButton("Save to File...");
 		statusText = new JTextArea(
 				"   Welcome to SoNIA "
@@ -139,7 +140,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 						+ " (code date "
 						+ SoniaController.CODE_DATE
 						+ ")\n"
-						+ "   For help and information, please visit http://sonia.stanford.edu"
+						+ "   For help and information, please visit http://sonia.wiki.sourceforge.net"
 						+ "  or send questions/bugs to sonia-users@lists.sourceforge.net",
 				1, 25);
 		// StatusText.setBackground(Color.white);
@@ -196,13 +197,13 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		c.weightx = 0.1;
 		c.weighty = 0.1;
 		menuPane.add(LayoutButton, c);
-//		c.gridx = 0;
-//		c.gridy = 2;
-//		c.gridwidth = 1;
-//		c.gridheight = 1;
-//		c.weightx = 0.1;
-//		c.weighty = 0.1;
-//		menuPane.add(PauseButton, c);
+		c.gridx = 0;
+		c.gridy = 2;
+		c.gridwidth = 1;
+		c.gridheight = 1;
+		c.weightx = 0.1;
+		c.weighty = 0.1;
+		menuPane.add(HelpButton, c);
 		c.gridx = 0;
 		c.gridy = 3;
 		c.gridwidth = 3;
@@ -217,7 +218,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		LayoutButton.addActionListener(this);
 		PauseButton.addActionListener(this);
 		// SaveButton.addActionListener(this);
-		// MovieButton.addActionListener(this);
+		HelpButton.addActionListener(this);
 
 		getContentPane().setLayout(new BorderLayout());
 		JSplitPane jsp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, vsplit,
@@ -359,6 +360,9 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		} else if (evt.getActionCommand().equals("Resume")) {
 			control.setPaused(false);
 			PauseButton.setText("Pause");
+		} else if (evt.getSource().equals(HelpButton)) {
+			showStatus("Attempting to open http://sonia.wiki.sourceforge.net in web browser...");
+			openURL("http://sonia.wiki.sourceforge.net");
 		} else if (evt.getActionCommand().equals("Create Layout...")) {
 			// should launch this on a new thread?
 			control.createNewLayout();
@@ -429,6 +433,37 @@ public class SoniaInterface extends JFrame implements WindowListener,
 	}
 
 	public void windowOpened(WindowEvent evt) {
+	}
+	
+	public void openURL(String url) {
+		final String errMsg = "Error attempting to launch web browser";
+		String osName = System.getProperty("os.name");
+		try {
+			if (osName.startsWith("Mac OS")) {
+				Class fileMgr = Class.forName("com.apple.eio.FileManager");
+				Method openURL = fileMgr.getDeclaredMethod("openURL",
+						new Class[] { String.class });
+				openURL.invoke(null, new Object[] { url });
+			} else if (osName.startsWith("Windows"))
+				Runtime.getRuntime().exec(
+						"rundll32 url.dll,FileProtocolHandler " + url);
+			else { // assume Unix or Linux
+				String[] browsers = { "firefox", "opera", "konqueror",
+						"epiphany", "mozilla", "netscape" };
+				String browser = null;
+				for (int count = 0; count < browsers.length && browser == null; count++)
+					if (Runtime.getRuntime().exec(
+							new String[] { "which", browsers[count] })
+							.waitFor() == 0)
+						browser = browsers[count];
+				if (browser == null)
+					throw new Exception("Could not find web browser");
+				else
+					Runtime.getRuntime().exec(new String[] { browser, url });
+			}
+		} catch (Exception e) {
+			control.showError(errMsg + ":\n" + e.getLocalizedMessage());
+		}
 	}
 
 	
