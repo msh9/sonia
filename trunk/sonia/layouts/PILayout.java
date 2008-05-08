@@ -6,6 +6,7 @@ import java.util.*;
 
 import sonia.LayoutSlice;
 import sonia.LayoutUtils;
+import sonia.LongTask;
 import sonia.NetUtils;
 import sonia.SoniaController;
 import sonia.SoniaLayoutEngine;
@@ -82,7 +83,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  * in a consistent fashion as they move towards eachother.
 
  */
-public class PILayout implements NetLayout, Runnable
+public class PILayout implements NetLayout, LongTask
 {
   private SoniaController control;
   private SoniaLayoutEngine engine;
@@ -99,6 +100,7 @@ public class PILayout implements NetLayout, Runnable
   private double selfWeight = 1;
   private int iterations = 6;
   private int passes = 0;
+  private HashSet listeners = new HashSet();
   
   public static final String ITERS = "iterations";
   public static final String SELF_WEIG = "selfWeight";
@@ -121,6 +123,7 @@ public class PILayout implements NetLayout, Runnable
 
   public void applyLayoutTo(LayoutSlice sl,int w, int h, ApplySettings set)
   {
+	
     slice = sl;
     settings = set;
     width = w;
@@ -161,16 +164,19 @@ public class PILayout implements NetLayout, Runnable
     //call the thread to go into the loop
     //threading stuff, to make this run indepent of the displays
    //make a new thread of this
-   Thread layoutRunner = new Thread(this,"PILayout loop");
-   layoutRunner.setPriority(10);
-    layoutRunner.start();
+	  run();
+  // Thread layoutRunner = new Thread(this,"PILayout loop");
+   //layoutRunner.setPriority(10);
+   // layoutRunner.start();
   }
 
   public void run()
   {
+	  noBreak = true;
 
     while ((passes < iterations) & noBreak)
     {
+  
       double minRad = Double.parseDouble(settings.getProperty(MIN_RAD));
       if (minRad > 0.0)
       {
@@ -201,10 +207,11 @@ public class PILayout implements NetLayout, Runnable
         engine.updateDisplays();
 
       }
+      LayoutUtils.applyCoordsToSlice(xCoords.toArray(),yCoords.toArray(),slice);
       passes++;
-      //attempt to let redraws of other windows, pause, etc
-      Thread.yield();
+     
     }
+   noBreak = false;
    engine.finishLayout(settings,this,slice,width, height);
   }
 
@@ -226,7 +233,7 @@ public class PILayout implements NetLayout, Runnable
           distance = Math.sqrt((newX[i]-newX[j])*(newX[i]-newX[j]) +
                             (newY[i]-newY[j])*(newY[i]-newY[j]));
           //debug
-          System.out.println("distance "+distance);
+          System.out.println("adjusting close nodes, distance "+distance);
           if (distance < minRad)
           {
             int[] pair = {i,j};
@@ -325,5 +332,42 @@ public class PILayout implements NetLayout, Runnable
   {
     //need to get rid of layout settigns dialog?
   }
+
+public String getTaskName() {
+	return "Applying Moody's Peer Influence layout";
+}
+
+public void stop() {
+	noBreak = false;
+	
+}
+
+public String getStatusText() {
+	return null;
+}
+
+public boolean isDurationKnown() {
+	return true;
+}
+
+public int maxSteps() {
+	return iterations;
+}
+
+public int currentStep() {
+	return passes;
+}
+
+public boolean isError() {
+	return slice.isError();
+}
+
+public boolean isDone() {
+	return slice.isLayoutFinished();
+}
+
+public void addTaskEventListener(Object listener) {
+	listeners.add(listener);
+}
 
 }

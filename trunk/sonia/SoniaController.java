@@ -89,7 +89,7 @@ import cern.colt.matrix.impl.SparseDoubleMatrix2D;
 public class SoniaController implements Runnable{
 	public static final String CODE_DATE = "2007-12-21";
 
-	public static final String VERSION = "1.2.0";
+	public static final String VERSION = "1.2.1";
 
 	private SoniaInterface ui;
 
