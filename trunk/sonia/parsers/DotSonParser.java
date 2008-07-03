@@ -1363,7 +1363,7 @@ public class DotSonParser implements ClusterParser {
 				} else {
 					String error = "Unable to link FromId on line "
 							+ reader.getLineNumber()
-							+ "column "
+							+ " column "
 							+ fromKey
 							+ " : "
 							+ "There is no AlphaID (node) corresponding to FromID "
@@ -1381,7 +1381,7 @@ public class DotSonParser implements ClusterParser {
 					// make sure there is a corresponding ID
 					if (!idSet.contains(ID)) {
 						String error = "Unable to link FromId on line "
-								+ reader.getLineNumber() + "column " + fromKey
+								+ reader.getLineNumber() + " column " + fromKey
 								+ " : "
 								+ "There is no NodeId corresponding to FromID "
 								+ fromId;
@@ -1437,7 +1437,7 @@ public class DotSonParser implements ClusterParser {
 				} else {
 					String error = "Unable to link ToId on line "
 							+ reader.getLineNumber()
-							+ "column "
+							+ " column "
 							+ toKey
 							+ " : "
 							+ "There is no AlphaID (node) corresponding to ToId "
@@ -1453,7 +1453,7 @@ public class DotSonParser implements ClusterParser {
 					// make sure there is a corresponding ID
 					if (!idSet.contains(ID)) {
 						String error = "Unable to link ToId on line "
-								+ reader.getLineNumber() + "column "
+								+ reader.getLineNumber() + " column "
 								+ DotSonColumnMap.TO_ID + " : "
 								+ "There is no NodeId corresponding to ToId "
 								+ toId;
@@ -1791,6 +1791,7 @@ public class DotSonParser implements ClusterParser {
 
 	private Color parseColorName(String text) throws IOException {
 		// TODO: extend color names to full list from pajek?
+		// TODO: extend color names to parse html #FFFFFF colors
 		Color theColor = Color.white;
 		if (text.equalsIgnoreCase("Black")) {
 			theColor = Color.black;
@@ -1905,5 +1906,12 @@ public class DotSonParser implements ClusterParser {
 
 	public Vector getClusterList() {
 		return clusterList;
+	}
+	
+	public int getLastLineNum(){
+		if (reader != null){
+			return reader.getLineNumber();
+		}
+		return -1;
 	}
 }
