@@ -11,6 +11,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import sonia.parsers.DotSonParser;
+import sonia.song.filters.AllProblemFilter;
+import sonia.song.filters.CleaningFilter;
+import sonia.song.filters.SqlDateToDecimal;
 
 
 /**
@@ -46,6 +49,9 @@ public class Getter {
 	private ArrayList<String> nodeHeaders = new ArrayList<String>();
 
 	private ArrayList<String> arcHeaders  = new ArrayList<String>();
+	
+	private int fromCol = -1;
+	private int toCol = -1;
 
 	private String currentNet = "";
 
@@ -57,11 +63,17 @@ public class Getter {
 	
 	private ArrayList<DataProblem> problems = new ArrayList<DataProblem>();
 	
+	private ArrayList<CleaningFilter> knownFilters = new ArrayList<CleaningFilter>();
+	
 	public Getter() {
+		
 	}
 
 	public Getter(SonGUI gui) {
 		ui = gui;
+//		initialize the list of known filters
+		knownFilters.add(new AllProblemFilter());
+		knownFilters.add(new SqlDateToDecimal(this));
 	}
 
 	/**
@@ -78,8 +90,9 @@ public class Getter {
 		// get the arcAttr query
 		// try to run it
 		ResultSet arcs = runQuery(arcQuery);
-		int fromCol = -1;
-		int toCol = -1;
+		fromCol = -1;
+		toCol = -1;
+		nodeIds = new HashSet<String>();
 		try {
 			ResultSetMetaData arcsMeta = arcs.getMetaData();
 			int numCols = arcsMeta.getColumnCount();
@@ -87,37 +100,36 @@ public class Getter {
 			// check that FromId and ToId are defined as column names
 			// and also store column names in list of headers
 			arcHeaders.clear();
-			for (int c = 1; c <= numCols; c++) {
-				arcHeaders.add(arcsMeta.getColumnLabel(c));
-				if (arcsMeta.getColumnLabel(c).equals("FromId")) {
+			for (int c = 0; c < numCols; c++) {
+				arcHeaders.add(arcsMeta.getColumnLabel(c+1));
+				if (arcsMeta.getColumnLabel(c+1).equals("FromId")) {
 					fromCol = c;
 				}
-				if (arcsMeta.getColumnLabel(c).equals("ToId")) {
+				if (arcsMeta.getColumnLabel(c+1).equals("ToId")) {
 					toCol = c;
 				}
 			}
-			if (fromCol < 1 | toCol < 1) {
+			if (fromCol < 0 | toCol < 0) {
 				error("Arcs query did not contain columns for both 'FromId' and 'ToId'");
 				return (false);
 			}
 			// store results in arcData (too bad we don't yet know how big it
 			// is...
 			arcData.clear(); 
-			nodeIds = new HashSet<String>();
 			int arcId = 0;
 			// process each row
 			while (arcs.next()) {
 				String[] row = new String[numCols];
 				// loop over cols
-				for (int i = 1; i <= numCols; i++) {
-					row[i - 1] = arcs.getString(i);
+				for (int i = 0; i < numCols; i++) {
+					row[i] = arcs.getString(i+1).trim();
 				}
 				// add any new ids to the list
-				if (!nodeIds.contains(row[fromCol - 1])) {
-					nodeIds.add(row[fromCol - 1]);
+				if (!nodeIds.contains(row[fromCol])) {
+					nodeIds.add(row[fromCol]);
 				}
-				if (!nodeIds.contains(row[toCol - 1])) {
-					nodeIds.add(row[toCol - 1]);
+				if (!nodeIds.contains(row[toCol])) {
+					nodeIds.add(row[toCol]);
 				}
 				arcData.add(row);
 				arcId++;
@@ -141,24 +153,22 @@ public class Getter {
 				// find where the node id is in the query
 				int replaceIndex = nodePropsQuery.indexOf(nodeIdTag);
 				if (replaceIndex < 0) {
-					error("node properties query does not contain '"
+					warn("node properties query does not contain '"
 							+ nodeIdTag
 							+ "' to indicate where ids should be inserted");
-					return false;
 				}
 				nodeData.clear();
 				//need to figure out how many cols returning and col names
 				//so first run a fake query that should return only the columns
 				String propQuery = nodePropsQuery.replace(nodeIdTag, "") + " limit 0";
 				ResultSet nodesCols = runQuery(propQuery);
-				//debug
-				System.out.println("node props q "+propQuery);
 				ResultSetMetaData nodesMeta = nodesCols.getMetaData();
 				int numCols = nodesMeta.getColumnCount() + 1; // +1 for alpha id added earlier
 				//put the col names in the list of headers
 				for (int h=1; h<numCols; h++){
 					nodeHeaders.add(nodesMeta.getColumnLabel(h));
 				}
+				nodesCols.close();
 				// loop over each id
 				int rowCounter = 0;
 				Iterator<String> nodeIter = nodeIds.iterator();
@@ -180,7 +190,7 @@ public class Getter {
 						String[] row = new String[numCols];
 						row[0] = id;
 						nodeData.add(row);
-						DataProblem prob = new DataProblem(DataProblem.NO_DATA_FOR_NODE_ID,
+						DataProblem prob = new DataProblem(DataProblem.NODES,DataProblem.NO_DATA_FOR_NODE_ID,
 								"query returned no property for nodeId '"+id+"'",rowCounter,propQuery);
 						prob.setRef(row);
 						problems.add(prob);
@@ -192,17 +202,108 @@ public class Getter {
 			}
 		}
 		
-		} catch (SQLException e){
+		} catch (Exception e){
 			error("running property query for nodes: "+e.getClass()+" "+e.getMessage());
 		}
 
 		formatSonFile();
-
+		
+		
 		if (ui != null) {
+			ui.showSonPreview(currentNet);
+		}
+		if (ui != null & problems.size() > 0) {
 			ui.showProblem(null);
 		}
 		status("Done. ("+problems.size()+" problems)");
 		return true;
+	}
+	
+	public void validateData(){
+		status("Validating data...");
+		//recompute the set of node ids to match what is in the node data
+		problems.clear();
+		nodeIds.clear();
+		int rowCount = 0;
+		Iterator<String[]> nodeIter = nodeData.iterator();
+		while(nodeIter.hasNext()){
+			String[] row = nodeIter.next();
+			nodeIds.add(row[0]);
+			
+			//check for blank fileds
+			for (int i = 0; i < row.length; i++) {
+				if (row[i] == null | row[i].equals("")){
+					DataProblem prob = new DataProblem(DataProblem.NODES,DataProblem.BLANK_FIELD,
+							"Row "+rowCount+" contains a blank or null field",
+							rowCount,"");
+					prob.setRef(row);
+					problems.add(prob);
+					break;
+				}
+			}
+			rowCount++;
+		}
+		//check for arcs refering to missing nodes
+		Iterator<String[]> arcIter = arcData.iterator();
+	     rowCount = 0;
+		while (arcIter.hasNext()){
+			String[] row = arcIter.next();
+			if (!nodeIds.contains(row[fromCol])){
+				DataProblem prob = new DataProblem(DataProblem.ARCS,DataProblem.NO_NODE_FOR_FROM_ID,
+						"FromId '"+row[fromCol]+"' is not present in the set of nodeids",
+						rowCount,"");
+				prob.setRef(row);
+				problems.add(prob);
+			}
+			if (!nodeIds.contains(row[toCol])){
+				DataProblem prob = new DataProblem(DataProblem.ARCS,DataProblem.NO_NODE_FOR_TO_ID,
+						"ToId '"+row[toCol]+"' is not present in the set of nodeids",
+						rowCount,"");
+				problems.add(prob);
+				prob.setRef(row);
+			}
+//			check for blank fileds
+			for (int i = 0; i < row.length; i++) {
+				if (row[i] == null | row[i].equals("")){
+					DataProblem prob = new DataProblem(DataProblem.ARCS,DataProblem.BLANK_FIELD,
+							"Row "+rowCount+" contains a blank or null field",
+							rowCount,"");
+					prob.setRef(row);
+					problems.add(prob);
+					break;
+				}
+			}
+			rowCount++;
+		}
+		status("Data validation found "+problems.size()+" problems.");
+	}
+	
+	public void filterData(Object[] filters){
+		status("Running "+filters.length+" filters...");
+		//for each filter on the list
+		for (int f = 0; f< filters.length; f++){
+			CleaningFilter filter = (CleaningFilter)filters[f];
+			//pass the filter the data and the list of problems
+			if (filter.isActive()){
+				status("   "+filter.getName());
+				//don't know if it likes nodes or arcs, so do both
+				if (filter.likesArcs()){
+					filter.process(arcData, problems,true);
+				}
+				if (filter.likesNodes()){
+					filter.process(nodeData, problems,false);
+				}
+			}
+		}
+		validateData();
+		//updatethe preview also
+		formatSonFile();
+		if (ui != null) {
+			ui.showSonPreview(currentNet);
+		}
+		if (ui != null & problems.size() > 0) {
+			ui.showProblem(null);
+		}
 	}
 
 	/**
@@ -345,7 +446,7 @@ public class Getter {
 		} catch (IOException e) {
 			error("unable to write .son file "+outfile.getAbsolutePath()+":"+e.getMessage());
 		}
-	
+		status("Saved file as "+outfile.getAbsolutePath());
 	}
 
 	public void status(String status) {
@@ -402,20 +503,30 @@ public class Getter {
 	 *
 	 */
 	public void validateSon(){
+		status("Validating .son output...");
 		//create a file and write out to it
-		String tempFile = "songTempCache.son";
-		saveAsSon(tempFile);
 		DotSonParser parser = new DotSonParser();
 		try {
+			String tempFile = File.createTempFile("temp", ".son").getAbsolutePath();
+			saveAsSon(tempFile);
 			parser.parseNetwork(tempFile);
 			//TODO:delete the temp file
+			status("Validation parsed "+parser.getNumNodeEvents()+" node events and "+parser.getNumArcEvents()+" arc events, no errors found");
 		} catch (IOException e) {
-			status(" validation error: "+e.getMessage());
+			status("validation problem: "+e.getMessage());
 			int lineNum = parser.getLastLineNum();
 			if (ui != null){
 				ui.showSonPreview(currentNet,lineNum);
 			}
 		}
+	}
+	
+	/**
+	 * returns a list of all the know filters
+	 * @return
+	 */
+	public ArrayList<CleaningFilter> getAllFilters(){
+		return knownFilters;
 	}
 
 	/**
@@ -451,5 +562,6 @@ public class Getter {
 	public ArrayList<DataProblem> getProblems() {
 		return problems;
 	}
+
 
 }

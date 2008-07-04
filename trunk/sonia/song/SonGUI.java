@@ -10,10 +10,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JEditorPane;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -31,6 +35,9 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableModel;
+
+import sonia.SoniaController;
+import sonia.song.filters.CleaningFilter;
 
 /**
  * user interface for SonG program for constructing sonia .son files from a
@@ -74,6 +81,8 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 	private JTextArea sonPreview;
 
 	private JButton saveSon;
+	
+	private JButton launchSonia;
 
 	private JButton validateSon;
 
@@ -100,6 +109,12 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 	private JScrollPane problemScroller;
 
 	private ProblemListModel problemModel;
+	
+	private JPanel filterPanel;
+	
+	private JList filterList;
+	
+	private JButton runFilter;
 
 	private JTabbedPane tabber;
 
@@ -125,15 +140,15 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		host.setBorder(new TitledBorder("Host Address"));
 		c.gridy = 0;
 		connectPanel.add(host, c);
-		user = new JTextField("oilchange", 10);
+		user = new JTextField("", 10);
 		user.setBorder(new TitledBorder("User Name"));
 		c.gridy = 1;
 		connectPanel.add(user, c);
-		password = new JTextField("oilchange", 10);
+		password = new JTextField("", 10);
 		password.setBorder(new TitledBorder("Password"));
 		c.gridy = 2;
 		connectPanel.add(password, c);
-		dbName = new JTextField("test", 10);
+		dbName = new JTextField("", 10);
 		dbName.setBorder(new TitledBorder("Database Name"));
 		c.gridy = 3;
 		connectPanel.add(dbName, c);
@@ -162,8 +177,7 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		queryPanel = new JPanel(new GridBagLayout());
 		queryPanel.setBorder(new TitledBorder("Queries to build network file"));
 		arcsQuery = new JTextArea(
-				"select actor as FromId, target as ToId, year as StartTime,"
-						+ " death as ArcWeight from events", 10, 40);
+				"relationship query here", 10, 50);
 		JScrollPane arcsQueryScroller = new JScrollPane(arcsQuery);
 		arcsQueryScroller
 				.setBorder(new TitledBorder("Arc Relationships Query"));
@@ -187,7 +201,7 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		queryPanel.add(generateNodeset, c);
 
 		nodePropsQuery = new JTextArea(
-				"select * from actors where actor_id ='$NODEID'", 5, 40);
+				"", 5, 50);
 		nodePropsScroller = new JScrollPane(nodePropsQuery);
 		nodePropsScroller.setBorder(new TitledBorder(
 				"Node Properties Query (use " + Getter.nodeIdTag
@@ -255,8 +269,20 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		c.gridwidth = 0;
 		dataPanel.add(problemScroller, c);
 		problemScroller.setVisible(false);
+		
+	//FILTERS pane to hold data cleaning operations	
+		filterPanel = new JPanel();
+		filterPanel.setBorder(new TitledBorder("Data Cleaning Filters"));
+		FilterListModel filterModel = new FilterListModel(song.getAllFilters());
+		filterList = new JList(filterModel);
+		JScrollPane filterScroller = new JScrollPane(filterList);
+		filterScroller.setBorder(new TitledBorder("Availible Filters"));
+		filterPanel.add(filterScroller, BorderLayout.CENTER);
+		runFilter = new JButton("Run Filters");
+		runFilter.addActionListener(this);
+		filterPanel.add(runFilter, BorderLayout.SOUTH);
 
-		// pane to hold the preview of the file to be written
+		//PREVIEW pane to hold the preview of the file to be written
 		previewPanel = new JPanel();
 		sonPreview = new JTextArea(40, 90);
 		Font previewFont = new Font("Monospaced", Font.PLAIN, 10);
@@ -272,11 +298,15 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		saveSon = new JButton("Save as .son file");
 		saveSon.addActionListener(this);
 		previewPanel.add(saveSon, BorderLayout.PAGE_END);
+		launchSonia = new JButton("Launch in SoNIA");
+		launchSonia.addActionListener(this);
+		previewPanel.add(launchSonia, BorderLayout.PAGE_END);
 
 		// tabber
 		tabber = new JTabbedPane();
 		tabber.addTab("Queries", queryPanel);
 		tabber.addTab("Data", dataPanel);
+		tabber.addTab("Filters", filterPanel);
 		tabber.addTab("Preview", previewPanel);
 		c.gridx = 1;
 		c.gridy = 0;
@@ -335,10 +365,34 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 			// TODO:make sure any edits have been saved back
 			song.validateSon();
 		} else if (e.getSource() == saveSon) {
-
+		    String filename = ".son";
+		    JFileChooser fc = new JFileChooser(new File(filename));
+		    // Show save dialog; this method does not return until the dialog is closed
+		    fc.showSaveDialog(frame);
+		    String pickedFile = fc.getSelectedFile().getAbsolutePath();
+		    if (pickedFile != null){
+		    	song.saveAsSon(pickedFile);
+		    }
+		    
+		} else if (e.getSource() == runFilter){
+			song.filterData(filterList.getSelectedValues());
 		} else if (e.getSource() == generateNodeset) {
-
+			
+		} else if (e.getSource() == launchSonia){
+			//launch sonia as an external java application
+			//TODO: do this by passing the string or data source diretly
+			try {
+				String tempfile = File.createTempFile("temp", ".son").getAbsolutePath();
+				song.saveAsSon(tempfile);
+				String[] args = new String[]{"file:"+tempfile};
+				SoniaController.main(args);
+			} catch (IOException e1) {
+				song.error("Unable to create temp file to pass data to SoNIA");
+			}
+			song.status("Launched SoNIA with .son data. (Quitting sonG will also quit SoNIA)");
+			
 		}
+
 		updateUI();
 	}
 
@@ -352,13 +406,12 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		tabber.setSelectedComponent(dataPanel);
 		if (problem != null) {
 			// figure out what kind of error it is
-			if (problem.getType() == DataProblem.NO_DATA_FOR_NODE_ID) {
+			if (problem.whereFound() == DataProblem.NODES) {
 				// hilite the selected row.
 				nodeDataTable.requestFocusInWindow();
 				nodeDataTable.changeSelection(problem.getRowNumber(), -1,
 						false, false);
-			} else if (problem.getType() == DataProblem.NO_NODE_FOR_FROM_ID
-					| problem.getType() == DataProblem.NO_NODE_FOR_TO_ID) {
+			} else if (problem.whereFound() == DataProblem.ARCS) {
 				// hilite the selected row.
 				arcDataTable.requestFocusInWindow();
 				arcDataTable.changeSelection(problem.getRowNumber(), -1, false,
