@@ -110,7 +110,7 @@ import sonia.settings.PropertySettings;
 * is why the .net parser throws up the dialog to ask "parse times as integers."
 * If this is set to true, the end times will all have 0.99999 added to them, so
 * that the interval 1-2 will become 1.0-2.99999 instead of 1.0 to 2.0.
-* @version $Revision: 1.7 $ $Date: 2007-10-16 05:41:50 $
+* @version $Revision: 1.8 $ $Date: 2008-07-04 19:35:43 $
 * @author Skye Bender-deMoll e-mail skyebend@santafe.edu
 */
 public class DotNetParser extends Object implements Parser, ActionListener
@@ -664,7 +664,7 @@ public class DotNetParser extends Object implements Parser, ActionListener
            if (tag.startsWith("["))
            {
              //strip off the braces
-             time = time.substring(tag.indexOf("[")+1,tag.indexOf("]"));
+             time = tag.substring(tag.indexOf("[")+1,tag.indexOf("]"));
              //find out if there are commas, meaning we have to add this line
              //several times
              if (time.indexOf(",") > 0)
@@ -736,7 +736,7 @@ public class DotNetParser extends Object implements Parser, ActionListener
       }
       catch (NumberFormatException doubleParseEx)
       {
-       String error = "Line "+currentLineNum+" Unable to parse start time coordinate";
+       String error = "Line "+currentLineNum+" Unable to parse start time coordinate:\""+time+"\"";
        throw(new IOException(error));
       }
     return startTime;
