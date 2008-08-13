@@ -535,10 +535,6 @@ public class Getter {
 	public static void main(String[] args) {
 		Getter song = new Getter();
 		song.status("Launched SonG");
-		song.connectToDB("192.168.2.2", "test", "oilchange", "oilchange");
-		ResultSet result = song.runQuery("select * from actors;");
-		song.status(song.resultAsString(result));
-		song.closeDB();
 		System.exit(1);
 
 	}
