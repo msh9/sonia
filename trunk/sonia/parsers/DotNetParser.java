@@ -110,7 +110,7 @@ import sonia.settings.PropertySettings;
 * is why the .net parser throws up the dialog to ask "parse times as integers."
 * If this is set to true, the end times will all have 0.99999 added to them, so
 * that the interval 1-2 will become 1.0-2.99999 instead of 1.0 to 2.0.
-* @version $Revision: 1.8 $ $Date: 2008-07-04 19:35:43 $
+* @version $Revision: 1.9 $ $Date: 2008-10-02 04:05:58 $
 * @author Skye Bender-deMoll e-mail skyebend@santafe.edu
 */
 public class DotNetParser extends Object implements Parser, ActionListener
