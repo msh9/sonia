@@ -69,6 +69,8 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 	private JTextArea arcsQuery;
 
 	private JCheckBox generateNodeset;
+	
+	private JCheckBox generateDateset;
 
 	private JTextArea nodePropsQuery;
 
@@ -159,7 +161,7 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 
 		// status
 		statusText = new JTextArea(
-				"Connect to database and enter relationship queries.", 3, 20);
+				"Connect to database and enter relationship queries.", 4, 20);
 		statusText.setEditable(false);
 		statusText.setWrapStyleWord(true);
 		JScrollPane statusScroller = new JScrollPane(statusText);
@@ -183,7 +185,7 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 				.setBorder(new TitledBorder("Arc Relationships Query"));
 		c.gridx = 0;
 		c.gridy = 0;
-		c.gridwidth = 2;
+		c.gridwidth = 3;
 		queryPanel.add(arcsQueryScroller, c);
 		runQuery = new JButton("Run Queries");
 		runQuery.addActionListener(this);
@@ -199,6 +201,13 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		c.gridy = 1;
 		c.gridwidth = 1;
 		queryPanel.add(generateNodeset, c);
+		
+		generateDateset = new JCheckBox("Also generate times ("+Getter.timeIdTag+")",false);
+		generateDateset.addActionListener(this);
+		c.gridx = 2;
+		c.gridy = 1;
+		c.gridwidth = 1;
+		queryPanel.add(generateDateset, c);
 
 		nodePropsQuery = new JTextArea(
 				"", 5, 50);
@@ -208,7 +217,7 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 						+ " as placeholder for NodeId)"));
 		c.gridx = 0;
 		c.gridy = 2;
-		c.gridwidth = 2;
+		c.gridwidth = 3;
 		queryPanel.add(nodePropsScroller, c);
 
 		// this one is hidden
@@ -217,7 +226,7 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		nodesScroller.setBorder(new TitledBorder("Node Set Query"));
 		c.gridx = 0;
 		c.gridy = 3;
-		c.gridwidth = 2;
+		c.gridwidth = 3;
 		queryPanel.add(nodesScroller, c);
 		// nodesScroller.setVisible(false);
 
@@ -359,8 +368,13 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 					password.getText());
 			password.setText("");
 		} else if (e.getSource() == runQuery) {
-			song.getNetwork(arcsQuery.getText(), generateNodeset.isSelected(),
-					nodePropsQuery.getText());
+			if (generateNodeset.isSelected()){
+				song.getNetwork(arcsQuery.getText(), generateNodeset.isSelected(),
+					nodePropsQuery.getText(),generateDateset.isSelected());
+			} else {
+				song.getNetwork(arcsQuery.getText(), generateNodeset.isSelected(),
+						nodesQuery.getText(),generateDateset.isSelected());
+			}
 		} else if (e.getSource() == validateSon) {
 			// TODO:make sure any edits have been saved back
 			song.validateSon();
@@ -429,9 +443,11 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		if (generateNodeset.isSelected()) {
 			nodePropsScroller.setVisible(true);
 			nodesScroller.setVisible(false);
+			generateDateset.setVisible(true);
 		} else {
 			nodePropsScroller.setVisible(false);
 			nodesScroller.setVisible(true);
+			generateDateset.setVisible(false);
 		}
 		queryPanel.validate();
 
