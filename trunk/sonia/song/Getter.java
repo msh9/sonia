@@ -161,7 +161,7 @@ public class Getter {
 				// check if a query was passed in
 				// if blank, use a default
 				if (nodePropsQuery.equals("")) {
-					nodePropsQuery = "select '$NODEID' as Label";
+					nodePropsQuery = "select \"$NODEID\" as Label";
 					status("Using default node query: select '$NODEID' as Label");
 				}
 
