@@ -22,6 +22,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.IllegalPathStateException;
+import java.awt.geom.Rectangle2D;
 import java.awt.geom.RectangularShape;
 import java.util.HashMap;
 
@@ -33,10 +34,15 @@ import sonia.RenderSlice;
 public class Graphics2DRender implements Render {
 
 	private GeneralPath arcLine = new GeneralPath(); // the path to draw
+	
 
 	private GeneralPath headPath = new GeneralPath();
 
 	private Graphics2D graphics;
+	
+	private float transparency = 1.0f; //holds the last transparency used 
+	
+	private AlphaComposite currentComposite;
 
 	// a flyweight for holding the various strokes
 	private static HashMap strokeTable = new HashMap();
@@ -102,13 +108,17 @@ public class Graphics2DRender implements Render {
 	}
 
 	public void paintNodeLabels(NodeAttribute node, double xCoord,
-			double yCoord, double scaleFact, boolean showLabels, boolean showId) {
+			double yCoord, double scaleFact, boolean showLabels, boolean showId, 
+			float bgTrans) {
+		//float bgTrans = 0.5f;
 		Color startColor = graphics.getColor();
 		Font startFont = graphics.getFont();
 		// rough label
 		String printLabel = "";
-		graphics.setColor(node.getLabelColor());
+		
 		graphics.setFont(startFont.deriveFont(node.getLabelSize()));
+		
+		
 		if (showId) {
 			printLabel = printLabel + node.getNodeId();
 			// if both are on, show with a ":" seperator
@@ -119,17 +129,33 @@ public class Graphics2DRender implements Render {
 		if (showLabels) {
 			printLabel = printLabel + node.getNodeLabel();
 		}
+		
+		//figure out exactly whre string will be drawn
 		double nodeDrawSize = node.getNodeSize() * scaleFact;
-		graphics.drawString(printLabel,
-				(float) (xCoord + (nodeDrawSize / 2.0) + 2.0),
-				(float) (yCoord + node.getLabelSize() / 2.0));
+		double labX =  (xCoord + (nodeDrawSize / 2.0) + 2.0);
+		double labY = (yCoord + node.getLabelSize() / 2.0);
+//		if transparency set greater than 0, draw a translucent box behind label
+		if (bgTrans >0.0f){
+			Rectangle2D bgRect = graphics.getFontMetrics().getStringBounds(printLabel, graphics);
+			bgRect.setFrame(labX-1,labY-graphics.getFontMetrics().getAscent(),
+					bgRect.getWidth()+2,bgRect.getHeight()+2);
+			graphics.setColor(Color.white);
+			graphics.setComposite(AlphaComposite.getInstance(
+					AlphaComposite.SRC_OVER, bgTrans));
+			graphics.fill(bgRect);
+			//set the transparency back
+			graphics.setComposite(AlphaComposite.getInstance(
+					AlphaComposite.SRC_OVER, transparency));
+		}
+		graphics.setColor(node.getLabelColor());
+		graphics.drawString(printLabel,(float)labX,(float)labY);
 		graphics.setColor(startColor);
 		graphics.setFont(startFont);
 	}
 
 	public void paintArc(ArcAttribute arc, float widthFactor, double fromX,
 			double fromY, double toX, double toY, boolean flash,
-			boolean arrows, boolean labels) {
+			boolean arrows, boolean labels,boolean curvey) {
 		Color startColor = graphics.getColor();
 		float drawWidth = (float) arc.getArcWidth() * widthFactor;
 		graphics.setStroke(getStrokeForWidth(drawWidth, arc.isNegitive()));
@@ -138,8 +164,22 @@ public class Graphics2DRender implements Render {
 		// should correct for width of node (and length of arrow?)
 		// arcLine.setLine(fromX,fromY,toX,toY);
 		arcLine.reset();
-		arcLine.moveTo((float) fromX, (float) fromY);
-		arcLine.lineTo((float) toX, (float) toY);
+		if (!curvey){
+			//set up a straight line 
+	     	arcLine.moveTo((float) fromX, (float) fromY);
+	    	arcLine.lineTo((float) toX, (float) toY);
+		} else {
+			//set up a curving line
+			double theta = Math.atan((fromY-toY)/(fromX-toX));
+//			firgure how large the offset from centerline should be
+			double offset = ((fromY-toY)/Math.sin(theta))/10; 
+			
+			arcLine.moveTo((float) fromX, (float) fromY);
+	    	arcLine.quadTo((float)(offset*Math.sin(theta)+fromX+(toX-fromX)/2), 
+	    			(float)(offset*Math.cos(theta)+toY+(fromY-toY)/2),
+	    			(float) toX, (float) toY);
+	    	//crap, still not quite right on the diagonals
+		}
 		graphics.draw(arcLine);
 		// graphics.fill(arcLine);
 
@@ -268,6 +308,7 @@ public class Graphics2DRender implements Render {
 	}
 
 	public void setTransparency(float trans) {
+		transparency = trans;
 		graphics.setComposite(AlphaComposite.getInstance(
 				AlphaComposite.SRC_OVER, trans));
 

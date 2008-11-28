@@ -62,7 +62,7 @@ public class GraphMLRender implements Render {
 	 */
 	public void paintArc(ArcAttribute arc, float widthFactor, double fromX,
 			double fromY, double toX, double toY, boolean flash,
-			boolean arrows, boolean labels) {
+			boolean arrows, boolean labels,boolean curvey) {
 		arcs.add(arc);
 
 	}
@@ -77,7 +77,7 @@ public class GraphMLRender implements Render {
 	 * ignored
 	 */
 	public void paintNodeLabels(NodeAttribute node, double xCoord,
-			double yCoord, double scaleFact, boolean showLabels, boolean showId) {
+			double yCoord, double scaleFact, boolean showLabels, boolean showId,float bgTrans) {
 	
 
 	}

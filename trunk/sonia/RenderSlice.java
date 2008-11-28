@@ -215,7 +215,8 @@ public class RenderSlice {
 				render.paintArc(arc, canvas.getArcWidthFact(), xCoords[fromId]
 						+ left, yCoords[fromId] + top, xCoords[toId] + left,
 						yCoords[toId] + top, arc.shouldFlash(), canvas
-								.isShowArrows(), canvas.isShowArcLabels() | canvas.isShowArcWeights());
+								.isShowArrows(), canvas.isShowArcLabels() | canvas.isShowArcWeights(),
+								canvas.drawCurvyArcs());
 				arc.setArcLabel(kludgeLabel);
 
 			} // end arc event loop
@@ -262,7 +263,7 @@ public class RenderSlice {
 			if (showLabels | showId) {
 				render.paintNodeLabels(node, xCoords[index] + left,
 						yCoords[index] + top, canvas.getNodeScaleFact(),
-						showLabels, showId);
+						showLabels, showId, canvas.getLabelBgTransVal());
 			}
 		}
 		

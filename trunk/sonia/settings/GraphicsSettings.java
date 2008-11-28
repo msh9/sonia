@@ -88,6 +88,12 @@ public class GraphicsSettings extends PropertySettings {
 	public static final String NODE_LABEL_FONTSIZE = "node label fontsize";
 	
 	/**
+	 * key for value indicating the opacity of background drawn behind node labels
+	 */
+	 
+	public static final String NODE_LABEL_BG_TRANS = "node label bg trans";
+	
+	/**
 	 * key indicating if nodes should be hidden. value NONE or ALL, etc..
 	 */
 	public static final String HIDE_NODES = "hide nodes";
@@ -107,6 +113,11 @@ public class GraphicsSettings extends PropertySettings {
 	 * key for value indicating if and how arrows should be drawn: none, arrow
 	 */
 	public static final String ARROW_STYLE = "arrow style";
+	
+	/**
+	 * flag indicating if arcs should be drawn straign (false) or curvy (true);
+	 */
+	public static final String ARCS_CURVY = "curvy arcs";
 	
 	
 	/**

@@ -39,13 +39,13 @@ public interface Render {
 
 	public void paintArc(ArcAttribute arc, float widthFactor, double fromX,
 			double fromY, double toX, double toY, boolean flash,
-			boolean arrows, boolean labels);
+			boolean arrows, boolean labels,boolean curvey);
 
 	public void paintNode(NodeAttribute node, double xCoord, double yCoord,
 			 double scaleFact);
 
 	public void paintNodeLabels(NodeAttribute node, double xCoord,
-			double yCoord, double scaleFact, boolean showLabels, boolean showId);
+			double yCoord, double scaleFact, boolean showLabels, boolean showId,float bgTrans);
 
 	public void paintStats(String stats);
 

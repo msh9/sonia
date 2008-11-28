@@ -330,12 +330,13 @@ public class SWFRender implements Render {
 
 	public void paintArc(ArcAttribute arc, float widthFactor, double fromX,
 			double fromY, double toX, double toY, boolean flash,
-			boolean arrows, boolean labels) {
+			boolean arrows, boolean labels,boolean curvey) {
 		// TODO: width factor not supported for swf arcs
 		// TODO: flash not supported for swf arcs
 		// TODO: arrows not supported for swf arcs
 		// TODO: labels not supported for swf arcs
 		// TODO: will multiple arcs draw correctly?
+		// TODO: curvey arcs not supported
 		try {
 			Instance inst = getSWFEdge(arc, fromX, fromY, toX, toY,
 					widthFactor, arrows);
@@ -372,7 +373,8 @@ public class SWFRender implements Render {
 	}
 
 	public void paintNodeLabels(NodeAttribute node, double xCoord,
-			double yCoord, double scaleFact, boolean showLabels, boolean showId) {
+			double yCoord, double scaleFact, boolean showLabels, boolean showId,float bgTrans) {
+				//TODO: Label background transparency not implemented for flash layout
 		// rough label
 		String printLabel = "";
 		if (showId) {

@@ -67,6 +67,7 @@ private Colormapper colormapper = null;
   private float arcWidthFact = 1.0f;
   private float arcTransVal = 0.5f;
   private float nodeTransVal = 0.5f;
+  private float nodeLabelBgTransVal = 0.5f;
   private float clusterTransVal = 0.5f;
   private float nodeScaleFact = 1.0f;
  // private boolean hideNodes = false;
@@ -260,6 +261,10 @@ public  void setRenderSlice(RenderSlice slice)
 //  {
 //    showArcLabels = onOff;
 //  }
+  
+  public boolean drawCurvyArcs(){
+	  return Boolean.parseBoolean(settings.getProperty(GraphicsSettings.ARCS_CURVY,"false"));
+  }
   public boolean isGhostSlice()
   {
      ghostSlice = Boolean.parseBoolean(settings.getProperty(GraphicsSettings.GHOST_SLICE));
@@ -376,6 +381,10 @@ public  void setRenderSlice(RenderSlice slice)
   public float getNodeTransVal()
   {
     return Float.parseFloat(settings.getProperty(GraphicsSettings.NODE_TRANSPARENCY,nodeTransVal+""));
+  }
+  public float getLabelBgTransVal()
+  {
+    return Float.parseFloat(settings.getProperty(GraphicsSettings.NODE_LABEL_BG_TRANS,nodeLabelBgTransVal+""));
   }
   public float getClusterTransVal()
   {

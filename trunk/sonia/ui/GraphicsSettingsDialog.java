@@ -132,7 +132,8 @@ public class GraphicsSettingsDialog {
 
 
 	private JTextField NodeTransField; // node transparency value
-
+    
+	private JTextField NodeLabelBgTransField; //transparency of background behind label
 
 
 	private JTextField ArcWidthFactorField;
@@ -148,6 +149,7 @@ public class GraphicsSettingsDialog {
 	// private JCheckBox ShowArcLabels;
 
 	private JComboBox ArcArrows;
+	private JCheckBox curveyArcs;
 
 	private JComboBox nodeLabels;
 
@@ -184,9 +186,9 @@ public class GraphicsSettingsDialog {
 		mainpanel.setBorder(new TitledBorder("Graphics Settings"));
 		generalPanel = new JPanel(new GridLayout(6,1));
 		generalPanel.setBorder(new TitledBorder("General Options:"));
-		nodesPanel = new JPanel(new GridLayout(6,1));
+		nodesPanel = new JPanel(new GridLayout(7,1));
 		nodesPanel.setBorder(new TitledBorder("Node Options:"));
-		arcsPanel = new JPanel(new GridLayout(5,1));
+		arcsPanel = new JPanel(new GridLayout(6,1));
 		arcsPanel.setBorder(new TitledBorder("Arc Options:"));
 		nodesPanel.setMinimumSize(new Dimension(150,arcsPanel.getHeight()));
 		clustersPanel = new JPanel(new GridLayout(2,2));
@@ -211,12 +213,15 @@ public class GraphicsSettingsDialog {
 		nodeLabels = new JComboBox(new String[] { GraphicsSettings.LABELS,
 				GraphicsSettings.IDS, GraphicsSettings.NONE });
 		nodeLabels.setBorder(new TitledBorder("Node labeling"));
+		NodeLabelBgTransField = new JTextField("0.5",3);
+		NodeLabelBgTransField.setBorder(new TitledBorder("Label backgnd trans"));
 		hideNodes = new JComboBox(new String[] { GraphicsSettings.NONE,
 				GraphicsSettings.ALL });
 		hideNodes.setBorder(new TitledBorder("Hide nodes"));
 		
 		ArcWidthFactorField = new JTextField("1.0", 4);
 		ArcWidthFactorField.setBorder(new TitledBorder("Arc width factor"));
+		curveyArcs = new JCheckBox("Draw curvy arcs");
 		NodeScaleFactorField = new JTextField("1.0", 4);
 		NodeScaleFactorField.setBorder(new TitledBorder("Node scale factor"));
 		nodeColorMap = new JCheckBox("Node Color Map...");
@@ -286,12 +291,14 @@ public class GraphicsSettingsDialog {
 		nodesPanel.add(nodeLabels);
 		nodesPanel.add(nodeColorMap);
 		nodesPanel.add(ShowLabelsField);
+		nodesPanel.add(NodeLabelBgTransField);
 		nodesPanel.add(hideNodes);
 
 		// arc options
 		arcsPanel.add(ArcTransField);
 		arcsPanel.add(ArcWidthFactorField);
 		arcsPanel.add(ArcArrows);
+		arcsPanel.add(curveyArcs);
 		arcsPanel.add(arcLabels);
 		arcsPanel.add(HideArcs);
 		
@@ -420,6 +427,8 @@ public class GraphicsSettingsDialog {
 				.getText().trim());
 		settings.put(GraphicsSettings.NODE_TRANSPARENCY, NodeTransField
 				.getText().trim());
+		settings.put(GraphicsSettings.NODE_LABEL_BG_TRANS, NodeLabelBgTransField
+				.getText().trim());
 		settings
 				.put(GraphicsSettings.NODE_LABELS, nodeLabels.getSelectedItem());
 		settings.put(GraphicsSettings.NODE_LABEL_CUTOFF, ShowLabelsField
@@ -430,6 +439,7 @@ public class GraphicsSettingsDialog {
 		settings.put(GraphicsSettings.ARCS_WIDTH_FACTOR, ArcWidthFactorField
 				.getText().trim());
 		settings.put(GraphicsSettings.ARROW_STYLE, ArcArrows.getSelectedItem());
+		settings.put(GraphicsSettings.ARCS_CURVY, curveyArcs.isSelected()+"");
 		settings.put(GraphicsSettings.ARC_LABELS, arcLabels.getSelectedItem());
 		settings.put(GraphicsSettings.HIDE_ARCS, HideArcs.getSelectedItem());
 		settings.put(GraphicsSettings.CLUSTER_TRANSPARENCY, clusterTrans.getText().trim());
@@ -464,6 +474,9 @@ public class GraphicsSettingsDialog {
 		NodeTransField.setText(settings.getProperty(
 				GraphicsSettings.NODE_TRANSPARENCY, NodeTransField.getText()
 						.trim()));
+		NodeLabelBgTransField.setText(settings.getProperty(
+				GraphicsSettings.NODE_LABEL_BG_TRANS, NodeLabelBgTransField.getText()
+						.trim()));
 		nodeLabels.setSelectedItem(settings.getProperty(
 				GraphicsSettings.NODE_LABELS, (String) nodeLabels
 						.getSelectedItem()));
@@ -482,6 +495,8 @@ public class GraphicsSettingsDialog {
 		ArcArrows.setSelectedItem(settings.getProperty(
 				GraphicsSettings.ARROW_STYLE, (String) ArcArrows
 						.getSelectedItem()));
+		curveyArcs.setSelected(Boolean.parseBoolean(settings.getProperty(
+				GraphicsSettings.ARCS_CURVY, curveyArcs.isSelected() + "")));
 		arcLabels.setSelectedItem(settings.getProperty(
 				GraphicsSettings.ARC_LABELS, (String) arcLabels
 						.getSelectedItem()));

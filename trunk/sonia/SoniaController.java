@@ -86,7 +86,7 @@ import cern.colt.matrix.impl.SparseDoubleMatrix2D;
  * the command line, otherwise the last 7 digits of milisecond time are used.
  */
 
-public class SoniaController implements Runnable{
+public class SoniaController implements Runnable, TaskListener{
 	public static final String CODE_DATE = "2007-12-21";
 
 	public static final String VERSION = "1.2.1";
@@ -547,7 +547,9 @@ public class SoniaController implements Runnable{
 
 			if ((engine != null) && (applySettings != null)) {
 				engine.setApplySettings(applySettings);
-				engine.applyLayoutToCurrent();
+				showStatus("Running layout on first slice");
+				LongTask firstLayout = engine.applyLayoutTo(engine.getCurrentApplySettings(), engine.getCurrentSlice());
+				firstLayout.addTaskEventListener(this);
 				//engine.changeToSliceNum(1);
 				applySettings.setProperty(ApplySettings.STARTING_COORDS,
 						ApplySettings.COORDS_FROM_PREV);
@@ -1305,6 +1307,14 @@ public class SoniaController implements Runnable{
 	 */
 	public BrowsingSettings getBrowsingSettings(){
 		return browseSettings;
+	}
+
+	//mostly used when running batch, to report when task is done
+	public void taskStatusChanged(LongTask task) {
+		if (task.isDone()){
+			
+		}
+		
 	}
 
 
