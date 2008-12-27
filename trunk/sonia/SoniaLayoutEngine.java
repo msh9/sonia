@@ -30,6 +30,7 @@ import java.awt.Frame;
 
 import javax.swing.JFrame;
 
+import sonia.analytics.ModularityStructureDirected;
 import sonia.layouts.CircleLayout;
 import sonia.layouts.FRLayout;
 import sonia.layouts.MetricMDSLayout;
@@ -1115,6 +1116,14 @@ public class SoniaLayoutEngine implements TaskListener{
 	 */
 	public LayoutSettings getLayoutSettings() {
 		return layoutSettings;
+	}
+	
+	/**
+	 * add clusters to the layout for the max modularity clustering
+	 */
+	public void createModularityClustersForSlice(){
+		netData.addClusterEvents(NetUtils.getSliceClusters(getCurrentSlice()));
+		//TODO: need to fix the cluster ids so old clusters do not get over written
 	}
 	
 

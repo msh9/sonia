@@ -3,6 +3,8 @@ package sonia;
 import java.awt.Color;
 import java.util.*;
 
+import sonia.analytics.ModularityStructureDirected;
+
 import com.sun.corba.se.impl.orbutil.DenseIntMapImpl;
 
 import cern.colt.matrix.impl.*;
@@ -148,6 +150,16 @@ public class NetUtils {
 		}
 		return symMatrix;
 	}
+	
+    public static Vector getSliceClusters(LayoutSlice slice){
+    	ModularityStructureDirected modularity = new ModularityStructureDirected();
+    	modularity.runClustering(getMatrix(slice));
+        int maxIndex = modularity.getMaxQValueIndex();
+        Vector clusters = modularity.makeClustersFor(maxIndex, modularity.getQValues(),
+        		modularity.getMergeList(),slice.getSliceStart(),slice.getSliceEnd()
+        		);
+        return clusters;
+    }
 
 	/**
 	 * Returns an array list containing a set of Subnets correspondig to the

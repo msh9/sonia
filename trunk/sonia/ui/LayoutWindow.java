@@ -195,6 +195,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 
 	private JButton ViewOptions;
 	
+	private JButton makeClusters;
+	
 	private JButton zoom;
 	private JTextField zoomFactor;
 	
@@ -327,6 +329,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		PlayAll = new JButton("> / ||");
 		//Pause = new JButton("||");
 		ViewOptions = new JButton("View Options..");
+		makeClusters = new JButton("Make Clusters");
 		MoveNodes = new JButton("Move Nodes");
 		zoom = new JButton("Scale layout");
 		zoomFactor = new JTextField("1.5",3);
@@ -493,6 +496,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		c.fill=c.NONE;
 		c.gridx = 0;c.gridy = 0;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;c.weighty = 0.0;
 		controlPanel.add(ViewOptions, c);
+		c.gridx = 0;c.gridy = 1;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;c.weighty = 0.0;
+		controlPanel.add(makeClusters, c);
 
 		// buttons
 		c.gridx = 1;c.gridy = 0;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;	c.weighty = 0.0;
@@ -593,6 +598,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		Stability.addActionListener(this);
 		PhasePlot.addActionListener(this);
 		ViewOptions.addActionListener(this);
+		makeClusters.addActionListener(this);
 		MoveNodes.addActionListener(this);
 		NextSlice.addActionListener(this);
 		PrevSlice.addActionListener(this);
@@ -632,6 +638,12 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 					 reApplyLayout();
 					}
 				}
+				if (k.getKeyCode() ==KeyEvent.VK_G){
+					if (k.isControlDown()){
+						graphicsSettings.showDialog();
+					}
+				}
+				
 				if (k.getKeyCode()== KeyEvent.VK_SPACE){
 				if(engine.isTransitionActive()){
 					Control.setPaused(true);
@@ -714,7 +726,10 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		} else if (evt.getSource().equals(ViewOptions)) {
 			graphicsSettings.showDialog();
 			updateDisplay();
-		} else if (evt.getSource().equals(LayoutNum)) {
+		} else if (evt.getSource().equals(makeClusters)) {
+			engine.createModularityClustersForSlice();
+			updateDisplay();
+		}else if (evt.getSource().equals(LayoutNum)) {
 			if (!engine.isTransitionActive()) {
 				goToSlice(Integer.parseInt(LayoutNum.getText()));
 			}
