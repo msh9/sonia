@@ -462,11 +462,12 @@ public class Getter {
 	 * already open
 	 * 
 	 * @param host
+	 * @param port  
 	 * @param usr
 	 * @param pw
 	 * @return
 	 */
-	public boolean connectToDB(String host, String db, String usr, String pwd) {
+	public boolean connectToDB(String host, String port, String db, String usr, String pwd) {
 
 		// if there is already a connection, close it
 		if (db != null) {
@@ -481,7 +482,7 @@ public class Getter {
 			return false;
 		}
 
-		String hostString = hostBase + host + "/" + db + hostSuffix; // "jdbc:mysql://localhost:3306/"
+		String hostString = hostBase + host +":"+port+ "/" + db + hostSuffix; // "jdbc:mysql://localhost:3306/"
 		try {
 			status("Connecting to database " + hostString + " using "
 					+ jdbcDriver + "...");

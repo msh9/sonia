@@ -53,6 +53,8 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 	private Getter song = null;
 
 	private JTextField host;
+	
+	private JTextField port;
 
 	private JTextField user;
 
@@ -142,21 +144,25 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		host.setBorder(new TitledBorder("Host Address"));
 		c.gridy = 0;
 		connectPanel.add(host, c);
+		port = new JTextField("3306",10);
+		port.setBorder(new TitledBorder("Port"));
+		c.gridy=1;
+		connectPanel.add(port,c);
 		user = new JTextField("", 10);
 		user.setBorder(new TitledBorder("User Name"));
-		c.gridy = 1;
+		c.gridy = 2;
 		connectPanel.add(user, c);
 		password = new JTextField("", 10);
 		password.setBorder(new TitledBorder("Password"));
-		c.gridy = 2;
+		c.gridy = 3;
 		connectPanel.add(password, c);
 		dbName = new JTextField("", 10);
 		dbName.setBorder(new TitledBorder("Database Name"));
-		c.gridy = 3;
+		c.gridy = 4;
 		connectPanel.add(dbName, c);
 		connect = new JButton("Connect to DB");
 		connect.addActionListener(this);
-		c.gridy = 4;
+		c.gridy = 5;
 		connectPanel.add(connect, c);
 
 		// status
@@ -364,7 +370,7 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 	 */
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == connect) {
-			song.connectToDB(host.getText(), dbName.getText(), user.getText(),
+			song.connectToDB(host.getText(), port.getText(), dbName.getText(), user.getText(),
 					password.getText());
 			password.setText("");
 		} else if (e.getSource() == runQuery) {
