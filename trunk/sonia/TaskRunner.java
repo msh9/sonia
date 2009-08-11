@@ -132,7 +132,7 @@ public class TaskRunner implements TaskListener {
 		// check if it is error
 		if (task.isError()){
 			control.showError(task.getStatusText());
-			System.out.println("task error:"+task.getStatusText());
+			control.log("task error:"+task.getStatusText());
 		}
 		// check if it is done
 		if (task.isDone()) {

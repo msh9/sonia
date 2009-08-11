@@ -48,9 +48,11 @@ import com.sun.media.sound.AutoConnectSequencer;
 import com.sun.org.apache.bcel.internal.generic.GETSTATIC;
 
 import sonia.movie.MovieMaker;
+import sonia.movie.MultipleImageMovieMaker;
 import sonia.movie.OldQTMovieMaker;
 import sonia.movie.QTMovieMaker;
 import sonia.movie.SWFMovieMaker;
+import sonia.parsers.BotDumpParser;
 import sonia.parsers.ClusterParser;
 import sonia.parsers.DLParser;
 import sonia.parsers.DotNetParser;
@@ -392,6 +394,8 @@ public class SoniaController implements Runnable, TaskListener{
 				parser = new DyNetMLParser();
 			} else if(fileName.endsWith(".net")) {
 				parser = new DotNetParser();
+			} else if(fileName.endsWith(".botnet")) {
+				parser = new BotDumpParser();
 			} else {
 				parser = null;
 				showError("Unable to determine correct parser from file extension," +
@@ -888,6 +892,40 @@ public class SoniaController implements Runnable, TaskListener{
 			}
 		} else {
 			showError("Unable to export movie with null file name");
+		}
+		return exporter;
+	}
+	
+	public MovieMaker exportImageSequence(SoniaLayoutEngine engToExport,
+			SoniaCanvas canvas, String fileName) {
+		MovieMaker exporter = null;
+		if ((fileName == null) & isShowGUI()) {
+			FileDialog dialog = new FileDialog(new Frame(),
+					"Save Network Image Sequence As...", FileDialog.SAVE);
+			dialog.setFile("network.jpg");
+
+			dialog.setVisible(true);
+			if (dialog.getFile() == null) {
+				// dont do anything
+				return exporter;
+			} else {
+				fileName = dialog.getDirectory() + dialog.getFile();
+			}
+
+		}
+		if (fileName != null) {
+			
+			try {
+				exporter = new MultipleImageMovieMaker(this,engine,fileName);
+				exporter.configure((MovieSettings)movieSettings);
+				engToExport.makeMovie(exporter);
+			} catch (Exception e) {
+				showError("Error writing network movie as image sequence:" + e.getMessage());
+				log("ERROR saving image sequence: " + e.getMessage());
+				e.printStackTrace();
+			}
+		} else {
+			showError("Unable to export image sequence with null file name");
 		}
 		return exporter;
 	}

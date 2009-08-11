@@ -114,6 +114,10 @@ public class MovieExportTask implements LongTask {
 			 currentSlice = 0;
 			//movie export loop
 			while (currentSlice < endIndex-1) {
+				//check if there was an unreported error from the previous slice
+				if (maker.getError() != null){
+					throw new Exception(maker.getError());
+				}
 				 currentSlice++;
 				// awkward transition checks if movie is being recorded and
 				// saves theframe
@@ -132,7 +136,7 @@ public class MovieExportTask implements LongTask {
 			reportStatus();
 		} catch (Exception e) {
 			isError = true;
-			status = "Movie export error: "+e.getMessage();
+			status = "Movie export error: "+e.getClass()+":"+e.getMessage();
 			stop = true;
 			reportStatus();
 		}
