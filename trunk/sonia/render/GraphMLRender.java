@@ -51,8 +51,8 @@ public class GraphMLRender implements Render {
 	public static final String LABEL = "label";
 	
 	
-	private Hashtable<NodeAttribute, Point2D>nodes = new Hashtable();
-	private HashSet<ArcAttribute>arcs = new HashSet();
+	private Hashtable<NodeAttribute, Point2D>nodes = new Hashtable<NodeAttribute, Point2D>();
+	private HashSet<ArcAttribute>arcs = new HashSet<ArcAttribute>();
 
 	
 	

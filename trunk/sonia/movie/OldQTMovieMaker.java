@@ -327,4 +327,9 @@ public void configure(MovieSettings settings) {
 	
 }
 
+public Throwable getError() {
+	// TODO Auto-generated method stub
+	return null;
+}
+
 }

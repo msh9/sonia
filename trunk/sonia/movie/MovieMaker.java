@@ -15,6 +15,7 @@
 
 package sonia.movie;
 
+
 import sonia.SoniaCanvas;
 import sonia.settings.MovieSettings;
 
@@ -45,5 +46,11 @@ public interface MovieMaker {
 	 * @param settings
 	 */
 	public abstract void configure(MovieSettings settings);
+	
+	/**
+	 * Reports any error that hs occured that might not have been otherwise reported
+	 */
+	
+	public Throwable getError();
 
 }

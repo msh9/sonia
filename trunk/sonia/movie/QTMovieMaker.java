@@ -121,6 +121,8 @@ public class QTMovieMaker implements MovieMaker {
 	private SoniaController control;
 
 	private boolean isExporting = false;
+	
+	private Throwable errorEx = null;
 
 	// private int[] pixels;
 
@@ -181,6 +183,7 @@ public class QTMovieMaker implements MovieMaker {
 			if (e.errorCode() == -47) {
 				error = "Output file is busy, is it open in another application?";
 			}
+			errorEx = e;
 			throw new Exception(error, e);
 		}
 		int timeScale = TIME_SCALE; // 100 units per second
@@ -243,6 +246,7 @@ public class QTMovieMaker implements MovieMaker {
 							: StdQTConstants.mediaSampleNotSync);
 		} catch (StdQTException e) {
 			control.showError(e.getMessage());
+			errorEx = e;
 		}
 
 		// debug
@@ -263,8 +267,10 @@ public class QTMovieMaker implements MovieMaker {
 
 		} catch (StdQTException e) {
 			control.showError(e.getMessage());
+			errorEx = e;
 		} catch (QTException e) {
 			control.showError(e.getMessage());
+			errorEx = e;
 		}
 		QTSession.close();
 		isExporting = false;
@@ -332,6 +338,10 @@ public class QTMovieMaker implements MovieMaker {
 		else {
 			System.out.println("Settings are not appropriate for QuickTime movie maker");
 		}
+	}
+
+	public Throwable getError() {
+		return errorEx;
 	}
 
 	/**

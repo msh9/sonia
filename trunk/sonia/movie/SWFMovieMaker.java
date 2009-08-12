@@ -59,6 +59,8 @@ public class SWFMovieMaker implements MovieMaker {
 	
 	private int debugFrameCount = 0;
 	
+	private Throwable error = null;
+	
 
 
 
@@ -150,7 +152,7 @@ public class SWFMovieMaker implements MovieMaker {
 			movie.write(file,compressed);
 		} catch (IOException e) {
 			control.showError("Error export SWF movie:" + e.getMessage());
-			e.printStackTrace();
+			error = e;
 		}
 		
 		// debug
@@ -186,8 +188,12 @@ public class SWFMovieMaker implements MovieMaker {
 	}
 
 	public void configure(MovieSettings settings) {
-		// TODO Auto-generated method stub
 		
+		
+	}
+
+	public Throwable getError() {
+		return error;
 	}
 	
 

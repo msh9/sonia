@@ -303,6 +303,12 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 			}
 		});
 		
+		multipleExport.add(new AbstractAction("Export Image Sequence...") {
+			public void actionPerformed(ActionEvent arg0) {
+				Control.exportImageSequence(engine, LayoutArea, null);
+			}
+		});
+		
 		multipleExport.add(new AbstractAction("Save As DyNetML xml ..") {
 			public void actionPerformed(ActionEvent arg0) {
 				Control.saveDyNetML(engine);
