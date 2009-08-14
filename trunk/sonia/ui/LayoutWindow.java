@@ -309,6 +309,12 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 			}
 		});
 		
+		multipleExport.add(new AbstractAction("Export JPEG Animation (Uncompressed)...") {
+			public void actionPerformed(ActionEvent arg0) {
+				Control.exportJPEGMovie(engine, LayoutArea, null);
+			}
+		});
+		
 		multipleExport.add(new AbstractAction("Save As DyNetML xml ..") {
 			public void actionPerformed(ActionEvent arg0) {
 				Control.saveDyNetML(engine);

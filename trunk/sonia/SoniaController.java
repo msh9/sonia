@@ -44,9 +44,11 @@ import javax.xml.transform.TransformerException;
 import com.anotherbigidea.flash.readers.SWFReader;
 import com.anotherbigidea.flash.readers.TagParser;
 import com.anotherbigidea.flash.writers.SWFTagDumper;
+import com.bric.qt.io.JPEGMovieAnimation;
 import com.sun.media.sound.AutoConnectSequencer;
 import com.sun.org.apache.bcel.internal.generic.GETSTATIC;
 
+import sonia.movie.JPEGMovieMaker;
 import sonia.movie.MovieMaker;
 import sonia.movie.MultipleImageMovieMaker;
 import sonia.movie.OldQTMovieMaker;
@@ -926,6 +928,40 @@ public class SoniaController implements Runnable, TaskListener{
 			}
 		} else {
 			showError("Unable to export image sequence with null file name");
+		}
+		return exporter;
+	}
+	
+	public MovieMaker exportJPEGMovie(SoniaLayoutEngine engToExport,
+			SoniaCanvas canvas, String fileName) {
+		MovieMaker exporter = null;
+		if ((fileName == null) & isShowGUI()) {
+			FileDialog dialog = new FileDialog(new Frame(),
+					"Save Network JPEG Movie As...", FileDialog.SAVE);
+			dialog.setFile("network.mov");
+
+			dialog.setVisible(true);
+			if (dialog.getFile() == null) {
+				// dont do anything
+				return exporter;
+			} else {
+				fileName = dialog.getDirectory() + dialog.getFile();
+			}
+
+		}
+		if (fileName != null) {
+			
+			try {
+				exporter = new JPEGMovieMaker(this,engine,fileName);
+				exporter.configure((MovieSettings)movieSettings);
+				engToExport.makeMovie(exporter);
+			} catch (Exception e) {
+				showError("Error writing network as JPEG Movie:" + e.getMessage());
+				log("ERROR saving JPEG Movie: " + e.getMessage());
+				e.printStackTrace();
+			}
+		} else {
+			showError("Unable to export JPEG Movie  with null file name");
 		}
 		return exporter;
 	}

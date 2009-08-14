@@ -2,24 +2,17 @@ package sonia.ui;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.PrintJob;
 import java.awt.event.ActionEvent;
-import java.awt.event.WindowEvent;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
-import java.beans.PropertyChangeListener;
 
 import javax.swing.AbstractAction;
-import javax.swing.Action;
 import javax.swing.JComponent;
-import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.RepaintManager;
 import javax.swing.event.InternalFrameEvent;
 
@@ -140,16 +133,16 @@ public class ExportableFrame extends JInternalFrame {
 		JComponent compToPrint = getGraphicContent();
 		disableDoubleBuffering(compToPrint);
 		compToPrint.repaint();
-		HEPDialog exportDialog = new HEPDialog("SoNIA");
-		exportDialog.showHEPDialog(this, "Chose file format for export",
-				compToPrint, "NetworkPic");
+		//HEPDialog exportDialog = new HEPDialog("SoNIA");
+	//	exportDialog.showHEPDialog(this, "Chose file format for export",
+	//			compToPrint, "NetworkPic");
 		
 		//THIS IS TO USE VERSION freehep 2.1.1
 		//AS SOON AS THEY FIX THE JPG EXPORT PROBLEM
-		//ExportDialog exportDialog = new ExportDialog();
-	// exportDialog.showExportDialog(compToPrint, 
-		//		"Chose file format for export...", compToPrint, "export");
-		//enableDoubleBuffering(compToPrint);
+		ExportDialog exportDialog = new ExportDialog();
+	 exportDialog.showExportDialog(compToPrint, 
+				"Chose file format for export...", compToPrint, "export");
+		enableDoubleBuffering(compToPrint);
 	}
 
 	protected void disableDoubleBuffering(JComponent comp) {

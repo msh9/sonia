@@ -137,6 +137,8 @@ public class MovieExportTask implements LongTask {
 		} catch (Exception e) {
 			isError = true;
 			status = "Movie export error: "+e.getClass()+":"+e.getMessage();
+			//debug
+			e.printStackTrace();
 			stop = true;
 			reportStatus();
 		}
