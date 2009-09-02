@@ -80,8 +80,7 @@ public class MovExportSettingsDialog {
 		quality.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
-				maker.setCodecQuality((String) ((JComboBox) e.getSource())
-						.getSelectedItem());
+				maker.setCodecQuality((String) ((JComboBox) e.getSource()).getSelectedItem());
 			};
 
 		});

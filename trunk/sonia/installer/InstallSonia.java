@@ -225,18 +225,17 @@ public class InstallSonia {
 				// show sonia info
 				// choose an install dir
 				if (targetPath == null) {
-					//THIS DOES NOT WORK ON THE MAC BECAUSE THE FILECHOSER IS BROKEN
-//					JFileChooser chooser = new JFileChooser();
-//					chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-//					int returnVal = chooser.showSaveDialog(baseFrame);
-//					if (returnVal == JFileChooser.APPROVE_OPTION) {
-//						targetPath = chooser.getSelectedFile()
-//								.getAbsolutePath();
-//					}
-					FileDialog locateOutput = new FileDialog(baseFrame, 
-							"Please choose a directory to install SoNIA", FileDialog.SAVE);
-					locateOutput.setVisible(true);
-					targetPath = locateOutput.getDirectory();
+					JFileChooser chooser = new JFileChooser();
+					chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+					int returnVal = chooser.showSaveDialog(baseFrame);
+					if (returnVal == JFileChooser.APPROVE_OPTION) {
+						targetPath = chooser.getSelectedFile()
+								.getAbsolutePath();
+					}
+//					FileDialog locateOutput = new FileDialog(baseFrame, 
+//							"Please choose a directory to install SoNIA", FileDialog.SAVE);
+//					locateOutput.setVisible(true);
+//					targetPath = locateOutput.getDirectory();
 			
 				}
 				// if it still equals null..

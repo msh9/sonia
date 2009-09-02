@@ -32,6 +32,9 @@ import quicktime.qd.QDConstants;
 import quicktime.qd.QDGraphics;
 import quicktime.qd.QDRect;
 import quicktime.std.StdQTConstants;
+import quicktime.std.StdQTConstants4;
+import quicktime.std.StdQTConstants5;
+import quicktime.std.StdQTConstants6;
 import quicktime.std.StdQTException;
 import quicktime.std.image.CSequence;
 import quicktime.std.image.CodecComponent;
@@ -119,7 +122,7 @@ public class QTMovieMaker implements MovieMaker {
 
 	private Graphics2D graphics2D;
 
-	private Graphics2DRender renderer;
+	//private Graphics2DRender renderer;
 
 	private SoniaCanvas canvas;
 	
@@ -141,7 +144,7 @@ public class QTMovieMaker implements MovieMaker {
 
 	public QTMovieMaker(SoniaController control, String fileAndPath) {
 		fileName = fileAndPath;
-		renderer = new Graphics2DRender();
+//		renderer = new Graphics2DRender();
 		this.control = control;
 	}
 
@@ -364,6 +367,7 @@ public class QTMovieMaker implements MovieMaker {
 			if (codec.equals(codecs[i])) {
 				codecType = codecTypes[i];
 				this.codec = codecs[i];
+				
 			}
 		}
 	}
@@ -376,9 +380,10 @@ public class QTMovieMaker implements MovieMaker {
 		this.codecQuality = StdQTConstants.codecHighQuality;
 		quality = "High";
 		for (int i = 0; i < qualityStrings.length; i++) {
-			if (quality.equals(qualityStrings[i]))
+			if (codecQuality.equals(qualityStrings[i])){
 				this.codecQuality = qualityConstants[i];
-			quality = qualityStrings[i];
+				quality = qualityStrings[i];
+			}
 
 		}
 	}
