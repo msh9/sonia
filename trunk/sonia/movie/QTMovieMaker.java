@@ -14,10 +14,12 @@
  */
 package sonia.movie;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.awt.image.PixelGrabber;
+import java.awt.image.Raster;
 import java.io.File;
 
 import javax.naming.ldap.Control;
@@ -39,6 +41,7 @@ import quicktime.std.image.QTImage;
 import quicktime.std.movies.Movie;
 import quicktime.std.movies.Track;
 import quicktime.std.movies.media.VideoMedia;
+import quicktime.util.IntEncodedImage;
 import quicktime.util.QTHandle;
 import quicktime.util.RawEncodedImage;
 import sonia.SoniaCanvas;
@@ -111,6 +114,8 @@ public class QTMovieMaker implements MovieMaker {
 	private int rate = 30; // TODO: read qt fps from engine
 
 	private BufferedImage bufferedImage;
+	
+	private int[] pixels = null;
 
 	private Graphics2D graphics2D;
 
@@ -131,6 +136,8 @@ public class QTMovieMaker implements MovieMaker {
 	private int codecQuality = StdQTConstants.codecHighQuality;
 
 	private int codecType = StdQTConstants.kAnimationCodecType;
+	
+	private int intsPerRow;
 
 	public QTMovieMaker(SoniaController control, String fileAndPath) {
 		fileName = fileAndPath;
@@ -151,16 +158,20 @@ public class QTMovieMaker implements MovieMaker {
 		} else {
 			graphics = new QDGraphics(QDGraphics.kDefaultPixelFormat, bounds);
 		}
+		
+		//intsPerRow = pixelData.getRowBytes() / 4;
 		// Get the raw image from the QT graphics world
-		RawEncodedImage image = graphics.getPixMap().getPixelData();
-		int scanLength = image.getRowBytes() >>> 2;
-		int scanHeight = image.getSize() / image.getRowBytes();
+		//RawEncodedImage image = graphics.getPixMap().getPixelData();
+		//int scanLength = image.getRowBytes() >>> 2;
+		//int scanHeight = image.getSize() / image.getRowBytes();
 
 		// Set up a Java graphics context based upaon an array as the storage
 		// for a buffered image
 
-		bufferedImage = new BufferedImage(scanLength, scanHeight,
+		bufferedImage = new BufferedImage(canvas.getWidth(), canvas.getHeight(),
 				BufferedImage.TYPE_INT_RGB);
+		//pixels = new int[bufferedImage.getHeight()*graphics.getPixMap().getRowBytes()/4]; //allocate an array of pixels for copying from the image
+		
 		// create a java graphcs based on the QT image
 		graphics2D = bufferedImage.createGraphics();
 		graphics2D.setBackground(canvas.getBackground());
@@ -190,11 +201,6 @@ public class QTMovieMaker implements MovieMaker {
 		videoTrack = movie.addTrack(canvas.getWidth(), canvas.getHeight(), 0);
 		videoMedia = new VideoMedia(videoTrack, timeScale);
 		videoMedia.beginEdits();
-		// ImageDescription imgDesc2 = new ImageDescription(
-		// QDConstants.k32ARGBPixelFormat);
-		// imgDesc2.setWidth(canvas.getWidth());
-		// imgDesc2.setHeight(canvas.getHeight());
-		// QDGraphics gw = new QDGraphics(imgDesc2, 0);
 		// figure out how much memory for each frame
 		int rawImageSize = QTImage.getMaxCompressionSize(graphics, bounds,
 				graphics.getPixMap().getPixelSize(), codecQuality, codecType,
@@ -214,28 +220,36 @@ public class QTMovieMaker implements MovieMaker {
 
 	public void captureImage() {
 
+		//clear the java graphics to redraw the network image
 		graphics2D.clearRect(0, 0, bufferedImage.getWidth(), bufferedImage
 				.getHeight());
-		// ask sonia to render the graphics to the QTGraphics
-		canvas.getRenderSlice().render(graphics2D, canvas, renderer);
+		// ask sonia to render the graphics to the java graphics
+//		ask the canvas to render the image
+		canvas.updateDisplay(graphics2D, canvas.isGhostSlice());
 		try {
+			//create a quicktime image buffer from the QuickTime graphics
 			RawEncodedImage pixelData = graphics.getPixMap().getPixelData();
 			int intsPerRow = pixelData.getRowBytes() / 4;
 			// need to copy the pixel data from the java to QuickDraw graphics
 			// OR could implement as quickdraw graphics renderer..
 			
-			PixelGrabber grabber = new PixelGrabber(bufferedImage, 0, 0,
-					bufferedImage.getWidth(), bufferedImage.getHeight(), false);
-			try {
-				grabber.grabPixels();
-			} catch (InterruptedException e) {
-				System.err.println(e);
-			}
-			int[] javaPixels = (int[]) grabber.getPixels();
-			
-			pixelData.copyFromArray(0, javaPixels, 0, intsPerRow
-					* bufferedImage.getHeight());
-
+			//grab the pixels from the java image
+//			PixelGrabber grabber = new PixelGrabber(bufferedImage, 0, 0,
+//					bufferedImage.getWidth(), bufferedImage.getHeight(), false);
+//			try {
+//				grabber.grabPixels();
+//			} catch (InterruptedException e) {
+//				System.err.println(e);
+//			}
+//			int[] javaPixels = (int[]) grabber.getPixels();
+//			//copy the pixels (in the form of an int array) from the java buffer to the qt buffer
+//			pixelData.copyFromArray(0, javaPixels, 0, intsPerRow
+//					* bufferedImage.getHeight());
+			pixels = bufferedImage.getRGB(0, 0, bufferedImage.getWidth(),
+					bufferedImage.getHeight(), pixels, 0, intsPerRow);
+			pixelData.copyFromArray(0,pixels,0,pixels.length);
+			//graphics.copyFromArray(0,pixels,0,pixels.length);
+		
 			CompressedFrameInfo cfInfo = seq.compressFrame(graphics, bounds,
 					StdQTConstants.codecFlagUpdatePrevious, compressedImage);
 			// decide if we need a keyframe,
@@ -248,6 +262,54 @@ public class QTMovieMaker implements MovieMaker {
 			control.showError(e.getMessage());
 			errorEx = e;
 		}
+		
+//		try {
+//			
+//			//get the raster of pixels from the buffered image
+//			Raster raster = bufferedImage.getRaster();
+//			//convert the raster into an array of ints
+//			int[] pixels = new int[raster.getWidth()*raster.getHeight()];
+//			//fill the pixel array with data from the rster
+//			pixels = raster.getPixels(0,0, raster.getWidth(),raster.getHeight(),pixels);
+//			IntEncodedImage iei = IntEncodedImage.fromIntArray(pixels);
+//			QTHandle han = QTHandle.fromEncodedImage(iei);
+//
+//			
+//			
+//			//create a quicktime image buffer from the QuickTime graphics
+//			RawEncodedImage pixelData = graphics.getPixMap().getPixelData();
+//			int intsPerRow = pixelData.getRowBytes() / 4;
+//			// need to copy the pixel data from the java to QuickDraw graphics
+//			// OR could implement as quickdraw graphics renderer..
+//			
+//			//grab the pixels from the java image
+//			PixelGrabber grabber = new PixelGrabber(bufferedImage, 0, 0,
+//					bufferedImage.getWidth(), bufferedImage.getHeight(), false);
+//			try {
+//				grabber.grabPixels();
+//			} catch (InterruptedException e) {
+//				System.err.println(e);
+//			}
+//			int[] javaPixels = (int[]) grabber.getPixels();
+//			//copy the pixels (in the form of an int array) from the java buffer to the qt buffer
+//			pixelData.copyFromArray(0, javaPixels, 0, intsPerRow
+//					* bufferedImage.getHeight());
+//
+//			CompressedFrameInfo cfInfo = seq.compressFrame(graphics, bounds,
+//					StdQTConstants.codecFlagUpdatePrevious, compressedImage);
+//			// decide if we need a keyframe,
+//			// see developer.apple.com/qa/qtmcc/qtmcc20.html
+//			boolean syncSample = cfInfo.getSimilarity() == 0;
+//			videoMedia.addSample(imageHandle, 0, cfInfo.getDataSize(), rate,
+//					imgDesc, 1, syncSample ? 0
+//							: StdQTConstants.mediaSampleNotSync);
+//		} catch (StdQTException e) {
+//			control.showError(e.getMessage());
+//			errorEx = e;
+//		} catch (QTException e) {
+//			control.showError(e.getMessage());
+//			errorEx = e;
+//		}
 
 		// debug
 		//System.out.println("\t saved QT frame " + currentFrame);
@@ -334,6 +396,7 @@ public class QTMovieMaker implements MovieMaker {
 		//check that it is the right kind of settings
 		if (settings != null && settings.getProperty(MovieSettings.FILE_TYPE).equals(SUFFIX)){
 			setCodec(settings.getProperty(CODEC_PARAM_NAME));
+			//TODO: add setting for compression quality
 		}
 		else {
 			System.out.println("Settings are not appropriate for QuickTime movie maker");

@@ -14,9 +14,11 @@
  */
 package sonia.ui;
 
+import java.awt.BorderLayout;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -39,8 +41,7 @@ public class MovExportSettingsDialog {
 	public MovExportSettingsDialog(SoniaInterface ui,QTMovieMaker moviemaker){
 		maker = moviemaker;
 		settingsDialog = new JDialog((Frame)ui,"Export Options",true);
-		panel = new JPanel(new GridBagLayout());
-		GridBagConstraints c = new GridBagConstraints();
+		panel = new JPanel(new BorderLayout());
 		
 		ok = new JButton("OK");
 		ok.addActionListener(new ActionListener(){
@@ -48,10 +49,10 @@ public class MovExportSettingsDialog {
 				settingsDialog.setVisible(false);
 			};
 			});
-		c.gridy=0;
-		panel.add(getOptionComponent(),c);
-		c.gridy=1;
-		panel.add(ok);
+		JPanel okpanel = new JPanel();
+		panel.add(getOptionComponent(),BorderLayout.CENTER);
+		okpanel.add(ok);
+		panel.add(okpanel,BorderLayout.SOUTH);
 		settingsDialog.getContentPane().add(panel);
 		settingsDialog.setSize(300,200);
 		
@@ -62,7 +63,7 @@ public class MovExportSettingsDialog {
 	}
 	
 	private JComponent getOptionComponent() {
-		JPanel optionPanel = new JPanel();
+		JPanel optionPanel = new JPanel(new GridLayout(2,1));
 		optionPanel.setBorder(new TitledBorder("QuickTime Export Options:"));
 		JComboBox codec = new JComboBox(QTMovieMaker.codecs);
 		codec.addActionListener(new ActionListener() {

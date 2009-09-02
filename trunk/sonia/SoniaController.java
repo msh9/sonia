@@ -884,8 +884,9 @@ public class SoniaController implements Runnable, TaskListener{
 					MovExportSettingsDialog set = new MovExportSettingsDialog(ui,
 							(QTMovieMaker)exporter);
 					set.showDialog();
+				 } else {
+					 exporter.configure((MovieSettings)movieSettings);
 				 }
-				exporter.configure((MovieSettings)movieSettings);
 				engToExport.makeMovie(exporter);
 			} catch (Exception e) {
 				showError("Error writing QT movie:" + e.getMessage());

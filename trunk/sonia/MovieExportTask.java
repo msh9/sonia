@@ -107,9 +107,8 @@ public class MovieExportTask implements LongTask {
 		int endIndex = engine.getNumSlices();
 		
 		int numFrames = endIndex * engine.getInterpFrames();
-		
-			maker.setupMovie(window.getDisplay(), numFrames);
 			window.transitionToSlice(0,null);
+			maker.setupMovie(window.getDisplay(), numFrames);
 			maker.captureImage();
 			 currentSlice = 0;
 			//movie export loop
