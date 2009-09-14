@@ -67,6 +67,16 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 	private JTextArea statusText;
 
 	private JPanel queryPanel;
+	
+	private JCheckBox crawlNetwork;
+	
+	private JCheckBox crawlTimes;
+	
+	private JPanel crawlPanel;
+	
+	private JTextArea seedQuery;
+	
+	private JTextArea timeSetQuery;
 
 	private JTextArea arcsQuery;
 
@@ -148,15 +158,15 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		port.setBorder(new TitledBorder("Port"));
 		c.gridy=1;
 		connectPanel.add(port,c);
-		user = new JTextField("", 10);
+		user = new JTextField("edgar", 10);
 		user.setBorder(new TitledBorder("User Name"));
 		c.gridy = 2;
 		connectPanel.add(user, c);
-		password = new JTextField("", 10);
+		password = new JTextField("edgar", 10);
 		password.setBorder(new TitledBorder("Password"));
 		c.gridy = 3;
 		connectPanel.add(password, c);
-		dbName = new JTextField("", 10);
+		dbName = new JTextField("edgarapi", 10);
 		dbName.setBorder(new TitledBorder("Database Name"));
 		c.gridy = 4;
 		connectPanel.add(dbName, c);
@@ -184,34 +194,71 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		// query ui stuff
 		queryPanel = new JPanel(new GridBagLayout());
 		queryPanel.setBorder(new TitledBorder("Queries to build network file"));
+		
+		//hierarchy
+		crawlNetwork = new JCheckBox("Crawl relationships to define network",false);
+		crawlNetwork.addActionListener(this);
+		c.gridx = 1;
+		c.gridy = 0;
+		c.gridwidth = 1;
+		c.weighty = 0.1;
+		c.fill = GridBagConstraints.NONE;
+		queryPanel.add(crawlNetwork,c);
+		crawlTimes = new JCheckBox("Also use time values in crawl",false);
+		crawlTimes.addActionListener(this);
+		c.gridx = 2;
+		c.gridy = 0;
+		c.gridwidth = 1;
+		queryPanel.add(crawlTimes,c);
+		
+		crawlPanel = new JPanel(new GridLayout(2,1));
+		crawlPanel.setBorder(new TitledBorder("Crawling parameters"));
+		c.gridx = 0;
+		c.gridy = 1;
+		c.weighty = 1;
+		c.gridwidth = 3;
+		c.fill = GridBagConstraints.BOTH;
+		queryPanel.add(crawlPanel,c);
+		seedQuery = new JTextArea("put query for initial seed set for crawling here",2,50);
+		seedQuery.setBorder(new TitledBorder("Seed Node Set Query"));
+		crawlPanel.add(seedQuery);
+		timeSetQuery = new JTextArea(2,50);
+		timeSetQuery.setBorder(new TitledBorder("Time Values Query"));
+		crawlPanel.add(timeSetQuery,c);
+		
+		
+		//main arcs query
 		arcsQuery = new JTextArea(
-				"relationship query here", 10, 50);
+				"put relationship query here. \n(when crawling, use "+Getter.nodeIdTag+
+				" for node id value and, "+Getter.timeIdTag+" for time value in query", 8, 50);
 		JScrollPane arcsQueryScroller = new JScrollPane(arcsQuery);
 		arcsQueryScroller
 				.setBorder(new TitledBorder("Arc Relationships Query"));
 		c.gridx = 0;
-		c.gridy = 0;
+		c.gridy = 2;
 		c.gridwidth = 3;
 		queryPanel.add(arcsQueryScroller, c);
 		runQuery = new JButton("Run Queries");
 		runQuery.addActionListener(this);
+		c.weighty = 0.1;
 		c.gridx = 0;
-		c.gridy = 1;
+		c.gridy = 3;
 		c.gridwidth = 1;
+		c.fill = GridBagConstraints.NONE;
 		queryPanel.add(runQuery, c);
 
 		generateNodeset = new JCheckBox("Generate node set from relations",
 				true);
 		generateNodeset.addActionListener(this);
 		c.gridx = 1;
-		c.gridy = 1;
+		c.gridy = 3;
 		c.gridwidth = 1;
 		queryPanel.add(generateNodeset, c);
 		
 		generateDateset = new JCheckBox("Also generate times ("+Getter.timeIdTag+")",false);
 		generateDateset.addActionListener(this);
 		c.gridx = 2;
-		c.gridy = 1;
+		c.gridy = 3;
 		c.gridwidth = 1;
 		queryPanel.add(generateDateset, c);
 
@@ -222,8 +269,10 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 				"Node Properties Query (use " + Getter.nodeIdTag
 						+ " as placeholder for NodeId)"));
 		c.gridx = 0;
-		c.gridy = 2;
+		c.gridy = 4;
 		c.gridwidth = 3;
+		c.weighty = 1;
+		c.fill = GridBagConstraints.BOTH;
 		queryPanel.add(nodePropsScroller, c);
 
 		// this one is hidden
@@ -231,7 +280,7 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		nodesScroller = new JScrollPane(nodesQuery);
 		nodesScroller.setBorder(new TitledBorder("Node Set Query"));
 		c.gridx = 0;
-		c.gridy = 3;
+		c.gridy = 5;
 		c.gridwidth = 3;
 		queryPanel.add(nodesScroller, c);
 		// nodesScroller.setVisible(false);
@@ -374,10 +423,23 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 					password.getText());
 			password.setText("");
 		} else if (e.getSource() == runQuery) {
-			if (generateNodeset.isSelected()){
+			if (crawlNetwork.isSelected() & generateNodeset.isSelected()){
+				//crawl network, use the node props query
+				song.crawlNetwork(seedQuery.getText(), arcsQuery.getText(), 
+						crawlTimes.isSelected(), timeSetQuery.getText(),
+						generateNodeset.isSelected(),nodePropsQuery.getText(),
+						generateDateset.isSelected());
+			} else if (crawlNetwork.isSelected()){
+				//crawl network, use regular nodes query
+				song.crawlNetwork(seedQuery.getText(), arcsQuery.getText(), 
+						crawlTimes.isSelected(), timeSetQuery.getText(),
+						generateNodeset.isSelected(),nodesQuery.getText(),
+						generateDateset.isSelected());
+			} else if (generateNodeset.isSelected()){
+				//use the  node props query
 				song.getNetwork(arcsQuery.getText(), generateNodeset.isSelected(),
 					nodePropsQuery.getText(),generateDateset.isSelected());
-			} else {
+			} else { //use the regular nodes query instead of the node props query
 				song.getNetwork(arcsQuery.getText(), generateNodeset.isSelected(),
 						nodesQuery.getText(),generateDateset.isSelected());
 			}
@@ -455,6 +517,19 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 			nodesScroller.setVisible(true);
 			generateDateset.setVisible(false);
 		}
+		if (crawlNetwork.isSelected()){
+			crawlPanel.setVisible(true);
+			crawlTimes.setVisible(true);
+		} else {
+			crawlPanel.setVisible(false);
+			crawlTimes.setVisible(false);
+		}
+		if (crawlTimes.isSelected()){
+			timeSetQuery.setVisible(true);
+		} else {
+			timeSetQuery.setVisible(false);
+		}
+		crawlPanel.validate();
 		queryPanel.validate();
 
 		// only show the data tables if there is data to show

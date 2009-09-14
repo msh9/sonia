@@ -9,6 +9,8 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Vector;
 
 import sonia.parsers.DotSonParser;
 import sonia.song.filters.AllProblemFilter;
@@ -82,6 +84,205 @@ public class Getter {
 		knownFilters.add(new AllProblemFilter());
 		knownFilters.add(new SqlDateToDecimal(this));
 	}
+	
+	/**
+	 * "Crawls" a search out from a subset of nodes to find additional connected nodes to include
+	 * in the network.  Optionaly repeats the process for relationships at multiple time points
+	 * @param seedQuery
+	 * @return
+	 */
+	public boolean crawlNetwork(String seedQuery,String arcsQuery, 
+			boolean doTimes, String timeQuery,boolean makeNodes,
+			String nodePropsQuery,boolean doNodeTimes){
+		problems.clear();
+		//create data structure for arcs
+		arcData.clear();
+		//create data structure for nodes
+		nodeIds = new HashSet<String>();
+		
+		boolean ok = false;
+		//check that the arcs query will let us substitute in a seed id
+		if (!arcsQuery.contains(nodeIdTag)) {
+			error("arc query does not contain '"
+					+ nodeIdTag
+					+ "' to indicate where node ids should be inserted to" +
+							" construct crawl queries");
+			return false;
+		} 
+		//if we are doing times, check that it is included as well
+		if (doTimes & !arcsQuery.contains(timeIdTag)) {
+			error("arc query does not contain '"
+					+ timeIdTag
+					+ "' to indicate where time values should be inserted to" +
+							" construct crawl queries");
+			return false;
+		} 
+		
+		//create a set to store node ids
+		LinkedList<String> idQueue = new LinkedList<String>();
+		HashSet<String>visited = new HashSet<String>();
+		status("getting seed set for crawl...");
+		//determine if we are running a time query, and if so do it
+		if (doTimes){
+			//run the time query
+			Vector<String> crawlTimes = getCrawlTimes(timeQuery);
+			//run the seed query for each time value
+			Iterator<String> timeIter = crawlTimes.iterator();
+			while (timeIter.hasNext()){
+				 String timeValue = timeIter.next();
+				 //get the ids we are gonna visit for this time
+				 idQueue.addAll(getSeedSetIds(seedQuery,timeValue));
+				 //subsittute in time values
+				 status("crawling seed set of "+idQueue.size()+" node ids for time value "+timeValue);
+				 ok = crawlArcs(idQueue,visited,
+				    	arcsQuery.replace(timeIdTag, timeValue));
+				 if(!ok) return false;
+				 //add the list of nodes we've visited to overall list
+				 nodeIds.addAll(visited);
+			}
+		} else {
+			//run the seed query to get the set of starting ids
+			idQueue.addAll(getSeedSetIds(seedQuery,null));
+			status("crawling seed set of "+idQueue.size()+" node ids");
+			ok = crawlArcs(idQueue,visited,arcsQuery);
+			if(!ok) return false;
+//			add the list of nodes we've visited to overall list
+			 nodeIds.addAll(visited);
+		}
+		ok = processNodes(makeNodes,nodePropsQuery,doNodeTimes);
+		if (!ok) return false;
+		finishParsing();
+		return true;
+	}
+	
+
+	
+	private Vector<String> getCrawlTimes(String timeQuery){
+		Vector<String> crawlTimes = new Vector<String>();
+		//run the query
+		ResultSet  times = runQuery(timeQuery);
+		try {
+			while (times.next()){
+				crawlTimes.add(times.getString(1));
+			}
+			times.close();
+		} catch (SQLException e) {
+			error("SQL error getting seed set for query "+timeQuery+" :"+e.getMessage());
+		}	
+		return crawlTimes;
+	}
+	
+	/**
+	 * returns a set of ids to use as the starting set for the crawl.  Assumes that the first
+	 * column of result is the id
+	 * @param seedQuery mysql query to return a node id
+	 * @param timeValue 
+	 * @return
+	 */
+	private HashSet<String> getSeedSetIds(String seedQuery,String timeValue){
+		HashSet<String>seedSet = new HashSet<String>();
+		//if are doing times, substitute it in the query
+		if ( timeValue != null){
+			if (seedQuery.contains(timeIdTag)) {
+				warn("node set set query does not contain '"
+						+ timeIdTag
+						+ "' to indicate where time values should be inserted");
+			} else {
+				seedQuery.replace(timeIdTag, timeValue);
+			}
+		}
+		//run the query
+		ResultSet  seeds = runQuery(seedQuery);
+		try {
+			while (seeds.next()){
+				seedSet.add(seeds.getString(1));
+			}
+			seeds.close();
+		} catch (SQLException e) {
+			error("SQL error getting seed set for query "+seedQuery+" :"+e.getMessage());
+		}	
+		return seedSet;
+	}
+	
+	
+	/**
+	 * BFS search out from all seed nodes, assuming the time value allready 
+	 * substituted if necessary
+	 * @param idQueue
+	 * @param visited
+	 * @param arcsQuery
+	 * @param timeValue
+	 */
+	private boolean crawlArcs(LinkedList<String> idQueue, 
+			HashSet<String>visited,String arcsQuery){
+		visited.clear();
+		int crawlCount = 0;
+//		while there are more ids in the queue, assuming we have not allready checked it
+		String nodeId = idQueue.poll(); //get a node from the queue
+		while(nodeId != null){
+			visited.add(nodeId);
+		    //built the arcs query with substitution, assuming we have already checked that the values are there
+		    String arcQuery = arcsQuery.replace(nodeIdTag, nodeId);
+			ResultSet arcs = runQuery(arcQuery);
+			fromCol = -1;
+			toCol = -1;
+			try {
+				ResultSetMetaData arcsMeta = arcs.getMetaData();
+				int numCols = arcsMeta.getColumnCount();
+				// check that FromId and ToId are defined as column names
+				// and also store column names in list of headers
+				arcHeaders.clear();
+				for (int c = 0; c < numCols; c++) {
+					arcHeaders.add(arcsMeta.getColumnLabel(c + 1));
+					if (arcsMeta.getColumnLabel(c + 1).equals("FromId")) {
+						fromCol = c;
+					}
+					if (arcsMeta.getColumnLabel(c + 1).equals("ToId")) {
+						toCol = c;
+					}
+				}
+				if (fromCol < 0 | toCol < 0) {
+					error("Arcs query did not contain columns for both 'FromId' and 'ToId'");
+					return (false);
+				}
+				// store results in arcData (too bad we don't yet know how big it
+				// is...
+				
+				// process each row
+				
+				while (arcs.next()) {
+					String[] row = new String[numCols];
+					// loop over cols
+					for (int i = 0; i < numCols; i++) {
+						row[i] = arcs.getString(i + 1).trim();
+					}
+					// add any new ids to the list to vist
+					if (!visited.contains(row[fromCol])) {
+						idQueue.add(row[fromCol]);
+						visited.add(row[fromCol]);
+					}
+					if (!visited.contains(row[toCol])) {
+						idQueue.add(row[toCol]);
+						visited.add(row[toCol]);
+					}
+					arcData.add(row);
+
+				}
+				// get rid of he resultset
+				arcs.close();
+
+			} catch (Exception e) {
+				error("crawling arcs query:" + e.getMessage());
+				return false;
+			}
+		    
+		  //run the arcs query, put any newly discoverd nodes on the queue
+			crawlCount++;
+			nodeId = idQueue.poll(); //get the next id from the queue
+		}
+		status("crawled "+crawlCount+" relations.");
+		return true;
+	}
 
 	/**
 	 * executes the relationship query, pulls out all the node ids and runs a
@@ -151,6 +352,13 @@ public class Getter {
 			return false;
 		}
 		// HERE WE BEGIN TO PROCESS NODES
+		boolean ok = processNodes(makeNodes,nodePropsQuery,makeTimes);
+		if (!ok) return false;
+		finishParsing();
+		return true;
+	}
+	
+	private boolean processNodes(boolean makeNodes, String nodePropsQuery,boolean makeTimes){
 		try {
 			nodeHeaders.clear();
 			// if we are auto generating the nodes section..
@@ -288,6 +496,14 @@ public class Getter {
 					+ e.getMessage());
 			return false;
 		}
+		return true;
+	}
+	
+	/**
+	 * print the output and set up the ui to show previews
+	 *
+	 */
+	private void finishParsing(){
 
 		formatSonFile();
 
@@ -298,7 +514,6 @@ public class Getter {
 			ui.showProblem(null);
 		}
 		status("Done. (" + problems.size() + " problems)");
-		return true;
 	}
 
 	private HashSet<String> getTimeset(ArrayList<String[]> arcData) {
