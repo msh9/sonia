@@ -40,9 +40,12 @@ public class LayoutSettings extends PropertySettings {
 	public static final String MULTI_KK = "MultiComp KK Layout";
 	public static final String PI = "Moody PI layout";
 	public static final String METRIC_MDS = "MetricMDS (SVD)?" ;
+	public static final String MDSJ_CMDS ="MDSJ Classic Mds (non-comercial)";
 
 	public static final String NO_ANIMATION = "none";
-	public static final String COSITE_ANIMATION = "cosine animation" ;
+	public static final String COSINE_ANIMATION = "cosine animation" ;
+	public static final String DELAY_COSINE_ANIMATION = "delayed cosine animation" ;
+	public static final String LINEAR_ANIMATION = "linear animation" ;
 
 	public static final String NUM_TIES =  "Number  of i->j ties";
 	public static final String AVG_TIES = "Avg of i->j ties";

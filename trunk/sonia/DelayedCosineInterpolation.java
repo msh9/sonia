@@ -2,6 +2,8 @@ package sonia;
 
 import java.util.*;
 
+import com.sun.tools.javac.code.Attribute.Array;
+
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>
  * <p>Description:Animates layouts of time-based networks
@@ -28,40 +30,18 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 /**
- * CoosineInterpolation calculates a slow-in, slow-out sinusoidal interpolation
+ * Calculates a slow-in, slow-out sinusoidal interpolation
  * between the node coordinates of the current slice and the coordinates in the
- * destination slice. This makes
+ * destination slice, put includes a pause at the beginning and end of the movement.  This makes
  * it so that the nodes appear to move more slowly at the start and end of the
  * transition, giving them a more natural sense of inertia, and making the overall
  * layout sequence smoother.
  *
  */
-public class CosineInterpolation implements CoordInterpolator
+public class DelayedCosineInterpolation implements CoordInterpolator
 {
-  //private LayoutSlice[] layoutSlices;
-  //private int numSlices;
 
-  /**
-   * Instantiates the consine interpolator.  NO VARABLES ARE SET, MAKE THIS INTO
-   * A STATIC CLASS?
-   */
-  public CosineInterpolation()
-  {
-
-  }
-/*
-  public void setLayoutSlices(Vector slices)
-  {
-    numSlices = slices.size();
-    layoutSlices = new LayoutSlice[numSlices];
-    for (int i=0;i<numSlices; i++)
-    {
-      layoutSlices[i]=(LayoutSlice)slices.get(i);
-    }
-  }
-  */
-
-
+  private double delayFactor = 0.1;
   //SHOULD COMBINE X AND Y INTO ONE CALL
   /**
    * Returns an array of coordinates corresponding to the x coords of each node,
@@ -80,20 +60,28 @@ public class CosineInterpolation implements CoordInterpolator
    * @param time the time at which the interpolation is evaluated
    * @return double array containing the x coords for each node.
    */
-  public double[] interpXCoords(LayoutSlice startSlice, LayoutSlice nextSlice,
+  public  double[] interpXCoords(LayoutSlice startSlice, LayoutSlice nextSlice,
                                double[] currentXCoords, double time)
   {
+//	TODO: remove object creation, make this a static method
     //WHAT HAPPENS WHEN SLICES OVERLAPP? Average?
-    int numNodes = startSlice.getMaxNumNodes();
     double startTime = startSlice.getSliceStart();
-    double interval = nextSlice.getSliceStart()-startTime;
+    double interval = (nextSlice.getSliceStart()-startTime)*delayFactor;
+    double offset = (((nextSlice.getSliceStart()-startTime))-interval)/2; 
     double[] fromX = startSlice.getXCoords();
     double[] toX = nextSlice.getXCoords();
     //do the interpolation
-    for (int i=0;i<numNodes;i++)
-    {
-    	currentXCoords[i]= fromX[i]+((1-Math.cos(Math.PI*((time-startTime)/interval)))/2)
-              *(toX[i]-fromX[i]);
+    if (time <= startTime+offset ){
+    	currentXCoords = fromX.clone();
+    } else if (time > nextSlice.getSliceStart()-offset) {
+    	currentXCoords = toX.clone();
+    } else {
+    	for (int i=0;i<currentXCoords.length;i++)
+	    {
+    		//currentXCoords[i]= fromX[i]+((time-(startTime+offset))/interval)*(toX[i]-fromX[i]); //linear
+    		currentXCoords[i]= fromX[i]+((1-Math.cos(Math.PI*((time-(startTime+offset))/interval)))/2)
+            *(toX[i]-fromX[i]);
+	    }
     }
     return currentXCoords;
   }
@@ -115,30 +103,38 @@ public class CosineInterpolation implements CoordInterpolator
     * @param time the time at which the interpolation is evaluated
    * @return double array containing the y coords for each node.
    */
-   public double[] interpYCoords(LayoutSlice startSlice, LayoutSlice nextSlice,
-                                double[] currentYCoords, double time)
+   public double[] interpYCoords(LayoutSlice startSlice, LayoutSlice nextSlice, double[] currentYCoords,
+                                 double time)
  {
+//	 TODO: remove object creation, make this a static method
    //WHAT HAPPENS WHEN SLICES OVERLAPP? Average?
-     int numNodes = startSlice.getMaxNumNodes();
      double startTime = startSlice.getSliceStart();
-     double interval = nextSlice.getSliceStart()-startTime;
+     double interval = (nextSlice.getSliceStart()-startTime)*delayFactor;
+     double offset = (((nextSlice.getSliceStart()-startTime))-interval)/2; 
      double[] fromY = startSlice.getYCoords();
      double[] toY = nextSlice.getYCoords();
      //do the interpolation
-     for (int i=0;i<numNodes;i++)
-     {
-    	 currentYCoords[i]= fromY[i]+((1-Math.cos(Math.PI*((time-startTime)/interval)))/2)
-               *(toY[i]-fromY[i]);
+     if (time <= startTime+offset){
+    	 currentYCoords = fromY.clone();
+     } else if (time > nextSlice.getSliceStart()-offset) {
+    	 currentYCoords = toY.clone();
+     } else {
+    	 for (int i=0;i<currentYCoords.length;i++){
+     	//currentYCoords[i]= fromY[i]+((time-(startTime+offset))/interval)*(toY[i]-fromY[i]); //linear
+    	currentYCoords[i]= fromY[i]+((1-Math.cos(Math.PI*((time-(startTime+offset))/interval)))/2)
+             *(toY[i]-fromY[i]);
+     	
+ 	    }
      }
     return currentYCoords;
   }
 
   /**
-   * Returns a string giving the name of the interpolation.  In this case "Cosine
+   * Returns a string giving the name of the interpolation.  In this case "Delayed Cosine
    * Interpolation".
    */
  public String getType()
  {
-   return "Cosine Interpolation";
+   return "Delayed Cosine Interpolation";
  }
 }

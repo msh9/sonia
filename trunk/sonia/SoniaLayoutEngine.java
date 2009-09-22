@@ -33,6 +33,7 @@ import javax.swing.JFrame;
 import sonia.analytics.ModularityStructureDirected;
 import sonia.layouts.CircleLayout;
 import sonia.layouts.FRLayout;
+import sonia.layouts.MDSJLayout;
 import sonia.layouts.MetricMDSLayout;
 import sonia.layouts.MultiCompKKLayout;
 import sonia.layouts.NetLayout;
@@ -177,13 +178,22 @@ public class SoniaLayoutEngine implements TaskListener{
 			theLayout = new PILayout(control, this);
 		} else if (layoutType.equals("MetricMDS (SVD)?")) {
 			theLayout = new MetricMDSLayout(control, this);
+		} else if (layoutType.equals(LayoutSettings.MDSJ_CMDS)) {
+			theLayout = new MDSJLayout(control, this);
 		} else {
 			theLayout = new OrigCoordLayout(control, this);
 		}
+		//set up arrays to hold the current display coordinates
+		currentXcoords  = new double[netData.getMaxNetSize()];
+		currentYcoords  = new double[netData.getMaxNetSize()];
 		// make the right kind of coordinate interpolator
 		CoordInterpolator interpolator;
-		if (animateType.equals("cosine animation")) {
+		if (animateType.equals(LayoutSettings.COSINE_ANIMATION)) {
 			interpolator = new CosineInterpolation();
+		} else if (animateType.equals(LayoutSettings.DELAY_COSINE_ANIMATION)) {
+			interpolator = new DelayedCosineInterpolation();
+		} else if (animateType.equals(LayoutSettings.LINEAR_ANIMATION)) {
+			interpolator = new LinearInterpolation();
 		} else {
 			interpolator = new NoInterpolation();
 			this.setInterpFrames(0);
@@ -655,7 +665,7 @@ public class SoniaLayoutEngine implements TaskListener{
 		// if null just get coords from first layout slice
 		if (currentXcoords == null) {
 			currentXcoords = ((LayoutSlice) layoutSlices.get(currentSlice))
-					.getXCoords();
+					.getXCoords().clone();
 		}
 		return currentXcoords;
 	}
@@ -668,7 +678,7 @@ public class SoniaLayoutEngine implements TaskListener{
 		// if null just get coords from first layout slice
 		if (currentYcoords == null) {
 			currentYcoords = ((LayoutSlice) layoutSlices.get(currentSlice))
-					.getYCoords();
+					.getYCoords().clone();
 		}
 		return currentYcoords;
 	}
@@ -696,8 +706,8 @@ public class SoniaLayoutEngine implements TaskListener{
 		// WHAT HAPPENS WHEN SLICES OVERLAPP? Should we Average all the slices
 		// within
 		// that time?
-		currentXcoords = interpolator.interpXCoords(startSlice, endSlice, time);
-		currentYcoords = interpolator.interpYCoords(startSlice, endSlice, time);
+		currentXcoords = interpolator.interpXCoords(startSlice, endSlice, currentXcoords,time);
+		currentYcoords = interpolator.interpYCoords(startSlice, endSlice, currentYcoords,time);
 	}
 
 	/**
@@ -711,9 +721,9 @@ public class SoniaLayoutEngine implements TaskListener{
 		// check that sliceNumis within range
 		if ((sliceNum >= 0) & (sliceNum < layoutSlices.size())) {
 			currentXcoords = ((LayoutSlice) layoutSlices.get(sliceNum))
-					.getXCoords();
+			.getXCoords().clone();
 			currentYcoords = ((LayoutSlice) layoutSlices.get(sliceNum))
-					.getYCoords();
+					.getYCoords().clone();
 		}
 	}
 

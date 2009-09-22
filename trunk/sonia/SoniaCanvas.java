@@ -309,6 +309,13 @@ public  void setRenderSlice(RenderSlice slice)
 	  return Double.parseDouble(settings.getProperty(GraphicsSettings.FLASH_EVENTS));
   }
   
+  public double getFadeDuration()
+  {
+      //return flashDuration;
+	  return Double.parseDouble(settings.getProperty(GraphicsSettings.FADE_EVENTS));
+  }
+  
+  
   public boolean isShowLabels()
   {
     //return showLabels;

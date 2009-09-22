@@ -60,7 +60,11 @@ public class InstallSonia {
 	public static final String GPL_URL = "http://www.gnu.org/licenses/gpl.txt";
 
 	public static final String LGPL_URL = "http://www.gnu.org/licenses/lgpl.txt";
-
+	
+	public static final String BSD_URL = "http://www.opensource.org/licenses/bsd-license.php";
+	
+	public static final String CC_ATTRIB_NONCOM_SHAREALIKE_URL = "http://creativecommons.org/licenses/by-nc-sa/3.0/";
+;
 	public static final String COLT_DOWNLOAD_URL = "http://dsd.lbl.gov/~hoschek/colt-download/releases/colt-1.2.0.zip";
 
 	public static final String COLT_LICENSE_URL = "http://dsd.lbl.gov/~hoschek/colt-download/releases/license.html";
@@ -71,6 +75,9 @@ public class InstallSonia {
 
 	public static final String JAVASWF_DOWNLOAD_URL = "http://internap.dl.sourceforge.net/sourceforge/javaswf/javaswf-binary-baseline.zip";
 	
+	public static final String JAVAGRAPHICS_DOWNLOAD_URL = "https://javagraphics.dev.java.net/jars/JPEGMovieAnimation-bin.jar";
+	
+	public static final String MDSJ_DOWNLOAD_URL = "http://www.inf.uni-konstanz.de/algo/software/mdsj/mdsj.jar";
 	
 	private JFrame baseFrame;
 
@@ -160,6 +167,12 @@ public class InstallSonia {
 
 			public void actionPerformed(java.awt.event.ActionEvent e) {
 				openURL("http://java.freehep.org/");
+			};
+		});
+		JButton javaGraphicsInfo = new JButton("About JavaGraphics...");
+		javaGraphicsInfo.addActionListener(new ActionListener() {
+			public void actionPerformed(java.awt.event.ActionEvent e) {
+				openURL("http://javagraphics.blogspot.com/2008/06/movies-writing-mov-files-without.html");
 			};
 		});
 		status = new JTextArea(5, 40);
@@ -374,6 +387,15 @@ public class InstallSonia {
 				//extrac javaswf.jar
 				extractFile(targetPath + "/javaswf-binary-baseline.zip",
 						"javaswf.jar", targetPath + "/lib");
+				
+				//get javaGraphics movie jars
+				try {
+					downloadFile(JAVAGRAPHICS_DOWNLOAD_URL, targetPath);
+				} catch (Exception e) {
+					showError("error downloading javaGraphics movie export libraries: "
+							+ e.toString());
+					e.printStackTrace();
+				}
 
 				// show quicktime info
 				String QTMessage = "<html>SoNIA currently exports animations in QuickTime .mov format <BR>"

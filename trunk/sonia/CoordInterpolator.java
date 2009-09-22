@@ -49,7 +49,7 @@ public interface CoordInterpolator
    * @return double array containing the x coordinate for each node
    */
   public double[] interpXCoords(LayoutSlice currentSlice ,LayoutSlice nextSlice,
-                                                      double time);
+                                                double[] currentXCoords, double time);
 
   /**
    * Returns an array of values for the x coordinates, interpolating between the
@@ -60,7 +60,7 @@ public interface CoordInterpolator
    * @return double array containing the x coordinate for each node
    */
   public double[] interpYCoords(LayoutSlice currentSlice ,LayoutSlice nextSlice,
-                                double time);
+                     double[] currentYCoords, double time);
 
   /**
    * Returns a String with the name of the layout

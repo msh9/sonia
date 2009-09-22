@@ -173,10 +173,7 @@ public class RenderSlice {
 		// KLUDG check to not draw arcs for speed
 		if (!canvas.isHideArcs()) {
 
-			// check settings before transparency
-			if (canvas.isArcTrans()) {
-				render.setTransparency(canvas.getArcTransVal());
-			}
+			
 
 			ArcAttribute arc;
 			int fromId;
@@ -196,6 +193,25 @@ public class RenderSlice {
 						arc.setFlash(true);
 					}
 				}
+				//figure out transparency
+				float trans = 1.0f;
+				if (canvas.isArcTrans()) {
+					trans = canvas.getArcTransVal();
+				}
+				//if arc should be faded out, make it more transparent
+				if (canvas.getFadeDuration() != 0.0){
+					if ((arc.getObsTime()-canvas.getFadeDuration() < sliceStart) 
+							& (arc.getEndTime() < sliceEnd ))
+					{
+						trans = trans * (float)Math.max(0,(arc.getObsTime()-sliceStart)/canvas.getFadeDuration());
+					} else if ((arc.getEndTime()-canvas.getFadeDuration() < sliceEnd) &
+							(sliceStart > arc.getObsTime())){
+						trans = trans * (float)Math.max(0,(arc.getEndTime()-sliceEnd)/canvas.getFadeDuration());
+					}
+				}
+				
+				render.setTransparency(trans);
+				
 				// correct for id ofset 0 -> 1
 				fromId = arc.getFromNodeId() - 1;
 				toId = arc.getToNodeId() - 1;
@@ -224,12 +240,8 @@ public class RenderSlice {
 			// graphics.setColor(origColor);
 		}
 
-		// check settings before node transparency
-		if (canvas.isNodeTrans()) {
-			render.setTransparency(canvas.getNodeTransVal());
-		} else {
-			render.setTransparency(1);
-		}
+		float trans = 1.0f; //default to no transparency
+	
 
 		// NODE EVENT LOOP
 		// then do nodes (so nodes are on top)
@@ -246,6 +258,24 @@ public class RenderSlice {
 					node.SetEffect(node.FLASH_EFFECT);
 				}
 			}
+			// check settings before node transparency
+			if (canvas.isNodeTrans()) {
+				trans = canvas.getNodeTransVal();
+			} 
+			
+			//if node should be faded out, make it more transparent
+			if (canvas.getFadeDuration() != 0.0){
+				if ((node.getObsTime()-canvas.getFadeDuration() < sliceStart) 
+						& (node.getEndTime() < sliceEnd ))
+				{
+					trans = trans * (float)Math.max(0,(node.getObsTime()-sliceStart)/canvas.getFadeDuration());
+				} else if ((node.getEndTime()-canvas.getFadeDuration() < sliceEnd) &
+						(sliceStart > node.getObsTime())){
+					trans = trans * (float)Math.max(0,(node.getEndTime()-sliceEnd)/canvas.getFadeDuration());
+				}
+			}
+			
+			render.setTransparency(trans);
 			int index = node.getNodeId() - 1;
 			if (!canvas.isHideNodes()){
 				render.paintNode(node, xCoords[index] + left, yCoords[index] + top,
@@ -283,126 +313,7 @@ public class RenderSlice {
 		fps = 1/((System.currentTimeMillis() - rendStart)/1000+0.00000001);
 	}
 
-	// private BasicStroke getStrokeForWidth(float width, boolean isNegitive){
-	// if (isNegitive){
-	// width = width*-1;
-	// //TODO: negitive weights not working correctly
-	// }
-	// width = Math.abs(width);
-	// Float key = new Float(width);
-	// if (strokeTable.containsKey(key)){
-	// //return the stroke already made for this width
-	// return (BasicStroke)strokeTable.get(key);
-	// }
-	// else {
-	// //do the dashing
-	// float dashSkip = 0.0f;
-	// float dashLength = 2.0f;
-	//		 
-	// if (isNegitive){
-	// dashSkip = width;
-	// dashLength = 2.0f * width;
-	// }
-	// float[] dash = {dashLength,dashSkip};
-	// BasicStroke newStroke = new
-	// BasicStroke(width,BasicStroke.CAP_BUTT,BasicStroke.JOIN_MITER,
-	// 1.0f,dash,0.0f);
-	// strokeTable.put(key,newStroke);
-	// return newStroke;
-	// }
-	// }
-	//  
-	// private void paintArc(ArcAttribute arc, Graphics2D graphics, SoniaCanvas
-	// canvas,
-	// double fromX, double fromY,double toX, double toY)
-	// {
-	// //check if drawing arc
-	// if (!canvas.isHideArcs())
-	// {
-	//   
-	// float drawWidth = (float)arc.getArcWidth()*canvas.getArcWidthFact();
-	// 
-	//    
-	//
-	// graphics.setStroke(getStrokeForWidth(drawWidth,arc.isNegitive()));
-	// graphics.setColor(arc.getArcColor());
-	// //should correct for width of node (and length of arrow?)
-	// //arcLine.setLine(fromX,fromY,toX,toY);
-	// arcLine.reset();
-	// arcLine.moveTo((float)fromX,(float)fromY);
-	// arcLine.lineTo((float)toX,(float)toY);
-	// graphics.draw(arcLine);
-	// //graphics.fill(arcLine);
-	//    
-	// //if it has never been drawn, than draww it very large so it will show
-	// if (arc.shouldFlash())
-	// {
-	// graphics.setStroke(getStrokeForWidth(drawWidth+flashFactor,arc.isNegitive()));
-	// graphics.setColor(flashColor);
-	// graphics.draw(arcLine);
-	//        
-	// arc.setFlash(false); //so we only draw once, even if stay on same
-	// slice..?
-	// }
-	//    
-	// //should turn off dashing
-	// // dashSkip = 0.0f;
-	//
-	// // CHECK IF ARROWS ARE TO BE DRAWN
-	// if (canvas.isShowArrows())
-	// {
-	//
-	// //reset the arrowhead path and make arrowhead
-	// headPath.reset();
-	// double arrowSize = arrowLength+drawWidth;
-	// double xDiff = (fromX - toX);
-	// double yDiff = (fromY - toY);
-	// double lineAngle = Math.atan((xDiff) / (yDiff));
-	// //trap cases where xDiff and yDiff are zero to stop strange PRException
-	// onPC
-	// if (Double.isNaN(lineAngle))
-	// {
-	// lineAngle = 0.0;
-	// }
-	// if (yDiff < 0) //rotate by 180
-	// {
-	// lineAngle += Math.PI;
-	// }
-	// try //for concurrency problems on dual processor machines...
-	// {
-	// //tip of arrow
-	// headPath.moveTo((float)toX, (float)toY);
-	// //one wedge
-	// headPath.lineTo((float)(toX + (arrowSize * Math.sin(lineAngle-0.3))),
-	// (float)(toY + (arrowSize * Math.cos(lineAngle-0.3))));
-	// //other wedge
-	// headPath.lineTo((float)(toX + (arrowSize * Math.sin(lineAngle+0.3))),
-	// (float)(toY + (arrowSize * Math.cos(lineAngle+0.3))));
-	// //back to top
-	// headPath.closePath();
-	// graphics.fill(headPath);
-	// }
-	// catch (IllegalPathStateException e)
-	// {
-	// System.out.println("Arrow Drawing error: x:"+toX+" y:"+toY);
-	// e.printStackTrace();
-	// }
-	//
-	// }//end draw arcs
-	// }
-	// //CHECK IF LABELS ARE TO BE DRAWN
-	// if (canvas.isShowArcLabels())
-	// {
-	// graphics.setColor(arc.getLabelColor());
-	// Font originalFont = graphics.getFont();
-	// graphics.setFont(originalFont.deriveFont(arc.getLabelSize()));
-	// float labelX = (float)(fromX+ (toX-fromX)/2);
-	// float labelY = (float)(fromY + (toY-fromY)/2);
-	// graphics.drawString(arc.getArcLabel(),labelX,labelY);
-	// }
-	//
-	// //detecting other arcs to same nodes to curve..
-	// }
+	
 
 	// accessors (not allowed to set in case objects would be at wrong time)
 	public double getSliceStart() {

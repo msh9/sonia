@@ -56,18 +56,18 @@ public class NoInterpolation implements CoordInterpolator
 
   //SHOULD COMBINE X AND Y INTO ONE CALL
   public double[] interpXCoords(LayoutSlice startSlice, LayoutSlice nextSlice,
-                                double time)
+                               double[] currentXCoords,  double time)
   {
     //WHAT HAPPENS WHEN SLICES OVERLAPP? Average?
-    return startSlice.getXCoords();
+    return currentXCoords;
   }
 
  public double[] interpYCoords(LayoutSlice startSlice, LayoutSlice nextSlice,
-                               double time)
+		 double[] currentYCoords,  double time)
  {
   //WHAT HAPPENS WHEN SLICES OVERLAPP? Average?
 
-  return startSlice.getYCoords();
+  return currentYCoords;
   }
 
 

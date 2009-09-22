@@ -51,6 +51,12 @@ public class GraphicsSettings extends PropertySettings {
 	 */
 	public static final String FLASH_EVENTS = "flash new events";
 	
+	
+	/**
+	 * key indicating if old events should be faded out before dissapearing, value gives duration of fade
+	 */
+	public static final String FADE_EVENTS = "fade old events";
+	
 	/**
 	 * key for screen width of the layout in pixels. integer value
 	 */

@@ -163,6 +163,7 @@ public class GraphicsSettingsDialog {
 	private JTextField WindowHeight;
 
 	private JTextField FlashDuration;
+	private JTextField FadeDuration;
 	private JComboBox hideNodes;
 	private JComboBox HideArcs;
 	private JPanel mainpanel;
@@ -184,7 +185,7 @@ public class GraphicsSettingsDialog {
 		graphicsDialog = new JDialog(owner, "Graphics Settings", true);
 		mainpanel = new JPanel(new GridBagLayout());
 		mainpanel.setBorder(new TitledBorder("Graphics Settings"));
-		generalPanel = new JPanel(new GridLayout(6,1));
+		generalPanel = new JPanel(new GridLayout(7,1));
 		generalPanel.setBorder(new TitledBorder("General Options:"));
 		nodesPanel = new JPanel(new GridLayout(7,1));
 		nodesPanel.setBorder(new TitledBorder("Node Options:"));
@@ -203,6 +204,8 @@ public class GraphicsSettingsDialog {
 		//FlashNew = new JCheckBox("Flash new events", false);
 		FlashDuration = new JTextField("0.0", 4);
 		FlashDuration.setBorder(new TitledBorder("Flash new events for"));
+		FadeDuration = new JTextField("0.0",4);
+		FadeDuration.setBorder(new TitledBorder("Fade old events for"));
 		
 		ArcTransField = new JTextField("0.5", 3);
 		ArcTransField.setBorder(new TitledBorder("Arc Transparency"));
@@ -282,6 +285,7 @@ public class GraphicsSettingsDialog {
 		generalPanel.add(ShowStats);
 		generalPanel.add(GhostSlice);
 		generalPanel.add(FlashDuration);
+		generalPanel.add(FadeDuration);
 		generalPanel.add(WindowWidth);
 		generalPanel.add(WindowHeight);
 
@@ -419,6 +423,8 @@ public class GraphicsSettingsDialog {
 				.put(GraphicsSettings.GHOST_SLICE, GhostSlice.isSelected() + "");
 		settings.put(GraphicsSettings.FLASH_EVENTS, FlashDuration.getText()
 				.trim());
+		settings.put(GraphicsSettings.FADE_EVENTS, FadeDuration.getText()
+				.trim());
 		settings.put(GraphicsSettings.LAYOUT_WIDTH, WindowWidth.getText()
 				.trim());
 		settings.put(GraphicsSettings.LAYOUT_HEIGHT, WindowHeight.getText()
@@ -464,6 +470,8 @@ public class GraphicsSettingsDialog {
 				GraphicsSettings.GHOST_SLICE, GhostSlice.isSelected() + "")));
 		FlashDuration.setText(settings.getProperty(
 				GraphicsSettings.FLASH_EVENTS, FlashDuration.getText().trim()));
+		FadeDuration.setText(settings.getProperty(
+				GraphicsSettings.FADE_EVENTS, FadeDuration.getText().trim()));
 		WindowWidth.setText(settings.getProperty(GraphicsSettings.LAYOUT_WIDTH,
 				WindowWidth.getText().trim()));
 		WindowHeight.setText(settings.getProperty(

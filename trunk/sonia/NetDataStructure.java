@@ -378,6 +378,14 @@ public class NetDataStructure
   {
     maxNetSize = size;
   }
+  
+  /*
+   * largest number of distinct nodes in the network
+   */
+  public int getMaxNetSize()
+  {
+     return(maxNetSize);
+  }
 
   //SHOULD CREATE A PARSER INTERFACE
   public DotNetParser getParser()
