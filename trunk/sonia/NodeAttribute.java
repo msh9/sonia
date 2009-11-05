@@ -94,12 +94,12 @@ public class NodeAttribute implements NetworkEvent{
   public NodeAttribute(int id, String label, double x, double y, double time,
                        double end, String fileLoc) {
     nodeId = id;
-    nodeLabel = label;
+    nodeLabel = label.intern();
     obsXCoord = x;
     obsYCoord = y;
     obsTime = time;
     endTime = end;
-    origFileLoc = fileLoc;
+    origFileLoc = fileLoc.intern();
   }
 
   //self drawing methods ------------
@@ -223,7 +223,7 @@ public class NodeAttribute implements NetworkEvent{
   }
   public void setNodeLabel(String label)
   {
-   nodeLabel = label;
+   nodeLabel = label.intern();
   }
   /**
    * Returns the nodes color, or, if a colormapper has been set, returns the color assigned

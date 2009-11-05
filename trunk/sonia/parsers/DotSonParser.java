@@ -1586,6 +1586,7 @@ public class DotSonParser implements ClusterParser {
 			theColor = parseColorName(rowArray[index]);
 		} else {
 			// check for each of the RGB colums
+			boolean foundRGB = false;
 			float red = 0.0f;
 			float green = 0.0f;
 			float blue = 0.0f;
@@ -1594,6 +1595,7 @@ public class DotSonParser implements ClusterParser {
 				int indexR = ((Integer) nodeHeaderMap.get(rKey)).intValue();
 				try {
 					red = Float.parseFloat(rowArray[indexR]);
+					foundRGB = true;
 				} catch (NumberFormatException e) {
 					String error = "Line " + reader.getLineNumber() + "column "
 							+ rKey + " Unable to parse RedRGB value:"
@@ -1606,6 +1608,7 @@ public class DotSonParser implements ClusterParser {
 				int indexG = ((Integer) nodeHeaderMap.get(gKey)).intValue();
 				try {
 					green = Float.parseFloat(rowArray[indexG]);
+					foundRGB = true;
 				} catch (NumberFormatException e) {
 					String error = "Line " + reader.getLineNumber() + "column "
 							+ gKey + " Unable to parse GreenRGB value:"
@@ -1618,6 +1621,7 @@ public class DotSonParser implements ClusterParser {
 				int indexB = ((Integer) nodeHeaderMap.get(bKey)).intValue();
 				try {
 					blue = Float.parseFloat(rowArray[indexB]);
+					foundRGB = true;
 				} catch (NumberFormatException e) {
 					String error = "Line " + reader.getLineNumber() + "column "
 							+ bKey + " Unable to parse BlueRGB value:"
@@ -1625,8 +1629,10 @@ public class DotSonParser implements ClusterParser {
 					throw (new IOException(error));
 				}
 			}
-			// try and make an rgb color with these values
-			theColor = parseRGBColor(red, green, blue);
+			// if we found at least one, try and make an rgb color with these values
+			if (foundRGB){
+				theColor = parseRGBColor(red, green, blue);
+			}
 		}
 
 		return theColor;
@@ -1708,6 +1714,7 @@ public class DotSonParser implements ClusterParser {
 			theColor = parseColorName(rowArray[index]);
 		} else {
 			// check for each of the RGB colums
+			boolean foundRGB = false;
 			float red = 0.0f;
 			float green = 0.0f;
 			float blue = 0.0f;
@@ -1718,6 +1725,7 @@ public class DotSonParser implements ClusterParser {
 						.getProperty(DotSonColumnMap.ARC_RED_RGB))).intValue();
 				try {
 					red = Float.parseFloat(rowArray[indexR]);
+					foundRGB = true;
 				} catch (NumberFormatException e) {
 					String error = "Line " + reader.getLineNumber() + "column "
 							+ colMap.getProperty(DotSonColumnMap.ARC_RED_RGB)
@@ -1734,6 +1742,7 @@ public class DotSonParser implements ClusterParser {
 						.intValue();
 				try {
 					green = Float.parseFloat(rowArray[indexG]);
+					foundRGB = true;
 				} catch (NumberFormatException e) {
 					String error = "Line " + reader.getLineNumber() + "column "
 							+ colMap.getProperty(DotSonColumnMap.ARC_GREEN_RGB)
@@ -1749,6 +1758,7 @@ public class DotSonParser implements ClusterParser {
 						.getProperty(DotSonColumnMap.ARC_BLUE_RGB))).intValue();
 				try {
 					blue = Float.parseFloat(rowArray[indexB]);
+					foundRGB = true;
 				} catch (NumberFormatException e) {
 					String error = "Line " + reader.getLineNumber() + "column "
 							+ colMap.getProperty(DotSonColumnMap.ARC_BLUE_RGB)
@@ -1757,8 +1767,10 @@ public class DotSonParser implements ClusterParser {
 					throw (new IOException(error));
 				}
 			}
-			// try and make an rgb color with these values
-			theColor = parseRGBColor(red, green, blue);
+			//if we found at least one rgb value,  try and make an rgb color with these values
+			if (foundRGB){
+				theColor = parseRGBColor(red, green, blue);
+			}
 		}
 
 		return theColor;

@@ -445,7 +445,8 @@ public class NetUtils {
 
 		return distMatrix;
 	}
-
+	
+	
 
 	
 	public static DenseDoubleMatrix2D getFastAllShortPathMatrix(
