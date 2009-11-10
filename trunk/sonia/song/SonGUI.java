@@ -1,6 +1,7 @@
 package sonia.song;
 
 import java.awt.BorderLayout;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -10,12 +11,19 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Properties;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -23,6 +31,7 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
@@ -131,6 +140,17 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 	private JButton runFilter;
 
 	private JTabbedPane tabber;
+	
+	private JProgressBar progressBar;
+	
+	private JDialog progressDialog;
+	
+	private JButton cancel;
+	
+	private String propertiesFileName = "SonGUIProperties";
+	
+	private Properties props;
+	
 
 	public SonGUI() {
 		song = new Getter(this);
@@ -150,7 +170,7 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		// set up the connection ui stuff
 		JPanel connectPanel = new JPanel(new GridBagLayout());
 		connectPanel.setBorder(new TitledBorder("Connection Settings"));
-		host = new JTextField("192.168.2.2", 10);
+		host = new JTextField("", 10);
 		host.setBorder(new TitledBorder("Host Address"));
 		c.gridy = 0;
 		connectPanel.add(host, c);
@@ -158,15 +178,15 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		port.setBorder(new TitledBorder("Port"));
 		c.gridy=1;
 		connectPanel.add(port,c);
-		user = new JTextField("edgar", 10);
+		user = new JTextField("", 10);
 		user.setBorder(new TitledBorder("User Name"));
 		c.gridy = 2;
 		connectPanel.add(user, c);
-		password = new JTextField("edgar", 10);
+		password = new JTextField("", 10);
 		password.setBorder(new TitledBorder("Password"));
 		c.gridy = 3;
 		connectPanel.add(password, c);
-		dbName = new JTextField("edgarapi", 10);
+		dbName = new JTextField("", 10);
 		dbName.setBorder(new TitledBorder("Database Name"));
 		c.gridy = 4;
 		connectPanel.add(dbName, c);
@@ -174,6 +194,7 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		connect.addActionListener(this);
 		c.gridy = 5;
 		connectPanel.add(connect, c);
+		
 
 		// status
 		statusText = new JTextArea(
@@ -377,7 +398,53 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		c.gridheight = 2;
 		c.fill = GridBagConstraints.BOTH;
 		mainPanel.add(tabber, BorderLayout.CENTER);
+		
+		progressBar = new JProgressBar();
+		progressBar.setStringPainted(true);
+		progressBar.setPreferredSize(new Dimension(450, 50));
+		progressDialog = new JDialog(frame,"Processing data...",false);
+		progressDialog.setLayout(new GridBagLayout());
+		progressDialog.setSize(500,200);
+		progressDialog.setLocationRelativeTo(null);
+		c.gridx = 0;
+		c.gridy = 0;
+		c.gridheight = 1;
+		c.gridwidth = 1;
+		c.weighty = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		progressDialog.add(progressBar,c);
+		cancel = new JButton("Cancel");
+		cancel.addActionListener(this);
+		c.gridy = 1;
+		c.fill = GridBagConstraints.NONE;
+		progressDialog.add(cancel,c);
+		
+		
+		//read default properteis for db connection saved from last session
+		readProperties();
 
+	}
+	
+	public void showDialog(){
+		frame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		progressDialog.setVisible(true);
+		//progressBar.setIndeterminate(true);
+	}
+	
+	public void hideDialog(){
+		progressDialog.setVisible(false);
+		frame.setCursor(Cursor.getDefaultCursor());
+	}
+	
+	public void showProgress(int max, int current,String status){
+		if (max == -1 & current == -1 ){
+			//progressBar.setIndeterminate(true);
+		} else {
+			//progressBar.setIndeterminate(false);
+			progressBar.setMaximum(max);
+			progressBar.setValue(current);
+			progressBar.setString(status);
+		}
 	}
 
 	public void run() {
@@ -388,6 +455,9 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 	public void showStatus(String status) {
 		statusText.append(status + "\n");
 		statusText.setCaretPosition(statusText.getText().length());
+		if (progressDialog.isVisible()){
+			progressBar.setString(status);
+		}
 	}
 
 	public void showSonPreview(String text) {
@@ -423,26 +493,8 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 					password.getText());
 			password.setText("");
 		} else if (e.getSource() == runQuery) {
-			if (crawlNetwork.isSelected() & generateNodeset.isSelected()){
-				//crawl network, use the node props query
-				song.crawlNetwork(seedQuery.getText(), arcsQuery.getText(), 
-						crawlTimes.isSelected(), timeSetQuery.getText(),
-						generateNodeset.isSelected(),nodePropsQuery.getText(),
-						generateDateset.isSelected());
-			} else if (crawlNetwork.isSelected()){
-				//crawl network, use regular nodes query
-				song.crawlNetwork(seedQuery.getText(), arcsQuery.getText(), 
-						crawlTimes.isSelected(), timeSetQuery.getText(),
-						generateNodeset.isSelected(),nodesQuery.getText(),
-						generateDateset.isSelected());
-			} else if (generateNodeset.isSelected()){
-				//use the  node props query
-				song.getNetwork(arcsQuery.getText(), generateNodeset.isSelected(),
-					nodePropsQuery.getText(),generateDateset.isSelected());
-			} else { //use the regular nodes query instead of the node props query
-				song.getNetwork(arcsQuery.getText(), generateNodeset.isSelected(),
-						nodesQuery.getText(),generateDateset.isSelected());
-			}
+			Thread task = song.getFetchThread();
+			task.start();
 		} else if (e.getSource() == validateSon) {
 			// TODO:make sure any edits have been saved back
 			song.validateSon();
@@ -459,7 +511,8 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		} else if (e.getSource() == runFilter){
 			song.filterData(filterList.getSelectedValues());
 		} else if (e.getSource() == generateNodeset) {
-			
+		} else if (e.getSource() == cancel) {
+			song.stop();
 		} else if (e.getSource() == launchSonia){
 			//launch sonia as an external java application
 			//TODO: do this by passing the string or data source diretly
@@ -571,6 +624,8 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 				JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 		if (result == 0) {
 			song.closeDB();
+			//save out database properties to use next time
+			saveProperties();
 			System.exit(0);
 		}
 	}
@@ -585,6 +640,105 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 	}
 
 	public void windowOpened(WindowEvent arg0) {
+	}
+	
+	public String getArcsQuery(){
+		return arcsQuery.getText();
+	}
+	
+	public boolean isGenerateNodeset(){
+		return generateNodeset.isSelected();
+	}
+	
+	public String getNodePropsQuery(){
+		return nodePropsQuery.getText();
+	}
+	
+	public String getNodesQuery(){
+		return nodesQuery.getText();
+	}
+	
+	public boolean isGenerateDateset(){
+		return generateDateset.isSelected();
+	}
+	
+	public String getTimeSetQuery(){
+		return timeSetQuery.getText();
+	}
+	
+	public boolean isCrawlNetwork(){
+		return crawlNetwork.isSelected();
+	}
+	
+	public boolean isCrawlTimes(){
+		return crawlTimes.isSelected();
+	}
+	
+	public String getSeedQuery(){
+		return seedQuery.getText();
+	}
+	
+
+	
+	/**
+	 * write out a properties object to save data between sessions
+	 *
+	 */
+	public void saveProperties(){
+		props = new Properties();
+		props.setProperty("db_host", host.getText());
+		props.setProperty("db_port",port.getText());
+		props.setProperty("db_name", dbName.getText());
+		props.setProperty("db_user",user.getText());
+		props.setProperty("arcs_query", arcsQuery.getText());
+		props.setProperty("node_properties_query",nodePropsQuery.getText());
+		props.setProperty("nodes_query", nodesQuery.getText());
+		props.setProperty("seed_set_query",seedQuery.getText());
+		props.setProperty("time_values_query", timeSetQuery.getText());
+		//also read in boolean vals
+		
+		
+		FileOutputStream out;
+		try {
+			out = new FileOutputStream(propertiesFileName);
+			props.store(out, "default values for the database connection");
+			out.close();
+		} catch (FileNotFoundException e) {
+			showStatus("Error saving database properties: "+e.getCause());
+		} catch (IOException e) {
+			showStatus("Error saving database properties: "+e.getCause());
+		}
+	}
+	
+	/**
+	 * read in stored properties from previous session
+	 *
+	 */
+	public void readProperties(){
+//		 create and load default properties
+		props = new Properties();
+		FileInputStream in;
+		try {
+			in = new FileInputStream(propertiesFileName);
+			props.load(in);
+			in.close();
+			host.setText(props.getProperty("db_host"));
+			port.setText(props.getProperty("db_port"));
+			dbName.setText(props.getProperty("db_name"));
+			user.setText(props.getProperty("db_user"));
+			arcsQuery.setText(props.getProperty("arcs_query"));
+			nodePropsQuery.setText(props.getProperty("node_properties_query"));
+			nodesQuery.setText(props.getProperty("nodes_query"));
+			seedQuery.setText(props.getProperty("seed_set_query"));
+			timeSetQuery.setText(props.getProperty("time_values_query"));
+		} catch (FileNotFoundException e) {
+			showStatus("Error reading default db properties: "+e.getCause());
+		} catch (IOException e) {
+			showStatus("Error reading default db properties: "+e.getCause());
+		}
+		
+
+
 	}
 
 }

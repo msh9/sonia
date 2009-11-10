@@ -12,6 +12,11 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Vector;
 
+import org.freehep.graphicsio.exportchooser.ProgressDialog;
+
+import cern.colt.list.IntArrayList;
+import edu.oswego.cs.dl.util.concurrent.misc.SwingWorker;
+
 import sonia.parsers.DotSonParser;
 import sonia.song.filters.AllProblemFilter;
 import sonia.song.filters.CleaningFilter;
@@ -27,7 +32,7 @@ import sonia.song.filters.SqlDateToDecimal;
  * 
  */
 
-public class Getter {
+public class Getter  {
 	/**
 	 * string used in node queries that will be replaced by a node id before
 	 * excuting
@@ -73,6 +78,10 @@ public class Getter {
 	private ArrayList<DataProblem> problems = new ArrayList<DataProblem>();
 
 	private ArrayList<CleaningFilter> knownFilters = new ArrayList<CleaningFilter>();
+	
+	private int queryCount =0; //for debugging
+	
+	private boolean stopTasks = false; //for breaking tasks
 
 	public Getter() {
 
@@ -220,6 +229,11 @@ public class Getter {
 //		while there are more ids in the queue, assuming we have not allready checked it
 		String nodeId = idQueue.poll(); //get a node from the queue
 		while(nodeId != null){
+			if (stopTasks){
+				status("crawling cancled.");
+				return false;
+			}
+			progress(idQueue.size(), crawlCount, "visited "+crawlCount+" nodes" );
 			visited.add(nodeId);
 		    //built the arcs query with substitution, assuming we have already checked that the values are there
 		    String arcQuery = arcsQuery.replace(nodeIdTag, nodeId);
@@ -251,6 +265,10 @@ public class Getter {
 				// process each row
 				
 				while (arcs.next()) {
+					if (stopTasks){
+						status("processing cancled.");
+						return false;
+					}
 					String[] row = new String[numCols];
 					// loop over cols
 					for (int i = 0; i < numCols; i++) {
@@ -328,6 +346,13 @@ public class Getter {
 			int arcId = 0;
 			// process each row
 			while (arcs.next()) {
+				if (arcId % 100 == 0){
+					progress(-1,-1,"processed "+arcId+" arc rows");
+				}
+				if (stopTasks){
+					status("processing cancled.");
+					return false;
+				}
 				String[] row = new String[numCols];
 				// loop over cols
 				for (int i = 0; i < numCols; i++) {
@@ -346,6 +371,7 @@ public class Getter {
 			status("   processed " + arcId + " arc rows.");
 			// get rid of he resultset
 			arcs.close();
+			arcs = null;
 
 		} catch (Exception e) {
 			error("processing arcs query:" + e.getMessage());
@@ -393,6 +419,10 @@ public class Getter {
 						// get the list of times that are going to be
 						// substituted
 						timeset = getTimeset(arcData);
+						//check that we were able to get a timeset
+						if (timeset == null){
+							return false;
+						}
 						// TODO: should have seperate timeset for starting and
 						// ending times
 					} else {
@@ -421,13 +451,21 @@ public class Getter {
 					}
 					nodesCols.close();
 					// loop over each id
+					//TODO: use a prepared statement
+					//this is complicated because we don't know the order or how many times we are replacing
+					
 					int rowCounter = 0;
 					Iterator<String> nodeIter = nodeIds.iterator();
 					while (nodeIter.hasNext()) {
 						Iterator<String> timeIter = timeset.iterator();
 						String id = nodeIter.next();
+						progress(nodeIds.size()*timeset.size(),rowCounter,"getting data for node "+id);
 						//loop over each time (default is just once) 
 						while (timeIter.hasNext()) {
+							if (stopTasks){
+								status("processing cancled.");
+								return false;
+							}
 							String time = timeIter.next();
 							// replace the id into the query
 							propQuery = nodePropsQuery.replace(nodeIdTag, id);
@@ -521,6 +559,11 @@ public class Getter {
 		// figure out if there are start and end times
 		int startIndex = arcHeaders.indexOf("StartTime");
 		int endIndex = arcHeaders.indexOf("EndTime");
+		if (startIndex ==-1 & endIndex == -1){
+			status("The arcs query must include columns for 'StartTime' and/or " +
+					"'EndTime' in order to generate a set of times for the node properties");
+			return null;
+		}
 		Iterator<String[]> rowIter = arcData.iterator();
 		while (rowIter.hasNext()) {
 			String[] row = rowIter.next();
@@ -561,6 +604,7 @@ public class Getter {
 			rowCount++;
 		}
 		// check for arcs refering to missing nodes
+		//TODO: add function to check for arc-node time miss-match
 		Iterator<String[]> arcIter = arcData.iterator();
 		rowCount = 0;
 		while (arcIter.hasNext()) {
@@ -712,8 +756,11 @@ public class Getter {
 	public void closeDB() {
 		if (currentDB != null) {
 			try {
-				currentDB.close();
-				status("closed connection to DB");
+				//check if already closed
+				if (!currentDB.isClosed()){
+					currentDB.close();
+					status("closed connection to DB");
+				}
 			} catch (SQLException e) {
 				error("closing connection: " + e.getMessage());
 			}
@@ -727,9 +774,22 @@ public class Getter {
 	 * @param query
 	 */
 	public ResultSet runQuery(String queryStr) {
+		ResultSet result = null;
+		//check if connection was closed and if so reopn
+		if (currentDB != null){
+			try{
+				if (currentDB.isClosed()){
+					error("database connection is closed, please reconnect");
+				}
+			} catch (SQLException e) {
+				error("error checking db state"+e.getCause());
+			}
+		}
 		if (currentDB == null) {
 			error("no current database connection open");
 		} else {
+			//debug timing code
+			long queryStart = System.currentTimeMillis();
 			if (query == null) {
 				// create a new statement object for executing queries
 				try {
@@ -740,12 +800,16 @@ public class Getter {
 			}
 			// execute the query
 			try {
-				return query.executeQuery(queryStr);
+				result= query.executeQuery(queryStr);
+				queryCount ++;
 			} catch (SQLException e) {
 				error(e.getMessage() + " executing query:" + queryStr);
 			}
+//			debug timing code
+			System.out.println("query "+queryCount+" took "+(System.currentTimeMillis()-queryStart)+" ms");
 		}
-		return null;
+		
+		return result;
 	}
 
 	/**
@@ -777,6 +841,12 @@ public class Getter {
 			ui.showStatus(status);
 		} else {
 			System.out.println(status);
+		}
+	}
+	
+	private void progress(int max, int current, String msg){
+		if (ui != null) {
+			ui.showProgress(max, current, msg);
 		}
 	}
 
@@ -885,6 +955,42 @@ public class Getter {
 
 	public ArrayList<DataProblem> getProblems() {
 		return problems;
+	}
+	
+	public void stop(){
+		stopTasks = true;
+		ui.hideDialog();
+	}
+
+	public Thread getFetchThread(){
+	 return new Thread() {
+		public void run(){
+			stopTasks = false;
+			ui.showDialog();
+			//check what settings are set in the UI, and run the appropriate methd
+			//TODO: use a properties opject so this could run from command line? 
+			if (ui.isCrawlNetwork() & ui.isGenerateNodeset()){
+				//crawl network, use the node props query
+				crawlNetwork(ui.getSeedQuery(), ui.getArcsQuery(), 
+						ui.isCrawlTimes(), ui.getTimeSetQuery(),
+						ui.isGenerateNodeset(),ui.getNodePropsQuery(),
+						ui.isGenerateDateset());
+			} else if (ui.isCrawlNetwork()){
+				//crawl network, use regular nodes query
+				crawlNetwork(ui.getSeedQuery(), ui.getArcsQuery(), 
+						ui.isCrawlTimes(), ui.getTimeSetQuery(),
+						ui.isGenerateNodeset(),ui.getNodesQuery(),
+						ui.isGenerateDateset());
+			} else if (ui.isGenerateNodeset()){
+				//use the  node props query
+				getNetwork(ui.getArcsQuery(), ui.isGenerateNodeset(), ui.getNodePropsQuery(), ui.isGenerateDateset());
+				
+			} else { //use the regular nodes query instead of the node props query
+				getNetwork(ui.getArcsQuery(), ui.isGenerateNodeset(), ui.getNodesQuery(), ui.isGenerateDateset());
+			}
+			ui.hideDialog();
+		}
+	};
 	}
 
 }

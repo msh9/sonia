@@ -68,6 +68,7 @@ public class SqlDateToDecimal extends AbstractFilter {
 	private String sqlToDecimal(String sqldate){
 		String date = sqldate;
 		//assume 2007-12-31
+		//TODO: need to catch and deal with null values
 		try {
 			Date sql = sqlStyle.parse(sqldate);
 			double decimal = Double.parseDouble(yearStyle.format(sql)) 
