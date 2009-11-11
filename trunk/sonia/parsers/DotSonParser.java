@@ -109,6 +109,9 @@ import sonia.ui.AttributeMapperDialog;
  * <P>
  * <B>LabelColor</B> - the color for the label text, must be a color name
  * </P>
+ *  <P>
+ * <B>LabelSize</B> - the font size for the label text, must be a flot number
+ * </P>
  * <P>
  * <B>BorderColor</B> - the color for the node's border, must be a color name
  * </P>
@@ -613,6 +616,7 @@ public class DotSonParser implements ClusterParser {
 			node.setNodeShape(parseNodeShape(rowArray));
 			node.setBorderColor(parseBorderColor(rowArray));
 			node.setLabelColor(parseLabelColor(rowArray));
+			node.setLabelSize(parseNodeLabelSize(rowArray));
 			node.setBorderWidth(parseBorderWidth(rowArray));
 			try // url may be invalid, problem creating icon, or network
 			// unreachable
@@ -1118,6 +1122,23 @@ public class DotSonParser implements ClusterParser {
 			}
 		}
 		return label;
+	}
+	
+	private float parseNodeLabelSize(String[] rowArray) throws IOException{
+		float size = 10f;
+		String key = colMap.getProperty(DotSonColumnMap.NODE_LABEL_SIZE);
+		if(nodeHeaderMap.containsKey(key)){
+			int index = ((Integer) nodeHeaderMap.get(key)).intValue();
+			try {
+				size = Float.parseFloat(rowArray[index]);
+			} catch (NumberFormatException e) {
+				String error = "Unable to parse node label size from column" + key
+						+ " on line " + reader.getLineNumber() + " : "
+						+ rowArray[index];
+				throw (new IOException(error));
+			}
+		}
+		return size;
 	}
 
 	/**

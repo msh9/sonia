@@ -55,6 +55,8 @@ public class DotSonColumnMap extends PropertySettings {
 	public static final String NODE_SHAPE = "NODE_SHAPE";
 
 	public static final String NODE_LABEL_COLOR_NAME = "NODE_LABEL_COLOR_NAME";
+	
+	public static final String NODE_LABEL_SIZE = "NODE_LABEL_SIZE";
 
 	public static final String NODE_BORDER_COLOR_NAME = "NODE_BORDER_COLOR_NAME";
 
@@ -123,6 +125,7 @@ public class DotSonColumnMap extends PropertySettings {
 		setProperty(NODE_SIZE , "NodeSize");
 		setProperty(NODE_SHAPE , "NodeShape");
 		setProperty(NODE_LABEL_COLOR_NAME , "LabelColor");
+		setProperty(NODE_LABEL_SIZE, "LabelSize");
 		setProperty(NODE_BORDER_COLOR_NAME , "BorderColor");
 		setProperty(NODE_BORDER_WIDTH , "BorderWidth");
 		setProperty(NODE_COLOR_NAME , "ColorName");
