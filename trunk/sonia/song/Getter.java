@@ -21,6 +21,7 @@ import sonia.parsers.DotSonParser;
 import sonia.song.filters.AllProblemFilter;
 import sonia.song.filters.CleaningFilter;
 import sonia.song.filters.SqlDateToDecimal;
+import sonia.song.filters.TimeMatchFilter;
 
 /**
  * Class to manage the process of building .son file from a series of queries to
@@ -92,6 +93,7 @@ public class Getter  {
 		// initialize the list of known filters
 		knownFilters.add(new AllProblemFilter());
 		knownFilters.add(new SqlDateToDecimal(this));
+		knownFilters.add(new TimeMatchFilter(this));
 	}
 	
 	/**

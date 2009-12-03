@@ -361,7 +361,7 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		FilterListModel filterModel = new FilterListModel(song.getAllFilters());
 		filterList = new JList(filterModel);
 		JScrollPane filterScroller = new JScrollPane(filterList);
-		filterScroller.setBorder(new TitledBorder("Availible Filters"));
+		filterScroller.setBorder(new TitledBorder("Available Filters"));
 		filterPanel.add(filterScroller, BorderLayout.CENTER);
 		runFilter = new JButton("Run Filters");
 		runFilter.addActionListener(this);

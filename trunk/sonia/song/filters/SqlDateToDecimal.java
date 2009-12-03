@@ -7,6 +7,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 
+import sonia.parsers.DotSonColumnMap;
 import sonia.song.DataProblem;
 import sonia.song.Getter;
 
@@ -44,8 +45,6 @@ public class SqlDateToDecimal extends AbstractFilter {
 			start = song.getNodeHeaders().indexOf("StartTime");
 			end = song.getNodeHeaders().indexOf("EndTime");
 		}
-		//debug
-		System.out.println(" start end "+start+" "+end);
 		//loop over 'em
 		Iterator<String[]> rowIter = data.iterator();
 		while (rowIter.hasNext()){
