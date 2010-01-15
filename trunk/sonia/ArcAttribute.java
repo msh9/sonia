@@ -86,8 +86,8 @@ public class ArcAttribute implements NetworkEvent
    setFromNodeId(from);
    setToNodeId(to);
    setArcWeight(weight);
-  // arcWidth = width;
-    setArcWidth(arcWeight);  // temporary kludge
+   arcWidth = width;
+   //setArcWidth(arcWeight);  // temporary kludge
  }
 
   //NEED TO PROVIDE METHODS FOR ASKING NODES FOR COORDS FOR DRAWING

@@ -209,20 +209,25 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 	private int pad = 20;
 
 	// private int initialIter = 10; //number of loops before cooling starts
-	private int maxPasses = 500; // maximum number of loops through the Fruch
+	private int maxPasses = 1500; // maximum number of loops through the Fruch
 									// layout procedure
 
 	private int maxSubpasses = 10;
 	private double rePickProb = 0.05;
 	private int totalPasses;
 
-	private double optDist; // optimal distance for nodes, gets reset later in
+	private double optDist = 20; // optimal distance for nodes, gets reset later in
 							// code
 
 	private double springConst = 1; // K in KK paper (avg. i,j distance?)
 
-	private double minEpsilon = 1; // target deltaM goal
+	private double minEpsilon = 0.1; // target deltaM goal
+	
+	private double coolFact = 0.25;
 
+	private double replaceWeight = 0;
+	
+	private  int repaintN = 0;
 
 	private boolean noBreak = true;
 
@@ -241,10 +246,25 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 	private double[] sliceXCoords;
 
 	private double[] sliceYCoords;
+	/**
+	 * target distince (in pixels) for edge of length 1
+	 */
 	public static final String OPT_DIST = "optimum dist";
+	
+	/**
+	 * minimum target energy for the optimization
+	 */
 	public static final String MIN_EPSI ="min epsilon";
 	public static final String SPRNG_CONST ="springConst";
+	
+	/**
+	 * factor by wich the pass-specific energy target should be reduced each round
+	 */
 	public static final String COOL_FACT ="cool factor";
+	
+	/**
+	 * if > 0, default edge length value to use between non-connected components
+	 */
 	public static final String COMP_CONN ="comp connect value";
 	/**
 	 * property key whose value gives the maximum number of iterations a layout
@@ -296,14 +316,14 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 	 *            the dialog the parameters will be added to
 	 */
 	public void setupLayoutProperties(ApplySettingsDialog settings) {
-		settings.addLayoutProperty(MAX_PASS,500);
-		settings.addLayoutProperty(OPT_DIST, 20);
-		settings.addLayoutProperty(MIN_EPSI, 1.0);
-		settings.addLayoutProperty(SPRNG_CONST, 1.0);
-		settings.addLayoutProperty(COOL_FACT, 0.25);
-		settings.addLayoutProperty(COMP_CONN, 0.0);
-		settings.addLayoutProperty(SUB_PASSES, 10);
-		settings.addLayoutProperty(REPICK_PROB,0.5);
+		settings.addLayoutProperty(MAX_PASS,maxPasses);
+		settings.addLayoutProperty(OPT_DIST, optDist);
+		settings.addLayoutProperty(MIN_EPSI, minEpsilon);
+		settings.addLayoutProperty(SPRNG_CONST, springConst);
+		settings.addLayoutProperty(COOL_FACT, coolFact);
+		settings.addLayoutProperty(COMP_CONN,replaceWeight );
+		settings.addLayoutProperty(SUB_PASSES, maxSubpasses);
+		settings.addLayoutProperty(REPICK_PROB,rePickProb);
 	}
 
 	/**
@@ -323,7 +343,15 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 		slice = s;
 		settings = set;
 		//maxPasses = schedule.getMaxUsrPasses();
-		maxPasses = (int)Math.round(Double.parseDouble(settings.getProperty(MAX_PASS)));
+		try {  //validate parameter
+			if (settings.getProperty(MAX_PASS)==null){
+				control.showStatus("Layout setting for "+MAX_PASS+" not specified, using default of "+maxPasses);
+			} else {
+				maxPasses = (int)Math.round(Double.parseDouble(settings.getProperty(MAX_PASS)));
+			}
+		} catch (Exception e) {
+			control.showError("Unable to parse layout setting value of "+MAX_PASS+" : "+e);
+		}
 		totalPasses = 0;
 		schedule.setMaxPasses(maxPasses);
 		//hack to move the cooling bar
@@ -363,10 +391,36 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 	public void run() {
 		// make sure layout is restarted if if it was stopped by error
 		noBreak = true;
-		// test code to connect with phtom links
-		double replaceWeight = Double.parseDouble(settings.getProperty(COMP_CONN));
-		rePickProb =  Double.parseDouble(settings.getProperty(REPICK_PROB));
-		maxSubpasses = (int)Double.parseDouble(settings.getProperty(SUB_PASSES));
+		//validate input params
+		try {
+//			 test code to connect with phtom links
+			if (settings.getProperty(COMP_CONN)==null){
+				control.showStatus("Layout setting for "+COMP_CONN+" not specified, using default of "+replaceWeight);
+			} else {
+				replaceWeight = Double.parseDouble(settings.getProperty(COMP_CONN));
+			}
+		} catch (Exception e) {
+			control.showError("Unable to parse layout setting value of "+COMP_CONN+" : "+e);
+		}
+		try{ 
+			if (settings.getProperty(REPICK_PROB)==null){
+				control.showStatus("Layout setting for "+REPICK_PROB+" not specified, using default of "+rePickProb);
+			} else {
+				rePickProb =  Double.parseDouble(settings.getProperty(REPICK_PROB));
+			}
+		} catch (Exception e) {
+			control.showError("Unable to parse layout setting value of "+REPICK_PROB+" : "+e);
+		}
+		try {
+			if (settings.getProperty(SUB_PASSES)==null){
+				control.showStatus("Layout setting for "+SUB_PASSES+" not specified, using default of "+maxSubpasses);
+			} else {
+				maxSubpasses = (int)Double.parseDouble(settings.getProperty(SUB_PASSES));
+			}
+		} catch (Exception e) {
+			control.showError("Unable to parse layout setting value of "+SUB_PASSES+" : "+e);
+		}
+		
 		if (replaceWeight > 0) {
 			IntArrayList includeAll = new IntArrayList(slice.getMaxNumNodes());
 			for (int i = 0; i < slice.getMaxNumNodes(); i++) {
@@ -463,11 +517,45 @@ public class MultiCompKKLayout implements NetLayout, LongTask {
 		 * Math.min(width, height) / Math.max(NetUtils.calcDiameter(distMatrix),
 		 * 1); //RECALCS ALLSHORTPAHS, BUT USE FOR NOW FOR COMPATIBLITY
 		 */
-		optDist = Double.parseDouble(settings.getProperty(OPT_DIST));
-		minEpsilon = Double.parseDouble(settings.getProperty(MIN_EPSI));
-		double coolFact = Double.parseDouble(settings.getProperty(COOL_FACT));
-		int repaintN = Integer.parseInt(settings.getProperty(ApplySettings.LAYOUT_REPAINT_N));
-		// do these only apply to the last subnet run?
+		//validate params
+		try {
+			if (settings.getProperty(OPT_DIST)==null){
+				control.showStatus("Layout setting for "+OPT_DIST+" not specified, using default of "+optDist);
+			} else {
+				optDist = Double.parseDouble(settings.getProperty(OPT_DIST));
+			}
+		} catch (Exception e) {
+			control.showError("Unable to parse layout setting value of "+OPT_DIST+" : "+e);
+		}
+		try {
+			if (settings.getProperty(MIN_EPSI)==null){
+				control.showStatus("Layout setting for "+MIN_EPSI+" not specified, using default of "+minEpsilon);
+			} else {
+				minEpsilon = Double.parseDouble(settings.getProperty(MIN_EPSI));
+			}
+		} catch (Exception e) {
+			control.showError("Unable to parse layout setting value of "+MIN_EPSI+" : "+e);
+		}
+		try {
+			if (settings.getProperty(COOL_FACT)==null){
+				control.showStatus("Layout setting for "+COOL_FACT+" not specified, using default of "+coolFact);
+			} else {
+				coolFact = Double.parseDouble(settings.getProperty(COOL_FACT));
+			}
+		} catch (Exception e) {
+			control.showError("Unable to parse layout setting value of "+COOL_FACT+" : "+e);
+		}
+		
+		try {
+			if (settings.getProperty(ApplySettings.LAYOUT_REPAINT_N)==null){
+				control.showStatus("Layout setting for "+ApplySettings.LAYOUT_REPAINT_N+" not specified, using default of "+repaintN);
+			} else {
+			 repaintN = Integer.parseInt(settings.getProperty(ApplySettings.LAYOUT_REPAINT_N));
+			}
+		} catch (Exception e) {
+			control.showError("Unable to parse layout setting value of Layout repaint N : "+e);
+		}
+			// do these only apply to the last subnet run?
 		//layoutInfo = layoutInfo + "\noptimum distance: " + optDist;
 		//layoutInfo = layoutInfo + "\nminimum epsilon: " + minEpsilon;
 		//layoutInfo = layoutInfo + "\ncool factor: " + coolFact;

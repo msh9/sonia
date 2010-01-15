@@ -22,7 +22,7 @@ import sonia.layouts.MultiCompKKLayout;
 import sonia.layouts.NetLayout;
 import sonia.settings.ApplySettings;
 
-public class ApplyLayoutTask implements LongTask {
+public class BatchLayoutTask implements LongTask {
 
 	private SoniaLayoutEngine engine;
 
@@ -42,7 +42,7 @@ public class ApplyLayoutTask implements LongTask {
 	private String status = "";
 
 
-	public ApplyLayoutTask(SoniaController cont, SoniaLayoutEngine engine, NetLayout layout,
+	public BatchLayoutTask(SoniaController cont, SoniaLayoutEngine engine, NetLayout layout,
 			int width, int height, LayoutSlice slice, ApplySettings settings) {
 		this.engine = engine;
 		this.layout = layout;
@@ -54,8 +54,7 @@ public class ApplyLayoutTask implements LongTask {
 	}
 
 	public String getTaskName() {
-		return "Apply "+layout.getLayoutType()+" to slice "
-		+slice.getSliceStart()+"-"+slice.getSliceEnd();
+		return "Batch Layout";
 	}
 
 
@@ -118,13 +117,12 @@ public class ApplyLayoutTask implements LongTask {
 			
 		} catch (Throwable t){
 			String er = " Error during layout: "
-				+t.getClass().getSimpleName()+": "+t.getCause();
-			t.printStackTrace();
+				+t.getClass().getSimpleName()+": "+t.getMessage();
 			control.showError(er);
 			status = er;
 			slice.setError(true);
 			slice.setLayoutFinished(true);
-			
+			t.printStackTrace();
 		}
 		reportStatus();
 	}

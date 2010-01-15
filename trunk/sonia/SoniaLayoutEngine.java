@@ -249,11 +249,13 @@ public class SoniaLayoutEngine implements TaskListener{
 			applySettings = new ApplySettings();
 		}
 
+		//TODO: fix this hack, shouldn't need to create the dialog to initialize settings when in non-gui mode
+		if (settings == null) {
+			settings = new ApplySettingsDialog(applySettings, control,
+					this, null, currentLayout);
+		}
+		
 		if (control.isShowGUI()) {
-			if (settings == null) {
-				settings = new ApplySettingsDialog(applySettings, control,
-						this, null, currentLayout);
-			}
 			settings.showDialog();
 		}
 
@@ -355,9 +357,10 @@ public class SoniaLayoutEngine implements TaskListener{
 	 * screen redraws and events (like pause) to take place. Thread calls
 	 * startApplyLayoutToRemaining()
 	 */
-	public void applyLayoutToRemaining() {
+	public LongTask applyLayoutToRemaining() {
 		LongTask multiTask = new MultipleLayoutTask(this,false);
 		control.runTask(multiTask);
+		return multiTask;
 	}
 	
 	public void applyLayoutToPrevious(){
@@ -381,7 +384,7 @@ public class SoniaLayoutEngine implements TaskListener{
 			applySettings = settings.getSettings();
 		}
 		control.showStatus("Applying layouts to slices " + startSlice + " to "
-				+ startSlice + slicesLeft);
+				+ (startSlice + slicesLeft));
 		// PROBLEMS WITH THREADING, NEED TO MAKE SURE THAT IF THEY ARE DEPENDENT
 		// ONE LAYOUT FINISHES BEFORE NEXT STARTS
 		// SHOULD CHECK THAT THE prev slice is finished
@@ -433,6 +436,7 @@ public class SoniaLayoutEngine implements TaskListener{
 	 *            the slice which the layout will be applied to
 	 */
 	public synchronized LongTask  applyLayoutTo(ApplySettings settings, LayoutSlice slice) {
+		
 		
 		// check if slice is in use
 		if (!slice.isLayoutFinished()) {
@@ -781,10 +785,11 @@ public class SoniaLayoutEngine implements TaskListener{
 	 * @param exporter
 	 *            the SoniaMovieMaker to save the movie frames to
 	 */
-	public void makeMovie(MovieMaker exporter) throws Exception {
+	public LongTask makeMovie(MovieMaker exporter) throws Exception {
 		//display.makeMovie(exporter);
 		MovieExportTask movieTask = new MovieExportTask(this,exporter);
 		control.runTask(movieTask);
+		return movieTask;
 	}
 
 	/**

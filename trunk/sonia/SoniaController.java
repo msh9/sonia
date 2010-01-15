@@ -139,6 +139,8 @@ public class SoniaController implements Runnable, TaskListener{
 	private Uniform randomUni; // colt package mersense twister random numbers
 	
 	private TaskRunner taskrunner;
+	
+	private LongTask batchTask = null;
 
 	// NEED TO INCLUDE COLT LISCENCE AGREEMENT
 	private Date date;
@@ -546,7 +548,7 @@ public class SoniaController implements Runnable, TaskListener{
 			if (sliceSettings != null) {
 				showStatus("Read layout settings from batch instructions");
 				log("Read layout settings from batch instructions");
-				createLayout(sliceSettings);
+				//createLayout(sliceSettings); //maybe we've already done this?
 			}
 			//need to build the layout window, even if we don't show it
 			showGUI(false);
@@ -554,57 +556,10 @@ public class SoniaController implements Runnable, TaskListener{
 			if ((engine != null) && (applySettings != null)) {
 				engine.setApplySettings(applySettings);
 				showStatus("Running layout on first slice");
-				LongTask firstLayout = engine.applyLayoutTo(engine.getCurrentApplySettings(), engine.getCurrentSlice());
-				firstLayout.addTaskEventListener(this);
-				//engine.changeToSliceNum(1);
-				applySettings.setProperty(ApplySettings.STARTING_COORDS,
-						ApplySettings.COORDS_FROM_PREV);
-				applySettings.setProperty(ApplySettings.APPLY_REMAINING,
-						true + "");
-				engine.setApplySettings(applySettings);
-				// call the non-threaded version so we can catch the
-				// exceptions...
-				//wait for it to finish
-				//while (!engine.getCurrentSlice().isLayoutFinished()){
-					//pause here so as not to gobble system resourcs
-			
-				//}
-
-				engine.startApplyLayoutToRemaining();
-				engine.changeToSliceNum(0);
-				engine.getLayoutWindow().showCurrentSlice();
-				String movType = MovieSettings.QUICKTIME_FILE_TYPE;
-				String movFileName = currentPath + getFileName() + "."+movType;
-				if (movieSettings != null) {
-					String name = movieSettings
-							.getProperty(MovieSettings.OUTPUT_PATH);
-					movType = movieSettings.getProperty(MovieSettings.FILE_TYPE);
-					name = name+"."+movType;
-					if ((name != null) && !name.equals("")) {
-						movFileName = name;
-					}
-				}
-
-				// THIS LAUNCHES ON ANOTHER THREAD!!
-				MovieMaker movie;
-				if (movType != null && movType.equals(MovieSettings.FLASH_FILE_TYPE)){
-					movie = exportFlashMovie(engine,engine.getLayoutWindow().getDisplay(),movFileName);
-				} else if (movType != null && movType.equals(MovieSettings.QUICKTIME_FILE_TYPE)) {
-					movie = exportQTMovie(engine,engine.getLayoutWindow().getDisplay(),movFileName);
-				}
-				else {
-					showError("Unknown movie file type:"+movType);
-					return;
-				}
-				while (movie.isExporting()) {
-					// TODO: need to notify when export is done, not loop
-					// continously!!
-				}
-				// wait for movie export to finsih
-				log.writeLogToFile(currentPath + getFileName() + "_log.txt");
-				// if there is no ui, then we should quit when done
-				System.exit(0);
-
+				batchTask = engine.applyLayoutTo(engine.getCurrentApplySettings(), engine.getCurrentSlice());
+				batchTask.addTaskEventListener(this);
+				//when this task is finsished, it should send a callback, which will trigger the mainBatch() method
+				
 			}
 		} catch (Throwable e) {
 			//ui.setVisible(true);
@@ -612,7 +567,86 @@ public class SoniaController implements Runnable, TaskListener{
 			showError("ERROR in batch execution: " + e.getMessage());
 			System.exit(-1);
 		}
+		
+	}
+	
+	
+	private void mainBatch(){
+		try {
+			showStatus("Startng main layout sequence using "+ApplySettings.STARTING_COORDS+"="+
+					ApplySettings.COORDS_FROM_PREV+" and "+ApplySettings.APPLY_REMAINING+"=true");
+			//engine.changeToSliceNum(1);
+			applySettings.setProperty(ApplySettings.STARTING_COORDS,
+					ApplySettings.COORDS_FROM_PREV);
+			applySettings.setProperty(ApplySettings.APPLY_REMAINING,
+					true + "");
+			engine.setApplySettings(applySettings);
+			
+			batchTask = engine.applyLayoutToRemaining();
+			batchTask.addTaskEventListener(this);
 
+		} catch (Throwable e) {
+			//ui.setVisible(true);
+			e.printStackTrace();
+			showError("ERROR in batch execution: " + e.getMessage());
+			System.exit(-1);
+		}
+	}
+	
+	private void movieBatch(){
+		try {
+	//now export movie
+			batchTask = null; //just to be safe
+			engine.changeToSliceNum(0);
+			engine.getLayoutWindow().showCurrentSlice();
+			String movType = MovieSettings.QUICKTIME_FILE_TYPE;
+			String movFileName = currentPath + getFileName() + "."+movType;
+			if (movieSettings != null) {
+				String name = movieSettings
+						.getProperty(MovieSettings.OUTPUT_PATH);
+				movType = movieSettings.getProperty(MovieSettings.FILE_TYPE);
+				name = name+"."+movType;
+				if ((name != null) && !name.equals("")) {
+					movFileName = name;
+				}
+			}
+
+			// THIS LAUNCHES ON ANOTHER THREAD!!
+			MovieMaker movie;
+			if (movType != null && movType.equals(MovieSettings.FLASH_FILE_TYPE)){
+				movie = exportFlashMovie(engine,engine.getLayoutWindow().getDisplay(),movFileName);
+				//nasty hack.  assome that the movie method has created a batchTask so listen to it
+				batchTask.addTaskEventListener(this);
+			} else if (movType != null && movType.equals(MovieSettings.QUICKTIME_FILE_TYPE)) {
+				movie = exportQTMovie(engine,engine.getLayoutWindow().getDisplay(),movFileName);
+//				nasty hack.  assome that the movie method has created a batchTask so listen to it
+				batchTask.addTaskEventListener(this);
+			} else {
+				showError("Unknown movie file type:"+movType);
+				return;
+			}
+		} catch (Throwable e) {
+			//ui.setVisible(true);
+			e.printStackTrace();
+			showError("ERROR in batch execution: " + e.getMessage());
+			//try writing log before exit!
+			System.exit(-1);
+		}
+	}
+	
+	private void finishBatch(){
+		try {
+//			 wait for movie export to finsih
+			log.writeLogToFile(currentPath + getFileName() + "_log.txt");
+			// if there is no ui, then we should quit when done
+			batchTask = null;
+			System.exit(0);
+		} catch (Throwable e) {
+			//ui.setVisible(true);
+			e.printStackTrace();
+			showError("ERROR in batch execution: " + e.getMessage());
+			System.exit(-1);
+		}
 	}
 
 	/**
@@ -845,7 +879,7 @@ public class SoniaController implements Runnable, TaskListener{
 			try {
 				exporter = new SWFMovieMaker(this, engToExport,
 						fileName);
-				engToExport.makeMovie(exporter);
+				batchTask = engToExport.makeMovie(exporter);
 			} catch (Exception e) {
 				showError("Error writing flash movie:" + e.getMessage());
 				log("ERROR saving movie: " + e.getMessage());
@@ -887,7 +921,8 @@ public class SoniaController implements Runnable, TaskListener{
 				 } else {
 					 exporter.configure((MovieSettings)movieSettings);
 				 }
-				engToExport.makeMovie(exporter);
+				 //kind of an ugly hack, should redesign to have a better way to get a reference to the mvoie task
+				batchTask = engToExport.makeMovie(exporter);
 			} catch (Exception e) {
 				showError("Error writing QT movie:" + e.getMessage());
 				log("ERROR saving movie: " + e.getMessage());
@@ -921,7 +956,7 @@ public class SoniaController implements Runnable, TaskListener{
 			try {
 				exporter = new MultipleImageMovieMaker(this,engine,fileName);
 				exporter.configure((MovieSettings)movieSettings);
-				engToExport.makeMovie(exporter);
+				batchTask = engToExport.makeMovie(exporter);
 			} catch (Exception e) {
 				showError("Error writing network movie as image sequence:" + e.getMessage());
 				log("ERROR saving image sequence: " + e.getMessage());
@@ -955,7 +990,7 @@ public class SoniaController implements Runnable, TaskListener{
 			try {
 				exporter = new JPEGMovieMaker(this,engine,fileName);
 				exporter.configure((MovieSettings)movieSettings);
-				engToExport.makeMovie(exporter);
+				batchTask = engToExport.makeMovie(exporter);
 			} catch (Exception e) {
 				showError("Error writing network as JPEG Movie:" + e.getMessage());
 				log("ERROR saving JPEG Movie: " + e.getMessage());
@@ -1386,8 +1421,25 @@ public class SoniaController implements Runnable, TaskListener{
 
 	//mostly used when running batch, to report when task is done
 	public void taskStatusChanged(LongTask task) {
+		//debug
+		System.out.println("TASK STATUS "+task.getTaskName()+" "+task.getStatusText());
 		if (task.isDone()){
-			
+			//check if it was the batch task
+			if (batchTask != null && batchTask.equals(task)){
+				if (task instanceof ApplyLayoutTask){
+					showStatus("Initial layout done "+task.getTaskName());
+					//kick off the rest of the process (should be a task on its own thread...)
+					mainBatch();
+				} else if (task instanceof MultipleLayoutTask){
+					showStatus("Main layout done "+task.getTaskName());
+					//assume we are done with layouts and start the movie export
+					movieBatch();
+				} else if (task instanceof MovieExportTask) {
+					//assume movie export is done, so wrap up and exit
+					showStatus("Movie export done "+task.getTaskName()+" saving log and exiting§");
+					finishBatch();
+				}
+			}
 		}
 		
 	}

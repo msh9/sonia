@@ -279,7 +279,7 @@ public class Getter  {
 					// add any new ids to the list to vist
 					if (!visited.contains(row[fromCol])) {
 						idQueue.add(row[fromCol]);
-						visited.add(row[fromCol]);
+						visited.add(row[fromCol]); //WHOA! SHOULD THIS BE HERE?!!
 					}
 					if (!visited.contains(row[toCol])) {
 						idQueue.add(row[toCol]);

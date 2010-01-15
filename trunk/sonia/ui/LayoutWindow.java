@@ -509,7 +509,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		c.gridx = 0;c.gridy = 0;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;c.weighty = 0.0;
 		controlPanel.add(ViewOptions, c);
 		c.gridx = 0;c.gridy = 1;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;c.weighty = 0.0;
-		controlPanel.add(makeClusters, c);
+		//controlPanel.add(makeClusters, c);  //hide this for now so don't have to support or explain...
 
 		// buttons
 		c.gridx = 1;c.gridy = 0;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;	c.weighty = 0.0;
