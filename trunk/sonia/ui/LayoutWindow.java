@@ -670,9 +670,11 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 				k.consume();
 			}
 		});
-
+		//TODO: figure out a better way to store the default browsing settings
 		// read settings from the browsng properties
 		fetchBrowseSettings();
+		//and then make sure they've all been stored
+		recordBrowseSettings();
 
 		// this.setBackground(Color.lightGray);
 		this.setSize(initWidth, initHeight);

@@ -108,11 +108,43 @@ public class MDSJLayout implements NetLayout {
 	public void applyLayoutTo(LayoutSlice slice, int width, int height,
 			ApplySettings settings) {
 		this.settings = settings;
-		//read out the settings
-		replaceWeight = Double.parseDouble(settings.getProperty(COMP_CONN,replaceWeight+""));
-		scalingExp = Double.parseDouble(settings.getProperty(DIST_SCALE_EXP,scalingExp+""));
-		scaleFactor = Double.parseDouble(settings.getProperty(SCALE_FACTOR,scalingExp+""));
-		iterations = (int)Double.parseDouble(settings.getProperty(ITERATIONS,iterations+""));
+		//read out the settings and validate
+		if (settings.getProperty(COMP_CONN)==null){
+			control.showStatus("Layout setting for "+COMP_CONN+" not specified, using default of "+replaceWeight);
+		} else {
+			try {
+				replaceWeight = Double.parseDouble(settings.getProperty(COMP_CONN,replaceWeight+""));
+			} catch (Exception e) {
+				control.showError("Unable to parse layout setting value of "+COMP_CONN+" : "+e);
+			}
+		}
+		if (settings.getProperty(DIST_SCALE_EXP)==null){
+			control.showStatus("Layout setting for "+DIST_SCALE_EXP+" not specified, using default of "+scalingExp);
+		} else {
+			try {
+				scalingExp = Double.parseDouble(settings.getProperty(DIST_SCALE_EXP,scalingExp+""));
+			} catch (Exception e) {
+				control.showError("Unable to parse layout setting value of "+DIST_SCALE_EXP+" : "+e);
+			}
+		}
+		if (settings.getProperty(SCALE_FACTOR)==null){
+			control.showStatus("Layout setting for "+SCALE_FACTOR+" not specified, using default of "+scaleFactor);
+		} else {
+			try {
+				scaleFactor = Double.parseDouble(settings.getProperty(SCALE_FACTOR,scaleFactor+""));
+			} catch (Exception e) {
+				control.showError("Unable to parse layout setting value of "+SCALE_FACTOR+" : "+e);
+			}
+		}
+		if (settings.getProperty(ITERATIONS)==null){
+			control.showStatus("Layout setting for "+ITERATIONS+" not specified, using default of "+iterations);
+		} else {
+			try {
+				iterations = (int)Double.parseDouble(settings.getProperty(ITERATIONS,iterations+""));
+			} catch (Exception e) {
+				control.showError("Unable to parse layout setting value of "+ITERATIONS+" : "+e);
+			}
+		}
 		xOffset = engine.getLayoutWidth()/2;
 		yOffset = engine.getLayoutWidth()/2;
 		
@@ -191,7 +223,6 @@ public class MDSJLayout implements NetLayout {
 	}
 
 	public String getLayoutType() {
-		// TODO Auto-generated method stub
 		return "MDSJ distance scaling";
 	}
 

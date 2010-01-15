@@ -550,6 +550,7 @@ public class SoniaController implements Runnable, TaskListener{
 				log("Read layout settings from batch instructions");
 				//createLayout(sliceSettings); //maybe we've already done this?
 			}
+		
 			//need to build the layout window, even if we don't show it
 			showGUI(false);
 
@@ -564,8 +565,9 @@ public class SoniaController implements Runnable, TaskListener{
 		} catch (Throwable e) {
 			//ui.setVisible(true);
 			e.printStackTrace();
-			showError("ERROR in batch execution: " + e.getMessage());
-			System.exit(-1);
+			log("ERROR in batch execution: " + e.getMessage());
+//			try writing log before exit!
+			finishBatch();
 		}
 		
 	}
@@ -588,8 +590,9 @@ public class SoniaController implements Runnable, TaskListener{
 		} catch (Throwable e) {
 			//ui.setVisible(true);
 			e.printStackTrace();
-			showError("ERROR in batch execution: " + e.getMessage());
-			System.exit(-1);
+			log("ERROR in batch execution: " + e.getMessage());
+//			try writing log before exit!
+			finishBatch();
 		}
 	}
 	
@@ -599,6 +602,8 @@ public class SoniaController implements Runnable, TaskListener{
 			batchTask = null; //just to be safe
 			engine.changeToSliceNum(0);
 			engine.getLayoutWindow().showCurrentSlice();
+			//log the broswing settings that will be use
+			log("Browse settings use for movie export:\n"+browseSettings);
 			String movType = MovieSettings.QUICKTIME_FILE_TYPE;
 			String movFileName = currentPath + getFileName() + "."+movType;
 			if (movieSettings != null) {
@@ -628,9 +633,9 @@ public class SoniaController implements Runnable, TaskListener{
 		} catch (Throwable e) {
 			//ui.setVisible(true);
 			e.printStackTrace();
-			showError("ERROR in batch execution: " + e.getMessage());
+			log("ERROR in batch execution: " + e.getMessage());
 			//try writing log before exit!
-			System.exit(-1);
+			finishBatch();
 		}
 	}
 	
@@ -644,7 +649,7 @@ public class SoniaController implements Runnable, TaskListener{
 		} catch (Throwable e) {
 			//ui.setVisible(true);
 			e.printStackTrace();
-			showError("ERROR in batch execution: " + e.getMessage());
+			log("ERROR in batch execution: " + e.getMessage());
 			System.exit(-1);
 		}
 	}
@@ -1421,22 +1426,20 @@ public class SoniaController implements Runnable, TaskListener{
 
 	//mostly used when running batch, to report when task is done
 	public void taskStatusChanged(LongTask task) {
-		//debug
-		System.out.println("TASK STATUS "+task.getTaskName()+" "+task.getStatusText());
 		if (task.isDone()){
 			//check if it was the batch task
 			if (batchTask != null && batchTask.equals(task)){
 				if (task instanceof ApplyLayoutTask){
-					showStatus("Initial layout done "+task.getTaskName());
+					log("Initial layout done: "+task.getTaskName());
 					//kick off the rest of the process (should be a task on its own thread...)
 					mainBatch();
 				} else if (task instanceof MultipleLayoutTask){
-					showStatus("Main layout done "+task.getTaskName());
+					log("Main layout done: "+task.getTaskName());
 					//assume we are done with layouts and start the movie export
 					movieBatch();
 				} else if (task instanceof MovieExportTask) {
 					//assume movie export is done, so wrap up and exit
-					showStatus("Movie export done "+task.getTaskName()+" saving log and exiting§");
+					log("Movie export done: "+task.getTaskName()+" saving log and exiting§");
 					finishBatch();
 				}
 			}
