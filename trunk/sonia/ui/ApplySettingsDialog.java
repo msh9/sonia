@@ -279,11 +279,11 @@ public class ApplySettingsDialog implements ActionListener {
 		c.gridy = 5;
 		mainPanel.add(Cancel, c);
 
-		// add any addl compondents from the layout
+		// add any addl components from the layout
 
 		algProps = new JPanel(new GridBagLayout());
 		algProps.setBorder(new TitledBorder("Algorithm-specific properties"));
-		// first colum (alterneat entries in propcomponents)
+		// first colum (alternate entries in propcomponents)
 		int compIndex = 0;
 		for (int i = 0; i < (propComponents.size() / 2); i++) {
 			c.anchor = GridBagConstraints.EAST;
@@ -296,7 +296,7 @@ public class ApplySettingsDialog implements ActionListener {
 			algProps.add((Component) propComponents.get(compIndex), c);
 			compIndex += 2;
 		}
-		// 2nd colum (alternet entries in propcomponents)
+		// 2nd colum (alternate entries in propcomponents)
 		compIndex = 1;
 		for (int i = 0; i < (propComponents.size() / 2); i++) {
 			c.anchor = GridBagConstraints.WEST;
@@ -327,7 +327,7 @@ public class ApplySettingsDialog implements ActionListener {
 
 		// settingsDialog.setBackground(Color.lightGray);
 		settingsDialog.getContentPane().add(mainPanel);
-		settingsDialog.setSize(600, 350);
+		settingsDialog.setSize(700, 500);
 		showSettings(); // get the values
 	}
 

@@ -57,6 +57,28 @@ public class TimedTagBin {
 			binStorage.put(timeKey, bin);
 		}
 	}
+	
+	/**
+	 * put multiple key value association into a bin with the in the included spell
+	 * 
+	 * @author skyebend
+	 * @param spells  double array of start and end times to add for that vale
+	 * @param keyTag
+	 * @param value
+	 */
+	public void addAssociations(double[][] spells, String keyTag, String value) {
+		for (int s=0; s<spells.length;s++){
+			Interval timeKey = new Interval(spells[s][0],spells[s][1]);
+			String[] keyTagValue = new String[] { keyTag, value };
+			if (binStorage.containsKey(timeKey)) {
+				((Vector) binStorage.get(timeKey)).add(keyTagValue);
+			} else {
+				Vector bin = new Vector();
+				bin.add(keyTagValue);
+				binStorage.put(timeKey, bin);
+			}
+		}
+	}
 
 	/**
 	 * return Iterator containing all the bin times as Interval objects in acending order. WARNING:
@@ -65,7 +87,7 @@ public class TimedTagBin {
 	 * @author skyebend
 	 * @return
 	 */
-	public Iterator getBinTimeIter(){
+	public Iterator<Interval> getBinTimeIter(){
 		return binStorage.keySet().iterator();
 	}
 

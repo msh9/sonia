@@ -34,7 +34,7 @@ as long as you
  *   - do not use MDSJ for any commercial purposes ("nc"), and
   *  - apply these conditions to all your pieces of software that make use of MDSJ ("sa"). 
 
-* Correspondence with developer Christian Pich stated that they were OK with the library being used as a 
+* Correspondence with developer Christian Pich on 3/23/09 stated that they were OK with the library being used as a 
 * linked library withen a GPL project provided that the project gave clear warnings of the non-comerical use
 * restriction when the algorithms are used.
 * 

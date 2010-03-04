@@ -62,6 +62,7 @@ import sonia.parsers.DotSonParser;
 import sonia.parsers.DyNetMLParser;
 import sonia.parsers.Parser;
 import sonia.parsers.RJavaParser;
+import sonia.parsers.RNetworkDynamicParser;
 import sonia.render.GraphMLRender;
 import sonia.render.XMLCoordRender;
 import sonia.settings.ApplySettings;
@@ -83,17 +84,17 @@ import cern.colt.matrix.impl.SparseDoubleMatrix2D;
 
 /**
  * Main controlling class for SoNIA. Handles most method calls for coordinating
- * loading files, creating layouts, random numbers, logging, error mesages,
- * status messags. some display updating, saving files, and saving movies. Data
+ * loading files, creating layouts, random numbers, logging, error messages,
+ * status messages. some display updating, saving files, and saving movies. Data
  * structures for holding loaded data, and Engines for layouts. Seed for random
  * number generator can be passed in as an argument when sonia is launched from
- * the command line, otherwise the last 7 digits of milisecond time are used.
+ * the command line, otherwise the last 7 digits of millisecond time are used.
  */
 
 public class SoniaController implements Runnable, TaskListener{
-	public static final String CODE_DATE = "2007-12-21";
+	public static final String CODE_DATE = "2010-2-26";
 
-	public static final String VERSION = "1.2.1";
+	public static final String VERSION = "1.2.2";
 
 	private SoniaInterface ui;
 
@@ -391,7 +392,7 @@ public class SoniaController implements Runnable, TaskListener{
 			} else if (fileName.endsWith(".dl")) {
 				parser = new DLParser();
 			} else if (fileName.endsWith(".rdump")) {
-				parser = new RJavaParser();
+				parser = new RNetworkDynamicParser(); //new RJavaParser();
 				parser.configureParser(parserSettings);
 			} else if (fileName.endsWith(".xml")){
 				//TODO:  need to check doctype to figure out what kind of xml
@@ -445,6 +446,8 @@ public class SoniaController implements Runnable, TaskListener{
 				parser.configureParser(parserSettings);
 			}
 			parser.parseNetwork(data);
+			//TODO: should add functionality to read other settings from parser, in case it was trying to configure sonia
+		
 			// put in a fake file name
 			fileName = "R_import";
 			fileLoaded = true;
@@ -462,7 +465,7 @@ public class SoniaController implements Runnable, TaskListener{
 	}
 
 	/**
-	 * desides if argument is a file or a string of compound settings, and tries
+	 * decides if argument is a file or a string of compound settings, and tries
 	 * to create the appropriate settings arguments.
 	 * 
 	 * @param settingsOrFile

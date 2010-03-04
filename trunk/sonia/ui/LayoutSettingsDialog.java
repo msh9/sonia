@@ -196,12 +196,12 @@ public class LayoutSettingsDialog extends JDialog implements ActionListener , Fo
 		c.gridy = 0;
 		c.gridwidth = 2;
 		c.gridheight = 1;
-		c.weightx = 0.5;
+		c.weightx = 1;
 		c.weighty = 1;
 		// this.add(SliceInfoLabel,c);
-		c.fill = GridBagConstraints.VERTICAL;
+		c.fill = GridBagConstraints.BOTH;
 		controlPanel.add(sliceSettings, c);
-
+		c.weightx = .5;
 		c.gridx = 2;
 		c.gridy = 0;
 		c.gridwidth = 1;

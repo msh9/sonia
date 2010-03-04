@@ -1,4 +1,27 @@
 package sonia.parsers;
+/**
+ * <p>Title:SoNIA (Social Network Image Animator) </p>
+ * <p>Description:Animates layouts of time-based networks
+ * <p>Copyright: 2010 Skye Bender-deMoll
+ * <p>License: GNU GPL 3.0</p>
+ * @author Skye Bender-deMoll 
+ * @version 1.0
+ */
+
+/* This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation; either version 2
+ of the License, or (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
 
 import java.awt.Color;
 import java.awt.geom.Ellipse2D;
@@ -18,6 +41,7 @@ import java.util.Vector;
 import sonia.ArcAttribute;
 import sonia.Interval;
 import sonia.NodeAttribute;
+import sonia.PropertyBuilder;
 import sonia.TimedTagBin;
 import sonia.settings.PropertySettings;
 import sonia.settings.RParserSettings;
@@ -25,28 +49,17 @@ import sonia.settings.RParserSettings;
 /**
  * This class takes sets of lists exported from R using deparse(). Lists may
  * either be as one long string, or can be passed as a file name ending in
- * ".rdump" containing the strings. This is compatible with the 0.04 version of the rSoNIA/dynamicNetwork package.
- * The R command to generate the appropriate
+ * ".???" containing the strings. This is intended to parse the output of Carter Butts' 
+ * networkDynamic (not to be confused with dynamicNetwork) package. The R command to generate the appropriate
  * string is: paste(deparse(network,control=NULL),sep=","); which should yield
  * something like: <BR>
  * <BR>
- * [1] "list(list(inl = 1, outl = 4, atl = list(na = FALSE)), list(inl = 1, outl =
- * 5, atl = list(na = FALSE)), list(inl = 2, outl = 3, atl = list(na = FALSE)),
- * list(inl = 2, outl = 4, atl = list(na = FALSE)), list(inl = 3, outl = 1, atl =
- * list(na = FALSE)), list(inl = 3, outl = 4, atl = list(na = FALSE)), list(inl =
- * 4, outl = 1, atl = list(na = FALSE)), list(inl = 4, outl = 2, atl = list(na =
- * FALSE)), list(inl = 4, outl = 3, atl = list(na = FALSE)), list(inl = 4, outl =
- * 5, atl = list(na = FALSE)), list(inl = 5, " [2] "list(n = 5, mnext = 15,
- * directed = TRUE, hyper = FALSE, loops = FALSE, multiple = FALSE, bipartite =
- * FALSE)" [3] "list(list(na = FALSE), list(na = FALSE), list(na = FALSE),
- * list(na = FALSE), list(na = FALSE))" [4] "list(c(2, 1), c(4, 3), c(6, 5),
- * c(7, 8, 10, 9), c(11, 12, 13, 14))" [5] "list(c(11, 7, 5), c(12, 8), c(3, 13,
- * 9), c(1, 4, 14, 6), c(2, 10))"
- * 
+ * They key difference between this and "RJavaParser" is that the edge timing is stored as attributes with names "active" 
+ * instead of on a separate low-level "etl" list. 
  * @author skyebend
  * 
  */
-public class RJavaParser implements Parser {
+public class RNetworkDynamicParser implements Parser {
 
 	private static final String rSuffix = ".rdump";
 
@@ -63,6 +76,9 @@ public class RJavaParser implements Parser {
 	private boolean isMultiplex = false;
 
 	private boolean isRenewal = false;
+	
+	private String netInfo = "Parsed from .rdump file.";
+	
 
 	// private boolean isBipartite = false;
 	private HashMap<String,String> galTagMap;
@@ -79,13 +95,13 @@ public class RJavaParser implements Parser {
 
 	private double minTime = 0.0;
 
-	private RParserSettings settings;
+	private PropertySettings settings;
 	
 	private String parserInfo ="";
 
 	/**
 	 * 
-	 * String may be a list of networks, need to seperate them String is the
+	 * String may be a list of networks, need to separate them String is the
 	 * output of the paste() command for a network object in R. Will be a set of
 	 * lists "mel" : Master Edge List, "gal" : Graph Attribute List, "val" :
 	 * Vertex Attribute List, "iel" : In Edge List, "oel", Out Edge List.
@@ -97,14 +113,15 @@ public class RJavaParser implements Parser {
 		// configure defaults
 		if (settings == null) {
 			settings = new RParserSettings();
+			//this give *either* default values, or default name of variable to read
 			settings.setProperty(RParserSettings.NODE_LABEL, "vertex.names");
-			settings.setProperty(RParserSettings.NODE_COLOR, "red");
 			settings.setProperty(RParserSettings.NODE_SIZE, "5");
 			settings.setProperty(RParserSettings.NODE_SHAPE, "circle");
 			settings.setProperty(RParserSettings.NODE_X, "0.0");
 			settings.setProperty(RParserSettings.NODE_Y, "0.0");
-			settings.setProperty(RParserSettings.NODE_COLOR,"gray");
+			settings.setProperty(RParserSettings.NODE_COLOR,"red");
 			settings.setProperty(RParserSettings.ARC_COLOR,"gray");
+			netInfo += " No parser settings were included, used default values"+settings;
 
 		}
 		parserInfo = "";
@@ -140,6 +157,7 @@ public class RJavaParser implements Parser {
 			if (mainElements.size() <= 1) {
 				throw (new Exception("Unexpected network value:" + netString));
 			}
+			//TODO: should have a variable that reports file format version...
 
 			String mel = (String) mainElements.get(0);
 			String gal = (String) mainElements.get(1);
@@ -148,11 +166,11 @@ public class RJavaParser implements Parser {
 			String oel = (String) mainElements.get(4);
 			String etl = null; // will be missing if it is not a dynamic
 			// network
-			if (mainElements.size() > 4) {
+			if (mainElements.size() > 5) {
 				etl = (String) mainElements.get(5);
 			}
 			parseGal(gal);
-			parseEdges(mel, etl);
+			parseEdges(mel);
 			parseVal(val);
 
 		} catch (Exception e) {
@@ -186,8 +204,8 @@ public class RJavaParser implements Parser {
 		// put all the name = value pairs into a map
 		for (int i = 0; i < attributeTokens.size(); i++) {
 			String tag = (String) attributeTokens.get(i);
-			galTagMap.put(tag.substring(0, tag.indexOf("=") - 1).trim(), tag
-					.substring(tag.indexOf("=") + 1).trim());
+			galTagMap.put(tag.substring(0, tag.indexOf(" = ")).trim(), tag
+					.substring(tag.indexOf(" = ") + 3).trim());
 		}
 		maxNodes = Integer.parseInt((String) galTagMap.get("n"));
 		numEdges = Integer.parseInt((String) galTagMap.get("mnext")) - 1;
@@ -199,25 +217,38 @@ public class RJavaParser implements Parser {
 		// bipartite is not a boolean flag, if it is present it is a index
 		// number of
 		// last node of the class
-		isRenewal = parseRBoolIsTrue((String) galTagMap.get("is.renewal"));
+		//isRenewal = parseRBoolIsTrue((String) galTagMap.get("is.renewal"));
 		// check if there are dynamic attributes
-		if (galTagMap.containsKey("dynam.attr.names")) {
-			Iterator keyIter = parseVector(
-					(String) galTagMap.get("dynam.attr.names")).iterator();
-			while (keyIter.hasNext()) {
-				dynamicVertAttrMap.add((stripQuotes((String) keyIter.next()))
-						.intern());
+		
+		String soniaParameters = galTagMap.get("sonia.parameters");
+		
+		if (soniaParameters != null){
+			//convert the "\n" strings to real newlines
+			soniaParameters = soniaParameters.replace("\\n", "\n");
+			soniaParameters = stripQuotes(soniaParameters);
+			
+			//try to parse as a settings objects
+			PropertyBuilder proper = new PropertyBuilder(soniaParameters);
+			settings = proper.getParserSettings();
+			if (settings != null) {
+				netInfo += " Read parser settings from sonia.parameter variable in network:"+settings;
+			} else {
+				throw new Exception(
+				"Unable to read parser settings from sonia.parameter variable in network: "+soniaParameters);
 			}
+			//TODO: should add way for soniaController to read the rest of the parser settings
+			
 		}
-		//check if there are dynamic arc attributes
-		if (galTagMap.containsKey("dyn.edge.attr.names")) {
-			Iterator keyIter = parseVector(
-					(String) galTagMap.get("dyn.edge.attr.names")).iterator();
-			while (keyIter.hasNext()) {
-				dynamicArcAttrMap.add((stripQuotes((String) keyIter.next()))
-						.intern());
-			}
-		}
+		
+//		if (galTagMap.containsKey("dynam.attr.names")) {
+//			Iterator keyIter = parseVector(
+//					(String) galTagMap.get("dynam.attr.names")).iterator();
+//			while (keyIter.hasNext()) {
+//				dynamicVertAttrMap.add((stripQuotes((String) keyIter.next()))
+//						.intern());
+//			}
+//		}
+
 
 	}
 
@@ -231,10 +262,13 @@ public class RJavaParser implements Parser {
 	 * FALSE)), list(inl = 4, outl = 3, atl = list(na = FALSE)), list(inl = 4,
 	 * outl = 5, atl = list(na = FALSE)), list(inl = 5, "
 	 * 
+	 * also creates dynamic and static attributes for those edges
+	 * 
 	 * @param mel
 	 * @throws Exception
 	 */
-	private void parseEdges(String mel, String etl) throws Exception {
+	private void parseEdges(String mel) throws Exception {
+		
 
 		int edgeCount = 1;
 		
@@ -243,40 +277,26 @@ public class RJavaParser implements Parser {
 		try {
 			fixedColor = parseRColor(settings
 					.getProperty(RParserSettings.ARC_COLOR));
-			parserInfo+=" node color fixed as "+fixedColor;
+			parserInfo+=" edge color fixed as "+fixedColor;
 		} catch (Exception e){}
 
-		Iterator edgeIter = parseList(mel.substring(6)).iterator();
-		// etl may be null if it is not a dynamic network
-		Iterator edgeTimeIter = parseList(etl.substring(6)).iterator();
+		Iterator<String> edgeIter = parseList(mel.substring(6)).iterator();
+
 		while (edgeIter.hasNext()) {
 
-			String protoEdge = (String) edgeIter.next();
-			String protoTime = (String) edgeTimeIter.next();
+			String protoEdge = edgeIter.next();
 			// need to deal with missing deleted edges when parsing, they will
 			// have NULL values
 			if (!protoEdge.equals("NULL") & !protoEdge.equals("")) {
 				ArcAttribute arc = null;
-				Iterator edgeTokenIter = parseList(protoEdge).iterator();
-				Vector edgeTimes = parseVector(protoTime);
+				Iterator<String> edgeTokenIter = parseList(protoEdge).iterator();
 				int fromId = -1;
 				int toId = -1;
 				double start = 0.0;
 				double end = 1.0;
+				double[][] spell = null;
 				Color ac = fixedColor;
 				
-				try {
-					start = Double.parseDouble((String) edgeTimes.get(0));
-					end = Double.parseDouble((String) edgeTimes.get(1));
-					maxTime = Math.max(maxTime, end);
-					minTime = Math.min(minTime, start);
-
-				} catch (NumberFormatException nfe) {
-
-					String error = "Unable to parse edge time for edge#"
-							+ edgeCount + " :" + nfe.toString();
-					throw new Exception(error);
-				}
 				double weight = 1.0;
 				double width = 1.0;
 				while (edgeTokenIter.hasNext()) {
@@ -285,12 +305,12 @@ public class RJavaParser implements Parser {
 					// attributes
 					// since at the moment sonia doesn't support multiple head
 					// or
-					// tail sets, willthrow an error if there are more than one
+					// tail sets, will throw an error if there are more than one
 					if (edgeToken.startsWith("inl")) { // in list
 						// parse the id of the starting node
 						try {
 							fromId = Integer.parseInt(edgeToken.substring(
-									edgeToken.indexOf("=") + 1).trim());
+									edgeToken.indexOf(" = ") + 3).trim());
 						} catch (Exception e) {
 							String error = "Unable to parse starting id for edge #"
 									+ edgeCount
@@ -304,7 +324,7 @@ public class RJavaParser implements Parser {
 						// parse the id of the ending node
 						try {
 							toId = Integer.parseInt(edgeToken.substring(
-									edgeToken.indexOf("=") + 1).trim());
+									edgeToken.indexOf(" = ") + 3).trim());
 						} catch (Exception e) {
 							String error = "Unable to parse ending id for edge #"
 									+ edgeCount
@@ -316,18 +336,54 @@ public class RJavaParser implements Parser {
 						}
 					} else if (edgeToken.startsWith("atl")) { // attributes
 						
-						Vector edgeAttrs = parseList(edgeToken.substring(6));
-						//do the static edge attributes
-						Iterator attrIter = edgeAttrs.iterator();
+						// construct a table of times by attribute values
+						TimedTagBin timeMapper = new TimedTagBin();
+						
+						//need to find the activity spell attributes first
+						Vector<String> edgeAttrs = parseList(edgeToken.substring(6));
+						Iterator<String> attrIter = edgeAttrs.iterator();
 						while (attrIter.hasNext()){
-							String attribute = ((String) attrIter.next()).trim();
+							String attribute = attrIter.next().trim();
 							String attrName = attribute.substring(0,
-									attribute.indexOf("=") - 1).trim();
+									attribute.indexOf(" = ")).trim();
 							String attrValue = attribute.substring(
-									attribute.indexOf("=") + 1).trim();
+									attribute.indexOf(" = ") + 3).trim();
+							//try to parse the arc activity spell
+							if (attribute.equals("active")) {
+								try {
+									spell = parseSpell(attrValue);
+									for (int r=0;r<spell.length;r++){
+										start = spell[r][0];
+										end = spell[r][1];
+										maxTime = Math.max(maxTime, end);
+										minTime = Math.min(minTime, start);
+										timeMapper.addAssociations(spell, attrName,
+												"arc active");
+										//TODO: need to handle multiple activity spells better, currently only last spell will be used for default values
+									}
+									
+								} catch (Exception e) {
+
+									String error = "Unable to parse arc time for arc #"
+											+ edgeCount;
+									throw new Exception(error,e);
+								}
+							}
+						}
+						
+						//now loop again for the rest of the static edge attributes
+						attrIter = edgeAttrs.iterator();
+						while (attrIter.hasNext()){
+							String attribute = attrIter.next().trim();
+							String attrName = attribute.substring(0,
+									attribute.indexOf(" = ")).trim();
+							String attrValue = attribute.substring(
+									attribute.indexOf(" = ") + 3).trim();
 							// only do non-dynamic attributes here
-							
-							if (!dynamicArcAttrMap.contains(attrName.intern())) {
+							// store dynamic attributes for later
+							if (!attrName.endsWith(".active")) {
+								
+								//try to parse a static color
 								if (ac == null && attribute.startsWith(settings
 										.getProperty(RParserSettings.ARC_COLOR))) {
 									ac = parseRColor(attrValue);
@@ -336,67 +392,79 @@ public class RJavaParser implements Parser {
 												+ attrValue;
 										throw new Exception(error);
 									}
+									timeMapper.addAssociations(spell, attrName, attrValue);
 								}
+								//TODO: parse other attributes, width etc
 							}
 							
 						}
 						
 //						 now that those are set, now loop again for dynamic attributes
 						attrIter = edgeAttrs.iterator();
-						// construct a table of times by attribute values
-						TimedTagBin timeMapper = new TimedTagBin();
+						
 						while (attrIter.hasNext()) {
-							// check if is na
-							// TODO: what do do if node is missing na
+							// check if is NA
+							// TODO: what do do if node is missing na?
 							String attribute = ((String) attrIter.next()).trim();
 							String attrName = attribute.substring(0,
-									attribute.indexOf("=") - 1).trim();
+									attribute.indexOf(" = ")).trim();
 							String attrValue = attribute.substring(
-									attribute.indexOf("=") + 1).trim();
+									attribute.indexOf(" = ") + 3).trim();
 							// if attribute is dynamic, need to create a new object with the
-							// apropriate values
-							if (dynamicArcAttrMap.contains(attrName.intern())) {
-								// c(blue, green, 1, 2)
-								// hmm, worrysome, should return somethink like "structure(
-								// c(...."
-								Vector timeData = parseVector(attrValue);
-								int nsteps = timeData.size() / 2;
-								// make node for first range..
-								double attrStart = start;
-								double attrEnd = Double.parseDouble(stripQuotes((String) timeData
-										.get(nsteps)));
-								// add an extra time at the end to fudge..
-								timeData.add("" + end);
-								// loop over times and values
-								for (int t = 0; t < nsteps; t++) {
-									attrValue = stripQuotes((String) timeData.get(t));
-									attrStart = attrEnd;
-									attrEnd = Double.parseDouble(stripQuotes((String) timeData
-											.get(t + nsteps + 1)));
-									timeMapper.addAssociation(attrStart, attrEnd, attrName,
-											attrValue);
+							// appropriate values
+							if (attrName.endsWith(".active")) {
+								//strip off the suffix
+								attrName = attrName.substring(0,attrName.indexOf(".active"));
+								//values are in first element of list, spells in 2nd
+								//	$vals
+								//	[1] "black"
+								//	$spls
+								//	     [,1] [,2]
+								//	[1,]    0   NA
+								Vector<String> timed = parseList(attrValue);
+								//check that the right elements are there
+								if (!timed.get(0).startsWith("vals")){
+									String error = "Unable to parse dynamic attribute \""+attrName+
+									"\".  $vals element is missing: "+ attrValue;
+									throw new Exception(error);
 								}
+								if (!timed.get(1).startsWith("spls")){
+									String error = "Unable to parse dynamic attribute \""+attrName+
+									"\".  $spls element is missing: "+ attrValue;
+									throw new Exception(error);
+								}
+								//store each value and its associated time
+								
+								Vector<String> vals = parseVector(timed.get(0).substring(
+										timed.get(0).indexOf(" = ") + 3).trim());
+								double[][] spells = parseSpell(timed.get(1).substring(
+										timed.get(1).indexOf(" = ") + 3).trim());
+								for (int i = 0; i < vals.size(); i++) {
+									timeMapper.addAssociation(spells[i][0], spells[i][1], attrName,
+											stripQuotes(vals.get(i)));
+								}
+								
 							}
 						}// end dynamic attributes mapping
 //						 NOW LOOP to actually CREATE ARC Attributes in time
-						Iterator timeIter = timeMapper.getBinTimeIter();
+						Iterator<Interval> timeIter = timeMapper.getBinTimeIter();
 						while (timeIter.hasNext()) {
 							Interval interval = (Interval) timeIter.next();
 							start = interval.start;
 							end = interval.end;
-							Iterator keyvalItr = timeMapper.getBin(interval).iterator();
+							Iterator<String[]> keyvalItr = timeMapper.getBin(interval).iterator();
 							while (keyvalItr.hasNext()) {
 								String[] keyval = (String[]) keyvalItr.next();
-
 								if (keyval[0].startsWith(settings
 										.getProperty(RParserSettings.ARC_COLOR))) {
 									ac = parseRColor(keyval[1]);
 									if (ac == null) {
-										String error = "Unable to parse aattribute as RGB value R color name:"
+										String error = "Unable to parse attribute as RGB value R color name:"
 												+ keyval[1];
 										throw new Exception(error);
 									}
 								}
+								//parse other attributes
 							}
 							arc = new ArcAttribute(start, end, fromId, toId,
 									weight, width);
@@ -404,7 +472,7 @@ public class RJavaParser implements Parser {
 							arcList.add(arc);
 						}// end dynamic attribute creation
 						
-						
+					
 						
 
 					} else {
@@ -414,6 +482,7 @@ public class RJavaParser implements Parser {
 					}
 
 				}// end parsing of edge
+				
 				if (arc == null){
 					arc = new ArcAttribute(start, end, fromId, toId,
 						weight, width);
@@ -461,14 +530,15 @@ public class RJavaParser implements Parser {
 			parserInfo+=" node size fixed as "+fixedSize;
 		} catch (Exception e){}
 		
+		
 		// get the string for each node with all its attributes, times etc
-		Iterator nodeIter = parseList(val.substring(6)).iterator();
+		Iterator<String> nodeIter = parseList(val.substring(6)).iterator();
 		while (nodeIter.hasNext()) {
 			NodeAttribute node = null;
 			// get the attributes for each node
 			String nodeToken = (String) nodeIter.next();
-			Vector nodeAttrs = parseList(nodeToken);
-			Iterator nodeAttrIter = nodeAttrs.iterator();
+			Vector<String> nodeAttrs = parseList(nodeToken);
+			Iterator<String> nodeAttrIter = nodeAttrs.iterator();
 			// set some default values
 			String label = nodeId + "";
 			double x = 0.0;
@@ -477,51 +547,76 @@ public class RJavaParser implements Parser {
 			// min of edge times
 			double start = minTime;
 			double end = maxTime;
-			String orgiFile = "R export";
-			//if the attri
-//			Color nc = parseRColor(settings
-//					.getProperty(RParserSettings.NODE_COLOR));
-//			double size = Double.parseDouble(settings
-//					.getProperty(RParserSettings.NODE_SIZE));
-//			RectangularShape shape = parseShape(settings
-//					.getProperty(RParserSettings.NODE_SHAPE));
+			String orgiFile = "R networkDynamic export";
+			double[][] spell = null;
+			// construct a table of times by attribute values
+			TimedTagBin timeMapper = new TimedTagBin();
+
 			Color nc = fixedColor;
 			double size = fixedSize;
 			RectangularShape shape = fixedShape;
+			//first look to see if there are any activity spells
+			while (nodeAttrIter.hasNext()) {
+				String attribute = ((String) nodeAttrIter.next()).trim();
+				String attrName = attribute.substring(0,
+						attribute.indexOf(" = ")).trim();
+				String attrValue = attribute.substring(
+						attribute.indexOf(" = ") + 3).trim();
+					if (attrName.equals("active")) {
+						spell = parseSpell(attrValue);
+						//length of outer array is number of spells
+						for (int s=0; s< spell.length; s++){
+							start = spell[s][0];
+							end = spell[s][1];
+							//add a spell place holder for the node
+							timeMapper.addAssociations(spell, attrName,"activity spell");
+						}
+						break;
+					}
+			}
+			
+			//if we haven't found an activity spell, use defaults
+			if (spell == null){
+				spell =  new double[][] {{start,end}};
+			}
+			
+			//now that we have possible times, look for the rest of the attributes
+			nodeAttrs = parseList(nodeToken);
+			nodeAttrIter = nodeAttrs.iterator();
+			
 			// if it is a single element, assume
 			while (nodeAttrIter.hasNext()) {
 				// check if is na
 				// TODO: what do do if node is missing
 				String attribute = ((String) nodeAttrIter.next()).trim();
 				String attrName = attribute.substring(0,
-						attribute.indexOf("=") - 1).trim();
+						attribute.indexOf(" = ")).trim();
 				String attrValue = attribute.substring(
-						attribute.indexOf("=") + 1).trim();
+						attribute.indexOf(" = ") + 3).trim();
 				// only do non-dynamic attributes here
-				if (!dynamicVertAttrMap.contains(attrName.intern())) {
-					if (attrName.startsWith(settings
+				if (!attrName.endsWith(".active")) {
+					
+					 if (attrName.startsWith(settings
 							.getProperty(RParserSettings.NODE_LABEL))) {
 						label = attrValue;
-					}
-					if (attrName.startsWith(settings
+						timeMapper.addAssociations(spell, attrName,attrValue);
+					} else if (attrName.startsWith(settings
 							.getProperty(RParserSettings.NODE_X))) {
 						x = Double.parseDouble(attrValue);
-					}
-					if (attrName.startsWith(settings
+						timeMapper.addAssociation(start, end, attrName,attrValue);
+					} else if (attrName.startsWith(settings
 							.getProperty(RParserSettings.NODE_Y))) {
 						y = Double.parseDouble(attrValue);
+						timeMapper.addAssociations(spell, attrName,attrValue);
 						
-					}
-					if (shape == null && attrName.startsWith(settings
+					} else if (shape == null && attrName.startsWith(settings
 							.getProperty(RParserSettings.NODE_SHAPE))) {
 						shape = parseShape(attrValue);
-					}
-					
-					if (size < 0 && attrName.startsWith(settings.getProperty(RParserSettings.NODE_SIZE))){
+						timeMapper.addAssociations(spell, attrName,attrValue);
+					} else if (size < 0 && attrName.startsWith(settings.getProperty(RParserSettings.NODE_SIZE))){
 						size = Double.parseDouble(attrValue);
-					}
-					
-					if (nc == null && attribute.startsWith(settings
+						timeMapper.addAssociations(spell, attrName,attrValue);
+					} else if (nc == null && attribute.startsWith(settings
 							.getProperty(RParserSettings.NODE_COLOR))) {
 						nc = parseRColor(attrValue);
 						if (nc == null) {
@@ -529,56 +624,71 @@ public class RJavaParser implements Parser {
 									+ attrValue;
 							throw new Exception(error);
 						}
+						timeMapper.addAssociations(spell, attrName,attrValue);
+					} else {
+					//TODO: add rest of attributes as node user data
+						//System.out.println("skipped static attribute: "+attrName+" : "+attrValue);
 					}
-				}
+				
 			}// end non-dynamic attributes
+		}
 			//if a node has only dynamic attribute, no vertex is created
 			// until first specified attribute
 
 			// now that those are set, now loop again for dynamic attributes
 			nodeAttrIter = nodeAttrs.iterator();
-			// construct a table of times by attribute values
-			TimedTagBin timeMapper = new TimedTagBin();
+			
 			while (nodeAttrIter.hasNext()) {
 				// check if is na
 				// TODO: what do do if node is missing na
 				String attribute = ((String) nodeAttrIter.next()).trim();
 				String attrName = attribute.substring(0,
-						attribute.indexOf("=") - 1).trim();
+						attribute.indexOf(" = ")).trim();
 				String attrValue = attribute.substring(
-						attribute.indexOf("=") + 1).trim();
+						attribute.indexOf(" = ") + 3).trim();
 				// if attribute is dynamic, need to create a new object with the
-				// apropriate values
-				if (dynamicVertAttrMap.contains(attrName.intern())) {
-					// c(blue, green, 1, 2)
-					// hmm, worrysome, should return somethink like "structure(
-					// c(...."
-					Vector timeData = parseVector(attrValue);
-					int nsteps = timeData.size() / 2;
-					// make node for first range..
-					start = minTime;
-					end = Double.parseDouble(stripQuotes((String) timeData
-							.get(nsteps)));
-					// add an extra time at the end to fudge..
-					timeData.add("" + maxTime);
-					// loop over times and values
-					for (int t = 0; t < nsteps; t++) {
-						attrValue = stripQuotes((String) timeData.get(t));
-						start = end;
-						end = Double.parseDouble(stripQuotes((String) timeData
-								.get(t + nsteps + 1)));
-						timeMapper.addAssociation(start, end, attrName,
-								attrValue);
+				// Appropriate values
+				if (attrName.endsWith(".active")) {
+					//strip off the suffix
+					attrName = attrName.substring(0,attrName.indexOf(".active"));
+					//TODO: future version will remove $vals and $spells, have to find another way to check for error
+					//values are in first element of list, spells in 2nd
+					//	$vals
+					//	[1] "black"
+					//	$spls
+					//	     [,1] [,2]
+					//	[1,]    0   NA
+					Vector<String> timed = parseList(attrValue);
+					//check that the right elements are there
+					if (!timed.get(0).startsWith("vals")){
+						String error = "Unable to parse dynamic attribute value for node \""+attrName+
+						"\".  $vals element is missing: "+ attrValue;
+						throw new Exception(error);
+					}
+					if (!timed.get(1).startsWith("spls")){
+						String error = "Unable to parse dynamic attribute for node \""+attrName+
+						"\".  $spls element is missing: "+ attrValue;
+						throw new Exception(error);
+					}
+					//store each value and its associated time
+					
+					Vector<String> vals = parseVector(timed.get(0).substring(
+							timed.get(0).indexOf(" = ") + 3).trim());
+					double[][] spells = parseSpell(timed.get(1).substring(
+							timed.get(1).indexOf(" = ") + 3).trim());
+					for (int i = 0; i < vals.size(); i++) {
+						timeMapper.addAssociation(spells[i][0], spells[i][1], attrName,
+								stripQuotes(vals.get(i)));
 					}
 				}
 			}// end dynamic attributes mapping
 			// NOW LOOP to actually CREATE NODE Attributes in time
-			Iterator timeIter = timeMapper.getBinTimeIter();
+			Iterator<Interval> timeIter = timeMapper.getBinTimeIter();
 			while (timeIter.hasNext()) {
-				Interval interval = (Interval) timeIter.next();
+				Interval interval = timeIter.next();
 				start = interval.start;
 				end = interval.end;
-				Iterator keyvalItr = timeMapper.getBin(interval).iterator();
+				Iterator<String[]> keyvalItr = timeMapper.getBin(interval).iterator();
 				while (keyvalItr.hasNext()) {
 					String[] keyval = (String[]) keyvalItr.next();
 					if (keyval[0].startsWith(settings
@@ -611,7 +721,8 @@ public class RJavaParser implements Parser {
 				node.setNodeSize(size);
 				nodeList.add(node);
 			}// end dynamic attribute creation
-			// TODO:generates the last value twice?
+			
+			
 			if (node == null) {
 				node = new NodeAttribute(nodeId, label, x, y, start, end,
 						orgiFile);
@@ -671,10 +782,10 @@ public class RJavaParser implements Parser {
 	 * @param list
 	 * @return A vector of strings, or null if argument was not a list
 	 */
-	private Vector parseList(String list) {
+	private Vector<String> parseList(String list) {
 		// list(list(na = FALSE), list(na = FALSE), list(na = FALSE), list(na =
 		// FALSE))
-		Vector listContents = new Vector();
+		Vector<String> listContents = new Vector<String>();
 		// check if it really is a list
 		if (!list.startsWith("list("))
 			return null;
@@ -685,14 +796,15 @@ public class RJavaParser implements Parser {
 		int chunkStart = 0;
 		int chunkEnd = 0;
 		int openParen = 0;
+		boolean openQuote =false;
 
 		// find the first (
 		// count ( and ) until find matich )
 		while (chunkEnd < list.length()) {
 			String checkChar = list.substring(chunkEnd, chunkEnd + 1);
 			if (checkChar.equals(",")) {
-				if (openParen == 0) { // ignore the comma if it is inside
-					// parens
+				if (openParen == 0 & !openQuote) { // ignore the comma if it is inside
+					// parens or quotation
 					listContents.add(list.substring(chunkStart, chunkEnd)
 							.trim());
 					chunkStart = chunkEnd + 1; // need to remove the comma?
@@ -701,7 +813,11 @@ public class RJavaParser implements Parser {
 				openParen++;
 			} else if (checkChar.equals(")") || checkChar.equals("]")) {
 				openParen--;
-
+			} else if (checkChar.equals("\"")) {
+				//make sure quote is not escaped?
+				if (!list.substring(chunkEnd-1,chunkEnd).equals("\\")){
+					openQuote = !openQuote;
+				}
 			}
 			chunkEnd++;
 		}
@@ -714,6 +830,8 @@ public class RJavaParser implements Parser {
 		return text.replaceAll("\"", "");
 
 	}
+	
+
 
 	/**
 	 * returns a vector with the elments at the first level of the passed string
@@ -723,10 +841,10 @@ public class RJavaParser implements Parser {
 	 *            of an R vector: "c(...)"
 	 * @return A vector of strings, or null if argument was not a list
 	 */
-	private Vector parseVector(String vector) {
+	private Vector<String> parseVector(String vector) {
 		// list(list(na = FALSE), list(na = FALSE), list(na = FALSE), list(na =
 		// FALSE))
-		Vector vectorContents = new Vector();
+		Vector<String> vectorContents = new Vector<String>();
 		// check if it really is a list
 		if (vector.startsWith("c(")) {
 			// strip off the outside () wrappers
@@ -761,6 +879,52 @@ public class RJavaParser implements Parser {
 		vectorContents.add(vector.substring(chunkStart, chunkEnd).trim());
 
 		return vectorContents;
+	}
+	
+	/**
+	 * parses a string expected to contain the R text representation of a spell vector
+	 * and returns two double values. If the vector has more than two elements, assumes it is 
+	 * meant to be a two column matrix of spells
+	 * @param aterValue
+	 * @return a two-element double[] with the first element the start time and second the end
+	 */
+	private double[][] parseSpell(String attrValue){
+		double[][] returnVals = new double[1][2];
+		Vector<String> spell = parseVector(attrValue);
+		//check dimensions
+		if (spell.size() > 2){
+			returnVals = new double[spell.size()/2][2];
+		}
+		//parse the start and end values out of the spell
+		//oddly, they are written out in column order so
+		//[a,b]				[0,3]
+		//[c,d]				[1,4]
+		//[e,f]				[2,5]
+		//becomes:
+		//c( a,c,e,b,d,f)	0:(0,0),1:(1,0),2:(2,0),3:(0,1),4:(1,1),5:(2,1)
+		//hope to god R doesn't do it differently some times...
+		
+		
+		//TODO: How to deal with "NA" and "null"?
+		int rows = spell.size()/2;
+		for (int r=0; r<rows; r++){
+	
+			if (spell.get(r).equals("Inf")){
+				returnVals[r][0]= Double.POSITIVE_INFINITY;
+			} else if (spell.get(r).equals("-Inf")){
+				returnVals[r][0]= Double.NEGATIVE_INFINITY;
+			} else {
+				returnVals[r][0] = Double.parseDouble(spell.get(r));
+			}
+			if (spell.get(r+rows).equals("Inf")){
+				returnVals[r][1]= Double.POSITIVE_INFINITY;
+			} else if (spell.get(r+rows).equals("-Inf")){
+				returnVals[r][1]= Double.NEGATIVE_INFINITY;
+			} else {
+				returnVals[r][1] = Double.parseDouble(spell.get(r+rows));
+			}
+		}
+		return returnVals;
 	}
 
 	private RectangularShape parseShape(String shapeString) throws IOException {
@@ -802,7 +966,7 @@ public class RJavaParser implements Parser {
 	}
 
 	public String getNetInfo() {
-		return "parsed from r";
+		return netInfo;
 	}
 
 	public String getParserInfo() {

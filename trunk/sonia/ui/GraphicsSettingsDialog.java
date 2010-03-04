@@ -257,6 +257,7 @@ public class GraphicsSettingsDialog {
 		// add components to the layout GBlayout using constraints
 		//c.anchor = GridBagConstraints.WEST;
 		// first, the colum lables
+		c.fill = GridBagConstraints.VERTICAL;
 		c.gridx = 0;
 		c.gridy = 0;
 		c.gridwidth = 1;
@@ -279,8 +280,10 @@ public class GraphicsSettingsDialog {
 		c.gridy = 0;
 		c.weightx = 1;
 		c.weighty = .5;
+		c.fill = GridBagConstraints.HORIZONTAL;
 		mainpanel.add(clustersPanel, c);
 
+		c.fill = GridBagConstraints.NONE;
 		generalPanel.add(AntiAlias);
 		generalPanel.add(ShowStats);
 		generalPanel.add(GhostSlice);
@@ -396,7 +399,7 @@ public class GraphicsSettingsDialog {
 		});
 		graphicsDialog.getContentPane().add(mainpanel);
 		// graphicsDialog.setBackground(Color.lightGray);
-		graphicsDialog.setSize(500, 400);
+		graphicsDialog.setSize(800, 500);
 
 	}
 
