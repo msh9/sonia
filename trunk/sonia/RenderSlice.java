@@ -141,8 +141,8 @@ public class RenderSlice {
 		double[] xCoords = layoutEngine.getCurrentXCoords();
 		double[] yCoords = layoutEngine.getCurrentYCoords();
 		// how for to translate the coords by
-		int left = layoutEngine.getLeftPad();
-		int top = layoutEngine.getTopPad();
+		double left = (double)layoutEngine.getLeftPad();
+		double top = (double)layoutEngine.getTopPad();
 
 		// Color origColor = graphics.getColor();
 		// Font originalFont = graphics.getFont();
