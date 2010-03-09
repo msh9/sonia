@@ -257,7 +257,6 @@ public class GraphicsSettingsDialog {
 		// add components to the layout GBlayout using constraints
 		//c.anchor = GridBagConstraints.WEST;
 		// first, the colum lables
-		c.fill = GridBagConstraints.VERTICAL;
 		c.gridx = 0;
 		c.gridy = 0;
 		c.gridwidth = 1;

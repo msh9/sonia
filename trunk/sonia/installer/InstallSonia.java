@@ -26,8 +26,10 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.LineNumberReader;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -61,9 +63,9 @@ public class InstallSonia {
 
 	public static final String LGPL_URL = "http://www.gnu.org/licenses/lgpl.txt";
 	
-	public static final String BSD_URL = "http://www.opensource.org/licenses/bsd-license.php";
+	public static final String BSD_URL = "Modified_bsd_license.txt";//"http://www.opensource.org/licenses/bsd-license.php";
 	
-	public static final String CC_ATTRIB_NONCOM_SHAREALIKE_URL = "http://creativecommons.org/licenses/by-nc-sa/3.0/";
+	public static final String CC_ATTRIB_NONCOM_SHAREALIKE_URL = "creativecommons_by-nc-sa_3.0_license.txt";
 ;
 	public static final String COLT_DOWNLOAD_URL = "http://dsd.lbl.gov/~hoschek/colt-download/releases/colt-1.2.0.zip";
 
@@ -75,9 +77,11 @@ public class InstallSonia {
 
 	public static final String JAVASWF_DOWNLOAD_URL = "http://internap.dl.sourceforge.net/sourceforge/javaswf/javaswf-binary-baseline.zip";
 	
-	public static final String JAVAGRAPHICS_DOWNLOAD_URL = "https://javagraphics.dev.java.net/jars/JPEGMovieAnimation-bin.jar";
+	public static final String JAVAGRAPHICS_DOWNLOAD_URL = "http://javagraphics.dev.java.net/jars/JPEGMovieAnimation-bin.jar";
 	
 	public static final String MDSJ_DOWNLOAD_URL = "http://www.inf.uni-konstanz.de/algo/software/mdsj/mdsj.jar";
+	
+	public static final String JPEGMOVIE_DOWNLOAD_URL = "https://javagraphics.dev.java.net/jars/JPEGMovieAnimation-bin.jar";
 	
 	private JFrame baseFrame;
 
@@ -148,31 +152,37 @@ public class InstallSonia {
 				System.exit(1);
 			};
 		});
-		JButton soniaInfo = new JButton("About SoNIA..");
+		JButton soniaInfo = new JButton("SoNIA..");
 		soniaInfo.addActionListener(new ActionListener() {
 
 			public void actionPerformed(java.awt.event.ActionEvent e) {
 				openURL("http://sonia.stanford.edu/");
 			};
 		});
-		JButton coltInfo = new JButton("About Colt..");
+		JButton coltInfo = new JButton("Colt..");
 		coltInfo.addActionListener(new ActionListener() {
 
 			public void actionPerformed(java.awt.event.ActionEvent e) {
 				openURL("http://dsd.lbl.gov/~hoschek/colt/");
 			};
 		});
-		JButton freeHepInfo = new JButton("About FreeHep..");
+		JButton freeHepInfo = new JButton("FreeHep..");
 		freeHepInfo.addActionListener(new ActionListener() {
 
 			public void actionPerformed(java.awt.event.ActionEvent e) {
 				openURL("http://java.freehep.org/");
 			};
 		});
-		JButton javaGraphicsInfo = new JButton("About JavaGraphics...");
+		JButton javaGraphicsInfo = new JButton("JavaGraphics..");
 		javaGraphicsInfo.addActionListener(new ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent e) {
 				openURL("http://javagraphics.blogspot.com/2008/06/movies-writing-mov-files-without.html");
+			};
+		});
+		JButton mdsjInfo = new JButton("MDSJ..");
+		javaGraphicsInfo.addActionListener(new ActionListener() {
+			public void actionPerformed(java.awt.event.ActionEvent e) {
+				openURL("http://www.inf.uni-konstanz.de/algo/software/mdsj/");
 			};
 		});
 		status = new JTextArea(5, 40);
@@ -188,7 +198,7 @@ public class InstallSonia {
 		c.gridx = 0;
 		c.gridy = 0;
 		mainPanel.add(new JLabel(soniaIcon), c);
-		c.gridwidth = 3;
+		c.gridwidth = 4;
 		c.gridx = 1;
 		c.gridy = 0;
 		mainPanel.add(message, c);
@@ -196,12 +206,12 @@ public class InstallSonia {
 		c.gridy = 1;
 		c.gridheight = 2;
 		mainPanel.add(statusScroller, c);
-		c.gridx = 3;
+		c.gridx = 4;
 		c.gridy = 1;
 		c.gridheight = 1;
 		c.gridwidth = 1;
 		mainPanel.add(install, c);
-		c.gridx = 3;
+		c.gridx = 4;
 		c.gridy = 2;
 		mainPanel.add(exit, c);
 		c.gridx = 0;
@@ -214,6 +224,12 @@ public class InstallSonia {
 		c.gridx = 2;
 		c.gridy = 3;
 		mainPanel.add(freeHepInfo, c);
+		c.gridx = 3;
+		c.gridy = 3;
+		mainPanel.add(javaGraphicsInfo, c);
+		c.gridx = 0;
+		c.gridy = 4;
+		mainPanel.add(mdsjInfo, c);
 
 		baseFrame.getContentPane().add(mainPanel);
 		baseFrame.setSize(600, 400);
@@ -260,6 +276,7 @@ public class InstallSonia {
 				// show sonia license
 				// "C:/Documents and
 				// Settings/skyebend/workspace/SoNIA/soniainstaller/GPL2_0_license.txt"
+				
 				try {
 					boolean accept = showLicense("SoNIA", GPL_URL);
 					if (!accept) {
@@ -389,8 +406,43 @@ public class InstallSonia {
 						"javaswf.jar", targetPath + "/lib");
 				
 				//get javaGraphics movie jars
+
+				//show bsd license
 				try {
-					downloadFile(JAVAGRAPHICS_DOWNLOAD_URL, targetPath);
+					boolean accept = showLicense("javaGraphics movie export libraries",
+							BSD_URL);
+					if (!accept) {
+						showError("License declined");
+						return;
+					}
+				} catch (IOException ioe) {
+					showError("Unable to load license");
+					ioe.printStackTrace();
+					return;
+				}
+				try {
+					downloadFile(JAVAGRAPHICS_DOWNLOAD_URL, targetPath + "/lib");
+				} catch (Exception e) {
+					showError("error downloading javaGraphics movie export libraries: "
+							+ e.toString());
+					e.printStackTrace();
+				}
+				
+				//creative commons NC SA 
+				try {
+					boolean accept = showLicense("MDSJ layout libraries",
+							CC_ATTRIB_NONCOM_SHAREALIKE_URL);
+					if (!accept) {
+						showError("License declined");
+						return;
+					}
+				} catch (IOException ioe) {
+					showError("Unable to load license");
+					ioe.printStackTrace();
+					return;
+				}
+				try {
+					downloadFile(MDSJ_DOWNLOAD_URL, targetPath + "/lib");
 				} catch (Exception e) {
 					showError("error downloading javaGraphics movie export libraries: "
 							+ e.toString());
@@ -514,29 +566,23 @@ public class InstallSonia {
 			throws IOException {
 		boolean agree = false;
 		JComponent licenseText;
-		// if (file.endsWith(".html") | file.endsWith(".htm")) {
+		
 		licenseText = new JTextPane();
-		((JTextPane) licenseText).setPage(file);
 		licenseText.setSize(400, 300);
-		// } else {
-		// // open connection to file
-		// LineNumberReader reader = new LineNumberReader(new FileReader(file));
-		// String text = "";
-		// String line = reader.readLine();
-		// while (line != null) {
-		// text += line + "\n";
-		// line = reader.readLine();
-		// }
-		// reader.close();
-		// licenseText = new JTextArea(text, 20, 40);
-		// }
+		 if (file.startsWith("http") | file.startsWith("ftp")) {
+		    ((JTextPane) licenseText).setPage(file);
+		  } else {
+			 // open connection to file inside jar
+			  ((JTextPane) licenseText).setPage(getClass().getResource(file));
+			
+		 }
 		JScrollPane scroller = new JScrollPane(licenseText,
 				JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		scroller.setPreferredSize(new Dimension(600, 400));
 		scroller
 				.setBorder(new TitledBorder(
-						"The requierd "
+						"The "
 								+ componentName
 								+ " library will be installed under the following conditions:"));
 		JPanel licenseArea = new JPanel();

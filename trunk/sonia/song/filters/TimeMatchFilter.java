@@ -48,6 +48,7 @@ public class TimeMatchFilter extends AbstractFilter implements CleaningFilter {
 		if (!dataAreArcs){
 			return; //don't do anything
 		}
+		//TODO: check that there are time data!!!
 		int numProbs = 0;
 		
 		//find out what cols the times are in 

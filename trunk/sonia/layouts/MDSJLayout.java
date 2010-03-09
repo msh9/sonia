@@ -1,13 +1,9 @@
 package sonia.layouts;
 
-import mdsj.DistanceScaling;
-import mdsj.MDSJ;
-
-
-import com.sun.tools.javac.code.Type.ForAll;
 
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
-
+import mdsj.MDSJ;
+import mdsj.StressMinimization;
 import sonia.CoolingSchedule;
 import sonia.LayoutSlice;
 import sonia.LayoutUtils;
@@ -182,7 +178,7 @@ public class MDSJLayout implements NetLayout {
 		}
 		
 		//compute a weight matrix
-		double[][] weights = DistanceScaling.weightMatrix(distArray, scalingExp);
+		double[][] weights = StressMinimization.weightMatrix(distArray, scalingExp);
 		//run the  mds calculation
 		layoutInfo = "Starting MDS distance optimization...";
 		//MDSJ.distanceScaling(distArray, newCoords,scalingExp);
@@ -208,10 +204,10 @@ public class MDSJLayout implements NetLayout {
 	private void doOptimization(double[][] coords,double[][] dists,double[][] weights){
 		//TODO: launch this on a thread
 		//debug
-		control.log("mdsj starting stress: "+DistanceScaling.stress(dists, weights, coords));
-		DistanceScaling.majorize(coords, dists, weights, iterations);
+		control.log("MDSJ starting stress: "+StressMinimization.stress(dists, weights, coords));
+		StressMinimization.majorize(coords, dists, weights, iterations);
 //		debug
-		control.log("mdsj ending stress: "+DistanceScaling.stress(dists, weights, coords));
+		control.log("MDSJ ending stress: "+StressMinimization.stress(dists, weights, coords));
 	}
 
 	public void disposeLayout() {

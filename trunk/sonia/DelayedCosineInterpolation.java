@@ -2,7 +2,7 @@ package sonia;
 
 import java.util.*;
 
-import com.sun.tools.javac.code.Attribute.Array;
+
 
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>

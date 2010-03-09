@@ -2,17 +2,17 @@ package sonia.analytics;
 
 import java.awt.Color;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 
-import javax.swing.DefaultBoundedRangeModel;
 
-import com.sun.tools.jdi.LinkedHashMap;
 
-import sonia.LayoutSlice;
+
+
+
 import sonia.NetUtils;
 import sonia.NodeClusterAttribute;
 import sonia.SoniaController;
@@ -23,7 +23,7 @@ import cern.colt.list.IntArrayList;
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix1D;
-import cern.colt.matrix.impl.SparseDoubleMatrix2D;
+
 
 /**
  * This class was imported with minor revisions from the Prefuse project, originally by 
