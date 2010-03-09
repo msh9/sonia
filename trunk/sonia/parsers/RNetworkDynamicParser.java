@@ -296,6 +296,8 @@ public class RNetworkDynamicParser implements Parser {
 				double end = 1.0;
 				double[][] spell = null;
 				Color ac = fixedColor;
+				// construct a table of times by attribute values
+				TimedTagBin timeMapper = new TimedTagBin();
 				
 				double weight = 1.0;
 				double width = 1.0;
@@ -306,7 +308,7 @@ public class RNetworkDynamicParser implements Parser {
 					// since at the moment sonia doesn't support multiple head
 					// or
 					// tail sets, will throw an error if there are more than one
-					if (edgeToken.startsWith("inl")) { // in list
+					if (edgeToken.startsWith("outl")) { // in list
 						// parse the id of the starting node
 						try {
 							fromId = Integer.parseInt(edgeToken.substring(
@@ -320,7 +322,7 @@ public class RNetworkDynamicParser implements Parser {
 									+ e.getMessage();
 							throw new Exception(error);
 						}
-					} else if (edgeToken.startsWith("outl")) {// out list
+					} else if (edgeToken.startsWith("inl")) {// out list
 						// parse the id of the ending node
 						try {
 							toId = Integer.parseInt(edgeToken.substring(
@@ -336,8 +338,7 @@ public class RNetworkDynamicParser implements Parser {
 						}
 					} else if (edgeToken.startsWith("atl")) { // attributes
 						
-						// construct a table of times by attribute values
-						TimedTagBin timeMapper = new TimedTagBin();
+						
 						
 						//need to find the activity spell attributes first
 						Vector<String> edgeAttrs = parseList(edgeToken.substring(6));
@@ -349,7 +350,7 @@ public class RNetworkDynamicParser implements Parser {
 							String attrValue = attribute.substring(
 									attribute.indexOf(" = ") + 3).trim();
 							//try to parse the arc activity spell
-							if (attribute.equals("active")) {
+							if (attrName.equals("active")) {
 								try {
 									spell = parseSpell(attrValue);
 									for (int r=0;r<spell.length;r++){
@@ -359,7 +360,6 @@ public class RNetworkDynamicParser implements Parser {
 										minTime = Math.min(minTime, start);
 										timeMapper.addAssociations(spell, attrName,
 												"arc active");
-										//TODO: need to handle multiple activity spells better, currently only last spell will be used for default values
 									}
 									
 								} catch (Exception e) {
@@ -446,35 +446,7 @@ public class RNetworkDynamicParser implements Parser {
 								
 							}
 						}// end dynamic attributes mapping
-//						 NOW LOOP to actually CREATE ARC Attributes in time
-						Iterator<Interval> timeIter = timeMapper.getBinTimeIter();
-						while (timeIter.hasNext()) {
-							Interval interval = (Interval) timeIter.next();
-							start = interval.start;
-							end = interval.end;
-							Iterator<String[]> keyvalItr = timeMapper.getBin(interval).iterator();
-							while (keyvalItr.hasNext()) {
-								String[] keyval = (String[]) keyvalItr.next();
-								if (keyval[0].startsWith(settings
-										.getProperty(RParserSettings.ARC_COLOR))) {
-									ac = parseRColor(keyval[1]);
-									if (ac == null) {
-										String error = "Unable to parse attribute as RGB value R color name:"
-												+ keyval[1];
-										throw new Exception(error);
-									}
-								}
-								//parse other attributes
-							}
-							arc = new ArcAttribute(start, end, fromId, toId,
-									weight, width);
-							arc.setArcColor(ac);
-							arcList.add(arc);
-						}// end dynamic attribute creation
-						
-					
-						
-
+//						
 					} else {
 						String error = "Unrecognized element in master edge list for edge #"
 								+ edgeCount + " : " + edgeToken;
@@ -482,6 +454,32 @@ public class RNetworkDynamicParser implements Parser {
 					}
 
 				}// end parsing of edge
+				
+				// NOW LOOP to actually CREATE ARC Attributes in time
+					Iterator<Interval> timeIter = timeMapper.getBinTimeIter();
+					while (timeIter.hasNext()) {
+						Interval interval = (Interval) timeIter.next();
+						start = interval.start;
+						end = interval.end;
+						Iterator<String[]> keyvalItr = timeMapper.getBin(interval).iterator();
+						while (keyvalItr.hasNext()) {
+							String[] keyval = (String[]) keyvalItr.next();
+							if (keyval[0].startsWith(settings
+									.getProperty(RParserSettings.ARC_COLOR))) {
+								ac = parseRColor(keyval[1]);
+								if (ac == null) {
+									String error = "Unable to parse attribute as RGB value R color name:"
+											+ keyval[1];
+									throw new Exception(error);
+								}
+							}
+							//parse other attributes
+						}
+						arc = new ArcAttribute(start, end, fromId, toId,
+								weight, width);
+						arc.setArcColor(ac);
+						arcList.add(arc);
+					}// end dynamic attribute creation
 				
 				if (arc == null){
 					arc = new ArcAttribute(start, end, fromId, toId,
@@ -720,6 +718,7 @@ public class RNetworkDynamicParser implements Parser {
 				node.setNodeShape(shape);
 				node.setNodeSize(size);
 				nodeList.add(node);
+				
 			}// end dynamic attribute creation
 			
 			
