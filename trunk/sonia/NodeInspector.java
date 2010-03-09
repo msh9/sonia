@@ -84,6 +84,8 @@ public class NodeInspector implements MouseListener, ChangeListener, MouseMotion
 	private RenderSlice nodeView;
 
 	private int selectedIndex;
+	
+	private NodeAttribute selectedNode;
 
 	private double selectedSize;
 
@@ -163,6 +165,7 @@ public class NodeInspector implements MouseListener, ChangeListener, MouseMotion
 		left = engine.getLeftPad();
 		top = engine.getTopPad();
 		selectedIndex = -1;
+		selectedNode = null;
 	}
 
 	public void activate() {
@@ -187,6 +190,7 @@ public class NodeInspector implements MouseListener, ChangeListener, MouseMotion
 		}
 		inspecting = false;
 		selectedIndex = -1;
+		selectedNode = null;
 	}
 
 	public void mousePressed(MouseEvent e) {
@@ -196,7 +200,7 @@ public class NodeInspector implements MouseListener, ChangeListener, MouseMotion
 		if (selectedIndex < 0) {
 			showNoInfo();
 		} else {
-			showNodeInfo((NodeAttribute) nodeEvents.get(selectedIndex));
+			showNodeInfo(selectedNode);
 		}
 		engine.updateDisplays();
 		hiliteSelected();
@@ -225,7 +229,7 @@ public class NodeInspector implements MouseListener, ChangeListener, MouseMotion
 		// if overlapp, will return last (topmost?) index
 		for (int i = 0; i < nodeEvents.size(); i++) {
 			NodeAttribute node = (NodeAttribute) nodeEvents.get(i);
-			nodeSize = node.getNodeSize() / 2.0;
+			nodeSize = Math.max(1.0,node.getNodeSize() / 2.0); //always leave at least 1 pixel for clicking
 
 			int nodeIndex = node.getNodeId() - 1;
 			// check for hit
@@ -235,6 +239,7 @@ public class NodeInspector implements MouseListener, ChangeListener, MouseMotion
 							- nodeSize))) {
 				targetIndex = nodeIndex;
 				selectedSize = nodeSize; // for later use by the graphics
+				selectedNode = node;
 				// TODO: need to get the correctly scaled node size
 			}
 
@@ -408,44 +413,42 @@ public class NodeInspector implements MouseListener, ChangeListener, MouseMotion
 				} else {
 					// check which attribute it is
 					String attr = propkeys[row];
-					NodeAttribute node = (NodeAttribute) nodeEvents
-							.get(selectedIndex);
 					if (attr.equals(ID)) {
-						return node.getNodeId();
+						return selectedNode.getNodeId();
 					} else if (attr.equals(LABEL)) {
-						return node.getNodeLabel();
+						return selectedNode.getNodeLabel();
 					} else if (attr.equals(START)) {
-						return node.getObsTime();
+						return selectedNode.getObsTime();
 					} else if (attr.equals(END)) {
-						return node.getEndTime();
+						return selectedNode.getEndTime();
 					} else if (attr.equals(SIZE)) {
-						return node.getNodeSize();
+						return selectedNode.getNodeSize();
 					} else if (attr.equals(REND_X)) {
 						return xCoords[selectedIndex];
 					} else if (attr.equals(REND_Y)) {
 						return yCoords[selectedIndex];
 					} else if (attr.equals(FILE_X)) {
-						return node.getObsXCoord();
+						return selectedNode.getObsXCoord();
 					} else if (attr.equals(FILE_Y)) {
-						return node.getObsYCoord();
+						return selectedNode.getObsYCoord();
 					} else if (attr.equals(COLOR)) {
-						return node.getNodeColor();
+						return selectedNode.getNodeColor();
 					} else if (attr.equals(SHAPE)) {
-						return node.getNodeShape();
+						return selectedNode.getNodeShape();
 					} else if (attr.equals(BORDER_W)) {
-						return node.getBorderWidth();
+						return selectedNode.getBorderWidth();
 					} else if (attr.equals(BORDER_C)) {
-						return node.getBorderColor();
+						return selectedNode.getBorderColor();
 					} else if (attr.equals(LABEL_S)) {
-						return node.getLabelSize();
+						return selectedNode.getLabelSize();
 					} else if (attr.equals(LABEL_C)) {
-						return node.getLabelColor();
+						return selectedNode.getLabelColor();
 					} else if (attr.equals(EFFECT)) {
-						return node.getEffect();
+						return selectedNode.getEffect();
 					} else if (attr.equals(FILE)) {
-						return node.getOrigFileLoc();
+						return selectedNode.getOrigFileLoc();
 					} else if (attr.equals(ICON)) {
-						return node.getIconURL();
+						return selectedNode.getIconURL();
 					} else {
 						return null;
 					}
@@ -496,12 +499,10 @@ public class NodeInspector implements MouseListener, ChangeListener, MouseMotion
 		public void setValueAt(Object value, int row, int col) {
 			if (col == 1) {
 				String attr = propkeys[row];
-				NodeAttribute node = (NodeAttribute) nodeEvents
-						.get(selectedIndex);
 				if (attr.equals(LABEL)) {
-					node.setNodeLabel(value.toString());
+					selectedNode.setNodeLabel(value.toString());
 				} else if (attr.equals(SIZE)) {
-					node.setNodeSize(Double.parseDouble(value.toString()));
+					selectedNode.setNodeSize(Double.parseDouble(value.toString()));
 				} else if (attr.equals(REND_X)) {
 					xCoords[selectedIndex] = Double.parseDouble(value
 							.toString());
@@ -509,11 +510,11 @@ public class NodeInspector implements MouseListener, ChangeListener, MouseMotion
 					yCoords[selectedIndex] = Double.parseDouble(value
 							.toString());
 				} else if (attr.equals(BORDER_W)) {
-					node.setBorderWidth(Float.parseFloat(value.toString()));
+					selectedNode.setBorderWidth(Float.parseFloat(value.toString()));
 				} else if (attr.equals(LABEL_S)) {
-					node.setLabelSize(Float.parseFloat(value.toString()));
+					selectedNode.setLabelSize(Float.parseFloat(value.toString()));
 				}
-				control.log("modified attribute of node " + node.getNodeId()
+				control.log("modified attribute of node " + selectedNode.getNodeId()
 						+ ", " + attr + "=" + value);
 				fireTableCellUpdated(row, col);
 				engine.updateDisplays();
