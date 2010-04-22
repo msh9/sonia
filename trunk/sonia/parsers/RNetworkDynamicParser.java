@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.StringTokenizer;
+import java.util.TreeMap;
 import java.util.Vector;
 
 import sonia.ArcAttribute;
@@ -568,6 +569,7 @@ public class RNetworkDynamicParser implements Parser {
 							end = spell[s][1];
 							//add a spell place holder for the node
 							timeMapper.addAssociations(spell, attrName,"activity spell");
+							
 						}
 						break;
 					}
@@ -677,16 +679,19 @@ public class RNetworkDynamicParser implements Parser {
 					for (int i = 0; i < vals.size(); i++) {
 						timeMapper.addAssociation(spells[i][0], spells[i][1], attrName,
 								stripQuotes(vals.get(i)));
+						
 					}
 				}
 			}// end dynamic attributes mapping
 			// NOW LOOP to actually CREATE NODE Attributes in time
-			Iterator<Interval> timeIter = timeMapper.getBinTimeIter();
+			//Iterator<Interval> timeIter = timeMapper.getBinTimeIter();
+			TreeMap<Interval, Vector<String[]>> subSpells = timeMapper.getSubSpellTree();
+			Iterator<Interval> timeIter = subSpells.keySet().iterator();
 			while (timeIter.hasNext()) {
 				Interval interval = timeIter.next();
 				start = interval.start;
 				end = interval.end;
-				Iterator<String[]> keyvalItr = timeMapper.getBin(interval).iterator();
+				Iterator<String[]> keyvalItr = subSpells.get(interval).iterator();
 				while (keyvalItr.hasNext()) {
 					String[] keyval = (String[]) keyvalItr.next();
 					if (keyval[0].startsWith(settings
@@ -711,6 +716,7 @@ public class RNetworkDynamicParser implements Parser {
 							throw new Exception(error);
 						}
 					}
+					
 				}
 				node = new NodeAttribute(nodeId, label, x, y, start, end,
 						orgiFile);

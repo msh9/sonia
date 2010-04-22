@@ -17,25 +17,34 @@ package sonia;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.Vector;
 
+import cern.colt.list.DoubleArrayList;
+
 /**
- * for sort time:key:value associations into bins by time and retriving them.
- * Not necesairly very efficient, but backed by a TreeMap
+ * for sort time:key:value associations into bins by time and retreieving them.
+ * Not necessarily very efficient, but backed by a TreeMap
  * 
  * @author skyebend
  * 
  */
 public class TimedTagBin {
 
-	private TreeMap<Interval,Vector> binStorage;
+	private TreeMap<Interval,Vector<String[]>> binStorage;
+	
+	/**
+	 * To store all the time points at which the status of the object changes
+	 */
+	private TreeSet<Double> timeline; 
 
 	public TimedTagBin() {
-		binStorage = new TreeMap<Interval,Vector>(new Comparator(){
+		binStorage = new TreeMap<Interval,Vector<String[]>>(new Comparator<Object>(){
 
 			public int compare(Object arg0, Object arg1) {
 				return ((Interval)arg0).compareTo(((Interval)arg1));
 			}});
+		timeline = new TreeSet<Double>();
 	}
 
 	/**
@@ -50,16 +59,24 @@ public class TimedTagBin {
 		Interval timeKey = new Interval(start,end);
 		String[] keyTagValue = new String[] { keyTag, value };
 		if (binStorage.containsKey(timeKey)) {
-			((Vector) binStorage.get(timeKey)).add(keyTagValue);
+			((Vector<String[]>) binStorage.get(timeKey)).add(keyTagValue);
 		} else {
-			Vector bin = new Vector();
+			Vector<String[]> bin = new Vector<String[]>();
 			bin.add(keyTagValue);
 			binStorage.put(timeKey, bin);
 		}
+		//also add to timeline
+		if (!timeline.contains(Double.valueOf(start))){
+			timeline.add(Double.valueOf(start));
+		}
+		if (!timeline.contains(Double.valueOf(end))){
+			timeline.add(Double.valueOf(end));
+		}
+		
 	}
 	
 	/**
-	 * put multiple key value association into a bin with the in the included spell
+	 * put multiple cases of a key-value association into a bin with the in the included set of spells
 	 * 
 	 * @author skyebend
 	 * @param spells  double array of start and end times to add for that vale
@@ -71,17 +88,24 @@ public class TimedTagBin {
 			Interval timeKey = new Interval(spells[s][0],spells[s][1]);
 			String[] keyTagValue = new String[] { keyTag, value };
 			if (binStorage.containsKey(timeKey)) {
-				((Vector) binStorage.get(timeKey)).add(keyTagValue);
+				((Vector<String[]>) binStorage.get(timeKey)).add(keyTagValue);
 			} else {
-				Vector bin = new Vector();
+				Vector<String[]> bin = new Vector<String[]>();
 				bin.add(keyTagValue);
 				binStorage.put(timeKey, bin);
+			}
+			//also add to timeline
+			if (!timeline.contains(Double.valueOf(spells[s][0]))){
+				timeline.add(Double.valueOf(spells[s][0]));
+			}
+			if (!timeline.contains(Double.valueOf(spells[s][1]))){
+				timeline.add(Double.valueOf(spells[s][1]));
 			}
 		}
 	}
 
 	/**
-	 * return Iterator containing all the bin times as Interval objects in acending order. WARNING:
+	 * return Iterator containing all the bin times as Interval objects in ascending order. WARNING:
 	 * modifying this will mess with the map!
 	 * 
 	 * @author skyebend
@@ -89,6 +113,40 @@ public class TimedTagBin {
 	 */
 	public Iterator<Interval> getBinTimeIter(){
 		return binStorage.keySet().iterator();
+	}
+	
+	/**
+	 * Returns a set of adjacent non-overlapping subintervals covering the start and end points of all the stored intervals.  
+	 * The values associated with each subinterval include the values of all the intervals it intersects with. 
+	 * @return a treemap keyed by Interval objects associated with Vectors of values
+	 */
+	public TreeMap<Interval,Vector<String[]>> getSubSpellTree(){
+		//TODO: this should be done with an interval tree, not on the fly by checking every value
+		TreeMap<Interval,Vector<String[]>> subSpells = new TreeMap<Interval,Vector<String[]>>(new Comparator<Object>(){
+			public int compare(Object arg0, Object arg1) {
+				return ((Interval)arg0).compareTo(((Interval)arg1));
+			}});
+		//construct a list of spells corresponding to all the subpells
+		Iterator<Double> times = timeline.iterator();
+		Double first = times.next();
+		while (times.hasNext()){
+			Double second = times.next();
+			Interval sub = new Interval(first.doubleValue(), second.doubleValue());
+			Vector<String[]> values = new Vector<String[]>();
+			//check all the intervals to find those that intersect with sub
+			Iterator<Interval> intervals = binStorage.keySet().iterator();
+			while (intervals.hasNext()){
+				Interval interval = intervals.next();
+				if (sub.within(interval)){
+					values.addAll(binStorage.get(interval));
+				}
+			}
+			subSpells.put(sub, values);
+			first = second; //shift over to the next interval
+			
+		}
+		return subSpells;
+		
 	}
 
 	
@@ -100,18 +158,18 @@ public class TimedTagBin {
 	 * @param time
 	 * @return
 	 */
-	public Vector getBin(Interval interval) {
-       return (Vector)binStorage.get(interval);
+	public Vector<String[]> getBin(Interval interval) {
+       return (Vector<String[]>)binStorage.get(interval);
 	}
 
 	@Override
 	public String toString() {
 		String returnString = "{";
-		Iterator keyIter = binStorage.keySet().iterator();
+		Iterator<Interval> keyIter = binStorage.keySet().iterator();
 		while (keyIter.hasNext()){
 			Interval key = (Interval)keyIter.next();
 			returnString += "("+key.start+"-"+key.end+")=>(";
-			Iterator binIter = binStorage.get(key).iterator();
+			Iterator<String[]> binIter = binStorage.get(key).iterator();
 			while(binIter.hasNext()){
 				 String[] value = (String[])binIter.next();
 				 returnString += value[0]+"="+value[1]+",";

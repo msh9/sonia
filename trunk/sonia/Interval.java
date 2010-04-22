@@ -63,6 +63,21 @@ public class Interval implements Comparable {
 		} else {return false;}
 	}
 	
+	public boolean within(Interval other){
+		if ((this.start >= other.start) & (this.start <= other.end)){
+			if ((this.end <= other.end) & (this.end >= other.start)){
+				return true;
+			}
+		} 
+		return false;
+		
+	}
+
+	@Override
+	public String toString() {
+		return "["+start+"-"+end+"]";
+	}
+	
 	
 
 }
