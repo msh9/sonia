@@ -457,12 +457,16 @@ public class RNetworkDynamicParser implements Parser {
 				}// end parsing of edge
 				
 				// NOW LOOP to actually CREATE ARC Attributes in time
-					Iterator<Interval> timeIter = timeMapper.getBinTimeIter();
+				// we use non-overlapping adjacent sub intervals to describe the set of
+				// properties defined by the possibly-overlapping original spells
+				TreeMap<Interval, Vector<String[]>> subSpells = timeMapper.getSubSpellTree();
+				Iterator<Interval> timeIter = subSpells.keySet().iterator();
+					
 					while (timeIter.hasNext()) {
 						Interval interval = (Interval) timeIter.next();
 						start = interval.start;
 						end = interval.end;
-						Iterator<String[]> keyvalItr = timeMapper.getBin(interval).iterator();
+						Iterator<String[]> keyvalItr = subSpells.get(interval).iterator();
 						while (keyvalItr.hasNext()) {
 							String[] keyval = (String[]) keyvalItr.next();
 							if (keyval[0].startsWith(settings
