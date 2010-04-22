@@ -130,7 +130,7 @@ public class Graphics2DRender implements Render {
 			printLabel = printLabel + node.getNodeLabel();
 		}
 		
-		//figure out exactly whre string will be drawn
+		//figure out exactly where string will be drawn
 		double nodeDrawSize = node.getNodeSize() * scaleFact;
 		double labX =  (xCoord + (nodeDrawSize / 2.0) + 2.0);
 		double labY = (yCoord + node.getLabelSize() / 2.0);
@@ -166,18 +166,18 @@ public class Graphics2DRender implements Render {
 		arcLine.reset();
 		if (!curvey){
 			//set up a straight line 
-	     	arcLine.moveTo((float) fromX, (float) fromY);
-	    	arcLine.lineTo((float) toX, (float) toY);
+	     	arcLine.moveTo( fromX,fromY);
+	    	arcLine.lineTo( toX, toY);
 		} else {
 			//set up a curving line
 			double theta = Math.atan((fromY-toY)/(fromX-toX));
-//			firgure how large the offset from centerline should be
+//			figure how large the offset from centerline should be
 			double offset = ((fromY-toY)/Math.sin(theta))/10; 
 			
-			arcLine.moveTo((float) fromX, (float) fromY);
-	    	arcLine.quadTo((float)(offset*Math.sin(theta)+fromX+(toX-fromX)/2), 
-	    			(float)(offset*Math.cos(theta)+toY+(fromY-toY)/2),
-	    			(float) toX, (float) toY);
+			arcLine.moveTo(fromX,fromY);
+	    	arcLine.quadTo((offset*Math.sin(theta)+fromX+(toX-fromX)/2), 
+	    			(offset*Math.cos(theta)+toY+(fromY-toY)/2),
+	    			 toX, toY);
 	    	//crap, still not quite right on the diagonals
 		}
 		graphics.draw(arcLine);
@@ -218,18 +218,18 @@ public class Graphics2DRender implements Render {
 			try // for concurrency problems on dual processor machines...
 			{
 				// tip of arrow
-				headPath.moveTo((float) toX, (float) toY);
+				headPath.moveTo(toX,toY);
 				// one wedge
 				headPath
-						.lineTo((float) (toX + (arrowSize * Math
+						.lineTo( (toX + (arrowSize * Math
 								.sin(lineAngle - 0.3))),
-								(float) (toY + (arrowSize * Math
+								 (toY + (arrowSize * Math
 										.cos(lineAngle - 0.3))));
 				// other wedge
 				headPath
-						.lineTo((float) (toX + (arrowSize * Math
+						.lineTo( (toX + (arrowSize * Math
 								.sin(lineAngle + 0.3))),
-								(float) (toY + (arrowSize * Math
+								 (toY + (arrowSize * Math
 										.cos(lineAngle + 0.3))));
 				// back to top
 				headPath.closePath();
