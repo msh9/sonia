@@ -775,6 +775,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 					engine.getDisplayWidth(),engine.getDisplayHeight());
 			Control.log("scaled layout for slice "+engine.getCurrentSliceNum()
 					+" by a factor of "+factor);
+			engine.setCoordsToSlice(engine.getCurrentSliceNum());
 			updateDisplay();
 		} else if (evt.getSource().equals(rotate)){
 			double deg = Double.parseDouble(degrees.getText());
@@ -782,6 +783,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 					engine.getDisplayWidth(),engine.getDisplayHeight());
 			Control.log("rotated layout for slice "+engine.getCurrentSliceNum()
 					+" by "+deg+" degrees.");
+			engine.setCoordsToSlice(engine.getCurrentSliceNum());
 			updateDisplay();
 		} else if (evt.getSource().equals(pan)){
 			if (panner == null){
@@ -801,6 +803,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 						deltax = release.x - press.x;
 						deltay = release.y - press.y;
 						LayoutUtils.panLayout(engine.getCurrentSlice(),deltax,deltay);
+						engine.setCoordsToSlice(engine.getCurrentSliceNum());
 						updateDisplay();
 					}
 				};
