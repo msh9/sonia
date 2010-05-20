@@ -41,6 +41,7 @@ public class LayoutSettings extends PropertySettings {
 	public static final String PI = "Moody PI layout";
 	public static final String METRIC_MDS = "MetricMDS (SVD)?" ;
 	public static final String MDSJ_CMDS ="MDSJ Classic Mds (non-comercial)";
+	public static final String GRAPHVIZ ="External GraphViz Layout";
 
 	public static final String NO_ANIMATION = "none";
 	public static final String COSINE_ANIMATION = "cosine animation" ;

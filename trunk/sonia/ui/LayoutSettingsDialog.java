@@ -112,7 +112,7 @@ public class LayoutSettingsDialog extends JDialog implements ActionListener , Fo
 	private String[] layoutNames = { LayoutSettings.COORD_ORIG,
 			LayoutSettings.CIRCULAR, LayoutSettings.FR, LayoutSettings.RAND_FR,
 			LayoutSettings.RUB_FR, LayoutSettings.MULTI_KK, LayoutSettings.PI,
-			LayoutSettings.METRIC_MDS , LayoutSettings.MDSJ_CMDS};
+			LayoutSettings.METRIC_MDS , LayoutSettings.MDSJ_CMDS,LayoutSettings.GRAPHVIZ};
 
 	private String[] interpNames = { LayoutSettings.NO_ANIMATION,
 			LayoutSettings.COSINE_ANIMATION,LayoutSettings.DELAY_COSINE_ANIMATION,

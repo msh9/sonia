@@ -78,7 +78,7 @@ public class ApplySettingsDialog implements ActionListener {
 	private JPanel transformProps;
 
 	// container dynamically added layout elements
-	private ArrayList propComponents = new ArrayList();
+	private ArrayList propComponents = new ArrayList();  //  @jve:decl-index=0:
 
 	// layout elements
 	// private JLabel SliceInfoLabel; // shows the laytout info, type of layout
@@ -400,6 +400,27 @@ public class ApplySettingsDialog implements ActionListener {
 		propComponents.add(PropField);
 	}
 
+	/**
+	 * called by the layout algorithm during setup so that it can add parameters
+	 * to the dilog box.
+	 * 
+	 * @param name
+	 *            the string name of the prameter to display and to use as the
+	 *            key
+	 * @param value
+	 *            the defualt double value of the parameter
+	 */
+	public void addLayoutProperty(String name, String value) {
+		// make new GUI objects
+		JLabel PropLabel = new JLabel(name);
+		JTextField PropField = new JTextField(value, 3);
+		PropField.setName(name);
+		// add the pair to the Hashmap
+		layoutProperties.put(name, PropField);
+		propComponents.add(PropLabel);
+		propComponents.add(PropField);
+	}
+	
 	/**
 	 * sets the algorithm specific layout pramter to the passed value, after
 	 * checking that there is a parameter corresponding to name. Will spit out

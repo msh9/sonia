@@ -33,6 +33,7 @@ import javax.swing.JFrame;
 import sonia.analytics.ModularityStructureDirected;
 import sonia.layouts.CircleLayout;
 import sonia.layouts.FRLayout;
+import sonia.layouts.GraphVizWrapperLayout;
 import sonia.layouts.MDSJLayout;
 import sonia.layouts.MetricMDSLayout;
 import sonia.layouts.MultiCompKKLayout;
@@ -180,6 +181,8 @@ public class SoniaLayoutEngine implements TaskListener{
 			theLayout = new MetricMDSLayout(control, this);
 		} else if (layoutType.equals(LayoutSettings.MDSJ_CMDS)) {
 			theLayout = new MDSJLayout(control, this);
+		} else if (layoutType.equals(LayoutSettings.GRAPHVIZ)) {
+			theLayout = new GraphVizWrapperLayout(control, this);
 		} else {
 			theLayout = new OrigCoordLayout(control, this);
 		}
@@ -376,7 +379,7 @@ public class SoniaLayoutEngine implements TaskListener{
 	public void startApplyLayoutToRemaining() {
 		// will throw up a settings window, but for now, apply the current
 		// layout to all subsequent layouts
-		// makesure there is a layout chosen
+		// make sure there is a layout chosen
 		int startSlice = currentSlice;
 		int slicesLeft = layoutSlices.size() - currentSlice;
 		// get the settings
@@ -396,7 +399,7 @@ public class SoniaLayoutEngine implements TaskListener{
 		while ((slicesLeft > 0) & (!control.isPaused())) {
 			// TODO: while loop for layout apply should not be here, should use
 			// threading
-			// check that layout is finished bfore startign next
+			// check that layout is finished before starting next
 			if (slice.isLayoutFinished()) {
 				// check if we should break for errors
 				if (slice.isError()) {
@@ -424,12 +427,28 @@ public class SoniaLayoutEngine implements TaskListener{
 				+ " error slices");
 
 	}
+	
+	/**
+	 * Temporarily overides the engine's preset layout with the pased layout, runs it, and then sets it back
+	 * @param layout
+	 * @param settings
+	 */
+	public void applyLayoutOnce(NetLayout layout, ApplySettings settings){
+		NetLayout oldLayout = currentLayout;
+		ApplySettings oldSettings = applySettings;
+		currentLayout = layout;
+		applySettings = settings;
+		applyLayoutToCurrent();
+		
+		currentLayout = oldLayout;
+		applySettings = oldSettings;
+	}
 
 	/**
 	 * Applies a layout algorithm to the passed slice. First checks that no
 	 * other layout is working on the slice, then locks it, gets the current
 	 * screen dimensions of the layout, sets the starting coordinates of the
-	 * slice to the appotion specified in the settings dialog, asks the layout
+	 * slice to the option specified in the settings dialog, asks the layout
 	 * algorithm to start, and records the starting info in the log.
 	 * 
 	 * @param slice
@@ -504,7 +523,7 @@ public class SoniaLayoutEngine implements TaskListener{
 			// incase there are redraws in the processes...
 			// make sure we are looking at the right slice
 			// setCoordsToSlice(thisIndex);
-			// makesure the display is current THIS WILL SLOW THINGS DOWN
+			// make sure the display is current THIS WILL SLOW THINGS DOWN
 			// display.updateDisplay();
 			// ask the layout to calculate the cordinates
 			//currentLayout.applyLayoutTo(slice, width, height, settings);
@@ -512,8 +531,8 @@ public class SoniaLayoutEngine implements TaskListener{
 			//ask control to run the layout in a new thread
 			LongTask task = new ApplyLayoutTask(control,this,currentLayout,width,
 					height,slice,settings);
-			//register thelayout window to get task updates. 
-			//TODO: only register ui updats if in gui mode
+			//register the layout window to get task updates. 
+			//TODO: only register ui updates if in gui mode
 			task.addTaskEventListener(this);
 			control.runTask(task);
 

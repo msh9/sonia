@@ -70,6 +70,7 @@ public class DLParser implements Parser {
 			}
 			// now loop over the tags to see which ones are present
 //debug
+			//TODO: dl should not be case sensitive, should permit " " as delimiter?
 			System.out.println("dl tags found:"+headerTagMap);
 			// check that format = edgelist1 (not some other dl file format
 			String format = (String) headerTagMap.get("format");

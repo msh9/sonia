@@ -484,12 +484,25 @@ public class RNetworkDynamicParser implements Parser {
 								weight, width);
 						arc.setArcColor(ac);
 						arcList.add(arc);
+						//if the network is undirected, add it in both directions
+						if (!isDirected){
+							arc = new ArcAttribute(start, end, toId, fromId,
+									weight, width);
+							arc.setArcColor(ac);
+							arcList.add(arc);
+						}
 					}// end dynamic attribute creation
 				
 				if (arc == null){
 					arc = new ArcAttribute(start, end, fromId, toId,
 						weight, width);
 					arcList.add(arc);
+					if (!isDirected){
+						//add the edge going the other way also
+						arc = new ArcAttribute(start, end, toId, fromId,
+								weight, width);
+							arcList.add(arc);
+					}
 				}
 
 				edgeCount++; //used for debugging

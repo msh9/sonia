@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -45,9 +46,12 @@ import sonia.SoniaCanvas;
 import sonia.SoniaController;
 import sonia.SoniaLayoutEngine;
 import sonia.layouts.FRLayout;
+import sonia.layouts.GraphVizWrapperLayout;
 import sonia.layouts.MultiCompKKLayout;
+import sonia.layouts.NetLayout;
 import sonia.mapper.Colormapper;
 import sonia.movie.MovieMaker;
+import sonia.settings.ApplySettings;
 import sonia.settings.BrowsingSettings;
 import sonia.settings.GraphicsSettings;
 
@@ -197,6 +201,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	
 	private JButton makeClusters;
 	
+	private JButton layoutOnce;
+	
 	private JButton zoom;
 	private JTextField zoomFactor;
 	
@@ -233,7 +239,6 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	private JPanel layoutPanel;
 	private JPanel timelinePane ;
 	
-	private JLabel fpsInfo;
 	
 	private StressTimeline stressline;
 	
@@ -321,11 +326,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 			}
 		});
 		
-		//menu that just used to dispaly info
-		fpsInfo = new JLabel("          fps:");
-		menuBar.add(fpsInfo);
-		
-
+	
 		// this.setFont(controller.getFont());
 		// create layout objects
 		controlPanel = new JPanel();
@@ -342,6 +343,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		//Pause = new JButton("||");
 		ViewOptions = new JButton("View Options..");
 		makeClusters = new JButton("Make Clusters");
+		layoutOnce = new JButton("Other Layout...");
 		MoveNodes = new JButton("Move Nodes");
 		zoom = new JButton("Scale layout");
 		zoomFactor = new JTextField("1.5",3);
@@ -510,7 +512,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		controlPanel.add(ViewOptions, c);
 		c.gridx = 0;c.gridy = 1;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;c.weighty = 0.0;
 		//controlPanel.add(makeClusters, c);  //hide this for now so don't have to support or explain...
-
+		controlPanel.add(layoutOnce, c);
+		
 		// buttons
 		c.gridx = 1;c.gridy = 0;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;	c.weighty = 0.0;
 		controlPanel.add(zoom, c);
@@ -611,6 +614,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		PhasePlot.addActionListener(this);
 		ViewOptions.addActionListener(this);
 		makeClusters.addActionListener(this);
+		layoutOnce.addActionListener(this);
 		MoveNodes.addActionListener(this);
 		NextSlice.addActionListener(this);
 		PrevSlice.addActionListener(this);
@@ -743,7 +747,17 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		} else if (evt.getSource().equals(makeClusters)) {
 			engine.createModularityClustersForSlice();
 			updateDisplay();
-		}else if (evt.getSource().equals(LayoutNum)) {
+		} else if (evt.getSource().equals(layoutOnce)) {
+			//TODO:show a list of layouts to choose from
+			NetLayout layout = new GraphVizWrapperLayout(Control, engine);
+			//show a settings dialog for that layout
+			ApplySettings settings = new ApplySettings();
+			ApplySettingsDialog dialog = new ApplySettingsDialog(settings, Control, engine, null, layout);
+			dialog.showDialog();
+			//tell the engine to do one layout of that option
+			engine.applyLayoutOnce(layout, settings);
+			updateDisplay();
+		} else if (evt.getSource().equals(LayoutNum)) {
 			if (!engine.isTransitionActive()) {
 				goToSlice(Integer.parseInt(LayoutNum.getText()));
 			}
