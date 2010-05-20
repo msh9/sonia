@@ -67,9 +67,9 @@ public class InstallSonia {
 	
 	public static final String CC_ATTRIB_NONCOM_SHAREALIKE_URL = "creativecommons_by-nc-sa_3.0_license.txt";
 ;
-	public static final String COLT_DOWNLOAD_URL = "http://dsd.lbl.gov/~hoschek/colt-download/releases/colt-1.2.0.zip";
+	public static final String COLT_DOWNLOAD_URL = "http://acs.lbl.gov/software/colt/colt-download/releases/colt-1.2.0.zip";
 
-	public static final String COLT_LICENSE_URL = "http://dsd.lbl.gov/~hoschek/colt-download/releases/license.html";
+	public static final String COLT_LICENSE_URL = "http://acs.lbl.gov/software/colt/colt-download/releases/license.html";
 
 	public static final String QT_DOWNLOAD_URL = "http://www.apple.com/quicktime/download/";
 
