@@ -242,7 +242,11 @@ public class ArcAttribute implements NetworkEvent
    */
   public void setArcColor(Color c)
   {
-      arcColor = c;
+	  //this to stop onself being shot in the foot with invisible edges
+	  if (c != null){
+		  arcColor = c;
+	  }
+
   }
 
   /**

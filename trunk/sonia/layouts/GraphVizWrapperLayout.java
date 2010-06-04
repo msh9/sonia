@@ -41,7 +41,7 @@ public class GraphVizWrapperLayout implements NetLayout {
 	private double yOffset;
 	private double scaleFactor = 20;
 
-	private String gvPath = "/usr/local/bin/dot";
+	private String gvPath = ""; // "/usr/local/bin/dot";
 
 	/**
 	 * From GV docs: In dot, this gives the desired rank separation, in inches.
@@ -69,26 +69,19 @@ public class GraphVizWrapperLayout implements NetLayout {
 	private String rankDir = "TB";
 
 	/**
-	 * From GV docs: An aspect ratio, double, followed optionally by a ',' and a
-	 * maximum pass count. If the aspect ratio is given, but no maximum pass
-	 * count, the latter defaults to 5. Target aspect ratio (width of the layout
-	 * divided by the height) of the graph drawing. If unset, dot minimizes the
-	 * total edge length. For certain graphs, like those with large fan-in or
-	 * fan-out, this can lead to very wide layouts. Setting aspect will cause
-	 * dot to try to adjust the layout to get an aspect ratio close to that
-	 * specified by aspect.
+	 * subgraph { rank = same; A; B; C; }
 	 * 
-	 * By default, dot will do 5 passes attempting to achieve the desired aspect
-	 * ratio. For certain graphs, more passes will be needed to get close
-	 * enough. The aspect attribute can also be used to specify the maximum
-	 * number of passes to try.
-	 * 
-	 * At present, there is no mechanism for widening a very tall layout. Also,
-	 * the algorithm doesn't handle clusters, nor disconnected graphs. For the
-	 * latter case, one can split the pipeline ccomps -x | dot | gvpack | neato
-	 * -n2 to get a similar effect.
+	 * This (anonymous) subgraph specifies that the nodes A, B and C should all
+	 * be placed on the same rank if drawn using dot. Rank constraints on the
+	 * nodes in a subgraph. If rank="same", all nodes are placed on the same
+	 * rank. If rank="min", all nodes are placed on the minimum rank. If
+	 * rank="source", all nodes are placed on the minimum rank, and the only
+	 * nodes on the minimum rank belong to some subgraph whose rank attribute is
+	 * "source" or "min". Analogous criteria hold for rank="max" and
+	 * rank="sink". (Note: the minimum rank is topmost or leftmost, and the
+	 * maximum rank is bottommost or rightmost.)
 	 */
-	private String aspect;
+	private String rank = "";
 
 	/**
 	 * Factor by which to scale up the layout results
@@ -103,13 +96,20 @@ public class GraphVizWrapperLayout implements NetLayout {
 
 	public static final String NODE_SEP = "nodesep";
 
+	/**
+	 * Path to where the operating system has located the GraphViz executeables
+	 */
+	public static final String GV_PATH = "GraphViz path";
+
 	private Process gvPrc = null;
 
 	public GraphVizWrapperLayout(SoniaController cont, SoniaLayoutEngine eng) {
 		control = cont;
 		engine = eng;
+
+		gvPath = "/usr/local/bin/";
 		// check if we can access graphViz by printing version or fail fast
-		String[] cmd = { gvPath, "-V" };
+		String[] cmd = { gvPath + "dot", "-V" };
 		try {
 			gvPrc = Runtime.getRuntime().exec(cmd);
 
@@ -140,9 +140,8 @@ public class GraphVizWrapperLayout implements NetLayout {
 				err = stdError.readLine();
 			}
 			if (errors != null) {
-				control
-						.showError("Error with GraphViz external process at "
-								+ gvPath + " :" + errors);
+				control.showError("Error with GraphViz external process at "
+						+ gvPath + " :" + errors);
 			}
 			stdOut.close();
 			stdError.close();
@@ -174,6 +173,8 @@ public class GraphVizWrapperLayout implements NetLayout {
 		rankSep = settings.getProperty(RANK_SEP);
 		rankDir = settings.getProperty(RANK_DIR);
 		nodeSep = settings.getProperty(NODE_SEP);
+		rank = settings.getProperty(RANK);
+		gvPath = settings.getProperty(GV_PATH);
 
 		xOffset = engine.getLayoutWidth() / 2;
 		yOffset = engine.getLayoutWidth() / 2;
@@ -181,13 +182,14 @@ public class GraphVizWrapperLayout implements NetLayout {
 		slice.setLayoutFinished(false);
 		double[] sliceXCoords = slice.getXCoords(); // slice's object
 		double[] sliceYCoords = slice.getYCoords(); // modifications will move
-													// nodes
+		// nodes
 
 		// run the mds calculation
 		layoutInfo = "Starting GraphViz layout external system call";
 		String graphString = getGVFileString(NetUtils.getMatrix(slice), slice
 				.getPresentNodes());
-		runExternalGV(graphString, sliceXCoords, sliceYCoords);
+		runExternalGV(getGVComponents(graphString),sliceXCoords,sliceYCoords);
+		//runExternalGV(graphString, sliceXCoords, sliceYCoords);
 
 		// normalize, recenter, dialate coordinates to fit display area
 		// update the slice coords
@@ -206,6 +208,93 @@ public class GraphVizWrapperLayout implements NetLayout {
 		layoutInfo = "Finished call to extral GraphViz layout.";
 
 	}
+/**
+ * send the graph to get components, reformat them into subgraph
+ * @param graphText
+ * @return
+ */
+	private String getGVComponents(String graphText) {
+		String gvOutput = "";
+		String graphHeader = "";
+		try {
+			String[] cmd = { gvPath+"ccomps", "-x" };
+
+			gvPrc = Runtime.getRuntime().exec(cmd);
+
+			BufferedReader stdOut = new BufferedReader(new InputStreamReader(
+					gvPrc.getInputStream()));
+
+			BufferedReader stdError = new BufferedReader(new InputStreamReader(
+					gvPrc.getErrorStream()));
+
+			// write the graph via std in
+			BufferedWriter stdIn = new BufferedWriter(new OutputStreamWriter(
+					gvPrc.getOutputStream()));
+			stdIn.write(graphText);
+			stdIn.flush();
+			stdIn.close();
+
+			// read the output from the command
+			
+			String line = stdOut.readLine();
+			boolean skip = false;
+			
+			boolean graphHeaderDone = false;
+			while (line != null) {
+				if (line.startsWith("digraph")) {
+					//start skipping the graph part
+					gvOutput += "subgraph cluster_"+line.substring(10,line.length()-2)+"{\n";
+					skip = true;
+				}
+				if (!skip){
+					gvOutput += line + "\n";
+				} else if (line.endsWith("];")){
+					//reached the end of the graph block, so stop skipping
+					skip=false;
+					if (!graphHeaderDone){
+						graphHeader+="];\n";
+						graphHeaderDone=true;
+					}
+				} else if (!graphHeaderDone){
+					//we must be dealing with the graph header
+					graphHeader += line;
+				}
+				
+				line = stdOut.readLine();
+			}
+
+
+			// read any errors from the attempted command
+			String errors = null;
+			String err = stdError.readLine();
+			while (err != null) {
+				errors += err;
+				err = stdError.readLine();
+			}
+			if (errors != null) {
+				control.showError("Errors with GraphViz external process:"
+						+ errors);
+			}
+			stdOut.close();
+			stdError.close();
+			control.showStatus("GraphViz process finished with status: "
+					+ gvPrc.waitFor());
+
+		} catch (IOException e) {
+			control.showError("Errors with GraphViz external process:"
+					+ e.getMessage());
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			control.showError("Errors with GraphViz external process:"
+					+ e.getMessage());
+			e.printStackTrace();
+		}
+		
+		//assemble the graph headers with subgraphs
+		gvOutput = graphHeader+gvOutput+"};";
+		return gvOutput;
+
+	}
 
 	private String getGVFileString(DoubleMatrix2D matrix, IntArrayList present) {
 		String gv = "digraph G {\n";
@@ -213,6 +302,11 @@ public class GraphVizWrapperLayout implements NetLayout {
 		String gParams = "graph [" + RANK_SEP + "=\"" + rankSep + "\","
 				+ RANK_DIR + "=\"" + rankDir + "\", " + NODE_SEP + "=\""
 				+ nodeSep + "\"];\n";
+		// check if we using a rank to specify position of subgraph
+		if (!rank.equals("")) {
+			// subgraph { rank = same; A; B; C; }
+			gParams += "subgraph { " + RANK + " =" + rank + "}\n";
+		}
 		layoutInfo += gParams;
 		gv += gParams;
 		// write in node records to give the existing positions and include
@@ -239,7 +333,8 @@ public class GraphVizWrapperLayout implements NetLayout {
 
 			// -y flips the coords to match the computer convention
 			// -s should scale like 72 dpi
-			String[] cmd = { gvPath, "-Tplain", "-y", "-s" };
+			String[] cmd = { gvPath+"dot", "-Tplain", "-y", "-s" };
+
 			gvPrc = Runtime.getRuntime().exec(cmd);
 
 			BufferedReader stdOut = new BufferedReader(new InputStreamReader(
@@ -254,7 +349,6 @@ public class GraphVizWrapperLayout implements NetLayout {
 			stdIn.write(graphText);
 			stdIn.flush();
 			stdIn.close();
-			System.out.println(graphText);
 
 			// read the output from the command
 			String gvOutput = "";
@@ -273,6 +367,7 @@ public class GraphVizWrapperLayout implements NetLayout {
 
 				line = stdOut.readLine();
 			}
+
 
 			// read any errors from the attempted command
 			String errors = null;
@@ -333,6 +428,8 @@ public class GraphVizWrapperLayout implements NetLayout {
 		settings.addLayoutProperty(RANK_DIR, rankDir);
 		settings.addLayoutProperty(RANK_SEP, rankSep);
 		settings.addLayoutProperty(NODE_SEP, nodeSep);
+		settings.addLayoutProperty(RANK, rank);
+		settings.addLayoutProperty(GV_PATH, gvPath);
 
 	}
 
