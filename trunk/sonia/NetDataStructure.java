@@ -301,7 +301,7 @@ public class NetDataStructure
     }
   }
 
-  //moves events from passed vector (from parseing) into array
+  //moves events from passed vector (from parsing) into array
   public void addArcEvents(Vector arcEvents)
   {
     //check that they will fit
@@ -309,6 +309,7 @@ public class NetDataStructure
     {
       for (int i = 0; i< numArcEvents; i++)
       {
+    	
         arcEventArray[i] = (ArcAttribute)arcEvents.get(i);
         //check with times
         firstTime = Math.min(arcEventArray[i].getObsTime(),firstTime);

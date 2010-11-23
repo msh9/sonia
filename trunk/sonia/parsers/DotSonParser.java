@@ -11,6 +11,7 @@ import cern.colt.list.IntArrayList;
 import sonia.ArcAttribute;
 import sonia.NodeAttribute;
 import sonia.NodeClusterAttribute;
+import sonia.ShapeFactory;
 import sonia.settings.PropertySettings;
 import sonia.ui.AttributeMapperDialog;
 
@@ -1179,14 +1180,13 @@ public class DotSonParser implements ClusterParser {
 	/**
 	 * parses a shape from the row. Currently parses to one of java's
 	 * "RectangularShape" which means either Rectangle2D.double or
-	 * Ellipse2D.double. Valid strings are "square" and "circle"(case
-	 * insensitive). Defaults to ellipse. (ADD MORE SHAPE CLASSES?)
+	 * Ellipse2D.double. Valid strings are those recognized by the shape factory. Defaults to ellipse. (ADD MORE SHAPE CLASSES?)
 	 * 
 	 * @param rowArray
 	 *            the array of strings from the row to be parsed
 	 * @return RectangularShape for the node
 	 * @throws IOException
-	 *             if value is not "square" or "circle"
+	 *             if value is not recognized by the shape factor
 	 */
 	private RectangularShape parseNodeShape(String[] rowArray)
 			throws IOException {
@@ -1198,6 +1198,7 @@ public class DotSonParser implements ClusterParser {
 		if (nodeHeaderMap.containsKey(key)) {
 			int index = ((Integer) nodeHeaderMap.get(key)).intValue();
 			// try to parse node ID from row
+			/*
 			if (rowArray[index].equalsIgnoreCase("square")
 					| rowArray[index].equalsIgnoreCase("rect")) {
 				shape = new Rectangle2D.Double();
@@ -1205,10 +1206,14 @@ public class DotSonParser implements ClusterParser {
 					| rowArray[index].equalsIgnoreCase("ellipse")) {
 				shape = new Ellipse2D.Double();
 			} else {
+			*/
+			try {
+				shape = ShapeFactory.getShapeFor(rowArray[index]);
+			} catch (Exception e){
+				
 				String error = "Unable to parse NodeShape \"" + rowArray[index]
 						+ "\" from column" + key + " on line "
-						+ reader.getLineNumber() + "\n"
-						+ "currently, shape must be \"square\" or \"circle\"";
+						+ reader.getLineNumber() + ":"+e.getMessage();
 				throw (new IOException(error));
 			}
 		} else {

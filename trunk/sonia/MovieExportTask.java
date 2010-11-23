@@ -20,8 +20,6 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.Vector;
 
-import quicktime.streaming.SettingsDialog;
-
 import sonia.layouts.NetLayout;
 import sonia.movie.MovieMaker;
 import sonia.settings.ApplySettings;
@@ -107,10 +105,12 @@ public class MovieExportTask implements LongTask {
 		int endIndex = engine.getNumSlices();
 		
 		int numFrames = endIndex * engine.getInterpFrames();
-			window.transitionToSlice(0,null);
+			//disabled this so we can export from the current slice
+			//window.transitionToSlice(0,null);
 			maker.setupMovie(window.getDisplay(), numFrames);
 			maker.captureImage();
-			 currentSlice = 0;
+			// currentSlice = 0;
+			currentSlice=engine.getCurrentSliceNum();
 			//movie export loop
 			while (currentSlice < endIndex-1) {
 				//check if there was an unreported error from the previous slice

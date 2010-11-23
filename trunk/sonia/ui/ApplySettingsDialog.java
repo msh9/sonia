@@ -78,7 +78,7 @@ public class ApplySettingsDialog implements ActionListener {
 	private JPanel transformProps;
 
 	// container dynamically added layout elements
-	private ArrayList propComponents = new ArrayList();  //  @jve:decl-index=0:
+	private ArrayList<Component> propComponents = new ArrayList<Component>();  //  @jve:decl-index=0:
 
 	// layout elements
 	// private JLabel SliceInfoLabel; // shows the laytout info, type of layout

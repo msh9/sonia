@@ -29,9 +29,9 @@ import sonia.parsers.DotSonColumnMap;
  */
 public class AttributeMapperDialog extends Object{
     
-    private ArrayList unmapped;
+    private ArrayList<String> unmapped;
     private Object[] headers;
-    private ArrayList states;
+    private ArrayList<Object> states;
     private DotSonColumnMap map;
     private Dialog dialog;
     private JScrollPane sp;
@@ -50,7 +50,7 @@ public class AttributeMapperDialog extends Object{
     
     
     /** Creates a new instance of AttributeMapperDialog */
-    public AttributeMapperDialog(DotSonColumnMap map, ArrayList unmapped,
+    public AttributeMapperDialog(DotSonColumnMap map, ArrayList<String> unmapped,
     		Set headers) {
         
         this.unmapped = unmapped;
@@ -142,7 +142,7 @@ public class AttributeMapperDialog extends Object{
     }
     
     /**
-     * store the slected user data items to the dotSonColumnMap
+     * store the selected user data items to the dotSonColumnMap
      * @author skyebend
      */
     private void storeUdata(){
@@ -159,6 +159,10 @@ public class AttributeMapperDialog extends Object{
     
     private class udataTableModel extends AbstractTableModel{
 
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		@Override
 		public String getColumnName(int column) {
 			if (column == 0){

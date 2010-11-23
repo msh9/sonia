@@ -10,7 +10,7 @@ import sonia.SoniaController;
 import sonia.SoniaLayoutEngine;
 import sonia.settings.ApplySettings;
 import sonia.ui.ApplySettingsDialog;
-import jal.INT.Modification;
+
 
 //mport javax.swing.SwingUtilities;
 
@@ -142,7 +142,7 @@ public class RandomFRLayout implements NetLayout, Runnable
     while ((temp > 0.1) && (passes < maxPasses) && noBreak)
     {
       //shuffle the order of the elements in updateOrder
-      Modification.random_shuffle(updateOrder,0,nNodes);
+      Collections.shuffle(Arrays.asList(updateOrder));//TODO: replaced this line 'cause old method used bad import.  Not sure if the shuffle actually sorts the primitive array backing the list object
       //update the positions of each node, one at atime, in the random order
       for (int i = 0; i < nNodes; i++)
       {

@@ -15,7 +15,7 @@ import java.util.Vector;
 import org.freehep.graphicsio.exportchooser.ProgressDialog;
 
 import cern.colt.list.IntArrayList;
-import edu.oswego.cs.dl.util.concurrent.misc.SwingWorker;
+
 
 import sonia.parsers.DotSonParser;
 import sonia.song.filters.AllProblemFilter;

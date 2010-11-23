@@ -11,7 +11,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -27,7 +26,7 @@ import sonia.settings.BrowsingSettings;
 import sonia.settings.GraphicsSettings;
 import sonia.settings.LayoutSettings;
 import sonia.settings.PropertySettings;
-import sonia.ui.AttributeMapperDialog;
+
 
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>
@@ -43,6 +42,7 @@ import sonia.ui.AttributeMapperDialog;
  * http://casos.isri.cmu.edu/dynetml/index.html If the file has been exported by
  * sonia it will contain data to allow recreating a set of layout slices
  * 
+ * @deprecated see DyNetMLSaxParser
  */
 public class DyNetMLParser implements Parser {
 
@@ -137,13 +137,23 @@ public class DyNetMLParser implements Parser {
 			// read the file info
 			// read the network level info (params etc if it is a file written
 			parseMetaData(document);
+			//debug
+			System.out.println( "xml parsed metadata");
 			// by sonia)
 			// read the nodes
 			parseNodes(document);
+			//debug
+			System.out.println( "xml parsed nodes");
 			// read the graph data (coordinates)
 			parseSliceData(document);
+			//debug
+			System.out.println( "xml parsed slice data");
 			// read the arcs
 			parseEdges(document);
+			//debug
+			System.out.println( "xml parsed metadata");
+			//debug
+			System.out.println( "xml parsing done");
 
 		} catch (ParserConfigurationException e) {
 			// debug

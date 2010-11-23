@@ -120,7 +120,7 @@ import sonia.settings.LayoutSettings;
  * @author skyebend
  * 
  */
-public class DyNetMLXMLWriter {
+ public class DyNetMLXMLWriter {
 
 	// constants for tag names in dynetML dtd
 	public static final String NAMESPACE = "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "

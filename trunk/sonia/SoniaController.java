@@ -45,8 +45,7 @@ import com.anotherbigidea.flash.readers.SWFReader;
 import com.anotherbigidea.flash.readers.TagParser;
 import com.anotherbigidea.flash.writers.SWFTagDumper;
 import com.bric.qt.io.JPEGMovieAnimation;
-import com.sun.media.sound.AutoConnectSequencer;
-import com.sun.org.apache.bcel.internal.generic.GETSTATIC;
+		
 
 import sonia.movie.JPEGMovieMaker;
 import sonia.movie.MovieMaker;
@@ -60,6 +59,7 @@ import sonia.parsers.DLParser;
 import sonia.parsers.DotNetParser;
 import sonia.parsers.DotSonParser;
 import sonia.parsers.DyNetMLParser;
+import sonia.parsers.DyNetMLSAXParser;
 import sonia.parsers.Parser;
 import sonia.parsers.RJavaParser;
 import sonia.parsers.RNetworkDynamicParser;
@@ -396,7 +396,7 @@ public class SoniaController implements Runnable, TaskListener{
 				parser.configureParser(parserSettings);
 			} else if (fileName.endsWith(".xml")){
 				//TODO:  need to check doctype to figure out what kind of xml
-				parser = new DyNetMLParser();
+				parser = new DyNetMLSAXParser();
 			} else if(fileName.endsWith(".net")) {
 				parser = new DotNetParser();
 			} else if(fileName.endsWith(".botnet")) {
@@ -707,9 +707,9 @@ public class SoniaController implements Runnable, TaskListener{
 		networks.add(networkData);
 		
 		//now check if we are recreating an entire network with layouts
-		if (parser instanceof DyNetMLParser){
+		if ( parser instanceof DyNetMLSAXParser){
 			showStatus("rebuilding layouts from data stored in "+inFile);
-			DyNetMLParser reloader = (DyNetMLParser)parser;
+			DyNetMLSAXParser reloader = (DyNetMLSAXParser)parser;
 			sliceSettings = reloader.getLayoutSettings();
 			applySettings = reloader.getApplySettings();
 			graphicSettings = reloader.getGraphicsSetttings();
@@ -1442,7 +1442,7 @@ public class SoniaController implements Runnable, TaskListener{
 					movieBatch();
 				} else if (task instanceof MovieExportTask) {
 					//assume movie export is done, so wrap up and exit
-					log("Movie export done: "+task.getTaskName()+" saving log and exiting§");
+					log("Movie export done: "+task.getTaskName()+" saving log and exitingï¿½");
 					finishBatch();
 				}
 			}

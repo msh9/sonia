@@ -5,7 +5,7 @@ import java.util.*;
 
 import sonia.analytics.ModularityStructureDirected;
 
-import com.sun.corba.se.impl.orbutil.DenseIntMapImpl;
+
 
 import cern.colt.matrix.impl.*;
 import cern.colt.matrix.*;
