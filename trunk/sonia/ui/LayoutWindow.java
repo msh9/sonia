@@ -503,6 +503,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		
 	
 		getContentPane().add(controlePane, BorderLayout.SOUTH);
+		controlePane.setPreferredSize(new Dimension(250, 150));
 
 		GridBagLayout layout = new GridBagLayout();
 		controlPanel.setLayout(layout);

@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseEvent;
+import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -17,12 +18,18 @@ import java.awt.GridBagLayout;
 
 import cern.colt.list.IntArrayList;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.NumberFormat;
 import java.util.Locale;
 import java.util.Vector;
 
+import javax.swing.AbstractCellEditor;
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JColorChooser;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -35,6 +42,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 
 /**
@@ -65,12 +73,13 @@ import javax.swing.table.TableCellRenderer;
  * Manages mouseovers that allow inspecting the properties of nodes and the data
  * that may be attached
  */
-public class NodeInspector implements MouseListener, ChangeListener, MouseMotionListener {
+public class NodeInspector implements MouseListener, ChangeListener,
+		MouseMotionListener {
 	private SoniaController control;
 
 	private SoniaLayoutEngine engine;
 
-	//private JComponent frame;
+	// private JComponent frame;
 	private SoniaCanvas canvas;
 
 	private LayoutSlice slice;
@@ -84,7 +93,7 @@ public class NodeInspector implements MouseListener, ChangeListener, MouseMotion
 	private RenderSlice nodeView;
 
 	private int selectedIndex;
-	
+
 	private NodeAttribute selectedNode;
 
 	private double selectedSize;
@@ -107,7 +116,7 @@ public class NodeInspector implements MouseListener, ChangeListener, MouseMotion
 
 	private TableCellRenderer basic = new DefaultTableCellRenderer();
 
-	private TableCellRenderer color = new ColorRender();
+	private TableCellRenderer color = new ColorRenderer(false);
 
 	// labels/keys for GUI
 	public static final String ID = "ID";
@@ -154,7 +163,7 @@ public class NodeInspector implements MouseListener, ChangeListener, MouseMotion
 			JComponent frm) {
 		control = cont;
 		engine = eng;
-		//frame = frm;
+		// frame = frm;
 
 		format = NumberFormat.getInstance(Locale.ENGLISH);
 		format.setMaximumFractionDigits(3);
@@ -184,9 +193,9 @@ public class NodeInspector implements MouseListener, ChangeListener, MouseMotion
 	}
 
 	public void deactivate() {
-		if (canvas != null){
-		canvas.removeMouseListener(this);
-		canvas.removeMouseMotionListener(this);
+		if (canvas != null) {
+			canvas.removeMouseListener(this);
+			canvas.removeMouseMotionListener(this);
 		}
 		inspecting = false;
 		selectedIndex = -1;
@@ -229,7 +238,10 @@ public class NodeInspector implements MouseListener, ChangeListener, MouseMotion
 		// if overlapp, will return last (topmost?) index
 		for (int i = 0; i < nodeEvents.size(); i++) {
 			NodeAttribute node = (NodeAttribute) nodeEvents.get(i);
-			nodeSize = Math.max(1.0,node.getNodeSize() / 2.0); //always leave at least 1 pixel for clicking
+			nodeSize = Math.max(1.0, node.getNodeSize() / 2.0); // always leave
+			// at least 1
+			// pixel for
+			// clicking
 
 			int nodeIndex = node.getNodeId() - 1;
 			// check for hit
@@ -277,38 +289,51 @@ public class NodeInspector implements MouseListener, ChangeListener, MouseMotion
 	public JPanel getInspectPanel() {
 		if (inspectPanel == null) {
 			// build the panel gui
-			inspectPanel = new JPanel(new GridBagLayout());
+			inspectPanel = new JPanel(new BorderLayout(5, 5));
 			GridBagConstraints c = new GridBagConstraints();
 			inspectPanel.setBorder(new TitledBorder("Node Attributes"));
 			nodeData = getNodeDataComp(null);
-			JTable nodeTable = new JTable(new AttributeTableModel()){
+			JTable nodeTable = new JTable(new AttributeTableModel()) {
 				public TableCellRenderer getCellRenderer(int row, int column) {
 					if (getValueAt(row, column) instanceof Color) {
 						return color;
+						
 					}
 					// else...
 					return basic;
 
 				}
+
+				
+				public TableCellEditor getCellEditor(int row, int column) {
+					if (getValueAt(row, column) instanceof Color) {
+						System.out.println("edit a color stupid");
+						return new ColorEditor();
+					}
+					// otherwise return default from superclass
+					return super.getCellEditor(row, column);
+				}
+				
 			};
+			
+			//nodeTable.setDefaultEditor(Color.class, new ColorEditor());
 			nodeTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
-			nodeTable
-					.setPreferredScrollableViewportSize(new Dimension(250, 70));
+			// nodeTable
+			// .setPreferredScrollableViewportSize(new Dimension(250, 70));
+			nodeTable.setFillsViewportHeight(true);
+
 			nodeProps = new JScrollPane(nodeTable);
-			// nodeProps.setPreferredSize();
+			inspectPanel.add(nodeProps, BorderLayout.CENTER);
+			inspectPanel.add(nodeData, BorderLayout.EAST);
+
 			// nodeProps.setBorder(new TitledBorder("Properties"));
 			// first col
-			c.fill = GridBagConstraints.BOTH;
-			c.insets.right = 5;
-			c.gridx = 0;
-			c.gridy = 0;
-			c.anchor = GridBagConstraints.WEST;
-			c.gridheight = 1;
-			inspectPanel.add(nodeProps, c);
-			c.gridx = 1;
-			c.gridy = 0;
-			c.gridheight = 1;
-			inspectPanel.add(nodeData, c);
+			/*
+			 * c.fill = GridBagConstraints.BOTH; c.insets.right = 5; c.gridx =
+			 * 0; c.gridy = 0; c.anchor = GridBagConstraints.WEST; c.gridheight
+			 * = 1; inspectPanel.add(nodeProps, c); c.gridx = 1; c.gridy = 0;
+			 * c.gridheight = 1; inspectPanel.add(nodeData, c);
+			 */
 
 		}
 		return inspectPanel;
@@ -344,7 +369,7 @@ public class NodeInspector implements MouseListener, ChangeListener, MouseMotion
 		c.gridx = 1;
 		c.gridy = 0;
 		c.gridheight = 1;
-		inspectPanel.add(nodeData, c);
+		inspectPanel.add(nodeData, BorderLayout.EAST);
 		inspectPanel.doLayout();
 		inspectPanel.repaint();
 	}
@@ -380,7 +405,7 @@ public class NodeInspector implements MouseListener, ChangeListener, MouseMotion
 		}
 
 		JTable dataTable = new JTable(keyAndValue, header);
-		
+
 		dataTable.setPreferredScrollableViewportSize(new Dimension(120, 70));
 		JScrollPane scroller = new JScrollPane(dataTable);
 		// scroller.setBorder(new TitledBorder("Attached data"));
@@ -464,13 +489,14 @@ public class NodeInspector implements MouseListener, ChangeListener, MouseMotion
 		 * each cell. If we didn't implement this method, then the last column
 		 * would contain text ("true"/"false"), rather than a check box.
 		 */
-		// public Class getColumnClass(int c) {
-		//			
-		// if (getValueAt(0, c) != null){
-		// return getValueAt(0, c).getClass();
-		// }
-		// return Object.class;
-		// }
+		public Class getColumnClass(int c) {
+
+			if (getValueAt(0, c) != null) {
+				return getValueAt(0, c).getClass();
+			}
+			return Object.class;
+		}
+
 		public boolean isCellEditable(int row, int col) {
 			// Note that the data/cell address is constant,
 			// no matter where the cell appears onscreen.
@@ -490,6 +516,14 @@ public class NodeInspector implements MouseListener, ChangeListener, MouseMotion
 					return true;
 				} else if (attr.equals(LABEL_S)) {
 					return true;
+				} else if (attr.equals(COLOR)) {
+					return true;
+				} else if (attr.equals(BORDER_C)) {
+					return true;
+				} else if (attr.equals(LABEL_C)) {
+					return true;
+				} else if (attr.equals(ICON)) {
+					return true;
 				} else {
 					return false;
 				}
@@ -502,7 +536,8 @@ public class NodeInspector implements MouseListener, ChangeListener, MouseMotion
 				if (attr.equals(LABEL)) {
 					selectedNode.setNodeLabel(value.toString());
 				} else if (attr.equals(SIZE)) {
-					selectedNode.setNodeSize(Double.parseDouble(value.toString()));
+					selectedNode.setNodeSize(Double.parseDouble(value
+							.toString()));
 				} else if (attr.equals(REND_X)) {
 					xCoords[selectedIndex] = Double.parseDouble(value
 							.toString());
@@ -510,52 +545,178 @@ public class NodeInspector implements MouseListener, ChangeListener, MouseMotion
 					yCoords[selectedIndex] = Double.parseDouble(value
 							.toString());
 				} else if (attr.equals(BORDER_W)) {
-					selectedNode.setBorderWidth(Float.parseFloat(value.toString()));
+					selectedNode.setBorderWidth(Float.parseFloat(value
+							.toString()));
 				} else if (attr.equals(LABEL_S)) {
-					selectedNode.setLabelSize(Float.parseFloat(value.toString()));
+					selectedNode.setLabelSize(Float
+							.parseFloat(value.toString()));
+				} else if (attr.equals(ICON)) {
+					try {
+						selectedNode.setIconURL(new URL(value.toString()));
+					} catch (MalformedURLException e) {
+						control
+								.showError("The URL " + value.toString()
+										+ " appears to be malformed: "
+										+ e.getMessage());
+					} catch (Exception e) {
+						control
+								.showError("There was a problem parsing the URL "
+										+ value.toString()
+										+ ": "
+										+ e.getMessage());
+					}
+				} else if (attr.equals(COLOR)) {
+					selectedNode.setNodeColor(((Color)value));
+				} else if (attr.equals(LABEL_C)) {
+					selectedNode.setLabelColor(((Color)value));
+				} else if (attr.equals(BORDER_C)) {
+					selectedNode.setBorderColor(((Color)value));
 				}
-				control.log("modified attribute of node " + selectedNode.getNodeId()
-						+ ", " + attr + "=" + value);
+				control.log("modified attribute of node id "
+						+ selectedNode.getNodeId() + ", " + attr + "=" + value);
 				fireTableCellUpdated(row, col);
 				engine.updateDisplays();
 			}
 		}
 	}
-	
+
 	/**
 	 * class used to color in the color values in the editor
 	 * 
 	 * @author skyebend
 	 * 
 	 */
-	private class ColorRender extends DefaultTableCellRenderer {
+	/*
+	 * private class ColorRender extends DefaultTableCellRenderer {
+	 * 
+	 * public Component getTableCellRendererComponent(JTable table, Object
+	 * color, boolean isSelected, boolean hasFocus, int row, int column) {
+	 * setOpaque(true); Color newColor = (Color) color; setBackground(newColor);
+	 * setText("r=" + newColor.getRed() + ",g=" + newColor.getGreen() + ",b=" +
+	 * newColor.getBlue()); return this; } }
+	 */
+
+	/*
+	 * Fromhttp://www.java2s.com/Code/Java/Swing-JFC/
+	 * Tablewithacustomcellrendererandeditorforthecolordata.htm
+	 * ColorRenderer.java (compiles with releases 1.2, 1.3, and 1.4) is used by
+	 * TableDialogEditDemo.java.
+	 */
+
+	class ColorRenderer extends JLabel implements TableCellRenderer {
+		Border unselectedBorder = null;
+		Border selectedBorder = null;
+		boolean isBordered = true;
+
+		public ColorRenderer(boolean isBordered) {
+			this.isBordered = isBordered;
+			setOpaque(true); // MUST do this for background to show up.
+		}
 
 		public Component getTableCellRendererComponent(JTable table,
-				Object color, boolean isSelected, boolean hasFocus,
-				int row, int column) {
-			setOpaque(true);
+				Object color, boolean isSelected, boolean hasFocus, int row,
+				int column) {
 			Color newColor = (Color) color;
 			setBackground(newColor);
-			setText("r="+newColor.getRed()+",g="+newColor.getGreen()+",b="+newColor.getBlue());
+			if (isBordered) {
+				if (isSelected) {
+					if (selectedBorder == null) {
+						selectedBorder = BorderFactory.createMatteBorder(2, 5,
+								2, 5, table.getSelectionBackground());
+					}
+					setBorder(selectedBorder);
+				} else {
+					if (unselectedBorder == null) {
+						unselectedBorder = BorderFactory.createMatteBorder(2,
+								5, 2, 5, table.getBackground());
+					}
+					setBorder(unselectedBorder);
+				}
+			}
+
+			setToolTipText("RGB value: " + newColor.getRed() + ", "
+					+ newColor.getGreen() + ", " + newColor.getBlue());
 			return this;
 		}
 	}
 
+	class ColorEditor extends AbstractCellEditor implements TableCellEditor,
+			ActionListener {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+		Color currentColor;
+		JButton button;
+		JColorChooser colorChooser;
+		JDialog dialog;
+		protected static final String EDIT = "edit";
+
+		public ColorEditor() {
+			// Set up the editor (from the table's point of view),
+			// which is a button.
+			// This button brings up the color chooser dialog,
+			// which is the editor from the user's point of view.
+			button = new JButton();
+			button.setActionCommand(EDIT);
+			button.addActionListener(this);
+			button.setBorderPainted(false);
+
+			// Set up the dialog that the button brings up.
+			colorChooser = new JColorChooser();
+			dialog = JColorChooser.createDialog(button, "Pick a Color", true, // modal
+					colorChooser, this, // OK button handler
+					null); // no CANCEL button handler
+		}
+
+		/**
+		 * Handles events from the editor button and from the dialog's OK
+		 * button.
+		 */
+		public void actionPerformed(ActionEvent e) {
+			if (EDIT.equals(e.getActionCommand())) {
+				// The user has clicked the cell, so
+				// bring up the dialog.
+				button.setBackground(currentColor);
+				colorChooser.setColor(currentColor);
+				dialog.setVisible(true);
+
+				// Make the renderer reappear.
+				fireEditingStopped();
+
+			} else { // User pressed dialog's "OK" button.
+				currentColor = colorChooser.getColor();
+			}
+		}
+
+		// Implement the one CellEditor method that AbstractCellEditor doesn't.
+		public Object getCellEditorValue() {
+			return currentColor;
+		}
+
+		// Implement the one method defined by TableCellEditor.
+		public Component getTableCellEditorComponent(JTable table,
+				Object value, boolean isSelected, int row, int column) {
+			currentColor = (Color) value;
+			return button;
+		}
+	}
+
 	public void mouseDragged(MouseEvent e) {
-		
+
 	}
 
 	public void mouseMoved(MouseEvent e) {
 		int found = getTarget(e.getX(), e.getY());
-		if (found >= 0){
-			//set the tool tip with the label of that node
-			NodeAttribute node = (NodeAttribute)nodeEvents.get(found);
+		if (found >= 0) {
+			// set the tool tip with the label of that node
+			NodeAttribute node = (NodeAttribute) nodeEvents.get(found);
 			canvas.setToolTipText(node.getNodeLabel());
-			
+
 		} else {
 			canvas.setToolTipText(null);
 		}
-		
+
 	}
 
 }
