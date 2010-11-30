@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseEvent;
+import java.awt.geom.RectangularShape;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -21,6 +22,7 @@ import cern.colt.list.IntArrayList;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.NumberFormat;
+import java.util.EventObject;
 import java.util.Locale;
 import java.util.Vector;
 
@@ -38,12 +40,15 @@ import javax.swing.JTable;
 import javax.swing.border.Border;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
+
+import sonia.ui.NodeShapeEditor;
 
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>
@@ -88,7 +93,7 @@ public class NodeInspector implements MouseListener, ChangeListener,
 
 	private double[] yCoords;
 
-	private Vector nodeEvents;
+	private Vector<NodeAttribute> nodeEvents;
 
 	private RenderSlice nodeView;
 
@@ -114,9 +119,15 @@ public class NodeInspector implements MouseListener, ChangeListener,
 
 	private JComponent nodeProps;
 
-	private TableCellRenderer basic = new DefaultTableCellRenderer();
+	private TableCellRenderer basic;
 
-	private TableCellRenderer color = new ColorRenderer(false);
+	private TableCellRenderer color;
+
+	private ColorEditor colorEdit;
+
+	private JButton inspect;
+	
+	private NodeShapeEditor shapeEdit;
 
 	// labels/keys for GUI
 	public static final String ID = "ID";
@@ -151,9 +162,9 @@ public class NodeInspector implements MouseListener, ChangeListener,
 
 	public static final String EFFECT = "Effect";
 
-	public static final String FILE = "File location";
+	public static final String FILE = "Orig. file path";
 
-	public static final String ICON = "Icon";
+	public static final String ICON = "Icon URL";
 
 	private String[] propkeys = new String[] { ID, LABEL, START, END, SIZE,
 			REND_X, REND_Y, FILE_X, FILE_Y, COLOR, SHAPE, ICON, BORDER_W,
@@ -168,13 +179,18 @@ public class NodeInspector implements MouseListener, ChangeListener,
 		format = NumberFormat.getInstance(Locale.ENGLISH);
 		format.setMaximumFractionDigits(3);
 		format.setMinimumFractionDigits(3);
-		;
+		
 
 		// how for to translate the coords by (because of margins)
 		left = engine.getLeftPad();
 		top = engine.getTopPad();
 		selectedIndex = -1;
 		selectedNode = null;
+
+		basic = new DefaultTableCellRenderer();
+		color = new ColorRenderer(false);
+		colorEdit = new ColorEditor();
+		shapeEdit = new NodeShapeEditor();
 	}
 
 	public void activate() {
@@ -188,6 +204,7 @@ public class NodeInspector implements MouseListener, ChangeListener,
 		nodeView = engine.getRenderSlice(slice.getSliceStart(), slice
 				.getSliceEnd());
 		nodeEvents = nodeView.getNodeEvents();
+		inspect.setText("Stop inspect");
 		inspecting = true;
 
 	}
@@ -197,7 +214,11 @@ public class NodeInspector implements MouseListener, ChangeListener,
 			canvas.removeMouseListener(this);
 			canvas.removeMouseMotionListener(this);
 		}
+		if (selectedNode != null) {
+			selectedNode.SetEffect(NodeAttribute.NO_EFFECT);
+		}
 		inspecting = false;
+		inspect.setText("Inspect nodes");
 		selectedIndex = -1;
 		selectedNode = null;
 	}
@@ -212,7 +233,6 @@ public class NodeInspector implements MouseListener, ChangeListener,
 			showNodeInfo(selectedNode);
 		}
 		engine.updateDisplays();
-		hiliteSelected();
 		inspectPanel.repaint();
 
 	}
@@ -235,13 +255,14 @@ public class NodeInspector implements MouseListener, ChangeListener,
 
 		int targetIndex = -1;
 		double nodeSize;
+		if (selectedNode != null) {
+			selectedNode.SetEffect(NodeAttribute.NO_EFFECT);
+		}
 		// if overlapp, will return last (topmost?) index
 		for (int i = 0; i < nodeEvents.size(); i++) {
 			NodeAttribute node = (NodeAttribute) nodeEvents.get(i);
-			nodeSize = Math.max(1.0, node.getNodeSize() / 2.0); // always leave
-			// at least 1
-			// pixel for
-			// clicking
+			nodeSize = Math.max(3.0, node.getNodeSize() / 2.0); // always leave
+			// at least 3 pixel for clicking
 
 			int nodeIndex = node.getNodeId() - 1;
 			// check for hit
@@ -252,6 +273,7 @@ public class NodeInspector implements MouseListener, ChangeListener,
 				targetIndex = nodeIndex;
 				selectedSize = nodeSize; // for later use by the graphics
 				selectedNode = node;
+				selectedNode.SetEffect(node.FLASH_EFFECT);
 				// TODO: need to get the correctly scaled node size
 			}
 
@@ -259,25 +281,19 @@ public class NodeInspector implements MouseListener, ChangeListener,
 		return targetIndex;
 	}
 
-	private void hiliteSelected() {
-		// TODO: hiliting is broken, should move into render slice
-		Graphics2D graphics = (Graphics2D) canvas.getGraphics();
-		graphics.setColor(Color.black);
-		graphics.setXORMode(Color.white);
-		// now draw the hilighting
-		int x;
-		int y;
-		int size = (int) Math.round(selectedSize);
-		if (selectedIndex >= 0) {
-			x = (int) Math.round(xCoords[selectedIndex]);
-			y = (int) Math.round(yCoords[selectedIndex]);
-			// draw black "handle" box at each corner
-			graphics.fillRect(x + left - size - 1, y + top - size - 1, 3, 3);
-			graphics.fillRect(x + left - size - 1, y + top + size - 1, 3, 3);
-			graphics.fillRect(x + left + size - 1, y + top + size - 1, 3, 3);
-			graphics.fillRect(x + left + size - 1, y + top - size - 1, 3, 3);
-		}
-	}
+	/*
+	 * private void hiliteSelected() { // TODO: hiliting is broken, should move
+	 * into render slice Graphics2D graphics = (Graphics2D)
+	 * canvas.getGraphics(); graphics.setColor(Color.black);
+	 * graphics.setXORMode(Color.white); // now draw the hilighting int x; int
+	 * y; int size = (int) Math.round(selectedSize); if (selectedIndex >= 0) { x
+	 * = (int) Math.round(xCoords[selectedIndex]); y = (int)
+	 * Math.round(yCoords[selectedIndex]); // draw black "handle" box at each
+	 * corner graphics.fillRect(x + left - size - 1, y + top - size - 1, 3, 3);
+	 * graphics.fillRect(x + left - size - 1, y + top + size - 1, 3, 3);
+	 * graphics.fillRect(x + left + size - 1, y + top + size - 1, 3, 3);
+	 * graphics.fillRect(x + left + size - 1, y + top - size - 1, 3, 3); } }
+	 */
 
 	/**
 	 * return a panel that will will show all the data for the node, and will be
@@ -297,34 +313,50 @@ public class NodeInspector implements MouseListener, ChangeListener,
 				public TableCellRenderer getCellRenderer(int row, int column) {
 					if (getValueAt(row, column) instanceof Color) {
 						return color;
-						
-					}
+
+					} 
 					// else...
 					return basic;
 
 				}
 
-				
 				public TableCellEditor getCellEditor(int row, int column) {
 					if (getValueAt(row, column) instanceof Color) {
-						System.out.println("edit a color stupid");
-						return new ColorEditor();
+						return colorEdit;
+					} else if (propkeys[row].equals(SHAPE)) {
+						return shapeEdit;
+
 					}
-					// otherwise return default from superclass
-					return super.getCellEditor(row, column);
+					return getDefaultEditor(getValueAt(row, column).getClass());
 				}
 				
+
 			};
-			
-			//nodeTable.setDefaultEditor(Color.class, new ColorEditor());
+
 			nodeTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 			// nodeTable
 			// .setPreferredScrollableViewportSize(new Dimension(250, 70));
 			nodeTable.setFillsViewportHeight(true);
 
 			nodeProps = new JScrollPane(nodeTable);
+
 			inspectPanel.add(nodeProps, BorderLayout.CENTER);
 			inspectPanel.add(nodeData, BorderLayout.EAST);
+			inspect = new JButton("Inspect Nodes");
+			inspect.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					if (inspecting) {
+						deactivate();
+					} else {
+						activate();
+					}
+				}
+			});
+			inspect.setToolTipText("Inspect data of nodes on layout");
+			JPanel buttonHolder = new JPanel();
+			buttonHolder.add(inspect);
+			inspectPanel.add(buttonHolder, BorderLayout.WEST);
 
 			// nodeProps.setBorder(new TitledBorder("Properties"));
 			// first col
@@ -459,7 +491,7 @@ public class NodeInspector implements MouseListener, ChangeListener,
 					} else if (attr.equals(COLOR)) {
 						return selectedNode.getNodeColor();
 					} else if (attr.equals(SHAPE)) {
-						return selectedNode.getNodeShape();
+						return ShapeFactory.getStringFor(selectedNode.getNodeShape());
 					} else if (attr.equals(BORDER_W)) {
 						return selectedNode.getBorderWidth();
 					} else if (attr.equals(BORDER_C)) {
@@ -473,7 +505,11 @@ public class NodeInspector implements MouseListener, ChangeListener,
 					} else if (attr.equals(FILE)) {
 						return selectedNode.getOrigFileLoc();
 					} else if (attr.equals(ICON)) {
-						return selectedNode.getIconURL();
+						URL url = selectedNode.getIconURL();
+						if (url != null){
+							return url.getFile();
+						}
+						return "";
 					} else {
 						return null;
 					}
@@ -484,18 +520,7 @@ public class NodeInspector implements MouseListener, ChangeListener,
 			}
 		}
 
-		/*
-		 * JTable uses this method to determine the default renderer/ editor for
-		 * each cell. If we didn't implement this method, then the last column
-		 * would contain text ("true"/"false"), rather than a check box.
-		 */
-		public Class getColumnClass(int c) {
-
-			if (getValueAt(0, c) != null) {
-				return getValueAt(0, c).getClass();
-			}
-			return Object.class;
-		}
+	
 
 		public boolean isCellEditable(int row, int col) {
 			// Note that the data/cell address is constant,
@@ -524,6 +549,8 @@ public class NodeInspector implements MouseListener, ChangeListener,
 					return true;
 				} else if (attr.equals(ICON)) {
 					return true;
+				} else if (attr.equals(SHAPE)){
+					return true;
 				} else {
 					return false;
 				}
@@ -550,9 +577,19 @@ public class NodeInspector implements MouseListener, ChangeListener,
 				} else if (attr.equals(LABEL_S)) {
 					selectedNode.setLabelSize(Float
 							.parseFloat(value.toString()));
+				} else if (attr.equals(SHAPE))	{
+					try {
+						selectedNode.setNodeShape(ShapeFactory.getShapeFor(value.toString()));
+					} catch (Exception e) {
+						control.showError("The shape "+value.toString()+" could not be parsed by the shape factory");
+					}
 				} else if (attr.equals(ICON)) {
 					try {
-						selectedNode.setIconURL(new URL(value.toString()));
+						URL url = null;
+						if (!value.toString().equals("")){
+							url = new URL(value.toString());
+						}
+						selectedNode.setIconURL(url);
 					} catch (MalformedURLException e) {
 						control
 								.showError("The URL " + value.toString()
@@ -560,17 +597,17 @@ public class NodeInspector implements MouseListener, ChangeListener,
 										+ e.getMessage());
 					} catch (Exception e) {
 						control
-								.showError("There was a problem parsing the URL "
+								.showError("There was a problem parsing the URL '"
 										+ value.toString()
-										+ ": "
+										+ "': "
 										+ e.getMessage());
 					}
 				} else if (attr.equals(COLOR)) {
-					selectedNode.setNodeColor(((Color)value));
+					selectedNode.setNodeColor(((Color) value));
 				} else if (attr.equals(LABEL_C)) {
-					selectedNode.setLabelColor(((Color)value));
+					selectedNode.setLabelColor(((Color) value));
 				} else if (attr.equals(BORDER_C)) {
-					selectedNode.setBorderColor(((Color)value));
+					selectedNode.setBorderColor(((Color) value));
 				}
 				control.log("modified attribute of node id "
 						+ selectedNode.getNodeId() + ", " + attr + "=" + value);
@@ -580,27 +617,45 @@ public class NodeInspector implements MouseListener, ChangeListener,
 		}
 	}
 
-	/**
-	 * class used to color in the color values in the editor
-	 * 
-	 * @author skyebend
-	 * 
-	 */
-	/*
-	 * private class ColorRender extends DefaultTableCellRenderer {
-	 * 
-	 * public Component getTableCellRendererComponent(JTable table, Object
-	 * color, boolean isSelected, boolean hasFocus, int row, int column) {
-	 * setOpaque(true); Color newColor = (Color) color; setBackground(newColor);
-	 * setText("r=" + newColor.getRed() + ",g=" + newColor.getGreen() + ",b=" +
-	 * newColor.getBlue()); return this; } }
-	 */
+
 
 	/*
-	 * Fromhttp://www.java2s.com/Code/Java/Swing-JFC/
-	 * Tablewithacustomcellrendererandeditorforthecolordata.htm
-	 * ColorRenderer.java (compiles with releases 1.2, 1.3, and 1.4) is used by
-	 * TableDialogEditDemo.java.
+	 * The ColorRenderer inner class uses code from http://www.java2s.com/Code/Java/Swing-JFC/Tablewithacustomcellrendererandeditorforthecolordata.htm Originally from
+	 * http://java.sun.com/docs/books/tutorial/index.html 
+	 * Copyright (c) 2006
+	 * Sun Microsystems, Inc. All Rights Reserved.
+	 * 
+	 * Redistribution and use in source and binary forms, with or without
+	 * modification, are permitted provided that the following conditions are
+	 * met:
+	 * 
+	 * -Redistribution of source code must retain the above copyright notice,
+	 * this list of conditions and the following disclaimer.
+	 * 
+	 * -Redistribution in binary form must reproduce the above copyright notice,
+	 * this list of conditions and the following disclaimer in the documentation
+	 * and/or other materials provided with the distribution.
+	 * 
+	 * Neither the name of Sun Microsystems, Inc. or the names of contributors
+	 * may be used to endorse or promote products derived from this software
+	 * without specific prior written permission.
+	 * 
+	 * This software is provided "AS IS," without a warranty of any kind. ALL
+	 * EXPRESS OR IMPLIED CONDITIONS, REPRESENTATIONS AND WARRANTIES, INCLUDING
+	 * ANY IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
+	 * OR NON-INFRINGEMENT, ARE HEREBY EXCLUDED. SUN MIDROSYSTEMS, INC. ("SUN")
+	 * AND ITS LICENSORS SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+	 * LICENSEE AS A RESULT OF USING, MODIFYING OR DISTRIBUTING THIS SOFTWARE OR
+	 * ITS DERIVATIVES. IN NO EVENT WILL SUN OR ITS LICENSORS BE LIABLE FOR ANY
+	 * LOST REVENUE, PROFIT OR DATA, OR FOR DIRECT, INDIRECT, SPECIAL,
+	 * CONSEQUENTIAL, INCIDENTAL OR PUNITIVE DAMAGES, HOWEVER CAUSED AND
+	 * REGARDLESS OF THE THEORY OF LIABILITY, ARISING OUT OF THE USE OF OR
+	 * INABILITY TO USE THIS SOFTWARE, EVEN IF SUN HAS BEEN ADVISED OF THE
+	 * POSSIBILITY OF SUCH DAMAGES.
+	 * 
+	 * You acknowledge that this software is not designed, licensed or intended
+	 * for use in the de ColorRenderer.java (compiles with releases 1.2, 1.3,
+	 * and 1.4) is used by TableDialogEditDemo.java.
 	 */
 
 	class ColorRenderer extends JLabel implements TableCellRenderer {
@@ -639,7 +694,45 @@ public class NodeInspector implements MouseListener, ChangeListener,
 			return this;
 		}
 	}
-
+	
+	/*
+	 * The ColorEditor inner class uses code from http://www.java2s.com/Code/Java/Swing-JFC/Tablewithacustomcellrendererandeditorforthecolordata.htm Originally from
+	 * http://java.sun.com/docs/books/tutorial/index.html 
+	 * Copyright (c) 2006
+	 * Sun Microsystems, Inc. All Rights Reserved.
+	 * 
+	 * Redistribution and use in source and binary forms, with or without
+	 * modification, are permitted provided that the following conditions are
+	 * met:
+	 * 
+	 * -Redistribution of source code must retain the above copyright notice,
+	 * this list of conditions and the following disclaimer.
+	 * 
+	 * -Redistribution in binary form must reproduce the above copyright notice,
+	 * this list of conditions and the following disclaimer in the documentation
+	 * and/or other materials provided with the distribution.
+	 * 
+	 * Neither the name of Sun Microsystems, Inc. or the names of contributors
+	 * may be used to endorse or promote products derived from this software
+	 * without specific prior written permission.
+	 * 
+	 * This software is provided "AS IS," without a warranty of any kind. ALL
+	 * EXPRESS OR IMPLIED CONDITIONS, REPRESENTATIONS AND WARRANTIES, INCLUDING
+	 * ANY IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
+	 * OR NON-INFRINGEMENT, ARE HEREBY EXCLUDED. SUN MIDROSYSTEMS, INC. ("SUN")
+	 * AND ITS LICENSORS SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+	 * LICENSEE AS A RESULT OF USING, MODIFYING OR DISTRIBUTING THIS SOFTWARE OR
+	 * ITS DERIVATIVES. IN NO EVENT WILL SUN OR ITS LICENSORS BE LIABLE FOR ANY
+	 * LOST REVENUE, PROFIT OR DATA, OR FOR DIRECT, INDIRECT, SPECIAL,
+	 * CONSEQUENTIAL, INCIDENTAL OR PUNITIVE DAMAGES, HOWEVER CAUSED AND
+	 * REGARDLESS OF THE THEORY OF LIABILITY, ARISING OUT OF THE USE OF OR
+	 * INABILITY TO USE THIS SOFTWARE, EVEN IF SUN HAS BEEN ADVISED OF THE
+	 * POSSIBILITY OF SUCH DAMAGES.
+	 * 
+	 * You acknowledge that this software is not designed, licensed or intended
+	 * for use in the de ColorRenderer.java (compiles with releases 1.2, 1.3,
+	 * and 1.4) is used by TableDialogEditDemo.java.
+	 */
 	class ColorEditor extends AbstractCellEditor implements TableCellEditor,
 			ActionListener {
 		/**

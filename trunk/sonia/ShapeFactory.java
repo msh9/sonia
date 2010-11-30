@@ -34,6 +34,8 @@ import java.awt.geom.RoundRectangle2D;
  */
 public class ShapeFactory {
 
+	public static final String[] shapeNames = {"ellipse","rect","diamond","roundrect","triangle"};
+	
 	public static RectangularShape getShapeFor(String shapeName)
 			throws Exception {
 		// rect
@@ -88,6 +90,10 @@ public class ShapeFactory {
 			return "rect";
 		if (shape instanceof Diamond2D)
 			return "diamond";
+		if (shape instanceof RoundRectangle2D)
+			return "roundrect";
+		if (shape instanceof Triangle2D)
+			return "triangle";
 		return shape.getClass().getCanonicalName();
 	}
 	

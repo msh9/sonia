@@ -99,7 +99,7 @@ public class NodeAttribute implements NetworkEvent{
     obsYCoord = y;
     obsTime = time;
     endTime = end;
-    origFileLoc = fileLoc.intern();
+    origFileLoc = fileLoc.intern(); //since almost all will be the same and can't change, just use one object.
   }
 
   //self drawing methods ------------
