@@ -338,8 +338,11 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		PhasePlot = new JButton("PhasePlot");
 		Stability = new JButton("Stability");
 		NextSlice = new JButton(">|");
+		NextSlice.setToolTipText("Advance to next slice");
 		PrevSlice = new JButton("|<");
+		PrevSlice.setToolTipText("Reverse to previous slice");
 		PlayAll = new JButton("> / ||");
+		PlayAll.setToolTipText("Play or pause animation");
 		//Pause = new JButton("||");
 		ViewOptions = new JButton("View Options..");
 		makeClusters = new JButton("Make Clusters");
