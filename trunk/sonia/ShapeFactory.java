@@ -34,7 +34,7 @@ import java.awt.geom.RoundRectangle2D;
  */
 public class ShapeFactory {
 
-	public static final String[] shapeNames = {"ellipse","rect","diamond","roundrect","triangle"};
+	public static final String[] shapeNames = {"ellipse","rect","diamond","roundrect","triangle","none"};
 	
 	public static RectangularShape getShapeFor(String shapeName)
 			throws Exception {
@@ -78,6 +78,14 @@ public class ShapeFactory {
 		if (shapeName.equalsIgnoreCase(RoundRectangle2D.Double.class
 				.getCanonicalName()))
 			return new RoundRectangle2D.Double(0, 0, 0, 0, 10, 10);
+		// none, noshape
+		if (shapeName.equalsIgnoreCase("none"))
+			return new NoShape2D();
+		if (shapeName.equalsIgnoreCase("noshape"))
+			return new NoShape2D();
+		if (shapeName.equalsIgnoreCase(NoShape2D.class
+				.getCanonicalName()))
+			return new NoShape2D();
 
 		throw new Exception("Unable to match shape name " + shapeName
 				+ " to a shape");
@@ -94,6 +102,8 @@ public class ShapeFactory {
 			return "roundrect";
 		if (shape instanceof Triangle2D)
 			return "triangle";
+		if (shape instanceof NoShape2D)
+			return "none";
 		return shape.getClass().getCanonicalName();
 	}
 	
@@ -391,6 +401,146 @@ public class ShapeFactory {
 		@Override
 		public boolean intersects(double x, double y, double w, double h) {
 			return triangle.intersects(x, y, w, h);
+		}
+		
+		
+
+	}
+	
+	/**
+	 * Implement "none" or "No Shape" shape that draws nothing for the node
+	 * 
+	 * @author skyebend
+	 * 
+	 */
+	public static class NoShape2D extends RectangularShape {
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
+		public double x;
+		public double y;
+		public static final double height = 0.0;
+		public static final double width = 0.0;
+		private Polygon point;
+
+		/**
+		 * create the shape to match the current settings
+		 */
+		private void updateShape() {
+
+			if (point == null) {
+				int[] xpoints = new int[1];
+				int[] ypoints = new int[1];
+				point = new Polygon(xpoints,ypoints,1);
+				
+			} 
+			point.xpoints[0] = (int)Math.round(x);
+			point.ypoints[0] = (int)Math.round(y);;
+			
+		}
+
+		public boolean equals(Object obj) {
+			if (obj == this) {
+				return true;
+			}
+			if (obj instanceof NoShape2D) {
+				Triangle2D r2d = (Triangle2D) obj;
+				return ((getX() == r2d.getX()) && (getY() == r2d.getY()));
+			}
+			return false;
+		}
+
+		@Override
+		public PathIterator getPathIterator(AffineTransform at, double flatness) {
+			updateShape();
+			return point.getPathIterator(at, flatness);
+		}
+
+		@Override
+		public PathIterator getPathIterator(AffineTransform at) {
+			updateShape();
+			return point.getPathIterator(at);
+		}
+
+
+		@Override
+		public double getHeight() {
+			return height;
+		}
+
+		@Override
+		public double getWidth() {
+			return width;
+		}
+
+		@Override
+		public double getX() {
+			return x;
+		}
+
+		@Override
+		public double getY() {
+			return y;
+		}
+
+		@Override
+		public boolean isEmpty() {
+			return (width <= 0.0) || (height <= 0.0);
+		}
+
+		@Override
+		public boolean contains(double x, double y, double w, double h) {
+			return point.contains(x, y, w, h);
+		}
+
+		@Override
+		public boolean contains(double x, double y) {
+			return point.contains(x, y);
+		}
+
+		@Override
+		public boolean contains(Point2D p) {
+			return point.contains(p);
+		}
+
+		@Override
+		public boolean contains(Rectangle2D r) {
+			// TODO Auto-generated method stub
+			return super.contains(r);
+		}
+
+		@Override
+		public Rectangle getBounds() {
+			return point.getBounds();
+		}
+
+		
+		@Override
+		public boolean intersects(Rectangle2D r) {
+			return point.intersects(r);
+		}
+
+		@Override
+		/**
+		 * ignores width and height
+		 */
+		public void setFrame(double x, double y, double w, double h) {
+			this.x = x;
+			this.y = y;
+			
+		}
+
+		@Override
+		public Rectangle2D getBounds2D() {
+			return point.getBounds2D();
+		}
+
+		@Override
+		public boolean intersects(double x, double y, double w, double h) {
+			return point.intersects(x, y, w, h);
 		}
 		
 		
