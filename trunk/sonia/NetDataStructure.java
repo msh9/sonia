@@ -4,7 +4,6 @@ import java.util.*;
 
 import sonia.mapper.Colormapper;
 import sonia.parsers.DotNetParser;
-import cern.colt.list.IntArrayList;
 
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>
@@ -34,19 +33,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 /*
  * Holds the time and space coordinates and attributes for the nodes and edges
  * as they were read from input files.  Provides methods for accessing
- * attributes, generating slices, and retriving nodes and edges by time to
+ * attributes, generating slices, and retreive nodes and edges by time to
  * generate layout slices.  Probably will eventually become an interface, so
  * that SoNIA can frontend for SQL database.
  */
 public class NetDataStructure
 {
   private SoniaController control;
-  private String origFileNamePath;   //name and path to first file loaded
   private String netInfo;
   private int maxNetSize;
-  private int numTimeSlice; //number of time slices in original data
-  //private Hashtable nodeIdLookup;  //for getting Id of node from labelString
-  private boolean isIdByName = true;
   private int numNodeEvents;
   private int numArcEvents;
   private double firstTime = Double.POSITIVE_INFINITY;
@@ -58,7 +53,7 @@ public class NetDataStructure
   public static int AVG_TIE_VALS = 1;
   public static int NUM_TIES = 2;  //should also include max and min?
   
-  private HashSet nodeDataKeys; //key strings for user data attached to nodes
+  private HashSet<String> nodeDataKeys; //key strings for user data attached to nodes
 
   //this array has an entry for every time an observation was made or an
   //attribute changed so it is >> than the number of nodes
@@ -100,12 +95,12 @@ public class NetDataStructure
   * @param sliceDuration  how "thick" the slice is
   * @param sliceDelta how far apart the slices are, (slices can overlap)
   */
-  public ArrayList getLayoutSlices(double startTime, double endTime,
+  public ArrayList<LayoutSlice> getLayoutSlices(double startTime, double endTime,
                                 double sliceDuration, double sliceDelta,
     int aggregateType)
   {
     control.showStatus("Getting layout slices...");
-    ArrayList layoutSlices = new ArrayList();
+    ArrayList<LayoutSlice> layoutSlices = new ArrayList<LayoutSlice>();
     //figure out how many slices there will be
     //equal to the total time divided by slice delta, rounded up
     //(last slice my be funny) ASSUMES startTime < endTime
@@ -283,7 +278,7 @@ public class NetDataStructure
   }
 
   //moves events from passed vector (from parseing) into array
-  public void addNodeEvents(Vector nodeEvents)
+  public void addNodeEvents(Vector<NodeAttribute> nodeEvents)
   {
     //check that they will fit
     if (nodeEvents.size() == numNodeEvents)
@@ -302,7 +297,7 @@ public class NetDataStructure
   }
 
   //moves events from passed vector (from parsing) into array
-  public void addArcEvents(Vector arcEvents)
+  public void addArcEvents(Vector<ArcAttribute> arcEvents)
   {
     //check that they will fit
     if (arcEvents.size() == numArcEvents)
@@ -324,7 +319,7 @@ public class NetDataStructure
     }
   }
   
-  public void addClusterEvents(Vector clusterEvents){
+  public void addClusterEvents(Vector<NodeClusterAttribute> clusterEvents){
 	  nodeClusterArray = new NodeClusterAttribute[clusterEvents.size()];
 	  clusterEvents.copyInto(nodeClusterArray);
   }
@@ -332,9 +327,9 @@ public class NetDataStructure
   /**
    * returns a list containing all the nodes and arcs within the passed time bounds
    */
-  public ArrayList getEventsFromTo(double sliceStart, double sliceEnd)
+  public ArrayList<NetworkEvent> getEventsFromTo(double sliceStart, double sliceEnd)
   {
-    ArrayList returnList = new ArrayList();
+    ArrayList<NetworkEvent> returnList = new ArrayList<NetworkEvent>();
     for (int i=0;i<numNodeEvents;i++)
      {
        double obsTime = nodeEventArray[i].getObsTime();
@@ -419,8 +414,8 @@ public class NetDataStructure
     netInfo = info;
   }
   
-  public Set getUniqueNodeValues(String key){
-	  HashSet unique = new HashSet<Object>();
+  public Set<Object> getUniqueNodeValues(String key){
+	  HashSet<Object> unique = new HashSet<Object>();
 	  for (int i=0;i<numNodeEvents;i++)
 	     {
 	       Object value = nodeEventArray[i].getData(key);
@@ -429,7 +424,7 @@ public class NetDataStructure
 	  return unique;
   }
   
-  public Set getNodeDataKeys(){
+  public Set<String> getNodeDataKeys(){
 	  if (nodeDataKeys == null){
 		  nodeDataKeys = new HashSet<String>();
 		  nodeDataKeys.add("<nodes have no attached data>");
@@ -437,7 +432,7 @@ public class NetDataStructure
 	  return nodeDataKeys;
   }
   
-  public void setNodeDataKeys(HashSet keys){
+  public void setNodeDataKeys(HashSet<String> keys){
 	  nodeDataKeys = keys;
   }
   

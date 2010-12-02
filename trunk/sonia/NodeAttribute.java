@@ -75,7 +75,7 @@ public class NodeAttribute implements NetworkEvent{
   private String origFileLoc = "";  //name and line in file that created it
  // private boolean flashNode = false;  //if it should be flashed when it is drawn
   private String effect = NO_EFFECT;
-  private HashMap userData;
+  private HashMap<String,Object> userData;
   private Colormapper colormap = null;
 
   //coords not stored here so that they can be accessed more quickly
@@ -409,7 +409,7 @@ public class NodeAttribute implements NetworkEvent{
    * @param key
    * @return the object the key is associated with, otherwise null 
    */
-  public Object getData(String key){
+  public Object getData(Object key){
 	  if (userData != null){
 		 return userData.get(key);
 	  } else {
@@ -423,7 +423,7 @@ public class NodeAttribute implements NetworkEvent{
    * @author skyebend
    * @return
    */
-  public Set getDataKeys(){
+  public Set<String> getDataKeys(){
 	  if (userData != null){
 		  return userData.keySet();  
 	  }

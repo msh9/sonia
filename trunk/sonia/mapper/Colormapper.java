@@ -6,6 +6,7 @@ import java.util.Vector;
 
 public abstract class Colormapper extends Object {
 	
+	
 	protected Object attributeKey = null;
 	/**
 	 * get the color this value is mapped to 
@@ -35,7 +36,7 @@ public abstract class Colormapper extends Object {
 	public abstract Set getValues();
 	
 	/**
-	 * sets the key to be used when looking up data from node attributs
+	 * sets the key to be used when looking up data from node attributes
 	 * @param key
 	 */
 	public void setKey(Object key){
@@ -48,5 +49,8 @@ public abstract class Colormapper extends Object {
 	public Object getKey(){
 		return attributeKey;
 	}
+	
+	public abstract String getMapperName();
+	
 	
 }

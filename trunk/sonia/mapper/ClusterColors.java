@@ -65,4 +65,11 @@ public class ClusterColors extends Colormapper {
 	public Set getValues() {
 		return colormap.keySet();
 	}
+
+	@Override
+	public String getMapperName() {
+		return "Cluster Colors";
+	}
+	
+	
 }

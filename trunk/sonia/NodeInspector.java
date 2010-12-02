@@ -258,7 +258,7 @@ public class NodeInspector implements MouseListener, ChangeListener,
 		if (selectedNode != null) {
 			selectedNode.SetEffect(NodeAttribute.NO_EFFECT);
 		}
-		// if overlapp, will return last (topmost?) index
+		// if overlap, will return last (topmost?) index
 		for (int i = 0; i < nodeEvents.size(); i++) {
 			NodeAttribute node = (NodeAttribute) nodeEvents.get(i);
 			nodeSize = Math.max(3.0, node.getNodeSize() / 2.0); // always leave
@@ -273,7 +273,7 @@ public class NodeInspector implements MouseListener, ChangeListener,
 				targetIndex = nodeIndex;
 				selectedSize = nodeSize; // for later use by the graphics
 				selectedNode = node;
-				selectedNode.SetEffect(node.FLASH_EFFECT);
+				selectedNode.SetEffect(NodeAttribute.FLASH_EFFECT);
 				// TODO: need to get the correctly scaled node size
 			}
 
@@ -281,19 +281,6 @@ public class NodeInspector implements MouseListener, ChangeListener,
 		return targetIndex;
 	}
 
-	/*
-	 * private void hiliteSelected() { // TODO: hiliting is broken, should move
-	 * into render slice Graphics2D graphics = (Graphics2D)
-	 * canvas.getGraphics(); graphics.setColor(Color.black);
-	 * graphics.setXORMode(Color.white); // now draw the hilighting int x; int
-	 * y; int size = (int) Math.round(selectedSize); if (selectedIndex >= 0) { x
-	 * = (int) Math.round(xCoords[selectedIndex]); y = (int)
-	 * Math.round(yCoords[selectedIndex]); // draw black "handle" box at each
-	 * corner graphics.fillRect(x + left - size - 1, y + top - size - 1, 3, 3);
-	 * graphics.fillRect(x + left - size - 1, y + top + size - 1, 3, 3);
-	 * graphics.fillRect(x + left + size - 1, y + top + size - 1, 3, 3);
-	 * graphics.fillRect(x + left + size - 1, y + top - size - 1, 3, 3); } }
-	 */
 
 	/**
 	 * return a panel that will will show all the data for the node, and will be
@@ -302,11 +289,11 @@ public class NodeInspector implements MouseListener, ChangeListener,
 	 * @author skyebend
 	 * @return
 	 */
+	@SuppressWarnings("serial")
 	public JPanel getInspectPanel() {
 		if (inspectPanel == null) {
 			// build the panel gui
 			inspectPanel = new JPanel(new BorderLayout(5, 5));
-			GridBagConstraints c = new GridBagConstraints();
 			inspectPanel.setBorder(new TitledBorder("Node Attributes"));
 			nodeData = getNodeDataComp(null);
 			JTable nodeTable = new JTable(new AttributeTableModel()) {
@@ -329,7 +316,6 @@ public class NodeInspector implements MouseListener, ChangeListener,
 					}
 					return getDefaultEditor(getValueAt(row, column).getClass());
 				}
-				
 
 			};
 
@@ -357,15 +343,6 @@ public class NodeInspector implements MouseListener, ChangeListener,
 			JPanel buttonHolder = new JPanel();
 			buttonHolder.add(inspect);
 			inspectPanel.add(buttonHolder, BorderLayout.WEST);
-
-			// nodeProps.setBorder(new TitledBorder("Properties"));
-			// first col
-			/*
-			 * c.fill = GridBagConstraints.BOTH; c.insets.right = 5; c.gridx =
-			 * 0; c.gridy = 0; c.anchor = GridBagConstraints.WEST; c.gridheight
-			 * = 1; inspectPanel.add(nodeProps, c); c.gridx = 1; c.gridy = 0;
-			 * c.gridheight = 1; inspectPanel.add(nodeData, c);
-			 */
 
 		}
 		return inspectPanel;
@@ -421,27 +398,84 @@ public class NodeInspector implements MouseListener, ChangeListener,
 	}
 
 	private JComponent getNodeDataComp(NodeAttribute node) {
-		Object[][] keyAndValue;
-		Object[] header = new Object[] { "DataKey", "Value" };
-		if (node != null && node.getDataKeys() != null) {
-			Object[] keys = node.getDataKeys().toArray();
-			keyAndValue = new Object[keys.length][2];
-			for (int i = 0; i < keys.length; i++) {
-				keyAndValue[i][0] = keys[i];
-				keyAndValue[i][1] = node.getData((String) keys[i]);
-			}
-		} else {
-			keyAndValue = new Object[1][2];
-			keyAndValue[0][0] = "<none>";
-			keyAndValue[0][1] = "<none>";
-		}
+		
 
-		JTable dataTable = new JTable(keyAndValue, header);
+		//JTable dataTable = new JTable(keyAndValue, header);
+		JTable dataTable = new JTable(new NodeDataTableModel(node));
+		
 
 		dataTable.setPreferredScrollableViewportSize(new Dimension(120, 70));
 		JScrollPane scroller = new JScrollPane(dataTable);
 		// scroller.setBorder(new TitledBorder("Attached data"));
 		return scroller;
+	}
+	
+	/**
+	 * provides a table model for editing a node's user data. 
+	 * @author skyebend
+	 *
+	 */
+	@SuppressWarnings("serial")
+	private class NodeDataTableModel extends AbstractTableModel {
+		
+		private NodeAttribute node;
+		private Object[] keys;
+		public NodeDataTableModel(NodeAttribute node){
+			this.node = node;
+			if (node != null && node.getDataKeys() != null) {
+				keys = node.getDataKeys().toArray();
+
+			} else {
+				keys = new String[]{"<none>"};
+			}
+		}
+		
+		@Override
+		public Object getValueAt(int rowIndex, int columnIndex) {
+			if (columnIndex == 0){
+				return keys[rowIndex];
+			} else if (columnIndex == 1 && node != null){
+				return node.getData(keys[rowIndex]);
+			}
+			return "<none>"; //otherwise something is really wrong
+		}
+		
+		@Override
+		public int getRowCount() {
+			return keys.length;
+		}
+		
+		@Override
+		public int getColumnCount() {
+			return 2;
+		}
+
+		@Override
+		public boolean isCellEditable(int rowIndex, int columnIndex) {
+			if (columnIndex ==1){
+				return true;
+			}
+			return false;
+		}
+
+		@Override
+		public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
+			if (columnIndex ==1){
+				node.setData((String)keys[rowIndex], aValue);
+			}
+		}
+
+		@Override
+		public String getColumnName(int column) {
+			if (column == 0){
+				return "Data Key";
+			} else if (column ==1){
+				return "Value";
+			}
+			return null;
+		}
+		
+		
 	}
 
 	private class AttributeTableModel extends AbstractTableModel {

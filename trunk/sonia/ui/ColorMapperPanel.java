@@ -9,6 +9,7 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Vector;
 
 import javax.swing.AbstractCellEditor;
@@ -25,80 +26,183 @@ import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
+import javax.swing.RowSorter;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 
+import sonia.SoniaCanvas;
 import sonia.SoniaLayoutEngine;
 import sonia.mapper.Colormapper;
 import sonia.mapper.DefaultColors;
+import sonia.mapper.GrayscaleColors;
+import sonia.mapper.RedtoBlueColors;
 
+/**
+ * Provides a UI for specifying mappings from node attributes to colors
+ * 
+ * @author skyebend
+ * 
+ */
+@SuppressWarnings("serial")
 public class ColorMapperPanel extends JPanel {
 	protected Colormapper mapper;
 	protected SoniaLayoutEngine engine;
+	protected SoniaCanvas canvas;
 	private Object editingValue = null;
 	private Vector<Object> keyData;
 	private JColorChooser colorChooser = new JColorChooser();
 	private JPanel chooserPanel = new JPanel(new BorderLayout());
 	private JPanel tablePanel = new JPanel(new BorderLayout());
 	private JButton setButton = new JButton("<<- Assign Color");
+	private JButton setAllButton = new JButton("Assign Color to All");
 	private JTable table;
-	private JComboBox keySelector; 
-	
+	private JComboBox keySelector;
+	private JComboBox mappingSelector;
+	/**
+	 * All color mapper classes need to be listed here to show up in the UI
+	 */
+	private String[] knownMappers = new String[] { DefaultColors.MAPPER_NAME,
+			GrayscaleColors.MAPPER_NAME,RedtoBlueColors.MAPPER_NAME };
+
 	// ui components
 
-	public ColorMapperPanel(Colormapper map,SoniaLayoutEngine engine) {
+	public ColorMapperPanel(SoniaCanvas canvas, SoniaLayoutEngine engine) {
 		super(new BorderLayout());
-		mapper = map;
+		this.canvas = canvas;
+		//get the list of mappers to choose from
+		mappingSelector = new JComboBox(knownMappers);
+		//get all the known data types to choose from
+		keySelector = new JComboBox(engine.getNetData().getNodeDataKeys()
+				.toArray());
+		mapper = canvas.getColormapper();
+		
+		//if no mapper is set, use default, otherwise reload the mapper
+		if (mapper == null) {
+			setMapperTo(DefaultColors.MAPPER_NAME);
+			mapper.createMapping(engine.getNetData().getUniqueNodeValues(
+					(String) keySelector.getSelectedItem()));
+		} else {
+			mappingSelector.setSelectedItem(mapper.getMapperName());
+			keySelector.setSelectedItem(mapper.getKey());
+		}
+
 		this.engine = engine;
 		keyData = new Vector<Object>(mapper.getValues());
-		
+
 		table = new JTable(new ColorTableModel());
-		table.setPreferredScrollableViewportSize(new Dimension(500, 50));
-		// table.setFillsViewportHeight(true);
+		table.setPreferredScrollableViewportSize(new Dimension(250, 50));
+		table.setFillsViewportHeight(true);
+		
 
 		// Create the scroll pane and add the table to it.
 		JScrollPane scrollPane = new JScrollPane(table);
 		tablePanel.add(scrollPane);
-		keySelector  = new JComboBox(engine.getNetData().getNodeDataKeys().toArray());
 		
-		keySelector.addActionListener(new ActionListener(){
+
+		keySelector.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				refreshData();	
+				refreshData();
 			}
 		});
-		tablePanel.add(keySelector,BorderLayout.NORTH);
-		tablePanel.setBorder(new TitledBorder("Data name (key) and color mapping"));
+		keySelector
+				.setToolTipText("Select user data type to use for node color values");
+		tablePanel.add(keySelector, BorderLayout.NORTH);
+		scrollPane.setBorder(new TitledBorder("Value to color mapping"));
+
+		JPanel mappingPanel = new JPanel();
+		mappingPanel.setBorder(new TitledBorder("Type of color mapping"));
+		mappingSelector.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				refreshData();
+			}
+		});
+		mappingPanel.add(mappingSelector);
+		JPanel mappingWrapper = new JPanel(new GridLayout(5, 1));
+		mappingWrapper.add(mappingPanel);
+		JPanel keyPanel = new JPanel();
+		keyPanel.setBorder(new TitledBorder("Mapping data key"));
+		keyPanel.add(keySelector);
+		mappingWrapper.add(keyPanel);
+		tablePanel.add(mappingWrapper, BorderLayout.WEST);
 
 		// Set up renderer and editor for the Favorite Color column.
 		table.setDefaultRenderer(Color.class, new ColorRenderer(true));
 		ColorEditor editor = new ColorEditor();
 		table.setDefaultEditor(Color.class, editor);
 		setButton.addActionListener(editor);
+		setAllButton.addActionListener(new ActionListener() {
+			// loop over data elements and set them all to the current color
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Color currentColor = colorChooser.getColor();
+				Iterator valIter = mapper.getValues().iterator();
+				while (valIter.hasNext()) {
+					Object value = valIter.next();
+					mapper.mapColor(value, currentColor);
+				}
+				table.repaint();
+
+			}
+		});
+		setAllButton
+				.setToolTipText("Set all data elemetns to the selected color");
 		chooserPanel.add(colorChooser);
-		chooserPanel.add(setButton,BorderLayout.SOUTH);
-		chooserPanel.setBorder(new TitledBorder("Color chooser for selected data value"));
+		JPanel buttonPanel = new JPanel();
+		buttonPanel.add(setButton);
+		buttonPanel.add(setAllButton);
+		chooserPanel.add(buttonPanel, BorderLayout.SOUTH);
+		chooserPanel.setBorder(new TitledBorder(
+				"Color chooser for selected data value"));
 		// Add the scroll pane to this panel.
-		JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,tablePanel,chooserPanel);
+		JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
+				tablePanel, chooserPanel);
 		add(split);
-		
-		keyData = new Vector<Object>(mapper.getValues());
+
+		//keyData = new Vector<Object>(mapper.getValues());
 		refreshData();
 	}
-	
-	public void refreshData(){
-		mapper.setKey((String)keySelector.getSelectedItem());
-		mapper.createMapping(engine.getNetData().
-				getUniqueNodeValues((String)keySelector.getSelectedItem()));
+
+	public void refreshData() {
+		// check if its different from the one we have
+		if (!((String) mappingSelector.getSelectedItem()).equals(mapper
+				.getMapperName())) {
+			table.setRowSorter(null);
+			setMapperTo((String) mappingSelector.getSelectedItem());
+			mapper.createMapping(engine.getNetData().getUniqueNodeValues(
+					(String) keySelector.getSelectedItem()));
+		}
+		mapper.setKey((String) keySelector.getSelectedItem());
 		keyData.clear();
 		keyData.addAll(mapper.getValues());
+		RowSorter<TableModel> sorter = new TableRowSorter<TableModel>(table
+				.getModel());
+		table.setRowSorter(sorter);
+		canvas.setColormapper(mapper);
 		engine.getNetData().setNodeColormap(mapper);
 		tablePanel.validate();
 		table.repaint();
 	}
 
+	/**
+	 * Factory method to create and store the mapper appropriate for the string
+	 */
+	private void setMapperTo(String mapperName) {
+		if (mapperName.equals(DefaultColors.MAPPER_NAME)) {
+			mapper = new DefaultColors();
+		} else if (mapperName.equals(GrayscaleColors.MAPPER_NAME)) {
+			mapper = new GrayscaleColors();
+		} else if (mapperName.equals(RedtoBlueColors.MAPPER_NAME)) {
+			mapper = new RedtoBlueColors();
+		}
+		
+	}
+
+	@SuppressWarnings("serial")
 	private class ColorTableModel extends AbstractTableModel {
 		private String[] columnNames = { "Data Value", "Color" };
 
@@ -115,10 +219,10 @@ public class ColorMapperPanel extends JPanel {
 		}
 
 		public Object getValueAt(int row, int col) {
-			if (col == 0){
+			if (col == 0) {
 				return keyData.get(row);
-			} else if (col ==1){
-				
+			} else if (col == 1) {
+
 				return mapper.getColorFor(keyData.get(row));
 			} else {
 				return null;
@@ -131,8 +235,8 @@ public class ColorMapperPanel extends JPanel {
 		 * would contain text ("true"/"false"), rather than a check box.
 		 */
 		public Class getColumnClass(int c) {
-			
-			if (getValueAt(0, c) != null){
+
+			if (getValueAt(0, c) != null) {
 				return getValueAt(0, c).getClass();
 			}
 			return Object.class;
@@ -149,35 +253,27 @@ public class ColorMapperPanel extends JPanel {
 		}
 
 		public void setValueAt(Object value, int row, int col) {
-			if (col == 1){
-				
+			if (col == 1) {
+
 				fireTableCellUpdated(row, col);
 			}
 		}
 
 	}
 
+	/* Adapted from the java exmaple */
 	private class ColorEditor extends AbstractCellEditor implements
 			TableCellEditor, ActionListener {
 		Color currentColor;
 		JButton button;
 		protected static final String EDIT = "edit";
+
 		private ColorEditor() {
-			// Set up the editor (from the table's point of view),
-			// which is a button.
-			// This button brings up the color chooser dialog,
-			// which is the editor from the user's point of view.
 			button = new JButton();
 			button.setActionCommand(EDIT);
 			button.addActionListener(this);
 			button.setBorderPainted(false);
 
-			// Set up the dialog that the button brings up.
-			//colorChooser = new JColorChooser();
-			
-			//dialog = JColorChooser.createDialog(button, "Pick a new Color", true, // modal
-			//		colorChooser, this, // OK button handler
-			//		null); // no CANCEL button handler
 		}
 
 		/**
@@ -187,7 +283,7 @@ public class ColorMapperPanel extends JPanel {
 		public void actionPerformed(ActionEvent e) {
 			if (EDIT.equals(e.getActionCommand())) {
 				// The user has clicked the cell, so
-				//button.setBackground(currentColor);
+				// button.setBackground(currentColor);
 				colorChooser.setColor(currentColor);
 				colorChooser.setVisible(true);
 
@@ -253,68 +349,28 @@ public class ColorMapperPanel extends JPanel {
 			return this;
 		}
 	}
-	
-	public static JDialog showMapperWindow(JDialog owner,Colormapper mapper, SoniaLayoutEngine eng){
-		final JDialog frame = new JDialog(owner,"Edit Color Mapping",true);
-		 //Create and set up the content pane.
-        JComponent newContentPane = new ColorMapperPanel(mapper,eng);
-        newContentPane.setOpaque(true); //content panes must be opaque
-        frame.setContentPane(newContentPane);
-        JButton okbutton = new JButton("OK");
-        okbutton.addActionListener(new ActionListener(){
+
+	public static JDialog showMapperWindow(JDialog owner, SoniaCanvas canvas,
+			SoniaLayoutEngine eng) {
+		final JDialog frame = new JDialog(owner, "Edit Color Mapping", true);
+		// Create and set up the content pane.
+		JComponent newContentPane = new ColorMapperPanel(canvas, eng);
+		newContentPane.setOpaque(true); // content panes must be opaque
+		frame.setContentPane(newContentPane);
+		JButton okbutton = new JButton("OK");
+		okbutton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				frame.setVisible(false);
 
 			}
-        });
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.add(okbutton);
-        newContentPane.add(buttonPanel,BorderLayout.SOUTH);
-        //Display the window.
-        frame.pack();
-        frame.setVisible(true);
-        return frame;
+		});
+		JPanel buttonPanel = new JPanel();
+		buttonPanel.add(okbutton);
+		newContentPane.add(buttonPanel, BorderLayout.SOUTH);
+		// Display the window.
+		frame.pack();
+		frame.setVisible(true);
+		return frame;
 	}
-	
-	/**
-     * Create the GUI and show it.  For thread safety,
-     * this method should be invoked from the
-     * event-dispatching thread.
-     * NOT USED, JUST FOR TESTING
-     */
-    private static void createAndShowGUI() {
-        //Create and set up the window.
-        JFrame frame = new JFrame("TableDialogEditDemo");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-  //mapper
-         HashSet<Object> testData = new HashSet<Object>();
-        testData.add("a");
-        testData.add("b");
-        testData.add("colorz drive me crazy");
-        testData.add("d");
-        Colormapper map = new DefaultColors();
-        map.createMapping(testData);
-        
-        //Create and set up the content pane.
-        JComponent newContentPane = new ColorMapperPanel(map,null);
-        newContentPane.setOpaque(true); //content panes must be opaque
-        frame.setContentPane(newContentPane);
-
-        //Display the window.
-       // frame.pack();
-        frame.setSize(600,420);
-        frame.setVisible(true);
-    }
-
-    public static void main(String[] args) {
-        //Schedule a job for the event-dispatching thread:
-        //creating and showing this application's GUI.
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                createAndShowGUI();
-            }
-        });
-    }
-
 
 }

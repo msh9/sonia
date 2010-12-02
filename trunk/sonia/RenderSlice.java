@@ -25,13 +25,7 @@ package sonia;
  */
 
 import java.util.*;
-import java.awt.BasicStroke;
-import java.awt.Graphics2D;
-import java.awt.AlphaComposite;
 import java.awt.Color;
-import java.awt.Font;
-import java.awt.geom.GeneralPath;
-import java.awt.geom.IllegalPathStateException;
 import java.text.*;
 
 import sonia.render.Graphics2DRender;
@@ -255,7 +249,7 @@ public class RenderSlice {
 				// flash if it is within the interval
 				if (((flashStart >= sliceStart) & (flashStart < sliceEnd))
 						| ((flashStart <= sliceStart) & (flashEnd > sliceEnd))) {
-					node.SetEffect(node.FLASH_EFFECT);
+					node.SetEffect(NodeAttribute.FLASH_EFFECT);
 				}
 			}
 			// check settings before node transparency
@@ -324,11 +318,11 @@ public class RenderSlice {
 		return sliceEnd;
 	}
 
-	public Vector getArcEvents() {
+	public Vector<ArcAttribute> getArcEvents() {
 		return arcEvents;
 	}
 
-	public Vector getNodeEvents() {
+	public Vector<NodeAttribute> getNodeEvents() {
 		return nodeEvents;
 	}
 

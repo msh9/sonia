@@ -388,7 +388,7 @@ public class GraphicsSettingsDialog {
 			public void actionPerformed(ActionEvent arg0) {
 				if (nodeColorMap.isSelected()){
 					JDialog colors = ColorMapperPanel.
-					showMapperWindow(graphicsDialog,canvas.getColormapper(),engine);
+					showMapperWindow(graphicsDialog,canvas,engine);
 				} else {
 					engine.getNetData().setNodeColormap(null);
 				}

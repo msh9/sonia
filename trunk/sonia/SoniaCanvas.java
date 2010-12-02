@@ -467,9 +467,6 @@ public void setSettings(GraphicsSettings settings) {
 	repaint();
 }
 public Colormapper getColormapper() {
-	if (this.colormapper == null){
-		this.colormapper = new DefaultColors();
-	}
 	return colormapper;
 }
 public void setColormapper(Colormapper colormapper) {

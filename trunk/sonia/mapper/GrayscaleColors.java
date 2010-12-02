@@ -5,29 +5,34 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
- * Creates an arbitrary mapping of objects to colors, with colors distributed through the color space
+ * Creates an arbitrary mapping of objects to colors, with colors distributed through the white to black color space
  * @author skyebend
  *
  */
-public class DefaultColors extends Colormapper {
+public class GrayscaleColors extends Colormapper {
 	
-	public static String MAPPER_NAME = "Default Colors";
+	public static String MAPPER_NAME = "Grayscale (Sorted)";
 	
 	private HashMap<Object, Color> colormap = new HashMap<Object, Color>();;
 
 	public void createMapping(Set<Object> values) {
+		//TODO: need to sort values into some kind of order
+		TreeSet<Object> sortedValues = new TreeSet<Object>(values) {
+		};
 		colormap.clear();
 		//figure out how many colors
-		float hue = 0f;
-		Iterator<Object> valiter = values.iterator();
+		float brightness = 0f;
+		Iterator<Object> valiter = sortedValues.iterator();
 		while (valiter.hasNext()){
 			
 			Object value = valiter.next();
-			Color col = Color.getHSBColor(hue, 1.0f, 1f);
+			Color col = Color.getHSBColor(0.0f, 0.0f, brightness);
 			colormap.put(value, col);
-			hue += 1f/values.size();
+			brightness += 1f/values.size();
 			
 		}
 		
@@ -51,7 +56,5 @@ public class DefaultColors extends Colormapper {
 	public String getMapperName() {
 		return MAPPER_NAME;
 	}
-
-	
 
 }
