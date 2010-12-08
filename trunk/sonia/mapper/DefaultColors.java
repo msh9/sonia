@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -15,7 +16,7 @@ public class DefaultColors extends Colormapper {
 	
 	public static String MAPPER_NAME = "Default Colors";
 	
-	private HashMap<Object, Color> colormap = new HashMap<Object, Color>();;
+	private HashMap<Object, Color> colormap = new HashMap<Object, Color>();
 
 	public void createMapping(Set<Object> values) {
 		colormap.clear();

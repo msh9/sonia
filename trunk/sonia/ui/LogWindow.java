@@ -67,11 +67,14 @@ public class LogWindow extends JPanel implements ActionListener {
 		Font textFont = new Font("Monospaced ", Font.PLAIN, 10);
 
 		// create layout objects
-		LogText = new JTextArea(14, 30);
+		LogText = new JTextArea(14, 0);
 		LogText.setBackground(Color.white);
 		LogText.setFont(textFont);
-		JPanel scrollPanel = new JPanel();
-		scrollPanel.add(LogText);
+		LogText.setTabSize(1);
+		LogText.setLineWrap(true);
+		LogText.setWrapStyleWord(true);
+		JPanel scrollPanel = new JPanel(new BorderLayout());
+		scrollPanel.add(LogText,BorderLayout.CENTER);
 		scroller = new JScrollPane(scrollPanel);
 
 		writeLogFile = new JButton("Write Log to File...");
@@ -109,7 +112,7 @@ public class LogWindow extends JPanel implements ActionListener {
 		// setBackground(Color.lightGray);
 
 		// construct frame
-		this.setSize(350, 250);
+		//this.setSize(350, 250);
 		this.setBorder(new TitledBorder("SoNIA Session Log"));
 		this.setLocation(0, 290);
 		this.setVisible(true);

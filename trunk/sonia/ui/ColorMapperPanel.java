@@ -8,12 +8,18 @@ import java.awt.Frame;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Properties;
 import java.util.Vector;
 
 import javax.swing.AbstractCellEditor;
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
@@ -36,10 +42,12 @@ import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 
 import sonia.SoniaCanvas;
+import sonia.SoniaController;
 import sonia.SoniaLayoutEngine;
 import sonia.mapper.Colormapper;
 import sonia.mapper.DefaultColors;
 import sonia.mapper.GrayscaleColors;
+import sonia.mapper.MapperFactory;
 import sonia.mapper.RedtoBlueColors;
 
 /**
@@ -50,6 +58,7 @@ import sonia.mapper.RedtoBlueColors;
  */
 @SuppressWarnings("serial")
 public class ColorMapperPanel extends JPanel {
+	protected SoniaController control;
 	protected Colormapper mapper;
 	protected SoniaLayoutEngine engine;
 	protected SoniaCanvas canvas;
@@ -63,27 +72,27 @@ public class ColorMapperPanel extends JPanel {
 	private JTable table;
 	private JComboBox keySelector;
 	private JComboBox mappingSelector;
-	/**
-	 * All color mapper classes need to be listed here to show up in the UI
-	 */
-	private String[] knownMappers = new String[] { DefaultColors.MAPPER_NAME,
-			GrayscaleColors.MAPPER_NAME,RedtoBlueColors.MAPPER_NAME };
+	private JButton saveMapping;
+	private JButton loadMapping;
 
 	// ui components
 
-	public ColorMapperPanel(SoniaCanvas canvas, SoniaLayoutEngine engine) {
+	public ColorMapperPanel(SoniaController cont, SoniaCanvas canvas,
+			SoniaLayoutEngine engine) {
 		super(new BorderLayout());
+		this.control = cont;
 		this.canvas = canvas;
-		//get the list of mappers to choose from
-		mappingSelector = new JComboBox(knownMappers);
-		//get all the known data types to choose from
+		this.engine = engine;
+		// get the list of mappers to choose from
+		mappingSelector = new JComboBox(MapperFactory.knownMappers);
+		// get all the known data types to choose from
 		keySelector = new JComboBox(engine.getNetData().getNodeDataKeys()
 				.toArray());
 		mapper = canvas.getColormapper();
-		
-		//if no mapper is set, use default, otherwise reload the mapper
+
+		// if no mapper is set, use default, otherwise reload the mapper
 		if (mapper == null) {
-			setMapperTo(DefaultColors.MAPPER_NAME);
+			mapper = MapperFactory.getMapperFor(DefaultColors.MAPPER_NAME);
 			mapper.createMapping(engine.getNetData().getUniqueNodeValues(
 					(String) keySelector.getSelectedItem()));
 		} else {
@@ -91,18 +100,15 @@ public class ColorMapperPanel extends JPanel {
 			keySelector.setSelectedItem(mapper.getKey());
 		}
 
-		this.engine = engine;
 		keyData = new Vector<Object>(mapper.getValues());
 
 		table = new JTable(new ColorTableModel());
 		table.setPreferredScrollableViewportSize(new Dimension(250, 50));
 		table.setFillsViewportHeight(true);
-		
 
 		// Create the scroll pane and add the table to it.
 		JScrollPane scrollPane = new JScrollPane(table);
 		tablePanel.add(scrollPane);
-		
 
 		keySelector.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -129,6 +135,41 @@ public class ColorMapperPanel extends JPanel {
 		keyPanel.add(keySelector);
 		mappingWrapper.add(keyPanel);
 		tablePanel.add(mappingWrapper, BorderLayout.WEST);
+
+		// set up buttons to save and load mappings
+		JPanel buttonWrapper = new JPanel();
+		buttonWrapper.setLayout(new BoxLayout(buttonWrapper, BoxLayout.Y_AXIS));
+		saveMapping = new JButton("Save mapping...");
+		saveMapping.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				Properties props = MapperFactory.asProperties(mapper);
+				String filename = control.getOutputFile("SoniaColormapperSettings.prp",
+						"Choose location to save colormapper settings");
+				String path = control.getCurrentPath(); //should have been set by file dialog
+				if (filename != null & path != null) {
+					try {
+						FileWriter propsOut = new FileWriter(path+filename);
+						propsOut.write(props.toString());
+						propsOut.close();
+					} catch (FileNotFoundException e1) {
+						control
+								.showError("Unable to save colormapping to file "
+										+ path+filename + " " + e1.getMessage());
+					} catch (IOException e1) {
+						control
+								.showError("Unable to save colormapping to file "
+										+ path+filename + " " + e1.getMessage());
+					}
+					control.showStatus("Saved color mapping settings to "
+							+ path+filename);
+				}
+			}
+		});
+		buttonWrapper.add(saveMapping);
+		
+		loadMapping = new JButton("Reload mapping...");
+		buttonWrapper.add(loadMapping);
+		mappingWrapper.add(buttonWrapper);
 
 		// Set up renderer and editor for the Favorite Color column.
 		table.setDefaultRenderer(Color.class, new ColorRenderer(true));
@@ -163,7 +204,7 @@ public class ColorMapperPanel extends JPanel {
 				tablePanel, chooserPanel);
 		add(split);
 
-		//keyData = new Vector<Object>(mapper.getValues());
+		// keyData = new Vector<Object>(mapper.getValues());
 		refreshData();
 	}
 
@@ -172,7 +213,8 @@ public class ColorMapperPanel extends JPanel {
 		if (!((String) mappingSelector.getSelectedItem()).equals(mapper
 				.getMapperName())) {
 			table.setRowSorter(null);
-			setMapperTo((String) mappingSelector.getSelectedItem());
+			mapper = MapperFactory.getMapperFor((String) mappingSelector
+					.getSelectedItem());
 			mapper.createMapping(engine.getNetData().getUniqueNodeValues(
 					(String) keySelector.getSelectedItem()));
 		}
@@ -186,20 +228,6 @@ public class ColorMapperPanel extends JPanel {
 		engine.getNetData().setNodeColormap(mapper);
 		tablePanel.validate();
 		table.repaint();
-	}
-
-	/**
-	 * Factory method to create and store the mapper appropriate for the string
-	 */
-	private void setMapperTo(String mapperName) {
-		if (mapperName.equals(DefaultColors.MAPPER_NAME)) {
-			mapper = new DefaultColors();
-		} else if (mapperName.equals(GrayscaleColors.MAPPER_NAME)) {
-			mapper = new GrayscaleColors();
-		} else if (mapperName.equals(RedtoBlueColors.MAPPER_NAME)) {
-			mapper = new RedtoBlueColors();
-		}
-		
 	}
 
 	@SuppressWarnings("serial")
@@ -351,10 +379,10 @@ public class ColorMapperPanel extends JPanel {
 	}
 
 	public static JDialog showMapperWindow(JDialog owner, SoniaCanvas canvas,
-			SoniaLayoutEngine eng) {
+			SoniaLayoutEngine eng, SoniaController control) {
 		final JDialog frame = new JDialog(owner, "Edit Color Mapping", true);
 		// Create and set up the content pane.
-		JComponent newContentPane = new ColorMapperPanel(canvas, eng);
+		JComponent newContentPane = new ColorMapperPanel(control, canvas, eng);
 		newContentPane.setOpaque(true); // content panes must be opaque
 		frame.setContentPane(newContentPane);
 		JButton okbutton = new JButton("OK");

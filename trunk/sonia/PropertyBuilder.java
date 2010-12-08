@@ -6,6 +6,7 @@ import java.util.StringTokenizer;
 import sonia.parsers.DotSonColumnMap;
 import sonia.settings.ApplySettings;
 import sonia.settings.BrowsingSettings;
+import sonia.settings.ColormapperSettings;
 import sonia.settings.GraphicsSettings;
 import sonia.settings.LayoutSettings;
 import sonia.settings.MovieSettings;
@@ -63,6 +64,26 @@ public class PropertyBuilder {
 			if (settingsBlocks[i].trim().startsWith(LayoutSettings.class.getName())){
 				
 				settings = (LayoutSettings)addProps(new LayoutSettings(),settingsBlocks[i]);
+				break;
+			}
+			
+		}
+		return settings;
+	}
+	
+	/**
+	 * looks for an ColormapperSettings block in the compoundProperties string,
+	 * initializes and returns it, or null if none found
+	 * 
+	 * @return a ColormapperSettings object with values initialized, or null
+	 */
+	public ColormapperSettings getColormapperSettings(){
+		// look through the blocks for one with a matching header
+		ColormapperSettings settings = null;
+		for (int i = 0; i < settingsBlocks.length; i++) {
+			if (settingsBlocks[i].trim().startsWith(ColormapperSettings.class.getName())){
+				
+				settings = (ColormapperSettings)addProps(new ColormapperSettings(),settingsBlocks[i]);
 				break;
 			}
 			

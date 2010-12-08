@@ -47,6 +47,7 @@ import com.anotherbigidea.flash.writers.SWFTagDumper;
 import com.bric.qt.io.JPEGMovieAnimation;
 		
 
+import sonia.mapper.MapperFactory;
 import sonia.movie.JPEGMovieMaker;
 import sonia.movie.MovieMaker;
 import sonia.movie.MultipleImageMovieMaker;
@@ -67,6 +68,7 @@ import sonia.render.GraphMLRender;
 import sonia.render.XMLCoordRender;
 import sonia.settings.ApplySettings;
 import sonia.settings.BrowsingSettings;
+import sonia.settings.ColormapperSettings;
 import sonia.settings.GraphicsSettings;
 import sonia.settings.LayoutSettings;
 import sonia.settings.MovieSettings;
@@ -135,6 +137,8 @@ public class SoniaController implements Runnable, TaskListener{
 	private PropertySettings parserSettings = null;
 
 	private PropertySettings movieSettings = null;
+	
+	private ColormapperSettings mapperSettings = null;
 	
 
 	private Uniform randomUni; // colt package mersense twister random numbers
@@ -533,6 +537,13 @@ public class SoniaController implements Runnable, TaskListener{
 			log("Read movie output settings from batch instructions:\n "
 					+ movieSettings);
 		}
+		
+		mapperSettings = proper.getColormapperSettings();
+		if (mapperSettings != null) {
+			showStatus("Read colormapper settings from batch instructions");
+			log("Read movie output settings from batch instructions:\n "
+					+ mapperSettings);
+		}
 
 	}
 
@@ -806,6 +817,11 @@ public class SoniaController implements Runnable, TaskListener{
 			}
 			 display = new LayoutWindow(graphicSettings,
 					browseSettings, this, engine, 500,400);
+			 //if color mapper settings were loaded in pass them in (but they won't be active)
+			 if (mapperSettings != null){
+				 display.getDisplay().setColormapper(MapperFactory.restoreMapperFrom(mapperSettings));
+			 }
+			 
 			engine.setDisplay(display);
 			showFrame((display));
 			engine.setDisplayWidth(Integer.parseInt(graphicSettings
@@ -1040,7 +1056,7 @@ public class SoniaController implements Runnable, TaskListener{
 	}
 	
 	/**
-	 * exports a graphML discription of the node positions of the current slice
+	 * exports a graphML description of the node positions of the current slice
 	 * @param engToExport
 	 */
 	public void exportGraphML(SoniaLayoutEngine engToExport){

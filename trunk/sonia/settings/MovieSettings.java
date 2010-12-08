@@ -48,7 +48,7 @@ public class MovieSettings extends PropertySettings {
 	public static final String QUICKTIME_FILE_TYPE = "mov";
 	
 	/**
-	 * file type value indicating a QuickTime movie.  Note: not useable on linux
+	 * file type value indicating a flash movie. 
 	 */
 	public static final String FLASH_FILE_TYPE = "swf";
 	

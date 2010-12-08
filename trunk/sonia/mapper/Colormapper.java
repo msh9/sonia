@@ -53,4 +53,6 @@ public abstract class Colormapper extends Object {
 	public abstract String getMapperName();
 	
 	
+	
+	
 }
