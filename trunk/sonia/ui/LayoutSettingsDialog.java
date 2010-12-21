@@ -330,15 +330,14 @@ public class LayoutSettingsDialog extends JDialog implements ActionListener , Fo
 		SliceEnd.setText(settings.getProperty(LayoutSettings.SLICE_END));
 		SliceDuration.setText(settings.getProperty(LayoutSettings.SLICE_DURATION));
 		SliceDelta.setText(settings.getProperty(LayoutSettings.SLICE_DELTA));
-		
 	}
 
-	// ACTION LISTENER //figures out what user did and calls apropriate method
+	// ACTION LISTENER //figures out what user did and calls appropriate method
 	public void actionPerformed(ActionEvent evt) {
 		if (evt.getActionCommand().equals("Create Layout")) {
 			storeSettings();
 			this.setVisible(false);
-			// will this distroyitself, or does it need to be explicit?
+			// will this destroy itself, or does it need to be explicit?
 			// this.finalize();
 		} else if (evt.getActionCommand().equals("Cancel")) {
 			this.setVisible(false);

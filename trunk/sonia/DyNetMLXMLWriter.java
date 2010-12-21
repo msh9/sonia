@@ -33,10 +33,13 @@ import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import sonia.mapper.Colormapper;
+import sonia.mapper.MapperFactory;
 import sonia.parsers.DotSonColumnMap;
 import sonia.parsers.DotSonParser;
 import sonia.settings.ApplySettings;
 import sonia.settings.BrowsingSettings;
+import sonia.settings.ColormapperSettings;
 import sonia.settings.GraphicsSettings;
 import sonia.settings.LayoutSettings;
 
@@ -120,11 +123,13 @@ import sonia.settings.LayoutSettings;
  * @author skyebend
  * 
  */
- public class DyNetMLXMLWriter {
+public class DyNetMLXMLWriter {
 
 	// constants for tag names in dynetML dtd
 	public static final String NAMESPACE = "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
 			+ "xsi:noNamespaceSchemaLocation=\"DyNetML.xsd\"";
+
+	public static final String XML_WRITER_VERSION = "1.2";
 
 	public static final String MAIN = "DynamicNetwork";
 
@@ -163,8 +168,8 @@ import sonia.settings.LayoutSettings;
 	public static final String ID = "id";
 
 	/**
-	 * sonia id is the numeric id (starting from 1) used by sonia to refer
-	 * to nodes, think of it as the matrix index
+	 * sonia id is the numeric id (starting from 1) used by sonia to refer to
+	 * nodes, think of it as the matrix index
 	 */
 	public static final String SID = "soniaId";
 
@@ -211,25 +216,27 @@ import sonia.settings.LayoutSettings;
 	 * tag used to store the ending timepoint for the slice in the graph
 	 */
 	public static final String SLICE_E = "endTime";
-	
+
 	/**
 	 * color specified as a comma seperated rgb triple
 	 */
 	public static final String NODE_RGB_COLOR = "rgbColorNode";
-	
+
 	public static final String EDGE_RGB_COLOR = "rgbColorEdge";
-	
+
 	public static final String NODE_BORDER_RGB_COLOR = "rgbColorNodeBorder";
-	
+
+	public static final String NODE_LABEL_RGB_COLOR = "rgbColorNodeLabel";
+
 	public static final String X_COORDS = "xCoords";
-	
+
 	public static final String Y_COORDS = "yCoords";
-	
+
 	public static final String UNKOWN_NODE = "?";
-	
+
 	/**
-	 * hash code that makes it possible to know if the edges
-	 * in two graphs are really the same ArcAttribute
+	 * hash code that makes it possible to know if the edges in two graphs are
+	 * really the same ArcAttribute
 	 */
 	public static final String EDGE_ID = "edgeID";
 
@@ -249,10 +256,10 @@ import sonia.settings.LayoutSettings;
 		double start = engine.getSlice(0).getSliceStart();
 		double end = engine.getSlice(engine.getNumSlices() - 1).getSliceEnd();
 		int eventID = 0;
-		
-		//TODO:store log file within xml?
+
+		// TODO:store log file within xml?
 		// get the set of nodes
-		ArrayList events = data.getEventsFromTo(start, end);
+		ArrayList<NetworkEvent> events = data.getEventsFromTo(start, end);
 
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder db = dbf.newDocumentBuilder();
@@ -265,42 +272,56 @@ import sonia.settings.LayoutSettings;
 		Element metamat = doc.createElement(METAMAT);
 		root.appendChild(metamat);
 		// should add meta info here
-		//add properties that specify sonia configuration as measures
+		// add properties that specify sonia configuration as measures
 		Element metaMeasures = doc.createElement(MEASURES);
 		metamat.appendChild(metaMeasures);
-		
-		//store the apply settings as if it was a measrure
+
+		// store the apply settings as if it was a measure
 		ApplySettings apSet = engine.getCurrentApplySettings();
-		Element applySettings = doc.createElement(MEASURE);
-		applySettings.setAttribute(ID,apSet.getClass().getCanonicalName());
-		applySettings.setAttribute(TP,STR);
-		applySettings.setAttribute(VAL,apSet.toString());
-		metaMeasures.appendChild(applySettings);
-		
-		//store the layout settings as if it was a measrure
+		// may be null if no layout has been applied
+		if (apSet != null) {
+			Element applySettings = doc.createElement(MEASURE);
+			applySettings.setAttribute(ID, apSet.getClass().getCanonicalName());
+			applySettings.setAttribute(TP, STR);
+			applySettings.setAttribute(VAL, apSet.toString());
+			metaMeasures.appendChild(applySettings);
+		}
+
+		// store the layout settings as if it was a measure
 		LayoutSettings laySet = engine.getLayoutSettings();
 		Element layoutSettings = doc.createElement(MEASURE);
-		layoutSettings.setAttribute(ID,laySet.getClass().getCanonicalName());
-		layoutSettings.setAttribute(TP,STR);
-		layoutSettings.setAttribute(VAL,laySet.toString());
+		layoutSettings.setAttribute(ID, laySet.getClass().getCanonicalName());
+		layoutSettings.setAttribute(TP, STR);
+		layoutSettings.setAttribute(VAL, laySet.toString());
 		metaMeasures.appendChild(layoutSettings);
-		
-		//store the graphics settings as if it was a measure
+
+		// store the graphics settings as if it was a measure
 		GraphicsSettings graphicsSet = control.getGraphicsSettings();
 		Element graphSettings = doc.createElement(MEASURE);
-		graphSettings.setAttribute(ID,graphicsSet.getClass().getCanonicalName());
-		graphSettings.setAttribute(TP,STR);
-		graphSettings.setAttribute(VAL,graphicsSet.toString());
+		graphSettings.setAttribute(ID, graphicsSet.getClass()
+				.getCanonicalName());
+		graphSettings.setAttribute(TP, STR);
+		graphSettings.setAttribute(VAL, graphicsSet.toString());
 		metaMeasures.appendChild(graphSettings);
-		
-		//store the browsing settings as if it was a measure
+
+		// store the browsing settings as if it was a measure
 		BrowsingSettings browseSet = control.getBrowsingSettings();
 		Element browSettings = doc.createElement(MEASURE);
-		browSettings.setAttribute(ID,browseSet.getClass().getCanonicalName());
-		browSettings.setAttribute(TP,STR);
-		browSettings.setAttribute(VAL,browseSet.toString());
+		browSettings.setAttribute(ID, browseSet.getClass().getCanonicalName());
+		browSettings.setAttribute(TP, STR);
+		browSettings.setAttribute(VAL, browseSet.toString());
 		metaMeasures.appendChild(browSettings);
-		
+
+		// store the colormappings as if it was a measure
+		Colormapper colmap = engine.getLayoutWindow().getDisplay()
+				.getColormapper();
+		ColormapperSettings colSet = MapperFactory.asProperties(colmap);
+		Element mapSettings = doc.createElement(MEASURE);
+		browSettings.setAttribute(ID, colSet.getClass().getCanonicalName());
+		browSettings.setAttribute(TP, STR);
+		browSettings.setAttribute(VAL, colSet.toString());
+		metaMeasures.appendChild(mapSettings);
+
 		// define nodes
 		Element nodes = doc.createElement(NODES);
 		metamat.appendChild(nodes);
@@ -308,10 +329,10 @@ import sonia.settings.LayoutSettings;
 		nodes.appendChild(nodeset);
 		nodeset.setAttribute(ID, "sonianodes"); // could use a better name here
 		// loop over set of nodes and create them
-		Iterator eventiter = events.iterator();
+		Iterator<NetworkEvent> eventiter = events.iterator();
 		// TODO: give warning that original alpha ids and some other data from
 		// the input file will not be preserved
-		//TODO:  create a set of dummy nodes for edges to attach to?
+		// TODO: create a set of dummy nodes for edges to attach to?
 		while (eventiter.hasNext()) {
 			NetworkEvent event = (NetworkEvent) eventiter.next();
 			if (event instanceof NodeAttribute) {
@@ -324,10 +345,31 @@ import sonia.settings.LayoutSettings;
 				Element prop = doc.createElement(PROP);
 				// attributes
 				// label
-				
 				prop.setAttribute(ID, DotSonColumnMap.NODE_LABEL);
 				prop.setAttribute(TP, STR);
 				prop.setAttribute(VAL, nodeAttr.getNodeLabel());
+				props.appendChild(prop);
+
+				// label size
+				prop = doc.createElement(PROP);
+				prop.setAttribute(ID, DotSonColumnMap.NODE_LABEL_SIZE);
+				prop.setAttribute(TP, DBL);
+				prop.setAttribute(VAL, nodeAttr.getLabelSize() + "");
+				props.appendChild(prop);
+
+				prop = doc.createElement(PROP);
+				prop.setAttribute(ID, DotSonColumnMap.NODE_LABEL_SIZE);
+				prop.setAttribute(TP, DBL);
+				prop.setAttribute(VAL, nodeAttr.getLabelSize() + "");
+				props.appendChild(prop);
+
+				// node label color
+				Color lc = nodeAttr.getLabelColor();
+				prop = doc.createElement(PROP);
+				prop.setAttribute(ID, NODE_LABEL_RGB_COLOR);
+				prop.setAttribute(TP, STR);
+				prop.setAttribute(VAL, lc.getRed() + "," + lc.getGreen() + ","
+						+ lc.getBlue());
 				props.appendChild(prop);
 
 				// sonia id
@@ -348,13 +390,13 @@ import sonia.settings.LayoutSettings;
 				prop.setAttribute(TP, DBL);
 				prop.setAttribute(VAL, nodeAttr.getEndTime() + "");
 				props.appendChild(prop);
-//				 file x
+				// file x
 				prop = doc.createElement(PROP);
 				prop.setAttribute(ID, DotSonColumnMap.NODE_X_COORD);
 				prop.setAttribute(TP, DBL);
 				prop.setAttribute(VAL, nodeAttr.getObsXCoord() + "");
 				props.appendChild(prop);
-//				 file y
+				// file y
 				prop = doc.createElement(PROP);
 				prop.setAttribute(ID, DotSonColumnMap.NODE_Y_COORD);
 				prop.setAttribute(TP, DBL);
@@ -366,55 +408,61 @@ import sonia.settings.LayoutSettings;
 				prop.setAttribute(TP, DBL);
 				prop.setAttribute(VAL, nodeAttr.getNodeSize() + "");
 				props.appendChild(prop);
-			
-				//node color
+
+				// node color
 				prop = doc.createElement(PROP);
 				Color c = nodeAttr.getNodeColor();
 				prop.setAttribute(ID, NODE_RGB_COLOR);
 				prop.setAttribute(TP, STR);
-				prop.setAttribute(VAL, c.getRed()+","+c.getGreen()+","+c.getBlue());
+				prop.setAttribute(VAL, c.getRed() + "," + c.getGreen() + ","
+						+ c.getBlue());
 				props.appendChild(prop);
-				
-				//node shape
+
+				// node shape
 				prop = doc.createElement(PROP);
 				prop.setAttribute(ID, DotSonColumnMap.NODE_SHAPE);
 				prop.setAttribute(TP, STR);
-				prop.setAttribute(VAL, ShapeFactory.getStringFor(nodeAttr.getNodeShape()));
+				prop.setAttribute(VAL, ShapeFactory.getStringFor(nodeAttr
+						.getNodeShape()));
 				props.appendChild(prop);
-				
-				//border width
+
+				// border width
 				prop = doc.createElement(PROP);
 				prop.setAttribute(ID, DotSonColumnMap.NODE_BORDER_WIDTH);
 				prop.setAttribute(TP, DBL);
-				prop.setAttribute(VAL, nodeAttr.getBorderWidth()+"");
+				prop.setAttribute(VAL, nodeAttr.getBorderWidth() + "");
 				props.appendChild(prop);
-				
-				//node border color
-				Color bc =nodeAttr.getBorderColor();
+
+				// node border color
+				Color bc = nodeAttr.getBorderColor();
 				prop = doc.createElement(PROP);
 				prop.setAttribute(ID, NODE_BORDER_RGB_COLOR);
-				prop.setAttribute(TP, DBL);
-				prop.setAttribute(VAL, bc.getRed()+","+bc.getGreen()+","+bc.getBlue());
+				prop.setAttribute(TP, STR);
+				prop.setAttribute(VAL, bc.getRed() + "," + bc.getGreen() + ","
+						+ bc.getBlue());
 				props.appendChild(prop);
-				
+
 				// add rest of properties
-				
-				//add user data elements
-				if (nodeAttr.getDataKeys() != null){
-					Iterator keyiter = nodeAttr.getDataKeys().iterator();
-					while (keyiter.hasNext()){
-						String key = (String)keyiter.next();
+
+				// add user data elements
+				if (nodeAttr.getDataKeys() != null) {
+					Iterator<String> keyiter = nodeAttr.getDataKeys()
+							.iterator();
+					while (keyiter.hasNext()) {
+						String key = (String) keyiter.next();
 						prop = doc.createElement(PROP);
 						prop.setAttribute(ID, key);
 						prop.setAttribute(TP, STR);
-						prop.setAttribute(VAL, nodeAttr.getData(key).toString());
+						prop
+								.setAttribute(VAL, nodeAttr.getData(key)
+										.toString());
 						props.appendChild(prop);
 					}
 				}
 
 				nodeset.appendChild(node);
 				eventID++;
-			}  
+			}
 		}
 
 		// create the graph to hold the slice info
@@ -428,11 +476,11 @@ import sonia.settings.LayoutSettings;
 			networks.appendChild(graph);
 			graph.setAttribute(ID, g + "");
 			graph.setAttribute("isDirected", "true");
-			
+
 			// set properties of graph
 			Element props = doc.createElement(PROPS);
 			graph.appendChild(props);
-			
+
 			// start time of slice
 			Element prop = doc.createElement(PROP);
 			graph.appendChild(prop);
@@ -440,14 +488,14 @@ import sonia.settings.LayoutSettings;
 			prop.setAttribute(TP, DBL);
 			prop.setAttribute(VAL, slice.getSliceStart() + "");
 			props.appendChild(prop);
-			
+
 			// end time of slice
 			prop = doc.createElement(PROP);
 			prop.setAttribute(ID, SLICE_E);
 			prop.setAttribute(TP, DBL);
 			prop.setAttribute(VAL, slice.getSliceEnd() + "");
 			props.appendChild(prop);
-			
+
 			// need to store xy coords
 			prop = doc.createElement(PROP);
 			prop.setAttribute(ID, X_COORDS);
@@ -464,89 +512,88 @@ import sonia.settings.LayoutSettings;
 			// THIS IS NOT VERY EFFICIENT SINCE THE SAME
 			// AC MAY APPEAR MULTIPLE TIMES
 			// get a render slice so we can get the eges
-			RenderSlice render = engine.getRenderSlice(slice.getSliceStart(),slice.getSliceEnd());
-			Iterator sliceArcs = render.getArcEvents().iterator();
-			
-			while (sliceArcs.hasNext()){
-				ArcAttribute arcattr = (ArcAttribute)sliceArcs.next();
-		
-				//BIG PROBLEM HERE, CANT USE THE SOURCE TARGET BECAUSE
-				//AN ARC ATTRIBUTE COULD LINK TO MULTIPLE NODES
-				//TODO: add check to see if node attributes do not change?
+			RenderSlice render = engine.getRenderSlice(slice.getSliceStart(),
+					slice.getSliceEnd());
+			Iterator<ArcAttribute> sliceArcs = render.getArcEvents().iterator();
+
+			while (sliceArcs.hasNext()) {
+				ArcAttribute arcattr = (ArcAttribute) sliceArcs.next();
+
+				// BIG PROBLEM HERE, CANT USE THE SOURCE TARGET BECAUSE
+				// AN ARC ATTRIBUTE COULD LINK TO MULTIPLE NODES
+				// TODO: add check to see if node attributes do not change?
 				Element edge = doc.createElement(EDGE);
-				edge.setAttribute(SOURCE,UNKOWN_NODE);
-				edge.setAttribute(TARGET,UNKOWN_NODE);
-				edge.setAttribute(TP,DBL);
-				edge.setAttribute(VAL,arcattr.getArcWeight()+"");
+				edge.setAttribute(SOURCE, UNKOWN_NODE);
+				edge.setAttribute(TARGET, UNKOWN_NODE);
+				edge.setAttribute(TP, DBL);
+				edge.setAttribute(VAL, arcattr.getArcWeight() + "");
 				graph.appendChild(edge);
-				//edge properties
+				// edge properties
 				props = doc.createElement(PROPS);
-				
-				//from id
+
+				// from id
 				prop = doc.createElement(PROP);
-				prop.setAttribute(ID,DotSonColumnMap.FROM_ID);
-				prop.setAttribute(TP,STR);
-				prop.setAttribute(VAL,arcattr.getFromNodeId()+"");
+				prop.setAttribute(ID, DotSonColumnMap.FROM_ID);
+				prop.setAttribute(TP, STR);
+				prop.setAttribute(VAL, arcattr.getFromNodeId() + "");
 				props.appendChild(prop);
-				
-				//to id
+
+				// to id
 				prop = doc.createElement(PROP);
-				prop.setAttribute(ID,DotSonColumnMap.TO_ID);
-				prop.setAttribute(TP,STR);
-				prop.setAttribute(VAL,arcattr.getToNodeId()+"");
+				prop.setAttribute(ID, DotSonColumnMap.TO_ID);
+				prop.setAttribute(TP, STR);
+				prop.setAttribute(VAL, arcattr.getToNodeId() + "");
 				props.appendChild(prop);
-				
-//				start time
+
+				// start time
 				prop = doc.createElement(PROP);
-				prop.setAttribute(ID,DotSonColumnMap.ARC_STARTIME);
-				prop.setAttribute(TP,DBL);
-				prop.setAttribute(VAL,arcattr.getObsTime()+"");
+				prop.setAttribute(ID, DotSonColumnMap.ARC_STARTIME);
+				prop.setAttribute(TP, DBL);
+				prop.setAttribute(VAL, arcattr.getObsTime() + "");
 				props.appendChild(prop);
-				
-//				end time
+
+				// end time
 				prop = doc.createElement(PROP);
-				prop.setAttribute(ID,DotSonColumnMap.ARC_ENDTIME);
-				prop.setAttribute(TP,DBL);
-				prop.setAttribute(VAL,arcattr.getEndTime()+"");
+				prop.setAttribute(ID, DotSonColumnMap.ARC_ENDTIME);
+				prop.setAttribute(TP, DBL);
+				prop.setAttribute(VAL, arcattr.getEndTime() + "");
 				props.appendChild(prop);
-				
-				//edge hash
+
+				// edge hash
 				prop = doc.createElement(PROP);
-				prop.setAttribute(ID,EDGE_ID);
-				prop.setAttribute(TP,STR);
-				prop.setAttribute(VAL,arcattr.hashCode()+"");
+				prop.setAttribute(ID, EDGE_ID);
+				prop.setAttribute(TP, STR);
+				prop.setAttribute(VAL, arcattr.hashCode() + "");
 				props.appendChild(prop);
-				
-//				 width
+
+				// width
 				prop = doc.createElement(PROP);
-				prop.setAttribute(ID,DotSonColumnMap.ARC_WIDTH);
-				prop.setAttribute(TP,STR);
-				prop.setAttribute(VAL,arcattr.getArcWidth()+"");
+				prop.setAttribute(ID, DotSonColumnMap.ARC_WIDTH);
+				prop.setAttribute(TP, STR);
+				prop.setAttribute(VAL, arcattr.getArcWidth() + "");
 				props.appendChild(prop);
-				
-//				color 
+
+				// color
 				Color c = arcattr.getArcColor();
 				prop = doc.createElement(PROP);
-				prop.setAttribute(ID,EDGE_RGB_COLOR);
-				prop.setAttribute(TP,DBL);
-				prop.setAttribute(VAL,c.getRed()+","+c.getGreen()+","+c.getBlue());
+				prop.setAttribute(ID, EDGE_RGB_COLOR);
+				prop.setAttribute(TP, DBL);
+				prop.setAttribute(VAL, c.getRed() + "," + c.getGreen() + ","
+						+ c.getBlue());
 				props.appendChild(prop);
-				
-				//label optional
-				if (arcattr.getArcLabel() != ""){
+
+				// label optional
+				if (arcattr.getArcLabel() != "") {
 					prop = doc.createElement(PROP);
-					prop.setAttribute(ID,DotSonColumnMap.ARC_LABEL);
-					prop.setAttribute(TP,DBL);
-					prop.setAttribute(VAL,arcattr.getArcLabel());
+					prop.setAttribute(ID, DotSonColumnMap.ARC_LABEL);
+					prop.setAttribute(TP, DBL);
+					prop.setAttribute(VAL, arcattr.getArcLabel());
 					props.appendChild(prop);
 				}
-				
-				
-				
+
 				edge.appendChild(props);
-				
-			} //end slice edges loop
-			
+
+			} // end slice edges loop
 
 		}// end graph loop
 
@@ -561,13 +608,13 @@ import sonia.settings.LayoutSettings;
 		control.log("saved network as DyNetML file: " + filename);
 		// TODO: list attribute not preserved by dynetml export
 	}// end save
-	
-	private String arrayToString(double[] coords){
+
+	private String arrayToString(double[] coords) {
 		String array = "";
 		for (int i = 0; i < coords.length; i++) {
-			array = array+coords[i]+",";
+			array = array + coords[i] + ",";
 		}
-		return array.substring(0,array.length()-1)+"";
+		return array.substring(0, array.length() - 1) + "";
 	}
 
 }

@@ -1857,6 +1857,10 @@ public class DotSonParser implements ClusterParser {
 			theColor = Color.yellow;
 		} else if (text.equalsIgnoreCase("blue")) {
 			theColor = Color.blue;
+		} else if (text.equalsIgnoreCase("brown")) {
+			theColor = new Color(71, 12, 8);
+		} else if (text.equalsIgnoreCase("tan")) {
+			theColor = new Color(195, 131, 97);
 		} else // unable to match a color name
 		{
 			String error = "Line" + reader.getLineNumber()

@@ -330,7 +330,6 @@ public class NodeInspector implements MouseListener, ChangeListener,
 			inspectPanel.add(nodeData, BorderLayout.EAST);
 			inspect = new JButton("Inspect Nodes");
 			inspect.addActionListener(new ActionListener() {
-				@Override
 				public void actionPerformed(ActionEvent e) {
 					if (inspecting) {
 						deactivate();
@@ -440,12 +439,12 @@ public class NodeInspector implements MouseListener, ChangeListener,
 			return "<none>"; //otherwise something is really wrong
 		}
 		
-		@Override
+		
 		public int getRowCount() {
 			return keys.length;
 		}
 		
-		@Override
+		
 		public int getColumnCount() {
 			return 2;
 		}

@@ -99,6 +99,10 @@ public class ColorMapperPanel extends JPanel {
 			mappingSelector.setSelectedItem(mapper.getMapperName());
 			keySelector.setSelectedItem(mapper.getKey());
 		}
+		
+		System.out.println("mapper key "+mapper.getKey());
+		System.out.println("possible keys: "+engine.getNetData().getNodeDataKeys()
+				.toArray());
 
 		keyData = new Vector<Object>(mapper.getValues());
 

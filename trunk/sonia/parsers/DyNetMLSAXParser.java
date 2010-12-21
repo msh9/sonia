@@ -91,8 +91,8 @@ public class DyNetMLSAXParser extends DefaultHandler implements Parser {
 	private boolean isPropertiesContext = false;
 
 	private HashMap<String, String> nodePropMap = null; // for storying node
-														// props while we
-														// assemble into node.
+	// props while we
+	// assemble into node.
 	private String dynetMLNodeId = null;
 	private HashMap<String, String> graphPropMap = null;
 	private String gid = null; // for indentifying active graph element
@@ -100,7 +100,7 @@ public class DyNetMLSAXParser extends DefaultHandler implements Parser {
 
 	private HashMap<String, String> edgePropMap = null;
 	private String edgeSource = null; // these hold values parsed from xml when
-										// not written by sonia.
+	// not written by sonia.
 	private String edgeTarget = null;
 	private String edgeWeight = null;
 
@@ -157,8 +157,8 @@ public class DyNetMLSAXParser extends DefaultHandler implements Parser {
 		// factory.setNamespaceAware(true);
 
 		// try to read in the xml file
-		//each element parsed will trigger the startElement method
-		//then we have to respond appropriately
+		// each element parsed will trigger the startElement method
+		// then we have to respond appropriately
 		try {
 			SAXParser saxParser = factory.newSAXParser();
 			saxParser.parse(new File(fileAndPath), this);
@@ -183,7 +183,8 @@ public class DyNetMLSAXParser extends DefaultHandler implements Parser {
 			String qName, // qualified name
 			Attributes attrs) throws SAXException {
 		String eName = sName; // element name
-		if ("".equals(eName)) eName = qName; // not namespace-aware
+		if ("".equals(eName))
+			eName = qName; // not namespace-aware
 
 		// check if it is context indicating what section we are in
 		if (eName.equals(DyNetMLXMLWriter.MEASURES))
@@ -229,7 +230,8 @@ public class DyNetMLSAXParser extends DefaultHandler implements Parser {
 
 		// if we hit a property and we are in the graph context, assume we are
 		// trying to get slice properties UNLESS WE ARE IN EDGE CONTEXT
-		if (eName.equals(DyNetMLXMLWriter.PROP) & (isGraphContext & !isEdgeContext)) {
+		if (eName.equals(DyNetMLXMLWriter.PROP)
+				& (isGraphContext & !isEdgeContext)) {
 			String propId = attrs.getValue(DyNetMLXMLWriter.ID);
 			String propValue = attrs.getValue(DyNetMLXMLWriter.VAL);
 			graphPropMap.put(propId, propValue);
@@ -248,7 +250,7 @@ public class DyNetMLSAXParser extends DefaultHandler implements Parser {
 			edgeWeight = attrs.getValue(DyNetMLXMLWriter.VAL);
 			edgePropMap = new HashMap<String, String>();
 		}
-		
+
 		if (eName.equals(DyNetMLXMLWriter.PROP) & isEdgeContext) {
 			String propId = attrs.getValue(DyNetMLXMLWriter.ID);
 			String propValue = attrs.getValue(DyNetMLXMLWriter.VAL);
@@ -287,8 +289,9 @@ public class DyNetMLSAXParser extends DefaultHandler implements Parser {
 			isGraphContext = false;
 		}
 		if (eName.equals(DyNetMLXMLWriter.EDGE)) {
-			ArcAttribute newArc = parseEdge(edgePropMap, edgeSource, edgeTarget, edgeWeight);
-			if (newArc != null){
+			ArcAttribute newArc = parseEdge(edgePropMap, edgeSource,
+					edgeTarget, edgeWeight);
+			if (newArc != null) {
 				arcList.add(newArc);
 			}
 
@@ -314,29 +317,30 @@ public class DyNetMLSAXParser extends DefaultHandler implements Parser {
 
 		String id = attrs.getValue(DyNetMLXMLWriter.ID);
 		String value = attrs.getValue(DyNetMLXMLWriter.VAL);
-
-		// check if it is alayout setting
-		if (id.equals(ApplySettings.class.getCanonicalName())) {
-			PropertyBuilder builder = new PropertyBuilder(value);
-			appSet = builder.getApplySettings();
-		}
-		// check if it is an apply setting
-		else if (id.equals(LayoutSettings.class.getCanonicalName())) {
-			PropertyBuilder builder = new PropertyBuilder(value);
-			laySet = builder.getLayoutSettings();
-		}
-		// check if it is a graphics settings
-		else if (id.equals(GraphicsSettings.class.getCanonicalName())) {
-			PropertyBuilder builder = new PropertyBuilder(value);
-			graphicSet = builder.getGraphicsSettings();
-		}
-		// check if it is a browsing setting
-		else if (id.equals(BrowsingSettings.class.getCanonicalName())) {
-			PropertyBuilder builder = new PropertyBuilder(value);
-			browseSet = builder.getBrowsingSettings();
-		} else {
-			// it was some other kind of measure that we ignored
-			parseInfo += "ignored measure with id" + id;
+		if (id != null & value != null) {
+			// check if it is alayout setting
+			if (id.equals(ApplySettings.class.getCanonicalName())) {
+				PropertyBuilder builder = new PropertyBuilder(value);
+				appSet = builder.getApplySettings();
+			}
+			// check if it is an apply setting
+			else if (id.equals(LayoutSettings.class.getCanonicalName())) {
+				PropertyBuilder builder = new PropertyBuilder(value);
+				laySet = builder.getLayoutSettings();
+			}
+			// check if it is a graphics settings
+			else if (id.equals(GraphicsSettings.class.getCanonicalName())) {
+				PropertyBuilder builder = new PropertyBuilder(value);
+				graphicSet = builder.getGraphicsSettings();
+			}
+			// check if it is a browsing setting
+			else if (id.equals(BrowsingSettings.class.getCanonicalName())) {
+				PropertyBuilder builder = new PropertyBuilder(value);
+				browseSet = builder.getBrowsingSettings();
+			} else {
+				// it was some other kind of measure that we ignored
+				parseInfo += "ignored measure with id" + id;
+			}
 		}
 
 	}
@@ -397,8 +401,6 @@ public class DyNetMLSAXParser extends DefaultHandler implements Parser {
 		}
 	}
 
-
-
 	/**
 	 * Determines if we are creating a "normal" edge or an edge that was created
 	 * by sonia. If sonia built it (for now determined by checking if the source
@@ -447,7 +449,7 @@ public class DyNetMLSAXParser extends DefaultHandler implements Parser {
 
 			// check if this edge already exists
 			if (foundEdges.contains(eid)) {
-				parseInfo += "skipped duplicate of edge with id " + eid+"\n";
+				parseInfo += "skipped duplicate of edge with id " + eid + "\n";
 				// stop here and don't create the edge again
 				return null;
 			}
@@ -543,7 +545,7 @@ public class DyNetMLSAXParser extends DefaultHandler implements Parser {
 			}
 			edge = new ArcAttribute(start, end, from, to, weight, width);
 		}
-		
+
 		return edge;
 	}
 
@@ -665,6 +667,20 @@ public class DyNetMLSAXParser extends DefaultHandler implements Parser {
 			Color bc = parseRGB((String) nodeProps
 					.remove(DyNetMLXMLWriter.NODE_BORDER_RGB_COLOR));
 			node.setBorderColor(bc);
+		}
+
+		// node font size
+		if (nodeProps.containsKey(DotSonColumnMap.NODE_LABEL_SIZE)) {
+			float size = Float.parseFloat((String) nodeProps
+					.remove(DotSonColumnMap.NODE_LABEL_SIZE));
+			node.setLabelSize(size);
+		}
+
+		// node label color
+		if (nodeProps.containsKey(DyNetMLXMLWriter.NODE_LABEL_RGB_COLOR)) {
+			Color bc = parseRGB((String) nodeProps
+					.remove(DyNetMLXMLWriter.NODE_LABEL_RGB_COLOR));
+			node.setLabelColor(bc);
 		}
 
 		Iterator propIter = nodeProps.keySet().iterator();
