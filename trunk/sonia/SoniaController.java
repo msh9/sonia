@@ -41,6 +41,8 @@ import javax.swing.plaf.metal.MetalTheme;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
+import org.freehep.graphicsio.swf.SWFAction.InstanceOf;
+
 import com.anotherbigidea.flash.readers.SWFReader;
 import com.anotherbigidea.flash.readers.TagParser;
 import com.anotherbigidea.flash.writers.SWFTagDumper;
@@ -51,7 +53,6 @@ import sonia.mapper.MapperFactory;
 import sonia.movie.JPEGMovieMaker;
 import sonia.movie.MovieMaker;
 import sonia.movie.MultipleImageMovieMaker;
-import sonia.movie.OldQTMovieMaker;
 import sonia.movie.QTMovieMaker;
 import sonia.movie.SWFMovieMaker;
 import sonia.parsers.BotDumpParser;
@@ -61,6 +62,7 @@ import sonia.parsers.DotNetParser;
 import sonia.parsers.DotSonParser;
 import sonia.parsers.DyNetMLParser;
 import sonia.parsers.DyNetMLSAXParser;
+import sonia.parsers.NodeDataParser;
 import sonia.parsers.Parser;
 import sonia.parsers.RJavaParser;
 import sonia.parsers.RNetworkDynamicParser;
@@ -210,16 +212,6 @@ public class SoniaController implements Runnable, TaskListener{
 		}
 		if (ui != null) {
 			ui.setVisible(visable);
-//			if (engine != null){
-//			LayoutWindow display = new LayoutWindow(graphicSettings,
-//					browseSettings, this, engine, 500,400);
-//			engine.setDisplay(display);
-//			//ui.addFrame(display);
-//			engine.setDisplayWidth(Integer.parseInt(graphicSettings
-//					.getProperty(GraphicsSettings.LAYOUT_WIDTH)));
-//			engine.setDisplayHeight(Integer.parseInt(graphicSettings
-//					.getProperty(GraphicsSettings.LAYOUT_HEIGHT)));
-//			}
 		}
 		
 	}
@@ -370,7 +362,7 @@ public class SoniaController implements Runnable, TaskListener{
 
 	/**
 	 * Brings up a file dialog, if a file is chosen it looks at the extension
-	 * (.net or .son) to determine which parser to use, passes the text to the
+	 * (.net , .son, .rdump, .xml, .dl) to determine which parser to use, passes the text to the
 	 * parser, and gets and stores the resulting network.
 	 */
 	public void loadNetFromFile() {
@@ -703,8 +695,8 @@ public class SoniaController implements Runnable, TaskListener{
 		}
 		
 		networkData.setNetInfo(parser.getNetInfo());
-		if (parser.getClass().equals(DotSonParser.class)){
-			networkData.setNodeDataKeys(((DotSonParser)parser).getNodeDataKeys());
+		if (parser instanceof NodeDataParser){
+			networkData.setNodeDataKeys(((NodeDataParser)parser).getNodeDataKeys());
 		}
 		// print details out to log
 		log("loaded network from " + currentPath + inFile + "\nparser used:"
@@ -725,6 +717,7 @@ public class SoniaController implements Runnable, TaskListener{
 			applySettings = reloader.getApplySettings();
 			graphicSettings = reloader.getGraphicsSetttings();
 			browseSettings = reloader.getBrowsingSettings();
+			mapperSettings = reloader.getColorMapperSettings();
 			//turn off auto create 'cause we are going to create here
 			autoCreate = false;
 			log("rebuilt layout from data stored in "+inFile);
@@ -732,10 +725,12 @@ public class SoniaController implements Runnable, TaskListener{
 			log(applySettings+"");
 			log(sliceSettings+"");
 			log(graphicSettings+"");
+			log(mapperSettings+"");
 			createLayout(sliceSettings);
+			
 			//load in the coordinates
 			engine.assignCoordinates(reloader.getXCoordArrays(),reloader.getYCoordArrays());
-			
+			engine.getLayoutWindow().showCurrentSlice();
 			
 		}
 		
@@ -761,14 +756,6 @@ public class SoniaController implements Runnable, TaskListener{
 			// show the dialog
 			sliceSettings = windowSettings.askUserSettings();
 			createLayout(sliceSettings);
-//			LayoutWindow display = new LayoutWindow(graphicSettings,
-//					browseSettings, this, engine, 500,400);
-//			engine.setDisplay(display);
-//			ui.addFrame(display);
-//			engine.setDisplayWidth(Integer.parseInt(graphicSettings
-//					.getProperty(GraphicsSettings.LAYOUT_WIDTH)));
-//			engine.setDisplayHeight(Integer.parseInt(graphicSettings
-//					.getProperty(GraphicsSettings.LAYOUT_HEIGHT)));
 		} else {
 			showError("File must be loaded before layout can be created");
 		}
@@ -792,9 +779,9 @@ public class SoniaController implements Runnable, TaskListener{
 				// show the dialog
 				sliceSettings = windowSettings.askUserSettings();
 			}
-			//TODO: this is not thread safe!
+			//TODO: this is not thread safe! 
 			if (sliceSettings == null){
-				showStatus("layout cancled: null slice settings");
+				showStatus("layout canceled: null slice settings");
 				return display;
 			}
 			engine = new SoniaLayoutEngine(sliceSettings, applySettings,this, networkData,
@@ -816,7 +803,7 @@ public class SoniaController implements Runnable, TaskListener{
 		
 			}
 			 display = new LayoutWindow(graphicSettings,
-					browseSettings, this, engine, 500,400);
+					browseSettings, this, engine, 500,400); 
 			 //if color mapper settings were loaded in pass them in (but they won't be active)
 			 if (mapperSettings != null){
 				 display.getDisplay().setColormapper(MapperFactory.restoreMapperFrom(mapperSettings));
@@ -828,7 +815,6 @@ public class SoniaController implements Runnable, TaskListener{
 					.getProperty(GraphicsSettings.LAYOUT_WIDTH)));
 			engine.setDisplayHeight(Integer.parseInt(graphicSettings
 					.getProperty(GraphicsSettings.LAYOUT_HEIGHT)));
-
 
 		} else {
 			showError("File must be loaded before layout can be created");
@@ -850,35 +836,7 @@ public class SoniaController implements Runnable, TaskListener{
 		}
 	}
 
-	/**
-	 * Brings up a dialog to pick which of the layouts to export as a movie,
-	 * then makes a movie exporter and passes it to the layout engine.
-	 * @deprecated uses old qt export call exportQTMovie() instead
-	 */
-	public MovieMaker exportMovie(SoniaLayoutEngine engToFilm, String fileName) {
-		// NEED TOP PICK WHICH layout to export!!
-		// ListPicker engPicker = new ListPicker(ui,engines,"Choose Layout to
-		// film");
-		// SoniaLayoutEngine engToFilm =
-		// (SoniaLayoutEngine)engPicker.getPickedObject();
-		OldQTMovieMaker exporter = new OldQTMovieMaker(this, engToFilm,
-				fileName);
-		// for now, tell the engine to tell the layout...
-		try {
-			engToFilm.makeMovie(exporter);
-		} catch (Exception e) {
-			// TODO: need to deal more elegantly when the movie file is busy or
-			// locked...
-			showError("ERROR saving movie: " + e.getMessage());
-			log("ERROR saving movie: " + e.getMessage());
-			// debug
-			System.out.println("Errors saving movie: " + e.getMessage());
-			e.printStackTrace();
-			exporter.setVisible(false);
-			exporter = null;
-		}
-		return exporter;
-	}
+	
 
 	public MovieMaker exportFlashMovie(SoniaLayoutEngine engToExport,
 			SoniaCanvas canvas, String fileName) {

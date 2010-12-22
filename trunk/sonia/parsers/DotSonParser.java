@@ -259,7 +259,7 @@ import sonia.ui.AttributeMapperDialog;
  *
  * <\tt>
  */
-public class DotSonParser implements ClusterParser {
+public class DotSonParser implements ClusterParser,NodeDataParser,Parser {
 
 	// vars for returned vals
 	private LineNumberReader reader;
@@ -630,7 +630,7 @@ public class DotSonParser implements ClusterParser {
 			}
 			// do other node data
 			if (nodeDataKeys.size() > 0) {
-				Iterator dataNames = nodeDataKeys.iterator();
+				Iterator<String> dataNames = nodeDataKeys.iterator();
 				while (dataNames.hasNext()) {
 					String key = (String) dataNames.next();
 					node.setData(key, parseUserData(key, rowArray));
@@ -679,7 +679,7 @@ public class DotSonParser implements ClusterParser {
 			}
 			// get children if there are any, cannot set until all clusters
 			//are loaded
-			Vector children = parseClusterChildren(rowArray);
+			Vector<String> children = parseClusterChildren(rowArray);
 			if (children != null){
 			   childrenMap.put(cluster,children);	
 			}
@@ -704,7 +704,7 @@ public class DotSonParser implements ClusterParser {
 			int index = ((Integer) clusterHeaderMap.get(key)).intValue();
 			// get cluster ID from row
 			clusterID = rowArray[index];
-		} else // something is teribly wrong
+		} else // something is terribly wrong
 		{
 			String error = "line " + reader.getLineNumber()
 					+ " Cluster column headings must begin with"
@@ -765,7 +765,7 @@ public class DotSonParser implements ClusterParser {
 		return parentId;
 	}
 	
-	private Vector parseClusterChildren(String [] rowArray){
+	private Vector<String> parseClusterChildren(String [] rowArray){
 		Vector<String> children = null;
 		String key = colMap.getProperty(DotSonColumnMap.CHILDREN);
 		if (clusterHeaderMap.containsKey(key)) {
@@ -1942,7 +1942,7 @@ public class DotSonParser implements ClusterParser {
 	}
 
 
-	public HashSet getNodeDataKeys() {
+	public HashSet<String> getNodeDataKeys() {
 		return nodeDataKeys;
 	}
 

@@ -479,7 +479,9 @@ public class PhasePlot extends ExportableFrame implements
 		 renderDrag = false;
 		 renderResize = false;
 		 //figure out how much it moved
-		 currentLayout.showRender(renderStart,renderEnd);
+		 if (currentLayout != null){
+			 currentLayout.showRender(renderStart,renderEnd);
+		 }
 		}
 	}
 

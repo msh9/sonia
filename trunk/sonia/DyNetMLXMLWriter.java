@@ -317,9 +317,9 @@ public class DyNetMLXMLWriter {
 				.getColormapper();
 		ColormapperSettings colSet = MapperFactory.asProperties(colmap);
 		Element mapSettings = doc.createElement(MEASURE);
-		browSettings.setAttribute(ID, colSet.getClass().getCanonicalName());
-		browSettings.setAttribute(TP, STR);
-		browSettings.setAttribute(VAL, colSet.toString());
+		mapSettings.setAttribute(ID, colSet.getClass().getCanonicalName());
+		mapSettings.setAttribute(TP, STR);
+		mapSettings.setAttribute(VAL, colSet.toString());
 		metaMeasures.appendChild(mapSettings);
 
 		// define nodes

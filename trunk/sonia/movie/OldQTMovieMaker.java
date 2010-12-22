@@ -1,5 +1,5 @@
 package sonia.movie;
-
+/*
 import java.io.*;
 import java.awt.*;
 
@@ -22,6 +22,7 @@ import sonia.SoniaCanvas;
 import sonia.SoniaController;
 import sonia.SoniaLayoutEngine;
 import sonia.settings.MovieSettings;
+*/
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>
  * <p>Description:Animates layouts of time-based networks
@@ -59,6 +60,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  * <BR><BR>
  * THIS PACKAGE REQUIRES THE QUICKTIME FOR JAVA LIBRARIES AVAILIBLE FORM APPLE COMPUTER
  */
+
+/*
 public class OldQTMovieMaker extends JFrame implements StdQTConstants, Errors, MovieMaker
 {
   private QTImageDrawer imageDrawer;
@@ -92,9 +95,7 @@ public class OldQTMovieMaker extends JFrame implements StdQTConstants, Errors, M
     fileName = file;
   }
 
-  /* (non-Javadoc)
- * @see sonia.MovieMaker#setupMovie(sonia.SoniaCanvas, int)
- */
+
   public void setupMovie(SoniaCanvas canvas,int frames) throws Exception
   {
     //control.showStatus("starting movie export...");
@@ -201,9 +202,7 @@ exporting = true;
    // }
   }
 
-  /* (non-Javadoc)
- * @see sonia.MovieMaker#captureImage()
- */
+
  public void captureImage()
  {
    //should check that movie is setup
@@ -237,9 +236,7 @@ exporting = true;
    }
  }
 
- /* (non-Javadoc)
- * @see sonia.MovieMaker#finishMovie()
- */
+
 public void finishMovie()
  {
    try
@@ -280,9 +277,7 @@ public void finishMovie()
    }
  }
  
- /* (non-Javadoc)
- * @see sonia.MovieMaker#isExporting()
- */
+ 
 public boolean isExporting(){
 	 return exporting;
  }
@@ -333,3 +328,4 @@ public Throwable getError() {
 }
 
 }
+*/

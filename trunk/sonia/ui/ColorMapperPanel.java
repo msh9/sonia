@@ -8,10 +8,14 @@ import java.awt.Frame;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Properties;
@@ -49,6 +53,7 @@ import sonia.mapper.DefaultColors;
 import sonia.mapper.GrayscaleColors;
 import sonia.mapper.MapperFactory;
 import sonia.mapper.RedtoBlueColors;
+import sonia.settings.ColormapperSettings;
 
 /**
  * Provides a UI for specifying mappings from node attributes to colors
@@ -99,10 +104,6 @@ public class ColorMapperPanel extends JPanel {
 			mappingSelector.setSelectedItem(mapper.getMapperName());
 			keySelector.setSelectedItem(mapper.getKey());
 		}
-		
-		System.out.println("mapper key "+mapper.getKey());
-		System.out.println("possible keys: "+engine.getNetData().getNodeDataKeys()
-				.toArray());
 
 		keyData = new Vector<Object>(mapper.getValues());
 
@@ -147,31 +148,70 @@ public class ColorMapperPanel extends JPanel {
 		saveMapping.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				Properties props = MapperFactory.asProperties(mapper);
-				String filename = control.getOutputFile("SoniaColormapperSettings.prp",
+				String filename = control.getOutputFile(
+						"SoniaColormapperSettings.prp",
 						"Choose location to save colormapper settings");
-				String path = control.getCurrentPath(); //should have been set by file dialog
+				String path = control.getCurrentPath(); // should have been set
+														// by file dialog
 				if (filename != null & path != null) {
 					try {
-						FileWriter propsOut = new FileWriter(path+filename);
+						FileWriter propsOut = new FileWriter(path + filename);
 						propsOut.write(props.toString());
 						propsOut.close();
 					} catch (FileNotFoundException e1) {
 						control
 								.showError("Unable to save colormapping to file "
-										+ path+filename + " " + e1.getMessage());
+										+ path
+										+ filename
+										+ " "
+										+ e1.getMessage());
 					} catch (IOException e1) {
 						control
 								.showError("Unable to save colormapping to file "
-										+ path+filename + " " + e1.getMessage());
+										+ path
+										+ filename
+										+ " "
+										+ e1.getMessage());
 					}
 					control.showStatus("Saved color mapping settings to "
-							+ path+filename);
+							+ path + filename);
 				}
 			}
 		});
 		buttonWrapper.add(saveMapping);
-		
+
 		loadMapping = new JButton("Reload mapping...");
+		loadMapping.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				String filename = control.getInputFile(
+						"SoniaColormapperSettings.prp",
+						"Choose a colormapper settings file to load");
+				String path = control.getCurrentPath();
+				if (filename != null) {
+					try {
+						ColormapperSettings settings = new ColormapperSettings();
+						FileInputStream inStream = new FileInputStream(
+								new File(path + filename));
+						settings.load(inStream);
+						mapper = MapperFactory.restoreMapperFrom(settings);
+						mappingSelector.setSelectedItem(mapper.getMapperName());
+						keySelector.setSelectedItem(mapper.getKey());
+						// TODO: what if the mapping doesn't match the data?
+					} catch (FileNotFoundException e1) {
+						control
+								.showError("Error reading colormapper properties file: "
+										+ e1.getMessage());
+					} catch (IOException e1) {
+						control
+								.showError("Error reading colormapper properties file: "
+										+ e1.getMessage());
+					}
+				}
+
+			}
+		});
 		buttonWrapper.add(loadMapping);
 		mappingWrapper.add(buttonWrapper);
 

@@ -24,6 +24,7 @@ import sonia.PropertyBuilder;
 import sonia.ShapeFactory;
 import sonia.settings.ApplySettings;
 import sonia.settings.BrowsingSettings;
+import sonia.settings.ColormapperSettings;
 import sonia.settings.GraphicsSettings;
 import sonia.settings.LayoutSettings;
 import sonia.settings.PropertySettings;
@@ -31,7 +32,7 @@ import sonia.settings.PropertySettings;
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>
  * <p>Description:Animates layouts of time-based networks
- * <p>Copyright: CopyLeft  2004: GNU GPL</p>
+ * <p>Copyright: CopyLeft  2010: GNU GPL</p>
  * <p>Company: none</p>
  * @author Skye Bender-deMoll unascribed
  * @version 1.1
@@ -42,10 +43,10 @@ import sonia.settings.PropertySettings;
  * http://casos.isri.cmu.edu/dynetml/index.html If the file has been exported by
  * sonia it will contain data to allow recreating a set of layout slices
  * 
- * This version is written to use the SAX framework so that it doesn't run out
+ * This version is written to use the SAX event based xml parsing framework so that it doesn't run out
  * of memory
  */
-public class DyNetMLSAXParser extends DefaultHandler implements Parser {
+public class DyNetMLSAXParser extends DefaultHandler implements Parser,NodeDataParser {
 
 	private Vector<NodeAttribute> nodeList;
 
@@ -66,6 +67,8 @@ public class DyNetMLSAXParser extends DefaultHandler implements Parser {
 	private GraphicsSettings graphicSet = null;
 
 	private BrowsingSettings browseSet = null;
+	
+	private ColormapperSettings colMapSet = null;
 
 	private HashMap<String, Integer> alphaIdMap = null;
 
@@ -103,6 +106,8 @@ public class DyNetMLSAXParser extends DefaultHandler implements Parser {
 	// not written by sonia.
 	private String edgeTarget = null;
 	private String edgeWeight = null;
+	
+	private HashSet<String> nodeDataKeys = new HashSet<String>();
 
 	public DyNetMLSAXParser() {
 
@@ -164,8 +169,6 @@ public class DyNetMLSAXParser extends DefaultHandler implements Parser {
 			saxParser.parse(new File(fileAndPath), this);
 			// TODO: need to validate xml?
 			// TODO: check file version?
-			// debug
-			System.out.println("xml parsing done");
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new IOException("Error parsing dynetML xml:" + e.getCause()
@@ -318,7 +321,7 @@ public class DyNetMLSAXParser extends DefaultHandler implements Parser {
 		String id = attrs.getValue(DyNetMLXMLWriter.ID);
 		String value = attrs.getValue(DyNetMLXMLWriter.VAL);
 		if (id != null & value != null) {
-			// check if it is alayout setting
+			// check if it is a layout setting
 			if (id.equals(ApplySettings.class.getCanonicalName())) {
 				PropertyBuilder builder = new PropertyBuilder(value);
 				appSet = builder.getApplySettings();
@@ -337,7 +340,11 @@ public class DyNetMLSAXParser extends DefaultHandler implements Parser {
 			else if (id.equals(BrowsingSettings.class.getCanonicalName())) {
 				PropertyBuilder builder = new PropertyBuilder(value);
 				browseSet = builder.getBrowsingSettings();
-			} else {
+			// check if it is colormapping setting	
+			} else if (id.equals(ColormapperSettings.class.getCanonicalName())) {
+				PropertyBuilder builder = new PropertyBuilder(value);
+				colMapSet = builder.getColormapperSettings();
+			}else {
 				// it was some other kind of measure that we ignored
 				parseInfo += "ignored measure with id" + id;
 			}
@@ -549,7 +556,7 @@ public class DyNetMLSAXParser extends DefaultHandler implements Parser {
 		return edge;
 	}
 
-	private NodeAttribute parseNode(String dynetmlNodeId, HashMap nodeProps)
+	private NodeAttribute parseNode(String dynetmlNodeId, HashMap<String,String> nodeProps)
 			throws SAXException {
 		// if it doesn't have a sonia ID, need to assume the ids are alpha
 		// store in a hasgmap with int values
@@ -572,7 +579,7 @@ public class DyNetMLSAXParser extends DefaultHandler implements Parser {
 		if (nodeProps.containsKey(DotSonColumnMap.NODE_STARTIME)) {
 			try {
 				start = Double.parseDouble((String) nodeProps
-						.get(DotSonColumnMap.NODE_STARTIME));
+						.remove(DotSonColumnMap.NODE_STARTIME));
 			} catch (NumberFormatException nfe) {
 				String msg = "Unable to parse double from node start time "
 						+ nodeProps.remove(DotSonColumnMap.NODE_STARTIME)
@@ -683,10 +690,13 @@ public class DyNetMLSAXParser extends DefaultHandler implements Parser {
 			node.setLabelColor(bc);
 		}
 
-		Iterator propIter = nodeProps.keySet().iterator();
+		Iterator<String> propIter = nodeProps.keySet().iterator();
 		while (propIter.hasNext()) {
 			String key = (String) propIter.next();
 			node.setData(key, nodeProps.get(key));
+			if (!nodeDataKeys.contains(key)){
+				nodeDataKeys.add(key);
+			}
 		}
 
 		return node;
@@ -765,19 +775,19 @@ public class DyNetMLSAXParser extends DefaultHandler implements Parser {
 		return array;
 	}
 
-	public Vector getSliceEnds() {
+	public Vector<Double> getSliceEnds() {
 		return sliceEnds;
 	}
 
-	public Vector getSliceStarts() {
+	public Vector<Double> getSliceStarts() {
 		return sliceStarts;
 	}
 
-	public Vector getXCoordArrays() {
+	public Vector<double[]> getXCoordArrays() {
 		return xCoordArrays;
 	}
 
-	public Vector getYCoordArrays() {
+	public Vector<double[]> getYCoordArrays() {
 		return yCoordArrays;
 	}
 
@@ -795,5 +805,13 @@ public class DyNetMLSAXParser extends DefaultHandler implements Parser {
 
 	public BrowsingSettings getBrowsingSettings() {
 		return browseSet;
+	}
+	
+	public ColormapperSettings getColorMapperSettings() {
+		return colMapSet;
+	}
+	
+	public HashSet<String> getNodeDataKeys() {
+		return nodeDataKeys;
 	}
 }

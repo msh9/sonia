@@ -13,6 +13,8 @@ import java.awt.MenuBar;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.HierarchyBoundsListener;
+import java.awt.event.HierarchyEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -156,16 +158,21 @@ import sonia.settings.GraphicsSettings;
 
 // TODO: need to fix the window size scaling issues for layouts and for movie
 // export
+
 public class LayoutWindow extends ExportableFrame implements ActionListener,
 		InternalFrameListener
 
 {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4946402657442083297L;
+
 	private SoniaController Control;
 
 	private SoniaLayoutEngine engine;
 
-	private MovieMaker movie;
 
 	private GraphicsSettingsDialog graphicsSettings;
 
@@ -265,6 +272,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	 * @param initHeight
 	 *            the initial height of the window in pixels
 	 */
+	@SuppressWarnings("serial")
 	public LayoutWindow(GraphicsSettings settings, BrowsingSettings browseSet,
 			SoniaController controller, SoniaLayoutEngine layoutEng,
 			int initWidth, int initHeight) {
@@ -322,6 +330,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		
 		multipleExport.add(new AbstractAction("Save As DyNetML xml ..") {
 			public void actionPerformed(ActionEvent arg0) {
+				recordBrowseSettings();
 				Control.saveDyNetML(engine);
 			}
 		});
@@ -511,7 +520,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		GridBagLayout layout = new GridBagLayout();
 		controlPanel.setLayout(layout);
 		c.insets = new Insets(0, 2, 0, 2);
-		c.fill=c.NONE;
+		c.fill=GridBagConstraints.NONE;
 		c.gridx = 0;c.gridy = 0;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;c.weighty = 0.0;
 		controlPanel.add(ViewOptions, c);
 		c.gridx = 0;c.gridy = 1;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;c.weighty = 0.0;
@@ -539,76 +548,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		// c.gridx=1;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
 		// add(LayoutLabel,c);
 		c.gridx = 3;c.gridy = 2;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.1;c.weighty = 0.0;
-		//add to the 
-//		controlPanel.add(LayoutNum, c);
-//		c.gridx = 3;
-//		c.gridy = 2;
-//		c.gridwidth = 1;
-//		c.gridheight = 1;
-//		c.weightx = 0.1;
-//		c.weighty = 0.0;
-//		controlPanel.add(PrevSlice, c);
-//		c.gridx = 4;
-//		c.gridy = 2;
-//		c.gridwidth = 1;
-//		c.gridheight = 1;
-//		c.weightx = 0.1;
-//		c.weighty = 0.0;
-//		controlPanel.add(NextSlice, c);
-//		c.gridx = 5;
-//		c.gridy = 2;
-//		c.gridwidth = 1;
-//		c.gridheight = 1;
-//		c.weightx = 0.1;
-//		c.weighty = 0.0;
-//		controlPanel.add(Pause, c);
-//		c.gridx = 6;
-//		c.gridy = 2;
-//		c.gridwidth = 1;
-//		c.gridheight = 1;
-//		c.weightx = 0.1;
-//		c.weighty = 0.0;
-//		controlPanel.add(PlayAll, c);
 
-		// c.gridx=1;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
-		// add(RenderLabel,c);
-//		c.gridx = 2;
-//		c.gridy = 3;
-//		c.gridwidth = 1;
-//		c.gridheight = 1;
-//		c.weightx = 0.1;
-//		c.weighty = 0.0;
-//		controlPanel.add(RenderTime, c);
-//		// c.gridx=3;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0.1;c.weighty=0.0;
-//		// add(DurationLabel,c);
-//		c.gridx = 3;
-//		c.gridy = 3;
-//		c.gridwidth = 1;
-//		c.gridheight = 1;
-//		c.weightx = 0.1;
-//		c.weighty = 0.0;
-//		controlPanel.add(RenderDuration, c);
-//		c.gridx = 4;
-//		c.gridy = 3;
-//		c.gridwidth = 1;
-//		c.gridheight = 1;
-//		c.weightx = 0.1;
-//		c.weighty = 0.0;
-//		controlPanel.add(renderOffset, c);
-//		c.gridx = 5;
-//		c.gridy = 3;
-//		c.gridwidth = 1;
-//		c.gridheight = 1;
-//		c.weightx = 0.1;
-//		c.weighty = 0.0;
-//		controlPanel.add(NumInterps, c);
-//		c.gridx = 6;
-//		c.gridy = 3;
-//		c.gridwidth = 1;
-//		c.gridheight = 1;
-//		c.weightx = 0.1;
-//		c.weighty = 0.0;
-//		controlPanel.add(frameDelay, c);
 
 		// add action listeners for button clicks
 		ApplyLayout.addActionListener(this);
@@ -678,7 +618,9 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 				k.consume();
 			}
 		});
-		//TODO: figure out a better way to store the default browsing settings
+		
+	
+		
 		// read settings from the browsng properties
 		fetchBrowseSettings();
 		//and then make sure they've all been stored
@@ -692,6 +634,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		controlePane.setSelectedComponent(layoutPanel);
 		controlePane.requestFocusInWindow();
 		//this.setVisible(true);
+		
+	
 
 	}
 	/**
@@ -746,6 +690,9 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 			} 
 			
 		} else if (evt.getSource().equals(ViewOptions)) {
+			//in case the window size has changed, make sure the engine knows about it
+			engine.setDisplayHeight(LayoutArea.getHeight());
+			engine.setDisplayWidth(LayoutArea.getWidth());
 			graphicsSettings.showDialog();
 			updateDisplay();
 		} else if (evt.getSource().equals(makeClusters)) {
@@ -839,103 +786,9 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		controlePane.requestFocusInWindow();
 	}
 
-	/**
-	 * Attaches the passed MovieMaker to the layout, and then launches the movie
-	 * recording thread, which will call the record movie method to step through
-	 * the layouts transitioning and recording each frame.
-	 * 
-	 * @param exporter
-	 *            the SoniaMovieMaker which will record the images
-	 */
-//	public void makeMovie(MovieMaker exporter) throws Exception {
-//		movie = exporter;
-//		int endIndex = engine.getNumSlices();
-//		int numFrames = endIndex * Integer.parseInt(NumInterps.getText());
-//
-//		movie.setupMovie(LayoutArea, numFrames);
-//		// make sure we are on the first slice
-//		// engine.changeToSliceNum(0);
-//		transitionToSlice(0,null);
-//		// THIS SHOULD BE ON A SEPERATE THREAD SO WE CAN PAUSE
-//		// should also record movie layout stats to first frame
-//		startMovieRecordThread();
-//
-//	}
 
-	/**
-	 * Creates a new thread to run the movie recording, calls the recordMovie
-	 * method, called by makeMove.
-	 */
-//	private void startMovieRecordThread() {
-//		Thread movieThread = new Thread() {
-//			public void run() {
-//				// catch throwable here to try to recover from out of memory
-//				// errors
-//				try {
-//					isTransitionActive = true;
-//					recordMovie();
-//					movie.finishMovie();
-//					movie = null;
-//					isTransitionActive = false;
-//					Control.showStatus("Movie export finished.");
-//				} catch (Throwable e) {
-//					Control.showError("Error in  movie export:"
-//							+ e.getMessage());
-//					// if not in gui mode, exit
-//					if (!Control.isShowGUI()) {
-//						e.printStackTrace();
-//						System.exit(-1);
-//					}
-//				}
-//			}
-//		};
-//		movieThread.setName("movie thread");
-//		movieThread.setPriority(10);
-//		movieThread.start();
-//	}
 
-	/**
-	 * Transitions through the layouts, recording the image to the movie file.
-	 * Called by the movie thread.
-	 */
-//	private void recordMovie() {
-//		// double check that a movie exists to record on
-//		if (movie != null) {
-//			movie.captureImage();
-//			int startIndex = 0;
-//			int endIndex = engine.getNumSlices();
-//			for (int s = startIndex; s < endIndex; s++) {
-//				// awkward transition checks if movie is being recorded and
-//				// saves theframe
-//				transitionToSlice(s,null);
-//				// make it so that movie recording can be stopped if something
-//				// goes wrong
-//				if (Control.isPaused()) {
-//					break;
-//				}
-//			}
-//		}
-//
-//	}
 
-	/**
-	 * Creates a thread to animate playback in the layout window, which calls
-	 * playAll.
-	 */
-//	private void startPlayThread() {
-//		// should have a method to make sure nothing else tries to change the
-//		// display at the same time
-//		Thread playThread = new Thread() {
-//			public void run() {
-//				isTransitionActive = true;
-//				playAll();
-//				isTransitionActive = false;
-//			}
-//		};
-//		playThread.setName("play thread");
-//		playThread.setPriority(10);
-//		playThread.start();
-//	}
 
 	/**
 	 * Transitions through the slices, starting at the current slice. Called by
@@ -943,18 +796,6 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	 */
 	public void playAll() {
 		selectPane(timelinePane);
-//		int startIndex = engine.getCurrentSliceNum();
-//		int endIndex = engine.getNumSlices();
-//		isTransitionActive = true;
-//		for (int s = startIndex + 1; s < endIndex; s++) {
-//			// check for pause
-//			if (!Control.isPaused()) {
-//				transitionToSlice(s,null);
-//			} else {
-//				break;
-//			}
-//		}
-//		isTransitionActive = false;
 		PlayAnimationTask playTask = new PlayAnimationTask(engine);
 		Control.runTask(playTask);
 	}
@@ -1247,13 +1088,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		// asks the canvas to actually redraw the network, instead of just
 		// refreshing
 		// the old image
-		// Graphics graph = LayoutArea.getGraphics();
-		// LayoutArea.updateDisplay(graph,true);
-		// LayoutArea.paintComponent(graph);
 		LayoutArea.repaint();
 		timelinePane.repaint();
-		// try to make it updage the controls on mac
-		//fpsInfo.setText("         fps:"+LayoutArea.getRenderSlice().getFps());
 	}
 
 	/**
@@ -1292,14 +1128,13 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 	 * @param height
 	 */
 	public void setDisplaySize(int width, int height) {
-		// get the difference between existing layout size and frame size
-		int widthDif = this.getWidth() - LayoutArea.getWidth();
-		int heightDif = this.getHeight() - LayoutArea.getHeight();
 		Dimension dim = new Dimension(width, height);
 		LayoutArea.setSize(dim);
 		LayoutArea.setMaximumSize(dim);
-		this.setSize(width + widthDif, height + heightDif);
-		
+		LayoutArea.setPreferredSize(dim);
+		LayoutArea.setMinimumSize(dim);
+		//this.setSize(width + widthDif, height + heightDif);
+		this.pack();
 		this.validate();
 	}
 
