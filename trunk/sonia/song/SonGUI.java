@@ -1,6 +1,7 @@
 package sonia.song;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -20,11 +21,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Properties;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JEditorPane;
@@ -168,33 +171,40 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 
 	private Properties props;
 
-	private JButton openEdgeFile;
+	private JButton openArcFile;
 
-	private JTextField edgeFileLocation;
-	
+	private JTextField arcFileLocation;
+
 	private JButton openNodeFile;
 
 	private JTextField nodeFileLocation;
 
-	private JTextField delimeter;
-	
+	private JCheckBox attachNodeProps;
+
+	// private JTextField delimeter;
+	private JComboBox delimeter;
+
 	private JButton parse;
-	
-	private JComponent arcHeaderColumnUI;
-	
-	private JComponent nodeHeaderColumnUI;
-	
+
+	private JPanel arcHeaderColumnUI;
+
+	private JPanel nodeHeaderColumnUI;
+
 	private JCheckBox parserGenerateNodeSet;
-	
+
 	private JCheckBox parserGenerateNodeTimes;
-	
-	private JCheckBox parserLoadNodeProperties;
+
+	private static String[] delimiters = { ",", "\t", "|", " " };
+	private static String[] delimterNames = { ", comma", "\t tab", "| pipe",
+			" single space" };
+
+	private static String IGNORE_STRING = "<ignore>";
 
 	public SonGUI() {
 		song = new Getter(this);
 		// set up the ui
 		frame = new JFrame(
-				"sonG - get relations from a DB or text files into SoNIA network format");
+				"sonG "+song.VERSION+" - get relations from a DB or text files into SoNIA network format");
 		frame.setSize(800, 700);
 		frame.addWindowListener(this);
 		frame.setLayout(new BorderLayout());
@@ -241,20 +251,21 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		// set up the file loading ui stuff
 		filePanel = new JPanel(new GridBagLayout());
 		filePanel.setBorder(new TitledBorder("File Settings"));
-		edgeFileLocation = new JTextField("relationData.csv",12);
-		edgeFileLocation.setBorder(new TitledBorder("Edge file path"));
-		edgeFileLocation.setEditable(false);
+		arcFileLocation = new JTextField("relationData.csv", 12);
+		arcFileLocation.setBorder(new TitledBorder("Edge file path"));
+		arcFileLocation.setEditable(false);
 		c.gridy = 0;
-		filePanel.add(edgeFileLocation, c);
-		openEdgeFile = new JButton("Open Arcs File");
-		openEdgeFile.addActionListener(this);
+		filePanel.add(arcFileLocation, c);
+		openArcFile = new JButton("Open Arcs File");
+		openArcFile.addActionListener(this);
 		c.gridy = 1;
-		filePanel.add(openEdgeFile, c);
-		delimeter = new JTextField(",", 10);
+		filePanel.add(openArcFile, c);
+		// delimeter = new JTextField(",", 10);
+		delimeter = new JComboBox(delimterNames);
 		delimeter.setBorder(new TitledBorder("Delimiter"));
 		c.gridy = 2;
 		filePanel.add(delimeter, c);
-		nodeFileLocation = new JTextField("nodeData.csv",12);
+		nodeFileLocation = new JTextField("nodeData.csv", 12);
 		nodeFileLocation.setBorder(new TitledBorder("Node file path"));
 		nodeFileLocation.setEditable(false);
 		c.gridy = 3;
@@ -266,7 +277,8 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 
 		// status
 		statusText = new JTextArea(
-				"Please choose input source, then connect to database or open input files", 4, 20);
+				"Please choose input source, then connect to database or open input files",
+				4, 20);
 		statusText.setEditable(false);
 		statusText.setWrapStyleWord(true);
 		JScrollPane statusScroller = new JScrollPane(statusText);
@@ -283,7 +295,7 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		sourcePanel.addTab("Database", connectPanel);
 		sourcePanel.addTab("File", filePanel);
 		mainPanel.add(sourcePanel, BorderLayout.LINE_START);
-		
+
 		// pay attention to which table selected to know what kind of data
 		// source
 		sourcePanel.addChangeListener(new ChangeListener() {
@@ -396,33 +408,38 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		// nodesScroller.setVisible(false);
 
 		// TEXT COLUMN MAPPING PANEL
-		
+
 		textMappingPanel = new JPanel(new GridBagLayout());
 		textMappingPanel.setBorder(new TitledBorder("Text Column Assignments"));
 		arcHeaderColumnUI = updateArcHeaderUI(arcHeaderColumnUI);
-		c.gridy=0;
-		c.gridwidth = 2;
-		c.fill=GridBagConstraints.BOTH;
-		textMappingPanel.add(arcHeaderColumnUI,c);
-		parserGenerateNodeSet = new JCheckBox("Generate nodes from arc ids",true);
-		c.gridwidth=1;
-		c.gridy=1;
-		textMappingPanel.add(parserGenerateNodeSet,c);
-		parserGenerateNodeTimes = new JCheckBox("Also generate times",false);
-		c.gridx=1;
-		textMappingPanel.add(parserGenerateNodeTimes,c);
-		
-		
+		c.gridy = 0;
+		c.gridwidth = 3;
+		c.fill = GridBagConstraints.BOTH;
+		textMappingPanel.add(arcHeaderColumnUI, c);
+		parserGenerateNodeSet = new JCheckBox("Generate nodes from arc ids",
+				true);
+		parserGenerateNodeSet.addActionListener(this);
+		c.gridwidth = 1;
+		c.gridy = 1;
+		textMappingPanel.add(parserGenerateNodeSet, c);
+		parserGenerateNodeTimes = new JCheckBox("Generate node times", false);
+		c.gridx = 1;
+		textMappingPanel.add(parserGenerateNodeTimes, c);
+		attachNodeProps = new JCheckBox("Attach node properties");
+		attachNodeProps.addActionListener(this);
+		c.gridx = 2;
+		textMappingPanel.add(attachNodeProps, c);
+
 		nodeHeaderColumnUI = updateNodeHeaderUI(nodeHeaderColumnUI);
-		c.gridx=0;
-		c.gridy=2;
-		c.gridwidth=2;
-		textMappingPanel.add(nodeHeaderColumnUI,c);
+		c.gridx = 0;
+		c.gridy = 2;
+		c.gridwidth = 3;
+		textMappingPanel.add(nodeHeaderColumnUI, c);
 		parse = new JButton("Parse File");
 		parse.addActionListener(this);
-		c.gridy=3;
-		c.fill=GridBagConstraints.NONE;
-		textMappingPanel.add(parse,c);
+		c.gridy = 3;
+		c.fill = GridBagConstraints.NONE;
+		textMappingPanel.add(parse, c);
 
 		// DATA VIEW PANEL
 		dataPanel = new JPanel(new GridBagLayout());
@@ -492,10 +509,15 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		sonPreview.setFont(previewFont);
 		JScrollPane sonScroller = new JScrollPane(sonPreview);
 		sonScroller.setBorder(new TitledBorder("Preview of .son file"));
-		//sonScroller.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		// sonScroller.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 
-		c.gridx=0;c.gridy=0;c.gridwidth=1;c.weighty=1.0;c.fill = GridBagConstraints.BOTH;c.weightx=1.0;
-		previewPanel.add(sonScroller,c);
+		c.gridx = 0;
+		c.gridy = 0;
+		c.gridwidth = 1;
+		c.weighty = 1.0;
+		c.fill = GridBagConstraints.BOTH;
+		c.weightx = 1.0;
+		previewPanel.add(sonScroller, c);
 		JPanel previewButtonPanel = new JPanel();
 		validateSon = new JButton("Validate .son");
 		validateSon.addActionListener(this);
@@ -506,8 +528,11 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		launchSonia = new JButton("Launch in SoNIA");
 		launchSonia.addActionListener(this);
 		previewButtonPanel.add(launchSonia);
-		c.gridx=0;c.gridy=1;c.gridwidth=1;c.weighty=0.0;
-		previewPanel.add(previewButtonPanel,c);
+		c.gridx = 0;
+		c.gridy = 1;
+		c.gridwidth = 1;
+		c.weighty = 0.0;
+		previewPanel.add(previewButtonPanel, c);
 
 		// tabber
 		tabber = new JTabbedPane();
@@ -543,7 +568,7 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 
 		// read default properteis for db connection saved from last session
 		readProperties();
-
+		updateUI();
 	}
 
 	public void showDialog() {
@@ -613,19 +638,23 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 			song.connectToDB(host.getText(), port.getText(), dbName.getText(),
 					user.getText(), password.getText());
 			password.setText("");
-		} else if (e.getSource() == openEdgeFile){
-			JFileChooser fc = new JFileChooser(new File(edgeFileLocation.getText()));
+			updateUI();
+		} else if (e.getSource() == openArcFile) {
+			JFileChooser fc = new JFileChooser(new File(arcFileLocation
+					.getText()));
 			// Show Open dialog; this method does not return until the dialog is
 			// closed
 			int state = fc.showOpenDialog(frame);
 			if (state == JFileChooser.APPROVE_OPTION) {
 				String pickedFile = fc.getSelectedFile().getAbsolutePath();
-				edgeFileLocation.setText(pickedFile);
-				edgeFileLocation.setToolTipText(pickedFile);
-				song.connectToFile(pickedFile, delimeter.getText().trim(),true);
+				arcFileLocation.setText(pickedFile);
+				arcFileLocation.setToolTipText(pickedFile);
+				song.connectToFile(pickedFile, getDelimiter(), true);
 			}
-		}  else if (e.getSource() == openNodeFile){
-			JFileChooser fc = new JFileChooser(new File(nodeFileLocation.getText()));
+			updateUI();
+		} else if (e.getSource() == openNodeFile) {
+			JFileChooser fc = new JFileChooser(new File(nodeFileLocation
+					.getText()));
 			// Show Open dialog; this method does not return until the dialog is
 			// closed
 			int state = fc.showOpenDialog(frame);
@@ -633,16 +662,19 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 				String pickedFile = fc.getSelectedFile().getAbsolutePath();
 				nodeFileLocation.setText(pickedFile);
 				nodeFileLocation.setToolTipText(pickedFile);
-				song.connectToFile(pickedFile, delimeter.getText().trim(),false);
+				song.connectToFile(pickedFile, getDelimiter(), false);
 			}
+			updateUI();
 		} else if (e.getSource() == runQuery) {
 			Thread task = song.getFetchThread();
 			task.start();
-		} else if (e.getSource() == parse ){
-			song.parseNetwork(edgeFileLocation.getText(), delimeter.getText(),parserGenerateNodeSet.isSelected(),parserGenerateNodeTimes.isSelected());
+		} else if (e.getSource() == parse) {
+			Thread task = song.getParseThread();
+			task.start();
 		} else if (e.getSource() == validateSon) {
 			// TODO:make sure any edits have been saved back
 			song.validateSon();
+			updateUI();
 		} else if (e.getSource() == saveSon) {
 			String filename = ".son";
 			JFileChooser fc = new JFileChooser(new File(filename));
@@ -653,12 +685,15 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 			if (pickedFile != null) {
 				song.saveAsSon(pickedFile);
 			}
-
+			updateUI();
 		} else if (e.getSource() == runFilter) {
 			song.filterData(filterList.getSelectedValues());
+			updateUI();
 		} else if (e.getSource() == generateNodeset) {
+			updateUI();
 		} else if (e.getSource() == cancel) {
 			song.stop();
+			updateUI();
 		} else if (e.getSource() == launchSonia) {
 			// launch sonia as an external java application
 			// TODO: do this by passing the string or data source diretly
@@ -673,10 +708,11 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 			}
 			song
 					.status("Launched SoNIA with .son data. (Quitting sonG will also quit SoNIA)");
-
+			updateUI();
+		} else {
+			updateUI();
 		}
 
-		updateUI();
 	}
 
 	/**
@@ -709,13 +745,12 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 	 * 
 	 */
 	public void updateUI() {
-	
-		
+
 		if (mode == DB_MODE) {
-			//check if we need to switch panels
-			if (tabber.getComponent(0) != queryPanel){
+			// check if we need to switch panels
+			if (tabber.getComponentAt(0) != queryPanel) {
 				tabber.remove(textMappingPanel);
-				tabber.insertTab("Queries",null, queryPanel,null,0);
+				tabber.insertTab("Queries", null, queryPanel, null, 0);
 			}
 			if (generateNodeset.isSelected()) {
 				nodePropsScroller.setVisible(true);
@@ -741,13 +776,29 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 			crawlPanel.validate();
 			queryPanel.validate();
 		} else {
-			//check if we need to switch modes
-			if (tabber.getComponent(0) != textMappingPanel){
+			// check if we need to switch modes
+			if (tabber.getComponentAt(0) != textMappingPanel) {
 				tabber.remove(queryPanel);
-				tabber.insertTab("Column Mappings",null, textMappingPanel,null,0);
+				tabber.insertTab("Input Columns", null, textMappingPanel, null,
+						0);
+			}
+			if (parserGenerateNodeSet.isSelected()) {
+				parserGenerateNodeTimes.setVisible(true);
+				attachNodeProps.setVisible(true);
+			} else {
+				parserGenerateNodeTimes.setVisible(false);
+				attachNodeProps.setVisible(false);
+			}
+			// hide and show the nodes panel depending if its needed
+			if (!parserGenerateNodeSet.isSelected()
+					| attachNodeProps.isSelected()) {
+				nodeHeaderColumnUI = updateNodeHeaderUI(nodeHeaderColumnUI);
+				nodeHeaderColumnUI.setVisible(true);
+			} else {
+				nodeHeaderColumnUI.setVisible(false);
 			}
 			arcHeaderColumnUI = updateArcHeaderUI(arcHeaderColumnUI);
-			nodeHeaderColumnUI = updateNodeHeaderUI(nodeHeaderColumnUI);
+
 			textMappingPanel.validate();
 		}
 
@@ -765,56 +816,92 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		problemModel.refresh();
 		dataPanel.validate();
 		previewPanel.validate();
+		dataPanel.validate();
 	}
-	
+
 	/**
 	 * create the component used to display arc file headers and mappings
 	 */
-	private JComponent updateArcHeaderUI(JComponent arcHeaderColPanel){
-		if (arcHeaderColPanel == null){
-			 arcHeaderColPanel = new JPanel();
+	private JPanel updateArcHeaderUI(JPanel arcHeaderColPanel) {
+		if (arcHeaderColPanel == null) {
+			arcHeaderColPanel = new JPanel();
 		}
 		arcHeaderColPanel.removeAll();
 		arcHeaderColPanel.setBorder(new TitledBorder("Arc File Headers"));
-		//loop over headers and create one for each
+		// loop over headers and create one for each
 		Iterator<String> headerIter = song.getArcHeaders().iterator();
-		//check if there are none
-		if (!headerIter.hasNext()){
-			JLabel noData = new JLabel("Locate a file to import relationship data from");
+		// check if there are none
+		if (!headerIter.hasNext()) {
+			JLabel noData = new JLabel(
+					"Locate a file to import relationship data from");
 			arcHeaderColPanel.add(noData);
 		} else {
-			while (headerIter.hasNext()){
-				String header  = headerIter.next();
-				arcHeaderColPanel.add(new JLabel(header));
+			while (headerIter.hasNext()) {
+				String header = headerIter.next();
+				JComboBox colUI = new JComboBox(new String[] { header,
+						IGNORE_STRING });
+				colUI.setName(header);
+				arcHeaderColPanel.add(colUI);
 			}
 		}
-		
+
 		return arcHeaderColPanel;
 	}
-	
+
 	/**
 	 * create the component used to display arc file headers and mappings
 	 */
-	private JComponent updateNodeHeaderUI(JComponent nodeHeaderColPanel){
-		if (nodeHeaderColPanel == null){
-			 nodeHeaderColPanel = new JPanel();
+	private JPanel updateNodeHeaderUI(JPanel nodeHeaderColPanel) {
+		if (nodeHeaderColPanel == null) {
+			nodeHeaderColPanel = new JPanel();
 		}
 		nodeHeaderColPanel.removeAll();
 		nodeHeaderColPanel.setBorder(new TitledBorder("Node File Headers"));
-		//loop over headers and create one for each
+		// loop over headers and create one for each
 		Iterator<String> headerIter = song.getNodeHeaders().iterator();
-		//check if there are none
-		if (!headerIter.hasNext()){
+		// check if there are none
+		if (!headerIter.hasNext()) {
 			JLabel noData = new JLabel("Locate a file to import node data from");
 			nodeHeaderColPanel.add(noData);
 		} else {
-			while (headerIter.hasNext()){
-				String header  = headerIter.next();
-				nodeHeaderColPanel.add(new JLabel(header));
+			while (headerIter.hasNext()) {
+				String header = headerIter.next();
+				JComboBox colUI = new JComboBox(new String[] { header,
+						IGNORE_STRING });
+				colUI.setName(header);
+				nodeHeaderColPanel.add(colUI);
 			}
 		}
-		
+
 		return nodeHeaderColPanel;
+	}
+
+	public HashSet<String> getNodeIgnoreCols() {
+		HashSet<String> ignoreSet = new HashSet<String>();
+		Component[] arcCols = nodeHeaderColumnUI.getComponents();
+		for (int c = 0; c < arcCols.length; c++) {
+			if (arcCols[c] instanceof JComboBox) {
+				JComboBox col = (JComboBox) arcCols[c];
+				if (col.getSelectedItem().equals(IGNORE_STRING)) {
+					ignoreSet.add(col.getName());
+				}
+			}
+		}
+		return ignoreSet;
+	}
+
+	public HashSet<String> getArcIgnoreCols() {
+		HashSet<String> ignoreSet = new HashSet<String>();
+		Component[] nodeCols = arcHeaderColumnUI.getComponents();
+		for (int c = 0; c < nodeCols.length; c++) {
+			if (nodeCols[c] instanceof JComboBox) {
+				JComboBox col = (JComboBox) nodeCols[c];
+				if (col.getSelectedItem().equals(IGNORE_STRING)) {
+					ignoreSet.add(col.getName());
+				}
+			}
+		}
+		return ignoreSet;
 	}
 
 	/**
@@ -863,7 +950,19 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 	}
 
 	public boolean isGenerateNodeset() {
-		return generateNodeset.isSelected();
+		if (mode == DB_MODE) {
+			return generateNodeset.isSelected();
+		} else {
+			return parserGenerateNodeSet.isSelected();
+		}
+	}
+
+	public String getArcPath() {
+		return arcFileLocation.getText();
+	}
+
+	public String getNodePath() {
+		return nodeFileLocation.getText();
 	}
 
 	public String getNodePropsQuery() {
@@ -875,7 +974,15 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 	}
 
 	public boolean isGenerateDateset() {
-		return generateDateset.isSelected();
+		if (mode == DB_MODE) {
+			return generateDateset.isSelected();
+		} else {
+			return parserGenerateNodeTimes.isSelected();
+		}
+	}
+
+	public boolean isGenerateNodeProps() {
+		return attachNodeProps.isSelected();
 	}
 
 	public String getTimeSetQuery() {
@@ -894,6 +1001,10 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		return seedQuery.getText();
 	}
 
+	public String getDelimiter() {
+		return delimiters[delimeter.getSelectedIndex()];
+	}
+
 	/**
 	 * write out a properties object to save data between sessions
 	 * 
@@ -910,10 +1021,10 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 		props.setProperty("seed_set_query", seedQuery.getText());
 		props.setProperty("time_values_query", timeSetQuery.getText());
 		// also read in boolean vals
-		
-		//save any file-related properties
-		props.setProperty("edge_file_path", edgeFileLocation.getText());
-		props.setProperty("delimiter", delimeter.getText());
+
+		// save any file-related properties
+		props.setProperty("edge_file_path", arcFileLocation.getText());
+		props.setProperty("delimiter", delimeter.getSelectedItem().toString());
 		props.setProperty("node_file_path", nodeFileLocation.getText());
 
 		FileOutputStream out;
@@ -949,12 +1060,15 @@ public class SonGUI implements WindowListener, ActionListener, Runnable {
 			nodesQuery.setText(props.getProperty("nodes_query"));
 			seedQuery.setText(props.getProperty("seed_set_query"));
 			timeSetQuery.setText(props.getProperty("time_values_query"));
-			//do file related props
-			edgeFileLocation.setText(props.getProperty("edge_file_path"));
-			delimeter.setText(props.getProperty("delimiter"));
+			// do file related props
+			arcFileLocation.setText(props.getProperty("edge_file_path"));
+			if (props.getProperty("delimiter") != null) {
+				delimeter.setSelectedItem(props.getProperty("delimiter"));
+			}
 			nodeFileLocation.setText(props.getProperty("node_file_path"));
 		} catch (FileNotFoundException e) {
-			showStatus("Error location default properties file: " + e.getCause());
+			showStatus("Error location default properties file: "
+					+ e.getCause());
 		} catch (IOException e) {
 			showStatus("Error reading default properties: " + e.getCause());
 		}

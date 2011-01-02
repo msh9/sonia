@@ -116,9 +116,6 @@ public class Graphics2DRender implements Render {
 		// rough label
 		String printLabel = "";
 		
-		graphics.setFont(startFont.deriveFont(node.getLabelSize()));
-		
-		
 		if (showId) {
 			printLabel = printLabel + node.getNodeId();
 			// if both are on, show with a ":" seperator
@@ -126,10 +123,18 @@ public class Graphics2DRender implements Render {
 				printLabel = printLabel + ":";
 			}
 		}
+		
+		
+		
 		if (showLabels) {
 			printLabel = printLabel + node.getNodeLabel();
 		}
 		
+		//if the label is null, don't show it 
+		if (printLabel.equals("") ){
+			return;
+		}
+		graphics.setFont(startFont.deriveFont(node.getLabelSize()));
 		//figure out exactly where string will be drawn
 		double nodeDrawSize = node.getNodeSize() * scaleFact;
 		double labX =  (xCoord + (nodeDrawSize / 2.0) + 2.0);

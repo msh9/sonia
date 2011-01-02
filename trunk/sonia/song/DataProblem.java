@@ -13,6 +13,7 @@ public class DataProblem {
 	public static final String NO_NODE_FOR_TO_ID = "NO_NODE_FOR_TO_ID";
 	public static final String BLANK_FIELD = "BLANK_FIELD";
 	public static final String BAD_ID_STRING = "BAD_ID_STRING";
+	public static final String CONFLICTING_PROPERTIES_FOR_ID = "CONFLICTING_PROPERTIES_FOR_ID";
 	
 	private String foundIn;
 	private String type;

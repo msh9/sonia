@@ -254,8 +254,10 @@ public class ColorMapperPanel extends JPanel {
 
 	public void refreshData() {
 		// check if its different from the one we have
+		//TODO: also need to check if data selector has changed
+		
 		if (!((String) mappingSelector.getSelectedItem()).equals(mapper
-				.getMapperName())) {
+				.getMapperName()) || !keySelector.getSelectedItem().equals(mapper.getKey())) {
 			table.setRowSorter(null);
 			mapper = MapperFactory.getMapperFor((String) mappingSelector
 					.getSelectedItem());

@@ -1,6 +1,5 @@
 package sonia.song;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -14,17 +13,14 @@ import java.io.LineNumberReader;
 import java.io.PrintWriter;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.Vector;
 
-import org.freehep.graphicsio.exportchooser.ProgressDialog;
-
-import cern.colt.list.IntArrayList;
-
-import sonia.parsers.DotSonColumnMap;
 import sonia.parsers.DotSonParser;
 import sonia.song.filters.AllProblemFilter;
 import sonia.song.filters.CleaningFilter;
@@ -43,6 +39,8 @@ import sonia.song.filters.TimeMatchFilter;
  */
 
 public class Getter {
+	
+	public static final String VERSION = "v0.3";
 	/**
 	 * string used in node queries that will be replaced by a node id before
 	 * excuting
@@ -81,6 +79,8 @@ public class Getter {
 
 	private HashSet<String> nodeIds;
 
+	private HashMap<String, String[]> nodeAttrIndex = new HashMap<String, String[]>();
+
 	private ArrayList<String[]> nodeData = new ArrayList<String[]>();;
 
 	private ArrayList<String[]> arcData = new ArrayList<String[]>();
@@ -92,6 +92,8 @@ public class Getter {
 	private int queryCount = 0; // for debugging
 
 	private boolean stopTasks = false; // for breaking tasks
+
+	private int warnCount = 0;
 
 	public Getter() {
 
@@ -109,14 +111,34 @@ public class Getter {
 	 * Scans through the specified file to generate a network file from the rows
 	 */
 	public boolean parseNetwork(String arcsPath, String delimiter,
-			boolean makeNodes, boolean makeTimes) {
+			String nodeFilePath, boolean makeNodes, boolean makeTimes,
+			boolean nodeProps) {
 		problems.clear();
+		warnCount = 0;
+		// connect to file again incase delimeter has been changed
+		connectToFile(arcsPath, delimiter, true);
 		status("Parsing files to build network...");
+		ArrayList<String> fileHeaders = new ArrayList<String>(arcHeaders);
+		HashSet<String> ignore = ui.getArcIgnoreCols();
+		if (ignore.size() > 0) {
+			status("Ignoring headers: " + ignore);
+			arcHeaders.removeAll(ignore);
+		}
+		// if we are going to build nodes using node properties, do that first
+		if (makeNodes & nodeProps) {
+			boolean nodesOK = parseNodeFile(nodeFilePath, delimiter, nodeProps);
+			if (!nodesOK) {
+				ui.updateUI();
+				return false;
+			}
+		}
+
 		// check for from and to id
 		fromCol = -1;
 		toCol = -1;
 		nodeIds = new HashSet<String>();
 		int numArcCols = arcHeaders.size();
+		int numFileCols = fileHeaders.size();
 		for (int c = 0; c < numArcCols; c++) {
 			if (arcHeaders.get(c).equals("FromId")) {
 				fromCol = c;
@@ -134,16 +156,16 @@ public class Getter {
 		int lineNum = 0;
 		BufferedReader reader;
 		try {
-			//TODO: is this gonna mangle things if the file is UTF-8  ?
+			// TODO: is this gonna mangle things if the file is UTF-8 ?
 			reader = new BufferedReader(new InputStreamReader(
 					new FileInputStream(new File(arcsPath))));
 		} catch (FileNotFoundException e) {
 			error("Unable to locate file " + arcsPath + " : " + e.getMessage());
 			return false;
 		}
-		
+
 		try {
-			//need to skip the first line because it has the headers
+			// need to skip the first line because it has the headers
 			reader.readLine();
 			for (String record; (record = reader.readLine()) != null;) {
 				if (lineNum % 100 == 0) {
@@ -154,7 +176,8 @@ public class Getter {
 					status("Parsing cancled.");
 					return false;
 				}
-				// TODO: Does not deal with escaped quotes correctly, ignores single quotes
+				// TODO: Does not deal with escaped quotes correctly, ignores
+				// single quotes
 				boolean dblQuoted = false;
 				StringBuilder fieldBuilder = new StringBuilder();
 				String[] fields = new String[numArcCols];
@@ -166,12 +189,15 @@ public class Getter {
 					if (c == '"') {
 						dblQuoted = !dblQuoted;
 					}
-				
+
 					// if we've reached the end of the record, add it
-					//but first check if we have too many
-					if (col >= numArcCols) {
-						DataProblem prob = new DataProblem(DataProblem.ARCS,
-								DataProblem.BLANK_FIELD, "Line " + (lineNum+1)
+					// but first check if we have too many
+					if (col >= numFileCols) {
+						DataProblem prob = new DataProblem(
+								DataProblem.ARCS,
+								DataProblem.BLANK_FIELD,
+								"Line "
+										+ (lineNum + 1)
 										+ " has too many entries, extras ignored",
 								lineNum, arcsPath);
 						prob.setRef(fields);
@@ -179,26 +205,33 @@ public class Getter {
 						break;
 					} else if ((!dblQuoted && c == delimiter.charAt(0))
 							|| i + 1 == record.length()) {
-						
-						fields[col] = fieldBuilder.toString().replaceAll(
-								delimiter + "$", "").replaceAll("^\"|\"$", "")
-								.replace("\"\"", "\"").trim();
+						String header = fileHeaders.get(col);
+						if (!ignore.contains(header)) {
+							fields[arcHeaders.indexOf(header)] = fieldBuilder
+									.toString().replaceAll(delimiter + "$", "")
+									.replaceAll("^\"|\"$", "").replace("\"\"",
+											"\"").trim();
+						}
 						fieldBuilder = new StringBuilder();
 						col++;
 					}
-					
+
 				}
-				// flag blank lines.  Don't want to skip, 'cause the line numbers don't match with file
+				// flag blank lines. Don't want to skip, 'cause the line numbers
+				// don't match with file
 				if (col == 0) {
-					DataProblem prob = new DataProblem(DataProblem.ARCS,
-							DataProblem.BLANK_FIELD, "Unable to find any data on line  " + (lineNum+1),
+					DataProblem prob = new DataProblem(
+							DataProblem.ARCS,
+							DataProblem.BLANK_FIELD,
+							"Unable to find any data on line  " + (lineNum + 1),
 							lineNum, arcsPath);
 					prob.setRef(fields);
 					problems.add(prob);
 				} else if (col > 0) {
-					if (col < numArcCols) {
+					if (col < numFileCols) {
 						DataProblem prob = new DataProblem(DataProblem.ARCS,
-								DataProblem.BLANK_FIELD, "Line " + (lineNum+1)
+								DataProblem.BLANK_FIELD, "Line "
+										+ (lineNum + 1)
 										+ " seems to be missing entries",
 								lineNum, arcsPath);
 						prob.setRef(fields);
@@ -208,7 +241,7 @@ public class Getter {
 					// store node ids for later use
 					nodeIds.add(fields[fromCol]);
 					nodeIds.add(fields[toCol]);
-					
+
 				}
 				arcData.add(fields);
 				lineNum++;
@@ -226,8 +259,6 @@ public class Getter {
 			if (nodeHeaders.isEmpty()) {
 				nodeHeaders.add("AlphaId");
 			}
-		
-			int numNodeCols = nodeHeaders.size();
 
 			HashSet<String> timeset;
 			if (makeTimes) {
@@ -237,18 +268,21 @@ public class Getter {
 				if (timeset == null) {
 					return false;
 				}
-				if (!nodeHeaders.contains("StartTime")) {
-					nodeHeaders.add("StartTime");
-				} 
-				
-				if (!nodeHeaders.contains("EndTime")){
-					nodeHeaders.add("EndTime");
+				if (!nodeHeaders.contains("StartTime".intern())) {
+					nodeHeaders.add("StartTime".intern());
+				}
+				// TODO: need some kind of check with user here: are we in
+				// discrete time? is an end time column correct?
+				if (!nodeHeaders.contains("EndTime".intern())) {
+					nodeHeaders.add("EndTime".intern());
 				}
 			} else {
 				timeset = new HashSet<String>();
 				timeset.add("always and forever"); // dummy value to make it
-													// loop
+				// loop
 			}
+
+			int numNodeCols = nodeHeaders.size();
 
 			// loop over all the nodes we've found in the arcs data
 			int rowCounter = 0;
@@ -269,20 +303,211 @@ public class Getter {
 
 					String time = timeIter.next();
 					String[] row = new String[numNodeCols];
+
+					if (nodeProps) {
+						if (nodeAttrIndex.containsKey(id)) {
+							row = Arrays.copyOf(nodeAttrIndex.get(id),
+									numNodeCols);
+						} else {
+							// we are missing a node attribute row, this is a
+							// problem
+							DataProblem prob = new DataProblem(
+									DataProblem.NODES,
+									DataProblem.NO_DATA_FOR_NODE_ID,
+									"No node properties found to match with node id "
+											+ id, rowCounter, nodeFilePath);
+							prob.setRef(row);
+							problems.add(prob);
+						}
+					}
 					row[nodeHeaders.indexOf("AlphaId")] = id;
+
 					if (makeTimes) {
+						// TODO: may not always want start and end time to be
+						// the same
 						row[nodeHeaders.indexOf("StartTime")] = time;
 						row[nodeHeaders.indexOf("EndTime")] = time;
 					}
+
 					nodeData.add(row);
 				}
 
 				rowCounter++;
 			}
 
-		} // end of auto generated node block.
-
+		} else if (!makeNodes) { // end of auto generated node block.
+			// if we are loading node data as raw rows, do that
+			boolean nodesOK = parseNodeFile(nodeFilePath, delimiter, nodeProps);
+			if (!nodesOK) {
+				return false;
+			}
+		}
 		finishParsing();
+		return true;
+	}
+
+	private boolean parseNodeFile(String nodeFilePath, String delimiter,
+			boolean nodeProps) {
+
+		int idCol = -1;
+		// reparse the headers in case something has changed
+		connectToFile(nodeFilePath, delimiter, false);
+		ArrayList<String> fileHeaders = new ArrayList<String>(nodeHeaders);
+
+		// if there are any columns we are supposed to ignore, throw 'em out
+		HashSet<String> ignore = ui.getNodeIgnoreCols();
+		if (ignore.size() > 0) {
+			status("Ignoring headers: " + ignore);
+			nodeHeaders.removeAll(ignore);
+		}
+
+		if (nodeProps) {
+			status("Parsing node properties from file " + nodeFilePath);
+		} else {
+			status("Parsing node data rows from file " + nodeFilePath);
+		}
+
+		// check that there a node id column that makes sense
+		if (!nodeHeaders.contains("AlphaId")) {
+			error("Node data file "
+					+ nodeFilePath
+					+ " does not contain a column with a header of 'AlphaId' to match with the relationship data.");
+			return false;
+		}
+		idCol = nodeHeaders.indexOf("AlphaId");
+		int numNodeCols = nodeHeaders.size();
+		int numFileCols = fileHeaders.size();
+		// open file and load from file into node data array
+		nodeData.clear();
+		nodeAttrIndex.clear();
+		int lineNum = 0;
+		BufferedReader reader;
+		try {
+			// TODO: is this gonna mangle things if the file is UTF-8 ?
+			reader = new BufferedReader(new InputStreamReader(
+					new FileInputStream(new File(nodeFilePath))));
+		} catch (FileNotFoundException e) {
+			error("Unable to locate file " + nodeFilePath + " : "
+					+ e.getMessage());
+			return false;
+		}
+
+		try {
+			// need to skip the first line because it has the headers
+			reader.readLine();
+			for (String record; (record = reader.readLine()) != null;) {
+				if (lineNum % 100 == 0) {
+					progress(-1, -1, "parsed " + lineNum
+							+ " lines of node file");
+				}
+
+				if (stopTasks) {
+					status("Parsing cancled.");
+					return false;
+				}
+				// TODO: Does not deal with escaped quotes correctly, ignores
+				// single quotes
+				boolean dblQuoted = false;
+				StringBuilder fieldBuilder = new StringBuilder();
+				String[] fields = new String[numNodeCols];
+				int col = 0;
+				for (int i = 0; i < record.length(); i++) {
+					// scan through the row, looking for delimiters or quotes
+					char c = record.charAt(i);
+					fieldBuilder.append(c);
+					if (c == '"') {
+						dblQuoted = !dblQuoted;
+					}
+
+					// if we've reached the end of the record, add it
+					// but first check if we have too many
+					if (col >= numFileCols) {
+						DataProblem prob = new DataProblem(
+								DataProblem.NODES,
+								DataProblem.BLANK_FIELD,
+								"Line "
+										+ (lineNum + 1)
+										+ " has too many entries, extras ignored",
+								lineNum, nodeFilePath);
+						prob.setRef(fields);
+						problems.add(prob);
+						break;
+					} else if ((!dblQuoted && c == delimiter.charAt(0))
+							|| i + 1 == record.length()) {
+						String colName = fileHeaders.get(col);
+						if (!ignore.contains(colName)) {
+							fields[nodeHeaders.indexOf(colName)] = fieldBuilder
+									.toString().replaceAll(delimiter + "$", "")
+									.replaceAll("^\"|\"$", "").replace("\"\"",
+											"\"").trim();
+						}
+						fieldBuilder = new StringBuilder();
+						col++;
+					}
+
+				}
+				// flag blank lines. Don't want to skip, 'cause the line numbers
+				// don't match with file
+				if (col == 0) {
+					DataProblem prob = new DataProblem(
+							DataProblem.NODES,
+							DataProblem.BLANK_FIELD,
+							"Unable to find any data on line  " + (lineNum + 1),
+							lineNum, nodeFilePath);
+					prob.setRef(fields);
+					problems.add(prob);
+				} else if (col > 0) {
+					if (col < numFileCols) {
+						DataProblem prob = new DataProblem(DataProblem.NODES,
+								DataProblem.BLANK_FIELD, "Line "
+										+ (lineNum + 1)
+										+ " seems to be missing entries",
+								lineNum, nodeFilePath);
+						prob.setRef(fields);
+						problems.add(prob);
+					}
+
+				}
+				// if we only want the props, add to the lookup table, otherwise
+				// store the whole row
+				if (nodeProps) {
+					// check if there is already a corresponding row
+					if (nodeAttrIndex.containsKey(fields[idCol])) {
+						// if the rows are identical don't worry about it.
+						// Otherwise its a problem
+						if (Arrays.equals(fields, nodeAttrIndex
+								.get(fields[idCol]))) {
+							warn("There are multiple identical rows in in the node properties file corresponding to the node id "
+									+ fields[idCol]);
+						} else {
+
+							DataProblem prob = new DataProblem(
+									DataProblem.NODES,
+									DataProblem.CONFLICTING_PROPERTIES_FOR_ID,
+									"Line "
+											+ (lineNum + 1)
+											+ " contains properties that conflict with another row with the same node id "
+											+ fields[idCol], lineNum,
+									nodeFilePath);
+							prob.setRef(fields);
+							problems.add(prob);
+						}
+					} else {
+						nodeAttrIndex.put(fields[idCol], fields);
+					}
+
+				} else { // end props block
+					nodeData.add(fields);
+				}
+				lineNum++;
+			}
+			reader.close();
+			status("   processed " + lineNum + " lines of node file.");
+		} catch (IOException e) {
+			error("Error reading file " + nodeFilePath + " : " + e.getMessage());
+			return false;
+		}
+
 		return true;
 	}
 
@@ -298,6 +523,7 @@ public class Getter {
 			boolean doTimes, String timeQuery, boolean makeNodes,
 			String nodePropsQuery, boolean doNodeTimes) {
 		problems.clear();
+		warnCount = 0;
 		// create data structure for arcs
 		arcData.clear();
 		// create data structure for nodes
@@ -515,6 +741,7 @@ public class Getter {
 		// TODO: need to check if the data being processed contains tabs that
 		// need to be escaped or quoted..
 		problems.clear();
+		warnCount = 0;
 		status("Running queries to build network...");
 		// get the arcAttr query
 		// try to run it
@@ -749,6 +976,7 @@ public class Getter {
 	 */
 	private void finishParsing() {
 
+		// validateData();
 		formatSonFile();
 
 		if (ui != null) {
@@ -757,7 +985,9 @@ public class Getter {
 		if (ui != null & problems.size() > 0) {
 			ui.showProblem(null);
 		}
-		status("Done. (" + problems.size() + " problems)");
+		status("Done. (" + problems.size() + " problems, " + warnCount
+				+ " warnings)");
+		ui.updateUI();
 	}
 
 	private HashSet<String> getTimeset(ArrayList<String[]> arcData) {
@@ -786,8 +1016,8 @@ public class Getter {
 
 	public void validateData() {
 		status("Validating data...");
-		// recompute the set of node ids to match what is in the node data
 		problems.clear();
+		// recompute the set of node ids to match what is in the node data
 		nodeIds.clear();
 		int rowCount = 0;
 		Iterator<String[]> nodeIter = nodeData.iterator();
@@ -997,8 +1227,6 @@ public class Getter {
 		}
 	}
 
-	
-
 	public void closeDB() {
 		if (currentDB != null) {
 			try {
@@ -1106,6 +1334,7 @@ public class Getter {
 	}
 
 	public void warn(String warning) {
+		warnCount++;
 		if (ui != null) {
 			ui.showStatus("warning: " + warning);
 		} else {
@@ -1207,6 +1436,19 @@ public class Getter {
 	public void stop() {
 		stopTasks = true;
 		ui.hideDialog();
+	}
+
+	public Thread getParseThread() {
+		return new Thread() {
+			public void run() {
+				stopTasks = false;
+				ui.showDialog();
+				parseNetwork(ui.getArcPath(), ui.getDelimiter(), ui
+						.getNodePath(), ui.isGenerateNodeset(), ui
+						.isGenerateDateset(), ui.isGenerateNodeProps());
+				ui.hideDialog();
+			}
+		};
 	}
 
 	public Thread getFetchThread() {

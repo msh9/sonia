@@ -25,7 +25,7 @@ public class MapperFactory {
 	 */
 	public static String[] knownMappers = new String[] {
 			DefaultColors.MAPPER_NAME, GrayscaleColors.MAPPER_NAME,
-			RedtoBlueColors.MAPPER_NAME };
+			RedtoBlueColors.MAPPER_NAME, BlueToRedColors.MAPPER_NAME };
 
 	/**
 	 * Factory method to create and store the mapper appropriate for the string
@@ -38,6 +38,8 @@ public class MapperFactory {
 			mapper = new GrayscaleColors();
 		} else if (mapperName.equals(RedtoBlueColors.MAPPER_NAME)) {
 			mapper = new RedtoBlueColors();
+		} else if (mapperName.equals(BlueToRedColors.MAPPER_NAME)) {
+			mapper = new BlueToRedColors();
 		}
 		return mapper;
 	}
