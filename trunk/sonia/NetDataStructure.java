@@ -3,6 +3,7 @@ package sonia;
 import java.util.*;
 
 import sonia.mapper.Colormapper;
+import sonia.mapper.Shapemapper;
 import sonia.parsers.DotNetParser;
 
 /**
@@ -444,6 +445,13 @@ public class NetDataStructure
 	  for (int i=0;i<numNodeEvents;i++)
 	  {
 	       nodeEventArray[i].setColormap(map);
+	  }
+  }
+  
+  public void setNodeShapemap(Shapemapper map){
+	  for (int i=0;i<numNodeEvents;i++)
+	  {
+	       nodeEventArray[i].setShapemap(map);
 	  }
   }
 

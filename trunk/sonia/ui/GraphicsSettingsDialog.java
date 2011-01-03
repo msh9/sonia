@@ -168,6 +168,7 @@ public class GraphicsSettingsDialog {
 	private JComboBox HideArcs;
 	private JPanel mainpanel;
 	private JCheckBox nodeColorMap;
+	private JCheckBox nodeShapeMap;
 	private JButton OK;
 	private JButton Save;
 	private JButton Apply;
@@ -228,6 +229,7 @@ public class GraphicsSettingsDialog {
 		NodeScaleFactorField = new JTextField("1.0", 4);
 		NodeScaleFactorField.setBorder(new TitledBorder("Node scale factor"));
 		nodeColorMap = new JCheckBox("Node Color Map...");
+		nodeShapeMap = new JCheckBox("Node Shape Map...");
 
 		ArcArrows = new JComboBox(new String[] { GraphicsSettings.ARROW_END,
 				GraphicsSettings.NONE });
@@ -296,6 +298,7 @@ public class GraphicsSettingsDialog {
 		nodesPanel.add(NodeTransField);
 		nodesPanel.add(nodeLabels);
 		nodesPanel.add(nodeColorMap);
+		nodesPanel.add(nodeShapeMap);
 		nodesPanel.add(ShowLabelsField);
 		nodesPanel.add(NodeLabelBgTransField);
 		nodesPanel.add(hideNodes);
@@ -391,6 +394,19 @@ public class GraphicsSettingsDialog {
 					showMapperWindow(graphicsDialog,canvas,engine,control);
 				} else {
 					engine.getNetData().setNodeColormap(null);
+				}
+				
+			}
+			
+		});
+		nodeShapeMap.addActionListener(new ActionListener(){
+
+			public void actionPerformed(ActionEvent arg0) {
+				if (nodeShapeMap.isSelected()){
+					JDialog colors = ShapeMapperPanel.
+					showMapperWindow(graphicsDialog,canvas,engine,control);
+				} else {
+					engine.getNetData().setNodeShapemap(null);
 				}
 				
 			}

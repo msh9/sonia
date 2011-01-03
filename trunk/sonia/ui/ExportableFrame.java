@@ -1,15 +1,23 @@
 package sonia.ui;
 
+import java.awt.Dimension;
+import java.awt.FileDialog;
+import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
+import java.awt.image.BufferedImage;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
+import java.io.File;
+import java.io.IOException;
 
+import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.JComponent;
+import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -18,6 +26,7 @@ import javax.swing.event.InternalFrameEvent;
 
 import org.freehep.util.export.ExportDialog;
 
+import sonia.SoniaController;
 
 /**
  * 
@@ -29,6 +38,7 @@ import org.freehep.util.export.ExportDialog;
  * the GUESS package
  */
 
+@SuppressWarnings("serial")
 public class ExportableFrame extends JInternalFrame {
 
 	protected JMenuBar menuBar;
@@ -42,7 +52,7 @@ public class ExportableFrame extends JInternalFrame {
 		setIconifiable(true);
 		setClosable(true);
 		menuBar = new JMenuBar();
-		//menuBar = super.getJMenuBar();
+		// menuBar = super.getJMenuBar();
 		exportMenu = new JMenu("Export");
 		// add an action to show the printing option
 		exportMenu.add(new AbstractAction("Print...") {
@@ -50,6 +60,14 @@ public class ExportableFrame extends JInternalFrame {
 				printContent();
 			}
 		});
+		// The JPEG export in freeHep vector graphics is broken, so add a jpeg
+		// version here.
+		exportMenu.add(new AbstractAction("Export JPEG...") {
+			public void actionPerformed(ActionEvent e) {
+				exportJPEGContent();
+			}
+		});
+
 		exportMenu.add(new AbstractAction("Export Image...") {
 			public void actionPerformed(ActionEvent arg0) {
 				exportContent();
@@ -57,7 +75,7 @@ public class ExportableFrame extends JInternalFrame {
 		});
 		setJMenuBar(menuBar);
 		menuBar.add(exportMenu);
-		
+
 	}
 
 	/**
@@ -133,16 +151,42 @@ public class ExportableFrame extends JInternalFrame {
 		JComponent compToPrint = getGraphicContent();
 		disableDoubleBuffering(compToPrint);
 		compToPrint.repaint();
-		//HEPDialog exportDialog = new HEPDialog("SoNIA");
-	//	exportDialog.showHEPDialog(this, "Chose file format for export",
-	//			compToPrint, "NetworkPic");
-		
-		//THIS IS TO USE VERSION freehep 2.1.1
-		//AS SOON AS THEY FIX THE JPG EXPORT PROBLEM
 		ExportDialog exportDialog = new ExportDialog();
-	 exportDialog.showExportDialog(compToPrint, 
+		exportDialog.showExportDialog(compToPrint,
 				"Chose file format for export...", compToPrint, "export");
 		enableDoubleBuffering(compToPrint);
+	}
+
+	/**
+	 * The JPEG export of FreeHEP VectorGraphics 2.1.1 is broken, so implement
+	 * our own version.
+	 */
+	public void exportJPEGContent() {
+		JComponent compToPrint = getGraphicContent();
+		disableDoubleBuffering(compToPrint);
+		compToPrint.repaint();
+		Dimension size = compToPrint.getSize();
+		BufferedImage image = (BufferedImage) compToPrint.createImage(
+				size.width, size.height);
+		Graphics g = image.getGraphics();
+		compToPrint.paint(g);
+		g.dispose();
+		FileDialog locateOutput = new FileDialog((JFrame)getDesktopPane().getTopLevelAncestor(),
+				"Choose a location to save a JPEG file", FileDialog.SAVE);
+		// throw up open dialog
+		locateOutput.setSize(450, 300);
+		locateOutput.setFile("myNetworkImage.jpg");
+		locateOutput.setVisible(true);
+		String outputFileName = locateOutput.getFile();
+		String outputPath = locateOutput.getDirectory();
+		if (outputFileName != null & outputPath != null) {
+			try {
+				ImageIO.write(image, "jpg", new File(outputPath+outputFileName));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
 	}
 
 	protected void disableDoubleBuffering(JComponent comp) {
@@ -154,18 +198,17 @@ public class ExportableFrame extends JInternalFrame {
 		RepaintManager currentManager = RepaintManager.currentManager(comp);
 		currentManager.setDoubleBufferingEnabled(true);
 	}
-	
+
 	/**
-	 * sub classes should overide these internal frame methods as needed
+	 * sub classes should override these internal frame methods as needed
 	 * 
 	 */
-	
 
 	public void internalFrameOpened(InternalFrameEvent e) {
 	}
 
 	public void internalFrameClosing(InternalFrameEvent e) {
-		
+
 	}
 
 	public void internalFrameClosed(InternalFrameEvent e) {

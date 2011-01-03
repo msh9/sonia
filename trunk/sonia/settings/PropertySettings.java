@@ -18,6 +18,7 @@
 package sonia.settings;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -61,5 +62,6 @@ public abstract class PropertySettings extends Properties {
 		Double.parseDouble(value);
 		setProperty(key,value);
 	}
+	
 
 }

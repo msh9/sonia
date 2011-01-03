@@ -86,6 +86,7 @@ import sonia.ui.AttributeMapperDialog;
  *   <BR>  Red
  *   <BR>  Yellow
  *   <BR>  Blue
+ *   <BR>  Brown
  *<BR></tt> Alternatively, you can specify the color using a "Red-Green-Blue" color
  * model by using the column headings:
  * </P>
@@ -111,7 +112,7 @@ import sonia.ui.AttributeMapperDialog;
  * <B>LabelColor</B> - the color for the label text, must be a color name
  * </P>
  *  <P>
- * <B>LabelSize</B> - the font size for the label text, must be a flot number
+ * <B>LabelSize</B> - the font size for the label text, must be a float number
  * </P>
  * <P>
  * <B>BorderColor</B> - the color for the node's border, must be a color name

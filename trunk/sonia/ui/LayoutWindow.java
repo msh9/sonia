@@ -206,9 +206,9 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 
 	private JButton ViewOptions;
 	
-	private JButton makeClusters;
+	//private JButton makeClusters;
 	
-	private JButton layoutOnce;
+	//private JButton layoutOnce;
 	
 	private JButton zoom;
 	private JTextField zoomFactor;
@@ -335,6 +335,29 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 			}
 		});
 		
+		//menu for various experimental options that don't fit elsewhere
+		JMenu experimental = new JMenu("Experimental");
+		menuBar.add(experimental);
+		experimental.add(new AbstractAction("Apply Graphviz Layout Once...") {
+			public void actionPerformed(ActionEvent arg0) {
+				//TODO:show a list of layouts to choose from
+				NetLayout layout = new GraphVizWrapperLayout(Control, engine);
+				//show a settings dialog for that layout
+				ApplySettings settings = new ApplySettings();
+				ApplySettingsDialog dialog = new ApplySettingsDialog(settings, Control, engine, null, layout);
+				dialog.showDialog();
+				//tell the engine to do one layout of that option
+				engine.applyLayoutOnce(layout, settings);
+				updateDisplay();
+			}
+		});
+		experimental.add(new AbstractAction("Create Modularity clusters for slice"){
+			public void actionPerformed(ActionEvent e) {
+				engine.createModularityClustersForSlice();
+				updateDisplay();
+			}
+		});
+		
 	
 		// this.setFont(controller.getFont());
 		// create layout objects
@@ -354,16 +377,16 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		PlayAll.setToolTipText("Play or pause animation");
 		//Pause = new JButton("||");
 		ViewOptions = new JButton("View Options..");
-		makeClusters = new JButton("Make Clusters");
-		layoutOnce = new JButton("Other Layout...");
+	//	makeClusters = new JButton("Make Clusters");
+	//	layoutOnce = new JButton("Other Layout...");
 		MoveNodes = new JButton("Move Nodes");
 		zoom = new JButton("Scale layout");
 		zoomFactor = new JTextField("1.5",3);
-		zoomFactor.setBorder(new TitledBorder("factor"));
+		zoomFactor.setBorder(new TitledBorder("zoom factor"));
 		zoomFactor.setToolTipText("factor by which the current slice's layout should be enlarge or reduced");
 		rotate = new JButton("Rotate layout");
 		degrees = new JTextField("45",3);
-		degrees.setBorder(new TitledBorder("degrees"));
+		degrees.setBorder(new TitledBorder("rotate degrees"));
 		degrees.setToolTipText("degrees that the current slice's layout should be rotated");
 		pan = new JButton("Pan layout");
 		
@@ -525,20 +548,22 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		controlPanel.add(ViewOptions, c);
 		c.gridx = 0;c.gridy = 1;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;c.weighty = 0.0;
 		//controlPanel.add(makeClusters, c);  //hide this for now so don't have to support or explain...
-		controlPanel.add(layoutOnce, c);
+	//	controlPanel.add(layoutOnce, c);
 		
 		// buttons
 		c.gridx = 1;c.gridy = 0;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;	c.weighty = 0.0;
 		controlPanel.add(zoom, c);
 		
-		c.gridx = 2;c.gridy = 0;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;c.weighty = 0.0;
+		c.gridx = 2;c.gridy = 0;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.75;c.weighty = 0.0;c.fill=GridBagConstraints.BOTH;
 		controlPanel.add(zoomFactor, c);
 		
-		c.gridx = 1;c.gridy = 1;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;c.weighty = 0.0;
+		c.gridx = 2;c.gridy = 1;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.75;c.weighty = 0.0;c.fill=GridBagConstraints.BOTH;
+		controlPanel.add(degrees,c);
+		
+		c.gridx = 1;c.gridy = 1;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;c.weighty = 0.0;c.fill=GridBagConstraints.NONE;
 		controlPanel.add(rotate, c);
 	
-		c.gridx = 2;c.gridy = 1;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;c.weighty = 0.0;
-		controlPanel.add(degrees,c);
+		
 		c.gridx = 1;c.gridy = 2;c.gridwidth = 1;c.gridheight = 1;c.weightx = 0.5;c.weighty = 0.0;
 		controlPanel.add(pan, c);
 	
@@ -557,8 +582,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		Stability.addActionListener(this);
 		PhasePlot.addActionListener(this);
 		ViewOptions.addActionListener(this);
-		makeClusters.addActionListener(this);
-		layoutOnce.addActionListener(this);
+	//	makeClusters.addActionListener(this);
+	//	layoutOnce.addActionListener(this);
 		MoveNodes.addActionListener(this);
 		NextSlice.addActionListener(this);
 		PrevSlice.addActionListener(this);
@@ -694,19 +719,6 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 			engine.setDisplayHeight(LayoutArea.getHeight());
 			engine.setDisplayWidth(LayoutArea.getWidth());
 			graphicsSettings.showDialog();
-			updateDisplay();
-		} else if (evt.getSource().equals(makeClusters)) {
-			engine.createModularityClustersForSlice();
-			updateDisplay();
-		} else if (evt.getSource().equals(layoutOnce)) {
-			//TODO:show a list of layouts to choose from
-			NetLayout layout = new GraphVizWrapperLayout(Control, engine);
-			//show a settings dialog for that layout
-			ApplySettings settings = new ApplySettings();
-			ApplySettingsDialog dialog = new ApplySettingsDialog(settings, Control, engine, null, layout);
-			dialog.showDialog();
-			//tell the engine to do one layout of that option
-			engine.applyLayoutOnce(layout, settings);
 			updateDisplay();
 		} else if (evt.getSource().equals(LayoutNum)) {
 			if (!engine.isTransitionActive()) {

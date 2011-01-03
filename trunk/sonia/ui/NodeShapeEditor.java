@@ -36,8 +36,8 @@ import sonia.ShapeFactory;
  */
 
 @SuppressWarnings("serial")
-public class NodeShapeEditor extends AbstractCellEditor implements TableCellEditor,
-ActionListener {
+public class NodeShapeEditor extends AbstractCellEditor implements TableCellEditor
+ {
 	
 	private JComboBox choices;
 	
@@ -59,10 +59,6 @@ ActionListener {
 		return choices.getSelectedItem();
 	}
 
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
+	
 
 }

@@ -12,6 +12,7 @@ import java.util.Set;
 import javax.imageio.*;
 
 import sonia.mapper.Colormapper;
+import sonia.mapper.Shapemapper;
 
 
 /**
@@ -77,6 +78,7 @@ public class NodeAttribute implements NetworkEvent{
   private String effect = NO_EFFECT;
   private HashMap<String,Object> userData;
   private Colormapper colormap = null;
+  private Shapemapper shapemap = null;
 
   //coords not stored here so that they can be accessed more quickly
   //transparency???
@@ -284,7 +286,11 @@ public class NodeAttribute implements NetworkEvent{
   }
   public Shape getNodeShape()
   {
-    return nodeShape;
+	  if (shapemap == null){
+		  return nodeShape;
+	  } else {
+		  return shapemap.getShapeFor(userData.get(shapemap.getKey()));
+	  }
   }
   public URL getIconURL()
   {
@@ -432,11 +438,20 @@ public class NodeAttribute implements NetworkEvent{
   
   /**
    * if the color map is not null, getNodeColor will return the value from the color map, rather than
-   * the nodes color.  ALL NODES SHOULD HAVE THE SAME COLOR MAP, BUT THIS IS NOT ENFORCED
+   * the node's color.  ALL NODES SHOULD HAVE THE SAME COLOR MAP, BUT THIS IS NOT ENFORCED
    * @param map
    */
   public void setColormap(Colormapper map){
 	  colormap = map;
+  }
+  
+  /**
+   * if the shape map is not null, getNodeShape will return the value from the shape map, rather than
+   * the node's shape.  ALL NODES SHOULD HAVE THE SAME SHAPE MAP, BUT THIS IS NOT ENFORCED
+   * @param map
+   */
+  public void setShapemap(Shapemapper map){
+	  shapemap = map;
   }
 
 public String getOrigFileLoc() {

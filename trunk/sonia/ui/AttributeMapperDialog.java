@@ -15,6 +15,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.AbstractTableModel;
@@ -31,7 +32,7 @@ public class AttributeMapperDialog extends Object{
     
     private ArrayList<String> unmapped;
     private Object[] headers;
-    private ArrayList<Object> states;
+    private ArrayList<Boolean> states;
     private DotSonColumnMap map;
     private Dialog dialog;
     private JScrollPane sp;
@@ -51,23 +52,23 @@ public class AttributeMapperDialog extends Object{
     
     /** Creates a new instance of AttributeMapperDialog */
     public AttributeMapperDialog(DotSonColumnMap map, ArrayList<String> unmapped,
-    		Set headers) {
+    		Set<String> headers) {
         
         this.unmapped = unmapped;
         this.map = map;
         this.headers = headers.toArray();
-        states = new ArrayList(unmapped.size());
+        Arrays.sort(this.headers);
+        states = new ArrayList<Boolean>(unmapped.size());
         //make the dialog
         dialog = new JDialog(new JFrame(),"Unrecognized column names in the input file",true);
         //make new font to help keep layouts consitant across platforms
-        Font textFont = new Font("Monospaced ",Font.PLAIN,10);
         layoutPanel = new JPanel();
-        layoutPanel.setFont(textFont);
+       
         layoutPanel.setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         c.insets = new Insets(0,2,0,2);
         //make the components
-        JLabel explainLabel = new JLabel("Please choose appropriate column name assignments for each attribute:");
+        layoutPanel.setBorder(new TitledBorder("Choose or re-assign columns to attributes"));
         JLabel attrLabel = new JLabel("Network Attributes:");
         JLabel colLabel = new JLabel("Column Names:");
         JButton ok = new JButton("OK");
@@ -85,8 +86,8 @@ public class AttributeMapperDialog extends Object{
         c.gridx=1;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=1;c.weighty=1;
         layoutPanel.add(colLabel,c);
         int rowNum = 2;
-        Set mapKeys =map.keySet();
-        Iterator attrKeyIter = mapKeys.iterator();
+        Set<Object> mapKeys =map.keySet();
+        Iterator<Object> attrKeyIter = mapKeys.iterator();
         //loop to add all the attribute labels
         while(attrKeyIter.hasNext()) {
             c.gridx=0;c.gridy=rowNum;c.gridwidth=1;c.gridheight=1;c.weightx=1;c.weighty=1;
@@ -115,26 +116,32 @@ public class AttributeMapperDialog extends Object{
             c.anchor=GridBagConstraints.WEST;
             layoutPanel.add(choiceList,c);
         }
-        dialog.setLayout(new GridBagLayout());
+       dialog.setLayout(new BorderLayout());
+        
         sp= new JScrollPane(layoutPanel);
         c.gridx=0;c.gridy=0;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;c.fill=GridBagConstraints.NONE;
-        dialog.add(explainLabel,c);
         c.gridx=0;c.gridy=1;c.gridwidth=1;c.gridheight=1;c.weightx=1;c.weighty=1;c.fill=GridBagConstraints.BOTH;
-        dialog.add(sp,c);
+       // dialog.add(sp,c);
         c.gridx=0;c.gridy=2;c.gridwidth=1;c.gridheight=1;c.weightx=1;c.weighty=1;
     	c.fill=GridBagConstraints.BOTH;c.anchor=GridBagConstraints.CENTER;
-        unmappedTable = new JTable(fillArray(unmapped,headers),new Object[]{"Input Column Name","Attach to node as user data?"});
+        unmappedTable = new JTable(fillArray(unmapped),new Object[]{"Input Column Name","Attach to node as user data?"});
         unmappedTable.setShowGrid(true);
         unmappedTable.setShowHorizontalLines(true);
         unmappedTable.setShowVerticalLines(true);
         unmappedTable.setModel(new udataTableModel());
         JScrollPane tableScroll = new JScrollPane(unmappedTable);
-        dialog.add(tableScroll,c);
+        tableScroll.setBorder(new TitledBorder("Select attributes to be User Data"));
+       // dialog.add(tableScroll,c);
+        JSplitPane divider = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,sp,tableScroll);
+        divider.setDividerLocation(400);
+        dialog.add(divider,BorderLayout.CENTER);
         c.gridx=0;c.gridy=3;c.gridwidth=1;c.gridheight=1;c.weightx=0;c.weighty=0;
         	c.fill=GridBagConstraints.NONE;c.anchor=GridBagConstraints.CENTER;
-        dialog.add(ok,c);
+        JPanel okHolder = new JPanel();
+        okHolder.add(ok);
+        dialog.add(okHolder,BorderLayout.SOUTH);
         //dialog.setBackground(Color.lightGray);
-        dialog.setSize(400,300);
+        dialog.setSize(800,400);
    
         dialog.setLocation(100,100);
         //dialog.pack();
@@ -201,7 +208,7 @@ public class AttributeMapperDialog extends Object{
 			return false;
 		}
 		 public void setValueAt(Object value, int row, int col) {
-		        states.set(row,value);
+		        states.set(row,(Boolean)value);
 		        storeUdata();
 		        fireTableCellUpdated(row, col);
 		    }
@@ -209,15 +216,15 @@ public class AttributeMapperDialog extends Object{
     	
     }
     
-    private Object[][] fillArray(ArrayList unmapped, Set headers){
-    	Object[][] array = new Object[headers.size()][2];
+    private Object[][] fillArray(ArrayList<String> unmapped){
+    	Object[][] array = new Object[headers.length][2];
     	states.clear();
-    	Object[] headArray = headers.toArray();
+    	//Arrays.sort(headArray);
     	
-    	for (int i = 0; i < headers.size(); i++) {
-			array[i][0]= headArray[i];
-		    array[i][1] = new Boolean(unmapped.contains(headArray[i]));
-			states.add(i,array[i][1]);
+    	for (int i = 0; i < headers.length; i++) {
+			array[i][0]= headers[i];
+		    array[i][1] =  new Boolean(unmapped.contains(headers[i]));
+			states.add(i,(Boolean)array[i][1]);
 		}
     	return array;
     }

@@ -167,8 +167,8 @@ public class DotSonColumnMap extends PropertySettings {
 	 * uses introspection to return a list of the names of all the fields
 	 * ("keys") Order not determined?
 	 */
-	private ArrayList getMapKeys() {
-		ArrayList keyNames = new ArrayList();
+	private ArrayList<String> getMapKeys() {
+		ArrayList<String> keyNames = new ArrayList<String>();
 		try {
 			Field[] fields = DotSonColumnMap.class.getDeclaredFields();
 			for (int i = 0; i < fields.length; i++) {

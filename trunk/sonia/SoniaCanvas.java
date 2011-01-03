@@ -9,6 +9,7 @@ import javax.swing.border.LineBorder;
 
 import sonia.mapper.Colormapper;
 import sonia.mapper.DefaultColors;
+import sonia.mapper.Shapemapper;
 import sonia.render.Graphics2DRender;
 import sonia.settings.GraphicsSettings;
 
@@ -46,6 +47,7 @@ public class SoniaCanvas extends JPanel
   private Graphics2DRender g2dRender;
   private GraphicsSettings settings = null;
 private Colormapper colormapper = null;
+private Shapemapper shapemapper = null;
   //private Image offScreen;
   private Image ghostImage = null;
   private int drawWidth;
@@ -473,6 +475,13 @@ public void setColormapper(Colormapper colormapper) {
 	this.colormapper = colormapper;
 }
 
+public Shapemapper getShapemapper() {
+	return shapemapper;
+}
+
+public void setShapemapper(Shapemapper shapemapper){
+	this.shapemapper = shapemapper;
+}
 
 
 }
