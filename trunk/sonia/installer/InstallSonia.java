@@ -57,7 +57,9 @@ public class InstallSonia {
 	//public static final String SONIA_DOWNLOAD_URL = "http://csde.washington.edu/~skyebend/rsonia/current/sonia_1_1_3_unstable.jar";
 	public static final String SONIA_DOWNLOAD_URL = "http://internap.dl.sourceforge.net/sourceforge/sonia/";
 	
-	public static final String SONIA_VERSION_NAME = "sonia_1_2_0.jar";
+	public static final String SONIA_VERSION_NAME = "sonia_1_2_2.jar";
+	
+	public static final String SONG_VERSION_NAME = "song_1_2_2.jar";
 	
 	public static final String GPL_URL = "http://www.gnu.org/licenses/gpl.txt";
 
@@ -180,7 +182,7 @@ public class InstallSonia {
 			};
 		});
 		JButton mdsjInfo = new JButton("MDSJ..");
-		javaGraphicsInfo.addActionListener(new ActionListener() {
+		mdsjInfo.addActionListener(new ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent e) {
 				openURL("http://www.inf.uni-konstanz.de/algo/software/mdsj/");
 			};
@@ -232,7 +234,7 @@ public class InstallSonia {
 		mainPanel.add(mdsjInfo, c);
 
 		baseFrame.getContentPane().add(mainPanel);
-		baseFrame.setSize(600, 400);
+		baseFrame.setSize(800, 500);
 		baseFrame.setVisible(true);
 	}
 
@@ -256,7 +258,7 @@ public class InstallSonia {
 				if (targetPath == null) {
 					JFileChooser chooser = new JFileChooser();
 					chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-					int returnVal = chooser.showSaveDialog(baseFrame);
+					int returnVal = chooser.showOpenDialog(baseFrame);
 					if (returnVal == JFileChooser.APPROVE_OPTION) {
 						targetPath = chooser.getSelectedFile()
 								.getAbsolutePath();
@@ -296,6 +298,15 @@ public class InstallSonia {
 					showError("error downloading sonia.jar: " + e.toString());
 					e.printStackTrace();
 				}
+				
+				// get the most current version of SONG
+				try {
+					downloadFile(SONIA_DOWNLOAD_URL+SONG_VERSION_NAME, targetPath);
+				} catch (Exception e) {
+					showError("error downloading song.jar: " + e.toString());
+					e.printStackTrace();
+				}
+				
 				// download colt license
 				try {
 					downloadFile(COLT_LICENSE_URL, targetPath);
@@ -450,9 +461,8 @@ public class InstallSonia {
 				}
 
 				// show quicktime info
-				String QTMessage = "<html>SoNIA currently exports animations in QuickTime .mov format <BR>"
-						+ " using the QTJava libraries from AppleComputer. <br>"
-						+ "Please download and run the QuickTime installer from:<br> "
+				String QTMessage = "<html>SoNIA exports animations in QuickTime .mov format. <BR>"
+						+ "You may want to download and run the QuickTime installer from:<br> "
 						+ QT_DOWNLOAD_URL
 						+ "<br>"
 						+ "  Would you like to open the download page in your browser now?</html>";
