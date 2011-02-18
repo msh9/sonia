@@ -14,6 +14,7 @@ import java.io.PrintWriter;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -21,6 +22,7 @@ import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.Vector;
 
+import sonia.Interval;
 import sonia.parsers.DotSonParser;
 import sonia.song.filters.AllProblemFilter;
 import sonia.song.filters.CleaningFilter;
@@ -94,6 +96,8 @@ public class Getter {
 	private boolean stopTasks = false; // for breaking tasks
 
 	private int warnCount = 0;
+	
+	private static Interval NULL_SPELL = new Interval();
 
 	public Getter() {
 
@@ -260,12 +264,14 @@ public class Getter {
 				nodeHeaders.add("AlphaId");
 			}
 
-			HashSet<String> timeset;
+			HashMap<String,ArrayList<Interval>> intervalSet;
 			if (makeTimes) {
 				// figure out the set of times based on the arcs
-				timeset = getTimeset(arcData);
+				//timeset = getTimeset(arcData);
+				intervalSet = getIntervalSet(arcData);
+				
 				// check that we got some times
-				if (timeset == null) {
+				if (intervalSet == null) {
 					return false;
 				}
 				if (!nodeHeaders.contains("StartTime".intern())) {
@@ -277,8 +283,8 @@ public class Getter {
 					nodeHeaders.add("EndTime".intern());
 				}
 			} else {
-				timeset = new HashSet<String>();
-				timeset.add("always and forever"); // dummy value to make it
+				intervalSet = new HashMap<String,ArrayList<Interval>>();
+				//timeset.add("always and forever"); // dummy value to make it
 				// loop
 			}
 
@@ -291,17 +297,24 @@ public class Getter {
 
 				String id = nodeIter.next();
 
-				progress(nodeIds.size() * timeset.size(), rowCounter,
+				progress(nodeIds.size() * intervalSet.size(), rowCounter,
 						"generate data for node " + id);
+				ArrayList<Interval> spells;
+				if (makeTimes){
+					spells = intervalSet.get(id);
+				} else {
+					spells = new ArrayList<Interval>(); //TODO: unecessary object creation
+					spells.add(NULL_SPELL);
+				}
 				// loop over each time
-				Iterator<String> timeIter = timeset.iterator();
+				Iterator<Interval> timeIter = spells.iterator();
 				while (timeIter.hasNext()) {
 					if (stopTasks) {
 						status("parsing cancled.");
 						return false;
 					}
 
-					String time = timeIter.next();
+					Interval spell = timeIter.next();
 					String[] row = new String[numNodeCols];
 
 					if (nodeProps) {
@@ -323,10 +336,9 @@ public class Getter {
 					row[nodeHeaders.indexOf("AlphaId")] = id;
 
 					if (makeTimes) {
-						// TODO: may not always want start and end time to be
-						// the same
-						row[nodeHeaders.indexOf("StartTime")] = time;
-						row[nodeHeaders.indexOf("EndTime")] = time;
+					
+						row[nodeHeaders.indexOf("StartTime")] = spell.start+"";
+						row[nodeHeaders.indexOf("EndTime")] = spell.end+"";
 					}
 
 					nodeData.add(row);
@@ -1012,6 +1024,102 @@ public class Getter {
 		}
 
 		return times;
+	}
+	
+	/**
+	 * Construct an array of spells for each node, index by node ids
+	 * @param arcData
+	 * @return
+	 */
+	private HashMap<String,ArrayList<Interval>> getIntervalSet(ArrayList<String[]> arcData){
+		HashMap<String,ArrayList<Interval>> nodeIntervalMap = new HashMap<String,ArrayList<Interval>>();
+		// figure out if there are start and end times
+		int startIndex = arcHeaders.indexOf("StartTime");
+		int endIndex = arcHeaders.indexOf("EndTime");
+		int fromIndex = arcHeaders.indexOf("FromId");
+		int toIndex = arcHeaders.indexOf("ToId");
+		if (startIndex == -1 & endIndex == -1) {
+			status("The arcs data must include columns for 'StartTime' and/or "
+					+ "'EndTime' in order to generate a set of intervals for the node properties");
+			return null;
+		}
+		Iterator<String[]> rowIter = arcData.iterator();
+		while (rowIter.hasNext()) {
+			String[] row = rowIter.next();
+			//deal with the from node
+			//if there are no spells, add it
+			if (!nodeIntervalMap.containsKey(row[fromIndex])){
+				ArrayList<Interval> spells = new ArrayList<Interval>();
+				Interval spell = new Interval();
+				spell.start = Double.parseDouble(row[startIndex]);
+				if (endIndex >= 0){
+					spell.end =  Double.parseDouble(row[endIndex]);
+				} else {
+					spell.end = Double.parseDouble(row[startIndex]);
+				}
+				spells.add(spell);
+				nodeIntervalMap.put(row[fromIndex],spells );
+			} else {
+				// add  spells
+				ArrayList<Interval> spells = nodeIntervalMap.get(row[fromIndex]);
+				Interval spell = new Interval();
+				spell.start = Double.parseDouble(row[startIndex]);
+				if (endIndex >= 0){
+					spell.end =  Double.parseDouble(row[endIndex]);
+				} else {
+					spell.end =Double.parseDouble(row[startIndex]);
+				}
+				spells.add(spell);
+				nodeIntervalMap.put(row[fromIndex],spells );
+			}
+			//deal with the to node
+			if (!nodeIntervalMap.containsKey(row[toIndex])){
+				ArrayList<Interval> spells = new ArrayList<Interval>();
+				Interval spell = new Interval();
+				spell.start = Double.parseDouble(row[startIndex]);
+				if (endIndex >= 0){
+					spell.end =  Double.parseDouble(row[endIndex]);
+				} else {
+					spell.end = Double.parseDouble(row[startIndex]);
+				}
+				spells.add(spell);
+				nodeIntervalMap.put(row[toIndex],spells );
+			} else {
+				// add  spells
+				ArrayList<Interval> spells = nodeIntervalMap.get(row[toIndex]);
+				Interval spell = new Interval();
+				spell.start = Double.parseDouble(row[startIndex]);
+				if (endIndex >= 0){
+					spell.end =  Double.parseDouble(row[endIndex]);
+				} else {
+					spell.end = Double.parseDouble(row[startIndex]);
+				}
+				spells.add(spell);
+				nodeIntervalMap.put(row[toIndex],spells );
+			}
+		}
+		
+		//merge overlapping spells for same nodes
+		Iterator<String> idIter  = nodeIntervalMap.keySet().iterator();
+		while (idIter.hasNext()){
+			ArrayList<Interval> spells = nodeIntervalMap.get(idIter.next());
+			
+			//sort spells so that we only have to compare start times
+			Collections.sort(spells);
+			for (int s = 1; s < spells.size(); s++) {
+				//compare s to s-1 . if they intersect or are adjacent, merge and delete s
+				Interval prevSpell = spells.get(s-1);
+				Interval spell = spells.get(s);
+				if (spell.intersectOrAdjoins(prevSpell)){
+					prevSpell.end = Math.max(prevSpell.end,spell.end);
+					spells.remove(s);
+				}
+			}
+			
+		}
+		
+		return nodeIntervalMap;
+		
 	}
 
 	public void validateData() {

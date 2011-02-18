@@ -21,18 +21,20 @@ package sonia;
  * @author skyebend
  * 
  */
-public class Interval implements Comparable {
+public class Interval implements Comparable<Interval> {
 
 	public double start;
 
 	public double end;
+	
+	public Interval(){}
 
 	public Interval(double start, double end) {
 		this.start = start;
 		this.end = end;
 	}
 
-	public int compareTo(Object arg0) {
+	public int compareTo(Interval arg0) {
 		Interval other = (Interval) (arg0);
 		if        ((other.start < start) & (other.end < end)) {
 			return -1;
@@ -71,6 +73,16 @@ public class Interval implements Comparable {
 		} 
 		return false;
 		
+	}
+	
+	public boolean intersectOrAdjoins(Interval other){
+		if ((this.start >= other.start) & (this.start <= other.end)){
+			return true;
+		}
+		if ((this.end <= other.end) & (this.end >= other.start)){
+			return true;
+		}
+		return false;
 	}
 
 	@Override
