@@ -110,7 +110,7 @@ import sonia.settings.PropertySettings;
 * is why the .net parser throws up the dialog to ask "parse times as integers."
 * If this is set to true, the end times will all have 0.99999 added to them, so
 * that the interval 1-2 will become 1.0-2.99999 instead of 1.0 to 2.0.
-* @version $Revision: 1.9 $ $Date: 2008-10-02 04:05:58 $
+* @version $Revision: 1.10 $ $Date: 2014-06-09 17:07:38 $
 * @author Skye Bender-deMoll e-mail skyebend@santafe.edu
 */
 public class DotNetParser extends Object implements Parser, ActionListener
@@ -323,6 +323,8 @@ public class DotNetParser extends Object implements Parser, ActionListener
     //take a guess if it has coords
     if (nodeString.countTokens() > 2){
     	parseCoords = true;
+    } else {
+    	parseCoords = false;
     }
     if ((nodeString.countTokens() < 2) |
         //check if coordinates parsing is on
@@ -497,12 +499,12 @@ public class DotNetParser extends Object implements Parser, ActionListener
     double arcEndTime = Double.POSITIVE_INFINITY;
     int fromId;
     int toId;
-    double weight;
+    double weight =1;
     double width = 1.0;
     Color color = Color.lightGray;
 
     StringTokenizer arcString = new StringTokenizer(line," ");
-    if (arcString.countTokens() < 3)
+    if (arcString.countTokens() < 2)
     {
       String error = "Line "+currentLineNum+" is missing Entries";
       throw(new IOException(error));
@@ -528,7 +530,9 @@ public class DotNetParser extends Object implements Parser, ActionListener
         //parse weight
         try
         {
+         if(arcString.hasMoreTokens()){
           weight = Double.parseDouble(arcString.nextToken());
+         }
         }
         catch (NumberFormatException doubleParseEx)
         {

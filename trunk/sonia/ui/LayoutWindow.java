@@ -296,13 +296,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 		});
 		JMenu multipleExport = new JMenu("Export Network");
 		menuBar.add(multipleExport);
-		multipleExport.add(new AbstractAction("Export QuickTime Movie...") {
-			public void actionPerformed(ActionEvent arg0) {
-				// Control.exportMovie(engine, null);
-
-				Control.exportQTMovie(engine, LayoutArea, null);
-			}
-		});
+		
 
 		multipleExport.add(new AbstractAction("Export Matricies...") {
 			public void actionPerformed(ActionEvent arg0) {

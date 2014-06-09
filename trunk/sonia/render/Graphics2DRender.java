@@ -79,7 +79,15 @@ public class Graphics2DRender implements Render {
 		BasicStroke borderStroke = getStrokeForWidth(node.getBorderWidth(),
 				false);
 		graphics.setStroke(borderStroke);
+		
+		//debug code to try to figureout why renderer is throwing exceptions
+		try {
 		graphics.draw(nodeShape);
+		} catch (Exception e) {
+			System.out.println("RENDER ERROR");
+			e.printStackTrace();
+			System.out.println(nodeShape.toString());
+		}
 
 		// if it has never been drawn, than draww it very large so it will
 		// show

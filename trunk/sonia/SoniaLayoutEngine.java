@@ -454,7 +454,7 @@ public class SoniaLayoutEngine implements TaskListener{
 	 * @param slice
 	 *            the slice which the layout will be applied to
 	 */
-	public synchronized LongTask  applyLayoutTo(ApplySettings settings, LayoutSlice slice) {
+	public  LongTask  applyLayoutTo(ApplySettings settings, LayoutSlice slice) {
 		
 		
 		// check if slice is in use

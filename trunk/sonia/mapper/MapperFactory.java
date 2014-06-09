@@ -52,17 +52,19 @@ public class MapperFactory {
 	 */
 	public static ColormapperSettings asProperties(Colormapper mapper) {
 		ColormapperSettings props = new ColormapperSettings();
-		props.setProperty(ColormapperSettings.MAPPER_NAME, mapper
-				.getMapperName());
-		props.setProperty(ColormapperSettings.DATA_KEY, mapper.getKey()
-				.toString());
-		Iterator valsiter = mapper.getValues().iterator();
-		while (valsiter.hasNext()) {
-			Object value = valsiter.next();
-			if (value != null) {
-				Color c = mapper.getColorFor(value);
-				props.setProperty(value.toString(), "rgb(" + c.getRed() + ","
-						+ c.getGreen() + "," + c.getBlue() + ")");
+		if (mapper != null){
+			props.setProperty(ColormapperSettings.MAPPER_NAME, mapper
+					.getMapperName());
+			props.setProperty(ColormapperSettings.DATA_KEY, mapper.getKey()
+					.toString());
+			Iterator valsiter = mapper.getValues().iterator();
+			while (valsiter.hasNext()) {
+				Object value = valsiter.next();
+				if (value != null) {
+					Color c = mapper.getColorFor(value);
+					props.setProperty(value.toString(), "rgb(" + c.getRed() + ","
+							+ c.getGreen() + "," + c.getBlue() + ")");
+				}
 			}
 		}
 		return props;

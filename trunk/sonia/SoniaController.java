@@ -53,7 +53,6 @@ import sonia.mapper.MapperFactory;
 import sonia.movie.JPEGMovieMaker;
 import sonia.movie.MovieMaker;
 import sonia.movie.MultipleImageMovieMaker;
-import sonia.movie.QTMovieMaker;
 import sonia.movie.SWFMovieMaker;
 import sonia.parsers.BotDumpParser;
 import sonia.parsers.ClusterParser;
@@ -628,10 +627,7 @@ public class SoniaController implements Runnable, TaskListener{
 				movie = exportFlashMovie(engine,engine.getLayoutWindow().getDisplay(),movFileName);
 				//nasty hack.  assome that the movie method has created a batchTask so listen to it
 				batchTask.addTaskEventListener(this);
-			} else if (movType != null && movType.equals(MovieSettings.QUICKTIME_FILE_TYPE)) {
-				movie = exportQTMovie(engine,engine.getLayoutWindow().getDisplay(),movFileName);
-//				nasty hack.  assome that the movie method has created a batchTask so listen to it
-				batchTask.addTaskEventListener(this);
+		
 			} else {
 				showError("Unknown movie file type:"+movType);
 				return;
@@ -873,48 +869,7 @@ public class SoniaController implements Runnable, TaskListener{
 		return exporter;
 	}
 
-	public MovieMaker exportQTMovie(SoniaLayoutEngine engToExport,
-			SoniaCanvas canvas, String fileName) {
-		MovieMaker exporter = null;
-		if ((fileName == null) & isShowGUI()) {
-			FileDialog dialog = new FileDialog(new Frame(),
-					"Save Network QuickTime Movie As...", FileDialog.SAVE);
-			dialog.setFile("network.mov");
-
-			dialog.setVisible(true);
-			if (dialog.getFile() == null) {
-				// dont do anything
-				return exporter;
-			} else {
-				fileName = dialog.getDirectory() + dialog.getFile();
-			}
-
-		}
-		if (fileName != null) {
-			
-			try {
-				 exporter = new QTMovieMaker(this,fileName);
-
-					// also ask about export formats
-				 if (movieSettings == null & isShowGUI()){
-					MovExportSettingsDialog set = new MovExportSettingsDialog(ui,
-							(QTMovieMaker)exporter);
-					set.showDialog();
-				 } else {
-					 exporter.configure((MovieSettings)movieSettings);
-				 }
-				 //kind of an ugly hack, should redesign to have a better way to get a reference to the mvoie task
-				batchTask = engToExport.makeMovie(exporter);
-			} catch (Exception e) {
-				showError("Error writing QT movie:" + e.getMessage());
-				log("ERROR saving movie: " + e.getMessage());
-				e.printStackTrace();
-			}
-		} else {
-			showError("Unable to export movie with null file name");
-		}
-		return exporter;
-	}
+	
 	
 	public MovieMaker exportImageSequence(SoniaLayoutEngine engToExport,
 			SoniaCanvas canvas, String fileName) {

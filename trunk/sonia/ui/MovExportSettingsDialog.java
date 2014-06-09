@@ -29,15 +29,14 @@ import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
 
-import sonia.movie.QTMovieMaker;
+//import sonia.movie.QTMovieMaker;
 
 public class MovExportSettingsDialog {
 
 	private JDialog settingsDialog;
 	private JPanel panel;
 	private JButton ok;
-	private QTMovieMaker maker;
-	
+/**	
 	public MovExportSettingsDialog(SoniaInterface ui,QTMovieMaker moviemaker){
 		maker = moviemaker;
 		settingsDialog = new JDialog((Frame)ui,"Export Options",true);
@@ -61,11 +60,13 @@ public class MovExportSettingsDialog {
 	public void showDialog(){
 		settingsDialog.setVisible(true);
 	}
+	**/
 	
 	private JComponent getOptionComponent() {
 		JPanel optionPanel = new JPanel(new GridLayout(2,1));
 		optionPanel.setBorder(new TitledBorder("QuickTime Export Options:"));
-		JComboBox codec = new JComboBox(QTMovieMaker.codecs);
+/**	turning off QTjava specific code
+        JComboBox codec = new JComboBox(QTMovieMaker.codecs);
 		codec.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
@@ -90,7 +91,7 @@ public class MovExportSettingsDialog {
 		optionPanel.add(quality);
 		//JComboBox exportType = new JComboBox(maker.getExportFormats());
 		//optionPanel.add(exportType);
-
+**/
 		return optionPanel;
 
 	}
