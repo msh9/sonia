@@ -16,7 +16,7 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 
-import com.bric.qt.io.*;
+import com.bric.qt.*;
 
 import sonia.SoniaCanvas;
 import sonia.SoniaController;

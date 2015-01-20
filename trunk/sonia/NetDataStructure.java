@@ -34,7 +34,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 /*
  * Holds the time and space coordinates and attributes for the nodes and edges
  * as they were read from input files.  Provides methods for accessing
- * attributes, generating slices, and retreive nodes and edges by time to
+ * attributes, generating slices, and retrieve nodes and edges by time to
  * generate layout slices.  Probably will eventually become an interface, so
  * that SoNIA can frontend for SQL database.
  */
@@ -68,7 +68,7 @@ public class NetDataStructure
   /**
    * Holds the time and space coordinates and attributes for the nodes and edges
    * as they were read from input files.  Provides methods for accessing
-   * attributes, generating slices, and retriving nodes and edges by time to
+   * attributes, generating slices, and retrieving nodes and edges by time to
    * generate layout slices.
    * @param controller the main soniaController
    * @param fileName the name of the original text file
@@ -226,24 +226,24 @@ public class NetDataStructure
       return currentSlice;
   }
 
-  public RenderSlice fillRenderSlice(RenderSlice slice)
-  {
+  	public RenderSlice fillRenderSlice(RenderSlice slice)
+  	{
 	  //TODO: build time indexing structure to speed up slice filling
-    double sliceStart = slice.getSliceStart();
-    double sliceEnd = slice.getSliceEnd();
-    //loop over all nodes to see which should be in this slice
-    for (int i=0;i<numNodeEvents;i++)
-     {
-       double obsTime = nodeEventArray[i].getObsTime();
-       double end = nodeEventArray[i].getEndTime();
-       //include node in bin if obsTime is within interval (inclusive)
-       // (will include relations of lenth shorter than interval)
-       //if obsTime before start AND endTime after end of interval
-       if(((obsTime >= sliceStart) & (obsTime < sliceEnd))
-         | ((obsTime <= sliceStart) & (end >= sliceEnd)))
-       {
-         slice.addNodeEvent(nodeEventArray[i]);
-       }
+	  double sliceStart = slice.getSliceStart();
+	  double sliceEnd = slice.getSliceEnd();
+	  //loop over all nodes to see which should be in this slice
+	  for (int i=0;i<numNodeEvents;i++)
+      {
+        double obsTime = nodeEventArray[i].getObsTime();
+        double end = nodeEventArray[i].getEndTime();
+        //include node in bin if obsTime is within interval (inclusive)
+        // (will include relations of lenth shorter than interval)
+        //if obsTime before start AND endTime after end of interval
+        if(((obsTime >= sliceStart) & (obsTime < sliceEnd))
+          | ((obsTime <= sliceStart) & (end >= sliceEnd)))
+        {
+          slice.addNodeEvent(nodeEventArray[i]);
+        }
       }
 
       //loop over the arcs
@@ -278,7 +278,7 @@ public class NetDataStructure
       return slice;
   }
 
-  //moves events from passed vector (from parseing) into array
+  //moves events from passed vector (from parsing) into array
   public void addNodeEvents(Vector<NodeAttribute> nodeEvents)
   {
     //check that they will fit

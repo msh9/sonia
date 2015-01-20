@@ -28,8 +28,16 @@ import java.util.*;
 import java.awt.Color;
 import java.text.*;
 
+import edu.uci.ics.jung.algorithms.scoring.ClosenessCentrality;
+import edu.uci.ics.jung.algorithms.scoring.DegreeScorer;
+import edu.uci.ics.jung.algorithms.scoring.EigenvectorCentrality;
+import edu.uci.ics.jung.graph.DirectedSparseGraph;
+import edu.uci.ics.jung.graph.Graph;
+import edu.uci.ics.jung.graph.SparseGraph;
+
 import sonia.render.Graphics2DRender;
 import sonia.render.Render;
+import sonia.settings.GraphicsSettings;
 
 /**
  * A bin or container for the node and arc events meeting its criteria, it draws
@@ -114,6 +122,99 @@ public class RenderSlice {
 		clusterEvents.add(cluster);
 	}
 	
+	private int NodeEventIndexFromId(int id) {
+		for (int i = 0; i < nodeEvents.size(); ++i) {
+			if (nodeEvents.get(i).getNodeId() == id)
+			{
+				return i;
+			}
+		}
+		return -1;
+	}
+	
+	private Vector<Double> computeNodeEventWidths(SoniaCanvas canvas) {
+		// SFB TODO: Add in dynamic computation of weights here
+		
+		Vector<Double> widths = new Vector<Double>();
+		
+		if (nodeEvents.size() > 0) {
+			
+			// convert sonia node/edge data to Jung graph data
+			Graph<Integer,Integer> graph = new DirectedSparseGraph<Integer,Integer>();
+			for (int i = 0; i < nodeEvents.size(); ++i) {
+				graph.addVertex(nodeEvents.get(i).getNodeId());
+			}
+			for (int i = 0; i < arcEvents.size(); ++i) {
+				ArcAttribute arc = arcEvents.get(i);
+				graph.addEdge(i, arc.getFromNodeId(), arc.getToNodeId());
+			}
+			
+			// check if we are computing weighs on dynamically by slice and if so 
+			switch (canvas.getNodeSizeByCentrality())
+			{
+			case GraphicsSettings.CENTRALITY_DEGREE:
+				DegreeScorer<Integer> degreeScorer = new DegreeScorer<Integer>(graph);
+				for (int i = 0; i < nodeEvents.size(); ++i) {
+					Double width = degreeScorer.getVertexScore(nodeEvents.get(i).getNodeId()).doubleValue();
+					widths.add(width);
+				}
+				break;
+				
+			case GraphicsSettings.CENTRALITY_CLOSENESS:
+				ClosenessCentrality<Integer,Integer> centralityScorer = new ClosenessCentrality<Integer,Integer>(graph);
+				for (int i = 0; i < nodeEvents.size(); ++i) {
+					Double width = centralityScorer.getVertexScore(nodeEvents.get(i).getNodeId()).doubleValue();
+					if (width.isNaN())
+					{
+						width = 0.0;
+					}
+					widths.add(width);
+				}
+				// QUESTIONS:
+				//   - what do we do when the centrality scorer returns an NaN result?  What does that mean??
+				break;
+				
+			case GraphicsSettings.CENTRALITY_EIGENVECTOR:
+				EigenvectorCentrality<Integer,Integer> eigenvectorScorer = new EigenvectorCentrality<Integer,Integer>(graph);
+				for (int i = 0; i < nodeEvents.size(); ++i) {
+					Double width = eigenvectorScorer.getVertexScore(nodeEvents.get(i).getNodeId()).doubleValue();
+					widths.add(width);
+				}
+				// QUESTION:
+				//   - returns identical number for all verticies
+				break;
+				
+			default:
+				// give the nodes a default width
+				for (int i = 0; i < nodeEvents.size(); ++i) {
+					widths.add(1.0);
+				}
+				break;
+			}
+			
+			// get the maximum width
+			Double max = 0.0;
+			for (int i = 0; i < widths.size(); ++i) {
+				if (widths.get(i) > max) {
+					max = widths.get(i);
+				}
+			}		
+			
+			// now do the following:
+			//  - normalize the widths
+			//  - scale by 0.75, and boost the floor by 0.25
+			//  - and then scale by canvas scaling factor
+			double baseFactor = canvas.getNodeScaleFact();
+			for (int i = 0; i < widths.size(); ++i) {
+				Double normVal = (((widths.get(i) / max) * 0.75) + 0.25) * baseFactor;
+				widths.set(i, normVal);
+			}			
+			
+		}
+		
+		return widths;
+	}
+	
 	/**
 	 * gets the number of seconds it took to render the last frame
 	 * @author skyebend
@@ -159,16 +260,11 @@ public class RenderSlice {
 				cluster.computeShapeFor(xCoords,yCoords,clusterPadding,left,top);
 				((Graphics2DRender)render).paintClusters(cluster);
 			}
-		
-			
 		}
 
 		// first do arcs
 		// KLUDG check to not draw arcs for speed
 		if (!canvas.isHideArcs()) {
-
-			
-
 			ArcAttribute arc;
 			int fromId;
 			int toId;
@@ -239,6 +335,11 @@ public class RenderSlice {
 
 		// NODE EVENT LOOP
 		// then do nodes (so nodes are on top)
+		
+		// first compute the dynamic node data attributes such as weights
+		Vector<Double> nodeWidths = computeNodeEventWidths(canvas);
+
+		// then loop through and render them
 		for (int i = 0; i < nodeEvents.size(); i++) {
 			NodeAttribute node = (NodeAttribute) nodeEvents.get(i);
 			
@@ -272,8 +373,8 @@ public class RenderSlice {
 			render.setTransparency(trans);
 			int index = node.getNodeId() - 1;
 			if (!canvas.isHideNodes()){
-				render.paintNode(node, xCoords[index] + left, yCoords[index] + top,
-					canvas.getNodeScaleFact());
+//				render.paintNode(node, xCoords[index] + left, yCoords[index] + top, canvas.getNodeScaleFact());
+				render.paintNode(node, xCoords[index] + left, yCoords[index] + top, nodeWidths.get(i));
 			}
 			// vertex size based label cutoffs
 			boolean showId = canvas.isShowId();
@@ -286,7 +387,7 @@ public class RenderSlice {
 			}
 			if (showLabels | showId) {
 				render.paintNodeLabels(node, xCoords[index] + left,
-						yCoords[index] + top, canvas.getNodeScaleFact(),
+						yCoords[index] + top, nodeWidths.get(i), //canvas.getNodeScaleFact(),
 						showLabels, showId, canvas.getLabelBgTransVal());
 			}
 		}

@@ -44,8 +44,8 @@ public class LayoutSlice
   private double[] yCoords;
   private SparseDoubleMatrix2D arcsMatrix; //holds links
   private SparseDoubleMatrix2D arcCountMatrix; //holds number of ij ties (would be nice if it was int..)
-  private IntArrayList presentNodes; //idexesof all the nodes present
-  private ArrayList nodeEvents;  // ref for acessing the orignial events
+  private IntArrayList presentNodes; //indexes of all the nodes present
+  private ArrayList nodeEvents;  // ref for accessing the original events
   private AtomicBoolean layoutFinished = new AtomicBoolean(true); //flag for concurency check
   private boolean hasError;  //flag for saying there are layout problems
 

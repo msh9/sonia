@@ -132,8 +132,6 @@ public class Graphics2DRender implements Render {
 			}
 		}
 		
-		
-		
 		if (showLabels) {
 			printLabel = printLabel + node.getNodeLabel();
 		}

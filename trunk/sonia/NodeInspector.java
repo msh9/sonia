@@ -833,16 +833,20 @@ public class NodeInspector implements MouseListener, ChangeListener,
 	}
 
 	public void mouseMoved(MouseEvent e) {
-		int found = getTarget(e.getX(), e.getY());
-		if (found >= 0) {
-			// set the tool tip with the label of that node
-			NodeAttribute node = (NodeAttribute) nodeEvents.get(found);
-			canvas.setToolTipText(node.getNodeLabel());
-
-		} else {
-			canvas.setToolTipText(null);
+		int foundId = getTarget(e.getX(), e.getY()) + 1;
+		if (foundId >= 0) {
+			// find the node with the given id
+			for (int i = 0; i < nodeEvents.size(); ++i)
+			{
+				if (nodeEvents.get(i).getNodeId() == foundId)
+				{
+					// set the tool tip with the label of that node
+					canvas.setToolTipText(nodeEvents.get(i).getNodeLabel());
+					return;
+				}
+			}
 		}
-
+		canvas.setToolTipText(null);
 	}
 
 }

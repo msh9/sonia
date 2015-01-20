@@ -441,6 +441,10 @@ public  void setRenderSlice(RenderSlice slice)
 //    hideArcs = state;
 //  }
 
+  public String getNodeSizeByCentrality()
+  {
+	  return settings.getProperty(GraphicsSettings.NODE_CENTRALITY);
+  }
 
 
   /**

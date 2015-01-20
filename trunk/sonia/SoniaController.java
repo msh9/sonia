@@ -46,8 +46,7 @@ import org.freehep.graphicsio.swf.SWFAction.InstanceOf;
 import com.anotherbigidea.flash.readers.SWFReader;
 import com.anotherbigidea.flash.readers.TagParser;
 import com.anotherbigidea.flash.writers.SWFTagDumper;
-import com.bric.qt.io.JPEGMovieAnimation;
-		
+import com.bric.qt.JPEGMovieAnimation;
 
 import sonia.mapper.MapperFactory;
 import sonia.movie.JPEGMovieMaker;
@@ -57,6 +56,7 @@ import sonia.movie.SWFMovieMaker;
 import sonia.parsers.BotDumpParser;
 import sonia.parsers.ClusterParser;
 import sonia.parsers.DLParser;
+import sonia.parsers.DotDyNetParser;
 import sonia.parsers.DotNetParser;
 import sonia.parsers.DotSonParser;
 import sonia.parsers.DyNetMLParser;
@@ -94,20 +94,22 @@ import cern.colt.matrix.impl.SparseDoubleMatrix2D;
  * the command line, otherwise the last 7 digits of millisecond time are used.
  */
 
-public class SoniaController implements Runnable, TaskListener{
-	public static final String CODE_DATE = "2011-01-03";
+public class SoniaController implements Runnable, TaskListener {
+	public static final String CODE_DATE = "2014-10-09";
 
-	public static final String VERSION = "1.2.2";
+	public static final String VERSION = "1.3.0";
 
 	private SoniaInterface ui;
 
 	private LogWindow log;
 
-	private ArrayList<SoniaLayoutEngine> engines; // holds engines for each layout
+	private ArrayList<SoniaLayoutEngine> engines; // holds engines for each
+													// layout
 
-	private SoniaLayoutEngine engine; //context for current actions
+	private SoniaLayoutEngine engine; // context for current actions
 
-	private ArrayList<NetDataStructure> networks; // holds NetDataStructures for eachLayout
+	private ArrayList<NetDataStructure> networks; // holds NetDataStructures for
+													// eachLayout
 
 	private NetDataStructure networkData;
 
@@ -120,9 +122,9 @@ public class SoniaController implements Runnable, TaskListener{
 	private String currentPath = "";
 
 	private boolean fileLoaded = false;
-	
+
 	private boolean verbose = false;
-	
+
 	private boolean autoCreate = false;
 
 	private boolean paused = false;
@@ -138,14 +140,13 @@ public class SoniaController implements Runnable, TaskListener{
 	private PropertySettings parserSettings = null;
 
 	private PropertySettings movieSettings = null;
-	
+
 	private ColormapperSettings mapperSettings = null;
-	
 
 	private Uniform randomUni; // colt package mersense twister random numbers
-	
+
 	private TaskRunner taskrunner;
-	
+
 	private LongTask batchTask = null;
 
 	// NEED TO INCLUDE COLT LISCENCE AGREEMENT
@@ -178,10 +179,9 @@ public class SoniaController implements Runnable, TaskListener{
 			System.out.println("ERROR: unable to locate: " + e.getMessage());
 			// if (e.getMessage().matches("cern"))
 			// {
-			ui
-					.showError("Error launching SoNIA:\n"
-							+ "It seems that SoNIA is unable to locate the external library"
-							+ e.getMessage());
+			ui.showError("Error launching SoNIA:\n"
+					+ "It seems that SoNIA is unable to locate the external library"
+					+ e.getMessage());
 			// }
 			log("ERROR: unable to initialize random number generator: "
 					+ e.getMessage());
@@ -189,10 +189,10 @@ public class SoniaController implements Runnable, TaskListener{
 		taskrunner = new TaskRunner(this);
 		taskrunner.addUItoUpdate(ui);
 	}
-	
-	public void runTask(LongTask task){
+
+	public void runTask(LongTask task) {
 		taskrunner.runTask(task);
-		if (isShowGUI()){
+		if (isShowGUI()) {
 			ui.showTask(task);
 		}
 	}
@@ -205,14 +205,14 @@ public class SoniaController implements Runnable, TaskListener{
 	 */
 	public void showGUI(boolean visable) {
 		showGUI = visable;
-//		 this is a kludge
+		// this is a kludge
 		if (autoCreate) {
 			createLayout(sliceSettings);
 		}
 		if (ui != null) {
 			ui.setVisible(visable);
 		}
-		
+
 	}
 
 	/**
@@ -240,86 +240,86 @@ public class SoniaController implements Runnable, TaskListener{
 		try {
 			// UIManager.setLookAndFeel(
 			// UIManager.getCrossPlatformLookAndFeelClassName());
-		
 
-		Date seedDate = new Date();
-		// kludge here 'cause millisecond value of date is too large for int
-		int rngSeed = (int) Math
-				.round((double) seedDate.getTime() - 1050960000000.0);
-		String inFile = "";
-		String networkData = "";
-		String settingsFile = "";
-		String batchSettings = "";
-		boolean runBatch = false;
-		boolean verbose = false;
-		for (int i = 0; i < args.length; i++) {
-			String arg = args[i];
-			// look at the arguments passed on the command line
-			// if there is "seed:9809283434" use it as the random seed
-			if (arg.startsWith("seed:")) {
-				rngSeed = Integer.parseInt(arg.substring(5));
+			Date seedDate = new Date();
+			// kludge here 'cause millisecond value of date is too large for int
+			int rngSeed = (int) Math
+					.round((double) seedDate.getTime() - 1050960000000.0);
+			String inFile = "";
+			String networkData = "";
+			String settingsFile = "";
+			String batchSettings = "";
+			boolean runBatch = false;
+			boolean verbose = false;
+			for (int i = 0; i < args.length; i++) {
+				String arg = args[i];
+				// look at the arguments passed on the command line
+				// if there is "seed:9809283434" use it as the random seed
+				if (arg.startsWith("seed:")) {
+					rngSeed = Integer.parseInt(arg.substring(5));
+				}
+				// if there is "file:<filenameand path>"try to load the file
+				if (arg.startsWith("file:")) {
+					inFile = arg.substring(5);
+				}
+				if (arg.startsWith("network:")) {
+					networkData = arg.substring(8);
+				}
+				if (arg.startsWith("settings:")) {
+					settingsFile = arg.substring(9);
+				}
+				if (arg.startsWith("batchsettings:")) {
+					batchSettings = arg.substring(14);
+				}
+				if (arg.startsWith("runbatch:")) {
+					runBatch = true;
+				}
+
+				if (arg.startsWith("verbose:")) {
+					verbose = true;
+				}
+
 			}
-			// if there is "file:<filenameand path>"try to load the file
-			if (arg.startsWith("file:")) {
-				inFile = arg.substring(5);
+			SoniaController sonia = new SoniaController(rngSeed);
+
+			sonia.setVerbose(verbose);
+
+			// batch overides settings
+			if (!batchSettings.equals("")) {
+				// check if it is a file or a string anda try to load it
+				sonia.log("batchsettings:" + batchSettings);
+				sonia.loadBatchSettings(batchSettings);
+				// this should be an option
+			} else if (!settingsFile.equals("")) {
+				sonia.loadSettings(settingsFile);
 			}
-			if (arg.startsWith("network:")) {
-				networkData = arg.substring(8);
-			}
-			if (arg.startsWith("settings:")) {
-				settingsFile = arg.substring(9);
-			}
-			if (arg.startsWith("batchsettings:")) {
-				batchSettings = arg.substring(14);
-			}
-			if (arg.startsWith("runbatch:")) {
-				runBatch = true;
-			}
-			
-			if (arg.startsWith("verbose:")) {
-				verbose = true;
+			// if a file has been passed on the command line, load it
+			if (!inFile.equals("")) {
+				sonia.log("inFile:" + inFile);
+				sonia.loadFile(inFile);
+			} else if (!networkData.equals("")) {
+				sonia.loadData(networkData);
 			}
 
-		}
-		SoniaController sonia = new SoniaController(rngSeed);
-		
-		sonia.setVerbose(verbose);
-
-		// batch overides settings
-		if (!batchSettings.equals("")) {
-			// check if it is a file or a string anda try to load it
-			sonia.log("batchsettings:"+batchSettings);
-			sonia.loadBatchSettings(batchSettings);
-			// this should be an option
-		} else if (!settingsFile.equals("")) {
-			sonia.loadSettings(settingsFile);
-		}
-		// if a file has been passed on the command line, load it
-		if (!inFile.equals("")) {
-			sonia.log("inFile:"+inFile);
-			sonia.loadFile(inFile);
-		} else if (!networkData.equals("")) {
-			sonia.loadData(networkData);
-		}
-
-		// if we are going to run a batch, run it here ( later move this code)
-		if (runBatch & !batchSettings.equals("")) {
-			sonia.runBatch();
-		} else {
-			//sonia.showGUI(true);
-			SwingUtilities.invokeLater(sonia);
-		}
+			// if we are going to run a batch, run it here ( later move this
+			// code)
+			if (runBatch & !batchSettings.equals("")) {
+				sonia.runBatch();
+			} else {
+				// sonia.showGUI(true);
+				SwingUtilities.invokeLater(sonia);
+			}
 		} catch (Throwable e) {
-			System.out.println("Error Launching Sonia:"+e.getMessage());
+			System.out.println("Error Launching Sonia:" + e.getMessage());
 			e.printStackTrace();
 			System.exit(-1);
 		}
 
 	}
-	
-	//launched inside gui thread, reads args and decides how to launch
-	public void run(){
-	  showGUI(true);
+
+	// launched inside gui thread, reads args and decides how to launch
+	public void run() {
+		showGUI(true);
 	}
 
 	/**
@@ -361,8 +361,8 @@ public class SoniaController implements Runnable, TaskListener{
 
 	/**
 	 * Brings up a file dialog, if a file is chosen it looks at the extension
-	 * (.net , .son, .rdump, .xml, .dl) to determine which parser to use, passes the text to the
-	 * parser, and gets and stores the resulting network.
+	 * (.net , .son, .rdump, .xml, .dl) to determine which parser to use, passes
+	 * the text to the parser, and gets and stores the resulting network.
 	 */
 	public void loadNetFromFile() {
 		// check that processes isn't running?
@@ -387,35 +387,35 @@ public class SoniaController implements Runnable, TaskListener{
 			} else if (fileName.endsWith(".dl")) {
 				parser = new DLParser();
 			} else if (fileName.endsWith(".rdump")) {
-				parser = new RNetworkDynamicParser(); //new RJavaParser();
+				parser = new RNetworkDynamicParser(); // new RJavaParser();
 				parser.configureParser(parserSettings);
-			} else if (fileName.endsWith(".xml")){
-				//TODO:  need to check doctype to figure out what kind of xml
+			} else if (fileName.endsWith(".xml")) {
+				// TODO: need to check doctype to figure out what kind of xml
 				parser = new DyNetMLSAXParser();
-			} else if(fileName.endsWith(".net")) {
+			} else if (fileName.endsWith(".net")) {
 				parser = new DotNetParser();
-			} else if(fileName.endsWith(".botnet")) {
+			} else if (fileName.endsWith(".botnet")) {
 				parser = new BotDumpParser();
+			} else if (fileName.endsWith(".dynet")) {
+				parser = new DotDyNetParser();
 			} else {
 				parser = null;
-				showError("Unable to determine correct parser from file extension," +
-						" is it the correct file type? (.son, .dl,.net,.rdump,.xml)");
-				
+				showError("Unable to determine correct parser from file extension,"
+						+ " is it the correct file type? (.son, .dl,.net,.rdump,.xml,.dynet)");
+
 			}
-			if (parser != null){
+			if (parser != null) {
 				try {
 					parser.parseNetwork(currentPath + inFile);
 					fileLoaded = true;
 					autoCreate = true;
 					showStatus("Parsed file " + currentPath + inFile);
 				} catch (Exception error) {
-//					debug
+					// debug
 					error.printStackTrace();
-					showError("Unable to load file: "+ error.getMessage());
+					showError("Unable to load file: " + error.getMessage());
 					fileLoaded = false;
-					
-					
-	
+
 				}
 			}
 
@@ -441,8 +441,9 @@ public class SoniaController implements Runnable, TaskListener{
 				parser.configureParser(parserSettings);
 			}
 			parser.parseNetwork(data);
-			//TODO: should add functionality to read other settings from parser, in case it was trying to configure sonia
-		
+			// TODO: should add functionality to read other settings from
+			// parser, in case it was trying to configure sonia
+
 			// put in a fake file name
 			fileName = "R_import";
 			fileLoaded = true;
@@ -528,7 +529,7 @@ public class SoniaController implements Runnable, TaskListener{
 			log("Read movie output settings from batch instructions:\n "
 					+ movieSettings);
 		}
-		
+
 		mapperSettings = proper.getColormapperSettings();
 		if (mapperSettings != null) {
 			showStatus("Read colormapper settings from batch instructions");
@@ -553,69 +554,72 @@ public class SoniaController implements Runnable, TaskListener{
 			if (sliceSettings != null) {
 				showStatus("Read layout settings from batch instructions");
 				log("Read layout settings from batch instructions");
-				//createLayout(sliceSettings); //maybe we've already done this?
+				// createLayout(sliceSettings); //maybe we've already done this?
 			}
-		
-			//need to build the layout window, even if we don't show it
+
+			// need to build the layout window, even if we don't show it
 			showGUI(false);
 
 			if ((engine != null) && (applySettings != null)) {
 				engine.setApplySettings(applySettings);
 				showStatus("Running layout on first slice");
-				batchTask = engine.applyLayoutTo(engine.getCurrentApplySettings(), engine.getCurrentSlice());
+				batchTask = engine.applyLayoutTo(
+						engine.getCurrentApplySettings(),
+						engine.getCurrentSlice());
 				batchTask.addTaskEventListener(this);
-				//when this task is finsished, it should send a callback, which will trigger the mainBatch() method
-				
+				// when this task is finsished, it should send a callback, which
+				// will trigger the mainBatch() method
+
 			}
 		} catch (Throwable e) {
-			//ui.setVisible(true);
+			// ui.setVisible(true);
 			e.printStackTrace();
 			log("ERROR in batch execution: " + e.getMessage());
-//			try writing log before exit!
+			// try writing log before exit!
 			finishBatch();
 		}
-		
+
 	}
-	
-	
-	private void mainBatch(){
+
+	private void mainBatch() {
 		try {
-			showStatus("Startng main layout sequence using "+ApplySettings.STARTING_COORDS+"="+
-					ApplySettings.COORDS_FROM_PREV+" and "+ApplySettings.APPLY_REMAINING+"=true");
-			//engine.changeToSliceNum(1);
+			showStatus("Startng main layout sequence using "
+					+ ApplySettings.STARTING_COORDS + "="
+					+ ApplySettings.COORDS_FROM_PREV + " and "
+					+ ApplySettings.APPLY_REMAINING + "=true");
+			// engine.changeToSliceNum(1);
 			applySettings.setProperty(ApplySettings.STARTING_COORDS,
 					ApplySettings.COORDS_FROM_PREV);
-			applySettings.setProperty(ApplySettings.APPLY_REMAINING,
-					true + "");
+			applySettings.setProperty(ApplySettings.APPLY_REMAINING, true + "");
 			engine.setApplySettings(applySettings);
-			
+
 			batchTask = engine.applyLayoutToRemaining();
 			batchTask.addTaskEventListener(this);
 
 		} catch (Throwable e) {
-			//ui.setVisible(true);
+			// ui.setVisible(true);
 			e.printStackTrace();
 			log("ERROR in batch execution: " + e.getMessage());
-//			try writing log before exit!
+			// try writing log before exit!
 			finishBatch();
 		}
 	}
-	
-	private void movieBatch(){
+
+	private void movieBatch() {
 		try {
-	//now export movie
-			batchTask = null; //just to be safe
+			// now export movie
+			batchTask = null; // just to be safe
 			engine.changeToSliceNum(0);
 			engine.getLayoutWindow().showCurrentSlice();
-			//log the broswing settings that will be use
-			log("Browse settings use for movie export:\n"+browseSettings);
+			// log the broswing settings that will be use
+			log("Browse settings use for movie export:\n" + browseSettings);
 			String movType = MovieSettings.QUICKTIME_FILE_TYPE;
-			String movFileName = currentPath + getFileName() + "."+movType;
+			String movFileName = currentPath + getFileName() + "." + movType;
 			if (movieSettings != null) {
 				String name = movieSettings
 						.getProperty(MovieSettings.OUTPUT_PATH);
 				movType = movieSettings.getProperty(MovieSettings.FILE_TYPE);
-				name = name+"."+movType;
+				name = name + "." + movType;
 				if ((name != null) && !name.equals("")) {
 					movFileName = name;
 				}
@@ -623,33 +627,36 @@ public class SoniaController implements Runnable, TaskListener{
 
 			// THIS LAUNCHES ON ANOTHER THREAD!!
 			MovieMaker movie;
-			if (movType != null && movType.equals(MovieSettings.FLASH_FILE_TYPE)){
-				movie = exportFlashMovie(engine,engine.getLayoutWindow().getDisplay(),movFileName);
-				//nasty hack.  assome that the movie method has created a batchTask so listen to it
+			if (movType != null
+					&& movType.equals(MovieSettings.FLASH_FILE_TYPE)) {
+				movie = exportFlashMovie(engine, engine.getLayoutWindow()
+						.getDisplay(), movFileName);
+				// nasty hack. assome that the movie method has created a
+				// batchTask so listen to it
 				batchTask.addTaskEventListener(this);
-		
+
 			} else {
-				showError("Unknown movie file type:"+movType);
+				showError("Unknown movie file type:" + movType);
 				return;
 			}
 		} catch (Throwable e) {
-			//ui.setVisible(true);
+			// ui.setVisible(true);
 			e.printStackTrace();
 			log("ERROR in batch execution: " + e.getMessage());
-			//try writing log before exit!
+			// try writing log before exit!
 			finishBatch();
 		}
 	}
-	
-	private void finishBatch(){
+
+	private void finishBatch() {
 		try {
-//			 wait for movie export to finsih
+			// wait for movie export to finsih
 			log.writeLogToFile(currentPath + getFileName() + "_log.txt");
 			// if there is no ui, then we should quit when done
 			batchTask = null;
 			System.exit(0);
 		} catch (Throwable e) {
-			//ui.setVisible(true);
+			// ui.setVisible(true);
 			e.printStackTrace();
 			log("ERROR in batch execution: " + e.getMessage());
 			System.exit(-1);
@@ -679,20 +686,22 @@ public class SoniaController implements Runnable, TaskListener{
 	}
 
 	private void setupData(String inFile, Parser parser) {
-		networkData = new NetDataStructure(this, inFile, parser
-				.getNumNodeEvents(), parser.getNumArcEvents(), parser
-				.getMaxNumNodes());
+		networkData = new NetDataStructure(this, inFile,
+				parser.getNumNodeEvents(), parser.getNumArcEvents(),
+				parser.getMaxNumNodes());
 		// load data from parser into net data
 		networkData.addNodeEvents(parser.getNodeList());
 		networkData.addArcEvents(parser.getArcList());
-		//debug TESTING IF CLUSTERS WILL DISPLAY
-		if (parser instanceof ClusterParser){
-			networkData.addClusterEvents(((ClusterParser)parser).getClusterList());
+		// debug TESTING IF CLUSTERS WILL DISPLAY
+		if (parser instanceof ClusterParser) {
+			networkData.addClusterEvents(((ClusterParser) parser)
+					.getClusterList());
 		}
-		
+
 		networkData.setNetInfo(parser.getNetInfo());
-		if (parser instanceof NodeDataParser){
-			networkData.setNodeDataKeys(((NodeDataParser)parser).getNodeDataKeys());
+		if (parser instanceof NodeDataParser) {
+			networkData.setNodeDataKeys(((NodeDataParser) parser)
+					.getNodeDataKeys());
 		}
 		// print details out to log
 		log("loaded network from " + currentPath + inFile + "\nparser used:"
@@ -704,35 +713,34 @@ public class SoniaController implements Runnable, TaskListener{
 				+ "\n" + "comments from file:" + networkData.getNetInfo());
 		// put it in list of loaded networks
 		networks.add(networkData);
-		
-		//now check if we are recreating an entire network with layouts
-		if ( parser instanceof DyNetMLSAXParser){
-			showStatus("rebuilding layouts from data stored in "+inFile);
-			DyNetMLSAXParser reloader = (DyNetMLSAXParser)parser;
+
+		// now check if we are recreating an entire network with layouts
+		if (parser instanceof DyNetMLSAXParser) {
+			showStatus("rebuilding layouts from data stored in " + inFile);
+			DyNetMLSAXParser reloader = (DyNetMLSAXParser) parser;
 			sliceSettings = reloader.getLayoutSettings();
 			applySettings = reloader.getApplySettings();
 			graphicSettings = reloader.getGraphicsSetttings();
 			browseSettings = reloader.getBrowsingSettings();
 			mapperSettings = reloader.getColorMapperSettings();
-			//turn off auto create 'cause we are going to create here
+			// turn off auto create 'cause we are going to create here
 			autoCreate = false;
-			log("rebuilt layout from data stored in "+inFile);
-			log(browseSettings+"");
-			log(applySettings+"");
-			log(sliceSettings+"");
-			log(graphicSettings+"");
-			log(mapperSettings+"");
+			log("rebuilt layout from data stored in " + inFile);
+			log(browseSettings + "");
+			log(applySettings + "");
+			log(sliceSettings + "");
+			log(graphicSettings + "");
+			log(mapperSettings + "");
 			createLayout(sliceSettings);
-			
-			//load in the coordinates
-			engine.assignCoordinates(reloader.getXCoordArrays(),reloader.getYCoordArrays());
+
+			// load in the coordinates
+			engine.assignCoordinates(reloader.getXCoordArrays(),
+					reloader.getYCoordArrays());
 			engine.getLayoutWindow().showCurrentSlice();
-			
+
 		}
-		
-		
+
 	}
-	
 
 	/**
 	 * always shows slice setting dialog, then calls create layout
@@ -743,7 +751,7 @@ public class SoniaController implements Runnable, TaskListener{
 		if (fileLoaded == true) {
 			String engName = getFileName() + " #" + (engines.size() + 1);
 			LayoutSettingsDialog windowSettings = new LayoutSettingsDialog(
-					sliceSettings, this, networkData,engName, ui);
+					sliceSettings, this, networkData, engName, ui);
 			if (sliceSettings == null) {
 				// tell the settings dialog what the start and end times for
 				windowSettings.setDataStartDefault(networkData.getFirstTime());
@@ -771,17 +779,17 @@ public class SoniaController implements Runnable, TaskListener{
 			// probably should ask for kind of layout here
 			if (isShowGUI() & (sliceSettings == null)) {
 				LayoutSettingsDialog windowSettings = new LayoutSettingsDialog(
-						sliceSettings, this,networkData, engName, ui);
+						sliceSettings, this, networkData, engName, ui);
 				// show the dialog
 				sliceSettings = windowSettings.askUserSettings();
 			}
-			//TODO: this is not thread safe! 
-			if (sliceSettings == null){
+			// TODO: this is not thread safe!
+			if (sliceSettings == null) {
 				showStatus("layout canceled: null slice settings");
 				return display;
 			}
-			engine = new SoniaLayoutEngine(sliceSettings, applySettings,this, networkData,
-					engName);
+			engine = new SoniaLayoutEngine(sliceSettings, applySettings, this,
+					networkData, engName);
 			showStatus("layout " + engName + " created.");
 			engines.add(engine);
 			// check if we have graphic settings
@@ -790,21 +798,25 @@ public class SoniaController implements Runnable, TaskListener{
 				graphicSettings = (new GraphicsSettingsDialog(
 						new GraphicsSettings(), this, engine, null, null))
 						.storeSettings();
-				graphicSettings.setProperty(GraphicsSettings.LAYOUT_WIDTH,500+"");
-				graphicSettings.setProperty(GraphicsSettings.LAYOUT_HEIGHT,400+"");
+				graphicSettings.setProperty(GraphicsSettings.LAYOUT_WIDTH,
+						500 + "");
+				graphicSettings.setProperty(GraphicsSettings.LAYOUT_HEIGHT,
+						400 + "");
 			}
-			if (browseSettings == null){
-				//create it here so control has a ref
+			if (browseSettings == null) {
+				// create it here so control has a ref
 				browseSettings = new BrowsingSettings();
-		
+
 			}
-			 display = new LayoutWindow(graphicSettings,
-					browseSettings, this, engine, 500,400); 
-			 //if color mapper settings were loaded in pass them in (but they won't be active)
-			 if (mapperSettings != null){
-				 display.getDisplay().setColormapper(MapperFactory.restoreMapperFrom(mapperSettings));
-			 }
-			 
+			display = new LayoutWindow(graphicSettings, browseSettings, this,
+					engine, 500, 400);
+			// if color mapper settings were loaded in pass them in (but they
+			// won't be active)
+			if (mapperSettings != null) {
+				display.getDisplay().setColormapper(
+						MapperFactory.restoreMapperFrom(mapperSettings));
+			}
+
 			engine.setDisplay(display);
 			showFrame((display));
 			engine.setDisplayWidth(Integer.parseInt(graphicSettings
@@ -818,21 +830,18 @@ public class SoniaController implements Runnable, TaskListener{
 		return display;
 	}
 
-
 	/**
 	 * Not sure if we should have this method as it is for gui..
 	 * 
 	 * @param frame
 	 */
 	public void showFrame(JInternalFrame frame) {
-		if (ui != null){
+		if (ui != null) {
 			ui.addFrame(frame);
 		} else {
 			showError("cannot add frame to UI when ui is null");
 		}
 	}
-
-	
 
 	public MovieMaker exportFlashMovie(SoniaLayoutEngine engToExport,
 			SoniaCanvas canvas, String fileName) {
@@ -853,10 +862,9 @@ public class SoniaController implements Runnable, TaskListener{
 
 		}
 		if (fileName != null) {
-			 
+
 			try {
-				exporter = new SWFMovieMaker(this, engToExport,
-						fileName);
+				exporter = new SWFMovieMaker(this, engToExport, fileName);
 				batchTask = engToExport.makeMovie(exporter);
 			} catch (Exception e) {
 				showError("Error writing flash movie:" + e.getMessage());
@@ -869,8 +877,6 @@ public class SoniaController implements Runnable, TaskListener{
 		return exporter;
 	}
 
-	
-	
 	public MovieMaker exportImageSequence(SoniaLayoutEngine engToExport,
 			SoniaCanvas canvas, String fileName) {
 		MovieMaker exporter = null;
@@ -889,13 +895,14 @@ public class SoniaController implements Runnable, TaskListener{
 
 		}
 		if (fileName != null) {
-			
+
 			try {
-				exporter = new MultipleImageMovieMaker(this,engine,fileName);
-				exporter.configure((MovieSettings)movieSettings);
+				exporter = new MultipleImageMovieMaker(this, engine, fileName);
+				exporter.configure((MovieSettings) movieSettings);
 				batchTask = engToExport.makeMovie(exporter);
 			} catch (Exception e) {
-				showError("Error writing network movie as image sequence:" + e.getMessage());
+				showError("Error writing network movie as image sequence:"
+						+ e.getMessage());
 				log("ERROR saving image sequence: " + e.getMessage());
 				e.printStackTrace();
 			}
@@ -904,7 +911,7 @@ public class SoniaController implements Runnable, TaskListener{
 		}
 		return exporter;
 	}
-	
+
 	public MovieMaker exportJPEGMovie(SoniaLayoutEngine engToExport,
 			SoniaCanvas canvas, String fileName) {
 		MovieMaker exporter = null;
@@ -923,13 +930,14 @@ public class SoniaController implements Runnable, TaskListener{
 
 		}
 		if (fileName != null) {
-			
+
 			try {
-				exporter = new JPEGMovieMaker(this,engine,fileName);
-				exporter.configure((MovieSettings)movieSettings);
+				exporter = new JPEGMovieMaker(this, engine, fileName);
+				exporter.configure((MovieSettings) movieSettings);
 				batchTask = engToExport.makeMovie(exporter);
 			} catch (Exception e) {
-				showError("Error writing network as JPEG Movie:" + e.getMessage());
+				showError("Error writing network as JPEG Movie:"
+						+ e.getMessage());
 				log("ERROR saving JPEG Movie: " + e.getMessage());
 				e.printStackTrace();
 			}
@@ -938,62 +946,73 @@ public class SoniaController implements Runnable, TaskListener{
 		}
 		return exporter;
 	}
-	
+
 	/**
 	 * exports an xml discription of the node positions of the current slice
+	 * 
 	 * @param engToExport
 	 */
-	public void exportXML(SoniaLayoutEngine engToExport){
+	public void exportXML(SoniaLayoutEngine engToExport) {
 		String promptString = "Please Choose location and name for the xml coordinate file";
 		String sugestFile = getFileName() + ".xml";
 		String fileName = getOutputFile(sugestFile, promptString);
 		if ((fileName != null) && (getCurrentPath() != null)) {
-		XMLCoordRender xmlRender = new XMLCoordRender();
-		SoniaCanvas canvas = engToExport.getLayoutWindow().getDisplay();
-		canvas.getRenderSlice().render(xmlRender, canvas, xmlRender);
-		try {
-			//debug
-			System.out.println("creating xml");
-			xmlRender.createXML(getCurrentPath()+fileName, canvas.getWidth(), canvas.getHeight(), 5, "testing xml file");
-	
-		} catch (TransformerException e) {
-			e.printStackTrace();
-			showError("Unable to create xml file for network:"+e.getMessage());
-		} catch (ParserConfigurationException e) {
-			e.printStackTrace();
-			showError("Unable to create xml file for network:"+e.getMessage());
-		} catch (Exception e){
-			showError("Error saving xml file for network:"+e.getMessage());
-		}
+			XMLCoordRender xmlRender = new XMLCoordRender();
+			SoniaCanvas canvas = engToExport.getLayoutWindow().getDisplay();
+			canvas.getRenderSlice().render(xmlRender, canvas, xmlRender);
+			try {
+				// debug
+				System.out.println("creating xml");
+				xmlRender.createXML(getCurrentPath() + fileName,
+						canvas.getWidth(), canvas.getHeight(), 5,
+						"testing xml file");
+
+			} catch (TransformerException e) {
+				e.printStackTrace();
+				showError("Unable to create xml file for network:"
+						+ e.getMessage());
+			} catch (ParserConfigurationException e) {
+				e.printStackTrace();
+				showError("Unable to create xml file for network:"
+						+ e.getMessage());
+			} catch (Exception e) {
+				showError("Error saving xml file for network:" + e.getMessage());
+			}
 		}
 	}
-	
+
 	/**
 	 * exports a graphML description of the node positions of the current slice
+	 * 
 	 * @param engToExport
 	 */
-	public void exportGraphML(SoniaLayoutEngine engToExport){
+	public void exportGraphML(SoniaLayoutEngine engToExport) {
 		String promptString = "Please Choose location and name for the GrphML xml file";
 		String sugestFile = getFileName() + ".xml";
 		String fileName = getOutputFile(sugestFile, promptString);
 		if ((fileName != null) && (getCurrentPath() != null)) {
-		GraphMLRender graphML = new GraphMLRender();
-		SoniaCanvas canvas = engToExport.getLayoutWindow().getDisplay();
-		canvas.getRenderSlice().render(graphML, canvas, graphML);
-		try {
-			//debug
-			System.out.println("creating GraphML xml fle");
-			graphML.createXML(getCurrentPath()+fileName, canvas.getWidth(), canvas.getHeight(), 5, "testing grapmML file");
-	
-		} catch (TransformerException e) {
-			e.printStackTrace();
-			showError("Unable to create GraphML xml file for network:"+e.getMessage());
-		} catch (ParserConfigurationException e) {
-			e.printStackTrace();
-			showError("Unable to create GraphML xml file for network:"+e.getMessage());
-		} catch (Exception e){
-			showError("Error saving GraphML xml file for network:"+e.getMessage());
-		}
+			GraphMLRender graphML = new GraphMLRender();
+			SoniaCanvas canvas = engToExport.getLayoutWindow().getDisplay();
+			canvas.getRenderSlice().render(graphML, canvas, graphML);
+			try {
+				// debug
+				System.out.println("creating GraphML xml fle");
+				graphML.createXML(getCurrentPath() + fileName,
+						canvas.getWidth(), canvas.getHeight(), 5,
+						"testing grapmML file");
+
+			} catch (TransformerException e) {
+				e.printStackTrace();
+				showError("Unable to create GraphML xml file for network:"
+						+ e.getMessage());
+			} catch (ParserConfigurationException e) {
+				e.printStackTrace();
+				showError("Unable to create GraphML xml file for network:"
+						+ e.getMessage());
+			} catch (Exception e) {
+				showError("Error saving GraphML xml file for network:"
+						+ e.getMessage());
+			}
 		}
 	}
 
@@ -1053,14 +1072,17 @@ public class SoniaController implements Runnable, TaskListener{
 			}
 		}
 	}
-	
-	public void saveDyNetML(SoniaLayoutEngine engToSave){
-//		show a warning that it may not be readable by future versions
-		
-		 JOptionPane.showMessageDialog(ui, 
-				 "This is a very preliminary version of the DyNetML file format. " +
-				 "Saved files may not work with future versions of SoNIA or with other programs",
-		            "preliminary version of the DyNetML file format", JOptionPane.INFORMATION_MESSAGE);
+
+	public void saveDyNetML(SoniaLayoutEngine engToSave) {
+		// show a warning that it may not be readable by future versions
+
+		JOptionPane
+				.showMessageDialog(
+						ui,
+						"This is a very preliminary version of the DyNetML file format. "
+								+ "Saved files may not work with future versions of SoNIA or with other programs",
+						"preliminary version of the DyNetML file format",
+						JOptionPane.INFORMATION_MESSAGE);
 
 		String promptString = "Please Choose location and name for the DyNetML xml file";
 		String sugestFile = getFileName() + ".xml";
@@ -1070,13 +1092,15 @@ public class SoniaController implements Runnable, TaskListener{
 			showStatus("saving network as dynetml file...");
 			DyNetMLXMLWriter writer = new DyNetMLXMLWriter(this);
 			try {
-				writer.saveXML(engToSave, getCurrentPath()+fileName);
+				writer.saveXML(engToSave, getCurrentPath() + fileName);
 			} catch (ParserConfigurationException e) {
 				e.printStackTrace();
-				showError("Error writing network as DyNetML xml file:"+e.toString());
+				showError("Error writing network as DyNetML xml file:"
+						+ e.toString());
 			} catch (TransformerException e) {
 				e.printStackTrace();
-				showError("Error writing network as DyNetML xml file:"+e.toString());
+				showError("Error writing network as DyNetML xml file:"
+						+ e.toString());
 			}
 		}
 	}
@@ -1089,13 +1113,13 @@ public class SoniaController implements Runnable, TaskListener{
 	 *            the text to display in the text area
 	 */
 	public void showStatus(String text) {
-		if (isShowGUI()){
+		if (isShowGUI()) {
 			ui.showStatus(text);
-		} 
-		if (isVerbose()){
-			System.out.println("<status>"+text);
 		}
-		
+		if (isVerbose()) {
+			System.out.println("<status>" + text);
+		}
+
 	}
 
 	/**
@@ -1106,25 +1130,26 @@ public class SoniaController implements Runnable, TaskListener{
 	 *            the text of the error message
 	 */
 	public void showError(String text) {
-		if (isShowGUI()){
+		if (isShowGUI()) {
 			ui.showError(text);
 		} else {
-			System.out.println("ERROR: "+text);
+			System.out.println("ERROR: " + text);
 			System.exit(-1);
 		}
-		
+
 	}
 
 	/**
-	 * Asks the log to append the passed text.
-	 *TODO: in command line mode log should save out to a file
+	 * Asks the log to append the passed text. TODO: in command line mode log
+	 * should save out to a file
+	 * 
 	 * @param text
 	 *            the text to append to the log
 	 */
 	public void log(String text) {
 		log.log(text);
-		if (verbose){
-			System.out.println("<log> "+text);
+		if (verbose) {
+			System.out.println("<log> " + text);
 		}
 	}
 
@@ -1179,7 +1204,7 @@ public class SoniaController implements Runnable, TaskListener{
 
 		}
 		ui.repaint();
-		
+
 	}
 
 	// accessors------------------
@@ -1240,7 +1265,7 @@ public class SoniaController implements Runnable, TaskListener{
 				engine.resume();
 			showStatus("");
 		}
-		
+
 	}
 
 	/**
@@ -1298,87 +1323,96 @@ public class SoniaController implements Runnable, TaskListener{
 	}
 
 	/**
-	 * indicates if the GUI should be displayed, or if sonia is running in commandline mode
+	 * indicates if the GUI should be displayed, or if sonia is running in
+	 * commandline mode
+	 * 
 	 * @author skyebend
 	 * @return
 	 */
 	public boolean isShowGUI() {
 		return showGUI;
 	}
-	
+
 	/**
 	 * sets wether logs messags should be displayed to user in command line mode
+	 * 
 	 * @author skyebend
 	 * @param value
 	 */
-	public void setVerbose(boolean value){
+	public void setVerbose(boolean value) {
 		verbose = value;
 	}
-	
+
 	/**
-	 * indicates if log messages should be displayed to the user in command line mode
+	 * indicates if log messages should be displayed to the user in command line
+	 * mode
+	 * 
 	 * @author skyebend
 	 * @return
 	 */
-	public boolean isVerbose(){
+	public boolean isVerbose() {
 		return verbose;
 	}
-	
+
 	/**
 	 * returns the layout engine at the index, if there is one
+	 * 
 	 * @author skyebend
 	 * @param index
 	 * @return
 	 */
-	public SoniaLayoutEngine getEngine(int index){
+	public SoniaLayoutEngine getEngine(int index) {
 		SoniaLayoutEngine eng = null;
-		if (index < engines.size()){
-			eng = (SoniaLayoutEngine)engines.get(index);
+		if (index < engines.size()) {
+			eng = (SoniaLayoutEngine) engines.get(index);
 		}
 		return eng;
 	}
-	
+
 	/**
 	 * TODO: this should be moved so that it is engine specific
+	 * 
 	 * @author skyebend
 	 * @return
 	 */
-	public GraphicsSettings getGraphicsSettings(){
+	public GraphicsSettings getGraphicsSettings() {
 		return graphicSettings;
 	}
-	
+
 	/**
 	 * TODO: this should be moved so that it is engine specific
+	 * 
 	 * @author skyebend
 	 * @return
 	 */
-	public BrowsingSettings getBrowsingSettings(){
+	public BrowsingSettings getBrowsingSettings() {
 		return browseSettings;
 	}
 
-	//mostly used when running batch, to report when task is done
+	// mostly used when running batch, to report when task is done
 	public void taskStatusChanged(LongTask task) {
-		if (task.isDone()){
-			//check if it was the batch task
-			if (batchTask != null && batchTask.equals(task)){
-				if (task instanceof ApplyLayoutTask){
-					log("Initial layout done: "+task.getTaskName());
-					//kick off the rest of the process (should be a task on its own thread...)
+		if (task.isDone()) {
+			// check if it was the batch task
+			if (batchTask != null && batchTask.equals(task)) {
+				if (task instanceof ApplyLayoutTask) {
+					log("Initial layout done: " + task.getTaskName());
+					// kick off the rest of the process (should be a task on its
+					// own thread...)
 					mainBatch();
-				} else if (task instanceof MultipleLayoutTask){
-					log("Main layout done: "+task.getTaskName());
-					//assume we are done with layouts and start the movie export
+				} else if (task instanceof MultipleLayoutTask) {
+					log("Main layout done: " + task.getTaskName());
+					// assume we are done with layouts and start the movie
+					// export
 					movieBatch();
 				} else if (task instanceof MovieExportTask) {
-					//assume movie export is done, so wrap up and exit
-					log("Movie export done: "+task.getTaskName()+" saving log and exiting�");
+					// assume movie export is done, so wrap up and exit
+					log("Movie export done: " + task.getTaskName()
+							+ " saving log and exiting�");
 					finishBatch();
 				}
 			}
 		}
-		
+
 	}
-
-
 
 }

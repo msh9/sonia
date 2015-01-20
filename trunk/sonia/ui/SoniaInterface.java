@@ -106,15 +106,13 @@ public class SoniaInterface extends JFrame implements WindowListener,
 	// private JButton SaveButton;
 
 	private JTextArea statusText;
-	
+
 	private JPanel statusPanel;
 
 	private JDesktopPane workPane;
 
 	private JPanel menuPane;
 
-	
-	
 	private ProgressMonitor monitor;
 
 	public SoniaInterface(SoniaController theController, boolean show) {
@@ -154,23 +152,26 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		GridBagConstraints c = new GridBagConstraints();
 		c.insets = new Insets(2, 2, 2, 2);
 		c.anchor = GridBagConstraints.WEST;
-		c.gridx = 0;c.gridy = 0;
-		statusPanel.add(PauseButton,c);
-		c.gridx = 0;c.gridy = 1;
-		statusPanel.add(statusText,c);
+		c.gridx = 0;
+		c.gridy = 0;
+		statusPanel.add(PauseButton, c);
+		c.gridx = 0;
+		c.gridy = 1;
+		statusPanel.add(statusText, c);
 		// StatusText.setColumns(30);
 
 		workPane = new JDesktopPane();
 		workPane.setBorder(new TitledBorder("Layouts:"));
 		workPane.setSize(300, 250);
 		workPane.setVisible(true);
-		
+
 		GridBagLayout layout = new GridBagLayout();
 		menuPane = new JPanel(layout);
-//		a horizontal split for the menu stuff
-		JSplitPane vsplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT,menuPane,statusScroller);
+		// a horizontal split for the menu stuff
+		JSplitPane vsplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, menuPane,
+				statusScroller);
 		vsplit.setDividerLocation(500);
-		
+
 		// LAYOUT
 		// add components to the layout GBlayout using constraints
 		// buttons
@@ -181,7 +182,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		c.weightx = 1;
 		c.weighty = 1;
 		c.fill = GridBagConstraints.BOTH;
-		//menuPane.add(statusPanel, c);
+		// menuPane.add(statusPanel, c);
 		c.fill = GridBagConstraints.NONE;
 		c.gridx = 0;
 		c.gridy = 0;
@@ -228,7 +229,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		getContentPane().add(jsp, BorderLayout.CENTER);
 		// add(workPane, BorderLayout.CENTER);
 		// add(menuPane, BorderLayout.WEST);
-		//getContentPane().add(statusScroller, BorderLayout.SOUTH);
+		// getContentPane().add(statusScroller, BorderLayout.SOUTH);
 
 		addWindowListener(this);
 		// setBackground(Color.lightGray);
@@ -280,40 +281,41 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		statusText.setText("  " + text);
 		statusText.setCaretPosition(0);
 		statusText.repaint();
-		
+
 	}
-	
-	public void showTask(LongTask task){
+
+	public void showTask(LongTask task) {
 		TaskProgressBar taskbar = new TaskProgressBar(task);
 		Component[] statuscomps = statusPanel.getComponents();
-//		for (int i = 0; i < statuscomps.length; i++) {
-//			if(statuscomps[i] instanceof TaskProgressBar){
-//				if (((TaskProgressBar)statuscomps[i]).getTask().isDone()){
-//					statusPanel.remove(statuscomps[i]);
-//				}
-//			}
-//		}
-		GridBagConstraints c= new GridBagConstraints();
-		c.gridy=statuscomps.length+1;
-		c.fill=GridBagConstraints.BOTH;
-		statusPanel.add(taskbar,c);
+		// for (int i = 0; i < statuscomps.length; i++) {
+		// if(statuscomps[i] instanceof TaskProgressBar){
+		// if (((TaskProgressBar)statuscomps[i]).getTask().isDone()){
+		// statusPanel.remove(statuscomps[i]);
+		// }
+		// }
+		// }
+		GridBagConstraints c = new GridBagConstraints();
+		c.gridy = statuscomps.length + 1;
+		c.fill = GridBagConstraints.BOTH;
+		statusPanel.add(taskbar, c);
 		statusPanel.revalidate();
 		statusPanel.repaint();
 	}
+
 	public void taskStatusChanged(LongTask task) {
-		//update all the status components
-		//TODO: make this smarter, only update task that changed
-		//statusPanel.validate();
+		// update all the status components
+		// TODO: make this smarter, only update task that changed
+		// statusPanel.validate();
 		Component[] statuscomps = statusPanel.getComponents();
 		for (int i = 0; i < statuscomps.length; i++) {
-			if(statuscomps[i] instanceof TaskProgressBar){
-				if (((TaskProgressBar)statuscomps[i]).getTask().isDone()){
+			if (statuscomps[i] instanceof TaskProgressBar) {
+				if (((TaskProgressBar) statuscomps[i]).getTask().isDone()) {
 					statusPanel.remove(statuscomps[i]);
 				}
 			}
 		}
 		statusPanel.repaint();
-		//control.updateDisplays();
+		// control.updateDisplays();
 	}
 
 	/**
@@ -434,7 +436,7 @@ public class SoniaInterface extends JFrame implements WindowListener,
 
 	public void windowOpened(WindowEvent evt) {
 	}
-	
+
 	public void openURL(String url) {
 		final String errMsg = "Error attempting to launch web browser";
 		String osName = System.getProperty("os.name");
@@ -452,8 +454,8 @@ public class SoniaInterface extends JFrame implements WindowListener,
 						"epiphany", "mozilla", "netscape" };
 				String browser = null;
 				for (int count = 0; count < browsers.length && browser == null; count++)
-					if (Runtime.getRuntime().exec(
-							new String[] { "which", browsers[count] })
+					if (Runtime.getRuntime()
+							.exec(new String[] { "which", browsers[count] })
 							.waitFor() == 0)
 						browser = browsers[count];
 				if (browser == null)
@@ -466,5 +468,4 @@ public class SoniaInterface extends JFrame implements WindowListener,
 		}
 	}
 
-	
 }

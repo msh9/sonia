@@ -31,6 +31,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
@@ -84,7 +85,7 @@ import sonia.settings.GraphicsSettings;
 /**
  * LayoutWindow does the drawing of the networks to screen, and provides
  * controls for moving through time slice bins. This is the main view into the
- * network data. It also (for now) generates the images whcih are exported in
+ * network data. It also (for now) generates the images which are exported in
  * the movie. Node positioning, and the actual storing of the layout slices is
  * handled by the LayoutEngine. Most of the actions take place on their own
  * threads so that it is possible to pause them. The model for drawing the
@@ -95,7 +96,7 @@ import sonia.settings.GraphicsSettings;
  * criteria (see NetDataStructure). The RenderSlice asks the engine for the
  * appropriate coordinates for the nodes, as specified by the current
  * LayoutSlice (with interpolation if the render is part of an animated
- * transition) and asks each of the attributes to draw themselvs in the
+ * transition) and asks each of the attributes to draw themselves in the
  * appropriate location, modified by the settings in the graphicSettingsDialog.
  * <BR>
  * <BR>
@@ -975,15 +976,23 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 
 	/**
 	 * Creates a smoothly animated transition from the current slice to the
-	 * specified slice number. Gets the ammount of time between the start of the
+	 * specified slice number. Gets the amount of time between the start of the
 	 * current and the start of the destination slice, divides this by the
 	 * desired number of interpolation frames, and creates a series of render
-	 * slices with the desired timings and interpolated node cooordinates.
+	 * slices with the desired timings and interpolated node coordinates.
 	 * Called by the play or transition threads.
 	 * 
 	 * @param number
 	 *            the slice number to transition to.
 	 */
+	
+	// General note, this function really should not be interacting with any of the 
+	// swing controls directly. You can probably get away with reading the controls, but
+	// you will experience random exceptions when you go to write to them.  To reduce 
+	// the refactoring of the code (it should go into a class of its own) I've wrapped 
+	// the setter so that the controls can be safely updated, but this needs a major
+	// refactor.
+	
 	public void transitionToSlice(int number, MovieMaker movie) {
 		LayoutArea.saveImageForGhost();
 		// check if should do interpolation
@@ -998,7 +1007,7 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 			LayoutSlice nowSlice = engine.getCurrentSlice();
 
 			int nowNum = engine.getCurrentSliceNum();
-			// try changeing to the requested one (there might not be one)
+			// try changing to the requested one (there might not be one)
 			engine.changeToSliceNum(number);
 			int newNum = engine.getCurrentSliceNum(); // incase we were at the
 			// last slice
@@ -1024,25 +1033,34 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 					if (Control.isPaused()) {
 						break;
 					}
+					
+					System.out.println(i + ":1");
 
 					time = nowSlice.getSliceStart() + offset + i * delta;
 					// render is a moving window the same width as the slice,
 					// we see edges as they are added to the front
-					LayoutArea.setRenderSlice(engine.getRenderSlice(time,
-							(time + duration)));
-					RenderTime.setText("" + time);
+					System.out.println(i + ":1.1");
+					LayoutArea.setRenderSlice(engine.getRenderSlice(time, (time + duration)));
+					System.out.println(i + ":1.2");
+					SetRenderTimeThreaded(time);
+
 					// make the engine figure out the coord
 					engine.interpCoords(nowSlice, newSlice, time - offset);
 
+					System.out.println(i + ":2");
+					
 					// check if we are recording a movie
 					if (movie != null) {
 						movie.captureImage();
 					} else {
 						// update the display
 						updateDisplay();
+						
 						// now the rendering is going to fast, so we have to
 						// slow it
 						// down
+						
+						System.out.println(i + ":3");
 
 						try {
 							Thread.sleep(engine.getFrameDelay());
@@ -1052,8 +1070,8 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 						}
 					}
 				}
-				LayoutNum.setText("" + engine.getCurrentSliceNum());
-				RenderTime.setText("" + newSlice.getSliceStart());
+				SetLayoutNumThreaded(engine.getCurrentSliceNum());
+				SetRenderTimeThreaded(newSlice.getSliceStart());
 				// RenderDuration.setText(""+(newSlice.getSliceEnd()-newSlice.getSliceStart()));
 			}
 		} else {
@@ -1061,6 +1079,28 @@ public class LayoutWindow extends ExportableFrame implements ActionListener,
 			// go to slice directly, without interpolation
 			goToSlice(number);
 		}
+	}
+	
+	private void SetRenderTimeThreaded(final double value)
+	{
+	    SwingUtilities.invokeLater(new Runnable() 
+	    {
+	    	public void run()
+	    	{
+				RenderTime.setText("" + value);
+	    	}
+	    });		
+	}
+
+	private void SetLayoutNumThreaded(final int value)
+	{
+	    SwingUtilities.invokeLater(new Runnable() 
+	    {
+	    	public void run()
+	    	{
+	    		LayoutNum.setText("" + value);
+	    	}
+	    });		
 	}
 
 	/**

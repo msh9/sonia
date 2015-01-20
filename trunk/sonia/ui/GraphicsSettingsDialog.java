@@ -17,6 +17,10 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
+import edu.uci.ics.jung.algorithms.generators.random.MixedRandomGraphGenerator;
+import edu.uci.ics.jung.algorithms.scoring.DegreeScorer;
+import edu.uci.ics.jung.graph.Graph;
+
 import sonia.SoniaCanvas;
 import sonia.SoniaController;
 import sonia.SoniaLayoutEngine;
@@ -166,9 +170,11 @@ public class GraphicsSettingsDialog {
 	private JTextField FadeDuration;
 	private JComboBox hideNodes;
 	private JComboBox HideArcs;
+	private JComboBox centralityScoringFunction;
 	private JPanel mainpanel;
 	private JCheckBox nodeColorMap;
 	private JCheckBox nodeShapeMap;
+	private JCheckBox nodeSizeByCentrality;
 	private JButton OK;
 	private JButton Save;
 	private JButton Apply;
@@ -230,6 +236,14 @@ public class GraphicsSettingsDialog {
 		NodeScaleFactorField.setBorder(new TitledBorder("Node scale factor"));
 		nodeColorMap = new JCheckBox("Node Color Map...");
 		nodeShapeMap = new JCheckBox("Node Shape Map...");
+		nodeSizeByCentrality = new JCheckBox("Node Size by Centrality");
+		centralityScoringFunction = new JComboBox(new String[] { 
+				GraphicsSettings.CENTRALITY_NONE,
+				GraphicsSettings.CENTRALITY_CLOSENESS,
+				GraphicsSettings.CENTRALITY_DEGREE, 
+				GraphicsSettings.CENTRALITY_EIGENVECTOR });
+		centralityScoringFunction.setEnabled(false);
+		centralityScoringFunction.setBorder(new TitledBorder("Centrality function"));
 
 		ArcArrows = new JComboBox(new String[] { GraphicsSettings.ARROW_END,
 				GraphicsSettings.NONE });
@@ -302,6 +316,8 @@ public class GraphicsSettingsDialog {
 		nodesPanel.add(ShowLabelsField);
 		nodesPanel.add(NodeLabelBgTransField);
 		nodesPanel.add(hideNodes);
+		nodesPanel.add(nodeSizeByCentrality);
+		nodesPanel.add(centralityScoringFunction);
 
 		// arc options
 		arcsPanel.add(ArcTransField);
@@ -412,6 +428,25 @@ public class GraphicsSettingsDialog {
 			}
 			
 		});
+		
+		nodeSizeByCentrality.addActionListener(new ActionListener(){
+
+			public void actionPerformed(ActionEvent arg0) {
+				if (nodeSizeByCentrality.isSelected()){
+					centralityScoringFunction.setEnabled(true);
+				} else {
+					centralityScoringFunction.setEnabled(false);
+					centralityScoringFunction.setSelectedIndex(0);
+				}
+				
+				// figure out how scoring works ... !!!
+//				Graph<Integer,Number> g = 
+//			        	MixedRandomGraphGenerator.<Integer,Number>generateMixedRandomGraph(null, null, null,
+//			        		null, 20, false, null);
+//				DegreeScorer<Integer> scorer = new DegreeScorer<Integer>(g);
+			}		
+		});
+		
 		graphicsDialog.getContentPane().add(mainpanel);
 		// graphicsDialog.setBackground(Color.lightGray);
 		graphicsDialog.setSize(800, 500);
@@ -467,6 +502,7 @@ public class GraphicsSettingsDialog {
 		settings.put(GraphicsSettings.ARC_LABELS, arcLabels.getSelectedItem());
 		settings.put(GraphicsSettings.HIDE_ARCS, HideArcs.getSelectedItem());
 		settings.put(GraphicsSettings.CLUSTER_TRANSPARENCY, clusterTrans.getText().trim());
+		settings.put(GraphicsSettings.NODE_CENTRALITY, centralityScoringFunction.getSelectedItem());
 		return settings;
 	}
 

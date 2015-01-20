@@ -157,4 +157,16 @@ public class GraphicsSettings extends PropertySettings {
 	 * value for arrow style indicating arrows should be drawn at the target end of the arc
 	 */
 	public static final String ARROW_END="arrow at end";
+	
+	/**
+	 * node centrality
+	 */
+	
+	public static final String NODE_CENTRALITY = "node centrality";
+	
+	public static final String CENTRALITY_NONE = "none";
+	public static final String CENTRALITY_DEGREE = "Degree (total)";
+	public static final String CENTRALITY_CLOSENESS = "Closeness";
+	public static final String CENTRALITY_EIGENVECTOR = "Eigenvector";
+
 }

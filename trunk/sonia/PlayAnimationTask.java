@@ -97,6 +97,8 @@ public class PlayAnimationTask implements LongTask {
 		engine.setTransitionActive(true);
 		while (currentSlice < endIndex) {
 			// check for pause
+			
+			System.out.println("slice:" + currentSlice);
 			if (!stop) {
 				window.transitionToSlice(currentSlice,null);
 				status = "showing slice "+currentSlice;
