@@ -56,7 +56,7 @@ import sonia.movie.SWFMovieMaker;
 import sonia.parsers.BotDumpParser;
 import sonia.parsers.ClusterParser;
 import sonia.parsers.DLParser;
-import sonia.parsers.DotDyNetParser;
+//import sonia.parsers.DotDyNetParser;
 import sonia.parsers.DotNetParser;
 import sonia.parsers.DotSonParser;
 import sonia.parsers.DyNetMLParser;
@@ -396,8 +396,8 @@ public class SoniaController implements Runnable, TaskListener {
 				parser = new DotNetParser();
 			} else if (fileName.endsWith(".botnet")) {
 				parser = new BotDumpParser();
-			} else if (fileName.endsWith(".dynet")) {
-				parser = new DotDyNetParser();
+//			} else if (fileName.endsWith(".dynet")) {
+//				parser = new DotDyNetParser();
 			} else {
 				parser = null;
 				showError("Unable to determine correct parser from file extension,"
