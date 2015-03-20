@@ -24,66 +24,31 @@ package sonia;
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-import java.awt.*;
-import java.awt.event.*;
-import java.text.*;
-import java.io.*;
-import java.util.*;
-import java.awt.color.*;
-import java.beans.PropertyVetoException;
-
-import javax.swing.JInternalFrame;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.plaf.metal.MetalLookAndFeel;
-import javax.swing.plaf.metal.MetalTheme;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
-
-import org.freehep.graphicsio.swf.SWFAction.InstanceOf;
-
-import com.anotherbigidea.flash.readers.SWFReader;
-import com.anotherbigidea.flash.readers.TagParser;
-import com.anotherbigidea.flash.writers.SWFTagDumper;
-import com.bric.qt.JPEGMovieAnimation;
-
+import cern.colt.matrix.impl.SparseDoubleMatrix2D;
+import cern.jet.random.Uniform;
 import sonia.mapper.MapperFactory;
 import sonia.movie.JPEGMovieMaker;
 import sonia.movie.MovieMaker;
 import sonia.movie.MultipleImageMovieMaker;
 import sonia.movie.SWFMovieMaker;
-import sonia.parsers.BotDumpParser;
-import sonia.parsers.ClusterParser;
-import sonia.parsers.DLParser;
-//import sonia.parsers.DotDyNetParser;
-import sonia.parsers.DotNetParser;
-import sonia.parsers.DotSonParser;
-import sonia.parsers.DyNetMLParser;
-import sonia.parsers.DyNetMLSAXParser;
-import sonia.parsers.NodeDataParser;
-import sonia.parsers.Parser;
-import sonia.parsers.RJavaParser;
-import sonia.parsers.RNetworkDynamicParser;
+import sonia.parsers.*;
 import sonia.render.GraphMLRender;
 import sonia.render.XMLCoordRender;
-import sonia.settings.ApplySettings;
-import sonia.settings.BrowsingSettings;
-import sonia.settings.ColormapperSettings;
-import sonia.settings.GraphicsSettings;
-import sonia.settings.LayoutSettings;
-import sonia.settings.MovieSettings;
-import sonia.settings.PropertySettings;
-import sonia.ui.GraphicsSettingsDialog;
-import sonia.ui.LayoutSettingsDialog;
-import sonia.ui.LayoutWindow;
-import sonia.ui.LogWindow;
-import sonia.ui.MovExportSettingsDialog;
-import sonia.ui.SoniaInterface;
+import sonia.settings.*;
+import sonia.ui.*;
 
-import cern.jet.random.Uniform;
-import cern.colt.list.IntArrayList;
-import cern.colt.matrix.impl.SparseDoubleMatrix2D;
+import javax.swing.*;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+import java.awt.*;
+import java.io.*;
+import java.text.DateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.Vector;
+
+//import sonia.parsers.DotDyNetParser;
 
 /**
  * Main controlling class for SoNIA. Handles most method calls for coordinating
