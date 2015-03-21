@@ -4,6 +4,7 @@ import sonia.mapper.Colormapper;
 import sonia.mapper.Shapemapper;
 import sonia.render.Graphics2DRender;
 import sonia.settings.GraphicsSettings;
+import sonia.settings.LayoutSettings;
 
 import javax.swing.*;
 import java.awt.*;
@@ -43,6 +44,7 @@ public class SoniaCanvas extends JPanel {
     private GraphicsSettings settings = null;
     private Colormapper colormapper = null;
     private Shapemapper shapemapper = null;
+    private Image background;
     //private Image offScreen;
     private Image ghostImage = null;
     private int drawWidth;
@@ -78,6 +80,7 @@ public class SoniaCanvas extends JPanel {
     public SoniaCanvas(GraphicsSettings settings, SoniaLayoutEngine eng) {
         engine = eng;
         this.settings = settings;
+        this.setupOptionalImage(this.engine.getLayoutSettings());
         //display = window;
         //this.setBorder(new EtchedBorder());
         drawWidth = engine.getDisplayWidth();
@@ -85,6 +88,20 @@ public class SoniaCanvas extends JPanel {
         //  this.setBackground(Color.white);
         //  offScreen = createImage(drawWidth, drawHeight);
         g2dRender = new Graphics2DRender();
+    }
+
+    /**
+     * Sets up an optional background image to use instead of the default color provided by
+     * getBackground
+     * @param settings A settings object that may optionally contain a background image path
+     */
+    private void setupOptionalImage(LayoutSettings settings) {
+        if (settings.containsKey(LayoutSettings.BACKGROUND_IMAGE)) {
+            String imageName = settings.getProperty(LayoutSettings.BACKGROUND_IMAGE);
+            if (imageName != null) {
+                this.background = Toolkit.getDefaultToolkit().createImage(imageName);
+            }
+        }
     }
 
 
@@ -163,8 +180,11 @@ public class SoniaCanvas extends JPanel {
         //take care of menubar or other items which might cover layout
         //graphics.translate(leftInset+pad,topInset+pad);
         //draw the network to the offscreen image
-        //draw a blank background with the specified background color
-        graphics.setColor(getBackground());
+        if(this.background != null) {
+            g.drawImage(this.background, 0, 0, null);
+        } else {
+            g.setColor(getBackground());
+        }
         graphics.fillRect(0, 0, drawWidth, drawHeight);
         //if ghosting is on, draw the ghost slice
         if (ghostSlice & includeGhost) {
