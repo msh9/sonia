@@ -47,370 +47,390 @@ import java.io.IOException;
  * the ability to preview the network data and slice parameters in a
  * "phase-space" plot.
  */
-public class LayoutSettingsDialog extends JDialog implements ActionListener , FocusListener{
-	// private Dialog settingsDialog;
-	//private SoniaLayoutEngine engine;
+public class LayoutSettingsDialog extends JDialog implements ActionListener, FocusListener {
+    // private Dialog settingsDialog;
+    //private SoniaLayoutEngine engine;
 
-	private SoniaController control;
+    private SoniaController control;
 
-	private PhasePlot timePlot;
-	
-	private NetDataStructure data;
+    private PhasePlot timePlot;
 
-	// layout elements
-	//private JOptionPane dialoger;
-	
-	private JPanel mainPanel;
-	
-	private JPanel controlPanel;
+    private NetDataStructure data;
 
-	private JComboBox LayoutType; // for choosing which kind of layout
+    // layout elements
+    //private JOptionPane dialoger;
 
-	private JTextField SliceStart;
+    private JPanel mainPanel;
 
-	private JTextField SliceEnd;
+    private JPanel controlPanel;
 
-	private JTextField SliceDuration;
+    private JComboBox<String> LayoutType; // for choosing which kind of layout
 
-	private JTextField SliceDelta;
+    private JTextField SliceStart;
 
-	private JComboBox AnimateType;
+    private JTextField SliceEnd;
 
-	private JComboBox SliceAggregation;
+    private JTextField SliceDuration;
 
-	private JPanel sliceSettings;
+    private JTextField SliceDelta;
 
-	private JButton OK;
-	
-	private JButton saveSettings;
+    private JComboBox<String> AnimateType;
 
-	private JButton Cancel;
+    private JComboBox<String> SliceAggregation;
 
-	//private JButton Plot;
+    private JPanel sliceSettings;
 
-	// holds the defualt values for start and endtimes
-	private double layoutStartTime = 0.0;
+    private JButton OK;
 
-	private double layoutEndTime = 10.0;
+    private JButton saveSettings;
 
-	private String[] layoutNames = { LayoutSettings.COORD_ORIG,
-			LayoutSettings.CIRCULAR, LayoutSettings.FR, LayoutSettings.RAND_FR,
-			LayoutSettings.RUB_FR, LayoutSettings.MULTI_KK, LayoutSettings.PI,
-			LayoutSettings.METRIC_MDS , LayoutSettings.MDSJ_CMDS,LayoutSettings.GRAPHVIZ};
+    private JButton Cancel;
 
-	private String[] interpNames = { LayoutSettings.NO_ANIMATION,
-			LayoutSettings.COSINE_ANIMATION,LayoutSettings.DELAY_COSINE_ANIMATION,
-			LayoutSettings.LINEAR_ANIMATION };
+    private File userSetBackgroundFile;
 
-	private String[] aggregateNames = { LayoutSettings.NUM_TIES,
-			LayoutSettings.AVG_TIES, LayoutSettings.SUM_TIES };
-	
-	private LayoutSettings settings;
+    //private JButton Plot;
 
-	public LayoutSettingsDialog(LayoutSettings set, SoniaController cont, NetDataStructure netData, String msg,
-			Frame owner) {
-		super(owner,true);
-		control = cont;
-		data = netData;
-		//engine = eng;
-		this.settings = set;
-	
-		
-		mainPanel = new JPanel(new BorderLayout());
-		controlPanel = new JPanel();
-		controlPanel.setBorder(new TitledBorder("Slicing Settings"));
+    // holds the defualt values for start and endtimes
+    private double layoutStartTime = 0.0;
 
-		LayoutType = new JComboBox(layoutNames);
-		LayoutType.setBorder(new TitledBorder("layout type:"));
-		LayoutType.setSelectedIndex(5);
+    private double layoutEndTime = 10.0;
 
-		sliceSettings = new JPanel(new GridLayout(2, 2));
-		sliceSettings.setBorder(new TitledBorder("Layout Slice Settings:"));
-		SliceStart = new JTextField(layoutStartTime + "", 8);
-		SliceStart.setBorder(new TitledBorder("start time"));
-		sliceSettings.add(SliceStart);
+    private String[] layoutNames = {LayoutSettings.COORD_ORIG,
+            LayoutSettings.CIRCULAR, LayoutSettings.FR, LayoutSettings.RAND_FR,
+            LayoutSettings.RUB_FR, LayoutSettings.MULTI_KK, LayoutSettings.PI,
+            LayoutSettings.METRIC_MDS, LayoutSettings.MDSJ_CMDS, LayoutSettings.GRAPHVIZ};
 
-		// SliceEndLabel = new JLabel("end time");
-		SliceEnd = new JTextField(layoutEndTime + "", 8);
-		SliceEnd.setBorder(new TitledBorder("end time"));
-		sliceSettings.add(SliceEnd);
+    private String[] interpNames = {LayoutSettings.NO_ANIMATION,
+            LayoutSettings.COSINE_ANIMATION, LayoutSettings.DELAY_COSINE_ANIMATION,
+            LayoutSettings.LINEAR_ANIMATION};
 
-		// SliceDurLabel = new JLabel("slice_duration");
-		SliceDuration = new JTextField("1.0", 4);
-		SliceDuration.setBorder(new TitledBorder("slice duration"));
-		sliceSettings.add(SliceDuration);
-		// SliceDeltaLabel = new JLabel("slice_delta");
-		SliceDelta = new JTextField("1.0", 4);
-		SliceDelta.setBorder(new TitledBorder("slice delta"));
-		sliceSettings.add(SliceDelta);
+    private String[] aggregateNames = {LayoutSettings.NUM_TIES,
+            LayoutSettings.AVG_TIES, LayoutSettings.SUM_TIES};
 
-		AnimateType = new JComboBox(interpNames);
-		AnimateType.setBorder(new TitledBorder("Animation type:"));
-		AnimateType.setSelectedIndex(1);
+    private LayoutSettings settings;
 
-		SliceAggregation = new JComboBox(aggregateNames);
-		SliceAggregation.setBorder(new TitledBorder(
-				"Within-slice aggregation technique:"));
+    public LayoutSettingsDialog(LayoutSettings set, SoniaController cont, NetDataStructure netData, String msg,
+                                Frame owner) {
+        super(owner, true);
+        control = cont;
+        data = netData;
+        //engine = eng;
+        this.settings = set;
 
-		OK = new JButton("Create Layout");
-		Cancel = new JButton("Cancel");
-	//	Plot = new JButton("Phase Plot...");
-		saveSettings = new JButton("Save Settings");
-		
-		if (settings == null) {
-			// tell the settings dialog what the start and end times are
-			setDataStartDefault(data.getFirstTime());
-			setDataEndDefault(data.getLastTime());
-			storeSettings();
-			
-		}
-		
-		timePlot = new PhasePlot(null,data,settings );
 
-		//layoutOptions = new JPanel();
+        mainPanel = new JPanel(new BorderLayout());
+        controlPanel = new JPanel();
+        controlPanel.setBorder(new TitledBorder("Slicing Settings"));
 
-		GridBagLayout layout = new GridBagLayout();
-		controlPanel.setLayout(layout);
-		GridBagConstraints c = new GridBagConstraints();
-		c.insets = new Insets(2, 5, 2, 5);
-		// add components to the layout GBlayout using constraints
-		// buttons
-		// slice info
-		c.gridx = 0;
-		c.gridy = 0;
-		c.gridwidth = 2;
-		c.gridheight = 1;
-		c.weightx = 1;
-		c.weighty = 1;
-		// this.add(SliceInfoLabel,c);
-		c.fill = GridBagConstraints.BOTH;
-		controlPanel.add(sliceSettings, c);
-		c.weightx = .5;
-		c.gridx = 2;
-		c.gridy = 0;
-		c.gridwidth = 1;
-		c.gridheight = 1;
-		
-		controlPanel.add(AnimateType, c);
-		c.gridx = 3;
-		c.gridy = 0;
-		c.gridwidth = 1;
-		c.gridheight = 1;
-		controlPanel.add(SliceAggregation, c);
+        LayoutType = new JComboBox<>(layoutNames);
+        LayoutType.setBorder(new TitledBorder("layout type:"));
+        LayoutType.setSelectedIndex(5);
+
+        sliceSettings = new JPanel(new GridLayout(2, 2));
+        sliceSettings.setBorder(new TitledBorder("Layout Slice Settings:"));
+        SliceStart = new JTextField(layoutStartTime + "", 8);
+        SliceStart.setBorder(new TitledBorder("start time"));
+        sliceSettings.add(SliceStart);
+
+        // SliceEndLabel = new JLabel("end time");
+        SliceEnd = new JTextField(layoutEndTime + "", 8);
+        SliceEnd.setBorder(new TitledBorder("end time"));
+        sliceSettings.add(SliceEnd);
+
+        // SliceDurLabel = new JLabel("slice_duration");
+        SliceDuration = new JTextField("1.0", 4);
+        SliceDuration.setBorder(new TitledBorder("slice duration"));
+        sliceSettings.add(SliceDuration);
+        // SliceDeltaLabel = new JLabel("slice_delta");
+        SliceDelta = new JTextField("1.0", 4);
+        SliceDelta.setBorder(new TitledBorder("slice delta"));
+        sliceSettings.add(SliceDelta);
+
+        AnimateType = new JComboBox<>(interpNames);
+        AnimateType.setBorder(new TitledBorder("Animation type:"));
+        AnimateType.setSelectedIndex(1);
+
+        SliceAggregation = new JComboBox<>(aggregateNames);
+        SliceAggregation.setBorder(new TitledBorder(
+                "Within-slice aggregation technique:"));
+
+        OK = new JButton("Create Layout");
+        JButton setBackgroundImage = new JButton("Set Background");
+        Cancel = new JButton("Cancel");
+        //	Plot = new JButton("Phase Plot...");
+        saveSettings = new JButton("Save Settings");
+
+        if (settings == null) {
+            // tell the settings dialog what the start and end times are
+            setDataStartDefault(data.getFirstTime());
+            setDataEndDefault(data.getLastTime());
+            storeSettings();
+
+        }
+
+        timePlot = new PhasePlot(null, data, settings);
+
+        //layoutOptions = new JPanel();
+
+        GridBagLayout layout = new GridBagLayout();
+        controlPanel.setLayout(layout);
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(2, 5, 2, 5);
+        // add components to the layout GBlayout using constraints
+        // buttons
+        // slice info
+        c.gridx = 0;
+        c.gridy = 0;
+        c.gridwidth = 2;
+        c.gridheight = 1;
+        c.weightx = 1;
+        c.weighty = 1;
+        // this.add(SliceInfoLabel,c);
+        c.fill = GridBagConstraints.BOTH;
+        controlPanel.add(sliceSettings, c);
+        c.weightx = .5;
+        c.gridx = 2;
+        c.gridy = 0;
+        c.gridwidth = 1;
+        c.gridheight = 1;
+
+        controlPanel.add(AnimateType, c);
+        c.gridx = 3;
+        c.gridy = 0;
+        c.gridwidth = 1;
+        c.gridheight = 1;
+        controlPanel.add(SliceAggregation, c);
 
 //layout type
-		c.gridx = 4;
-		c.gridy = 0;
-		c.gridheight = 1;
-		controlPanel.add(LayoutType, c);
-		c.fill = GridBagConstraints.NONE;
-		// buttons
-	//	c.gridx = 0;
-	//	c.gridy = 1;
-	//	c.gridheight = 1;
-	//	controlPanel.add(Plot, c);
-		c.gridx = 1;
-		c.gridy = 1;
-		c.gridheight = 1;
-		controlPanel.add(saveSettings, c);
+        c.gridx = 4;
+        c.gridy = 0;
+        c.gridheight = 1;
+        controlPanel.add(LayoutType, c);
+        c.fill = GridBagConstraints.NONE;
+        // buttons
+        //	c.gridx = 0;
+        //	c.gridy = 1;
+        //	c.gridheight = 1;
+        //	controlPanel.add(Plot, c);
+        c.gridx = 1;
+        c.gridy = 1;
+        c.gridheight = 1;
+        controlPanel.add(saveSettings, c);
 
-		c.gridx = 2;
-		c.gridy = 1;
-		c.gridheight = 1;
-		controlPanel.add(Cancel, c);
+        c.gridx = 2;
+        c.gridy = 1;
+        c.gridheight = 1;
+        controlPanel.add(Cancel, c);
 
-		c.gridx =3;
-		c.gridy = 1;
-		controlPanel.add(OK, c);
-		
-		//add components to the main panel
-		mainPanel.add(controlPanel,BorderLayout.SOUTH);
-		mainPanel.add(timePlot.getContentPane(),BorderLayout.CENTER);
-		
-		
+        c.gridx = 3;
+        c.gridy = 1;
+        controlPanel.add(OK, c);
 
-		Cancel.addActionListener(this);
-		OK.addActionListener(this);
-	//	Plot.addActionListener(this);
-		SliceStart.addActionListener(this);
-		SliceStart.addFocusListener(this);
-		SliceEnd.addActionListener(this);
-		SliceEnd.addFocusListener(this);
-		SliceDuration.addActionListener(this);
-		SliceDuration.addFocusListener(this);
-		SliceDelta.addActionListener(this);
-		SliceDelta.addFocusListener(this);
-		saveSettings.addActionListener(this);
+        c.gridx = 4;
+        c.gridy = 1;
+        controlPanel.add(setBackgroundImage);
 
-		//this.setBackground(Color.lightGray);
-		this.getContentPane().add(mainPanel);
-		this.setTitle("Layout (Slicing) Settings for " + msg);
-		this.setSize(800, 300);
-		// this.show();
-		OK.requestFocus();
-		if (settings != null){
-			readSettings();
-		}
-		
+        //add components to the main panel
+        mainPanel.add(controlPanel, BorderLayout.SOUTH);
+        mainPanel.add(timePlot.getContentPane(), BorderLayout.CENTER);
 
-	}
 
-	public LayoutSettings askUserSettings() {
-		
-		//wait here for OK, which dismiss dialog and set the settings
-		this.setVisible(true);
-		return settings;
-	}
+        Cancel.addActionListener(this);
+        OK.addActionListener(this);
+        //	Plot.addActionListener(this);
+        SliceStart.addActionListener(this);
+        SliceStart.addFocusListener(this);
+        SliceEnd.addActionListener(this);
+        SliceEnd.addFocusListener(this);
+        SliceDuration.addActionListener(this);
+        SliceDuration.addFocusListener(this);
+        SliceDelta.addActionListener(this);
+        SliceDelta.addFocusListener(this);
+        saveSettings.addActionListener(this);
+        //demonstrating a different style of listener that uses anonymous classes
+        //instead of single handle with a string based branching if-else-if statement
+        setBackgroundImage.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFileChooser picker = new JFileChooser();
+                int pickResult = picker.showOpenDialog(controlPanel);
+                if (pickResult == JFileChooser.APPROVE_OPTION) {
+                    userSetBackgroundFile = picker.getSelectedFile();
+                }
+            }
+        });
 
-	/**
-	 * Sets the default value to be shown in the layout start field, should be
-	 * set to the smallest time value in the data.
-	 * 
-	 * @param start
-	 *            the double default start time
-	 */
-	public void setDataStartDefault(double start) {
-		layoutStartTime = start;
-		SliceStart.setText(layoutStartTime + "");
-	}
+        //this.setBackground(Color.lightGray);
+        this.getContentPane().add(mainPanel);
+        this.setTitle("Layout (Slicing) Settings for " + msg);
+        this.setSize(800, 300);
+        // this.show();
+        OK.requestFocus();
+        if (settings != null) {
+            readSettings();
+        }
 
-	/**
-	 * Sets the default value to be shown in the layout end field, should be set
-	 * to the largest time value in the data.
-	 * 
-	 * @param end
-	 *            the double default end time
-	 */
-	public void setDataEndDefault(double end) {
 
-		layoutEndTime = end;
-		SliceEnd.setText(layoutEndTime + "");
-	}
-	
-	private void storeSettings()
-	{
-		if (settings == null){
-			settings = new LayoutSettings();
-		}
+    }
+
+    public LayoutSettings askUserSettings() {
+
+        //wait here for OK, which dismiss dialog and set the settings
+        this.setVisible(true);
+        return settings;
+    }
+
+    /**
+     * Sets the default value to be shown in the layout start field, should be
+     * set to the smallest time value in the data.
+     *
+     * @param start the double default start time
+     */
+    public void setDataStartDefault(double start) {
+        layoutStartTime = start;
+        SliceStart.setText(layoutStartTime + "");
+    }
+
+    /**
+     * Sets the default value to be shown in the layout end field, should be set
+     * to the largest time value in the data.
+     *
+     * @param end the double default end time
+     */
+    public void setDataEndDefault(double end) {
+
+        layoutEndTime = end;
+        SliceEnd.setText(layoutEndTime + "");
+    }
+
+    private void storeSettings() {
+        if (settings == null) {
+            settings = new LayoutSettings();
+        }
 //
 //		// take care of all the settings
-		settings.setProperty(LayoutSettings.LAYOUT_TYPE,(String)LayoutType.getSelectedItem());
-		settings.setProperty(LayoutSettings.ANIMATE_TYPE,(String)AnimateType.getSelectedItem());
-		settings.setProperty(LayoutSettings.SLICE_AGGREGATION,(String)SliceAggregation.getSelectedItem());
-		settings.setProperty(LayoutSettings.SLICE_START,SliceStart.getText().trim());
-		settings.setProperty(LayoutSettings.SLICE_END,SliceEnd.getText().trim());
-		settings.setProperty(LayoutSettings.SLICE_DURATION,SliceDuration.getText().trim());
-		settings.setProperty(LayoutSettings.SLICE_DELTA,SliceDelta.getText().trim());
-	}
-	
-	private void readSettings(){
-		if (settings == null){
-			settings = new LayoutSettings();
-		}
-		LayoutType.setSelectedItem(settings.getProperty(LayoutSettings.LAYOUT_TYPE));
-		AnimateType.setSelectedItem(settings.getProperty(LayoutSettings.ANIMATE_TYPE));
-		SliceAggregation.setSelectedItem(settings.getProperty(LayoutSettings.SLICE_AGGREGATION));
-		SliceStart.setText(settings.getProperty(LayoutSettings.SLICE_START));
-		SliceEnd.setText(settings.getProperty(LayoutSettings.SLICE_END));
-		SliceDuration.setText(settings.getProperty(LayoutSettings.SLICE_DURATION));
-		SliceDelta.setText(settings.getProperty(LayoutSettings.SLICE_DELTA));
-	}
+        settings.setProperty(LayoutSettings.LAYOUT_TYPE, (String) LayoutType.getSelectedItem());
+        settings.setProperty(LayoutSettings.ANIMATE_TYPE, (String) AnimateType.getSelectedItem());
+        settings.setProperty(LayoutSettings.SLICE_AGGREGATION, (String) SliceAggregation.getSelectedItem());
+        settings.setProperty(LayoutSettings.SLICE_START, SliceStart.getText().trim());
+        settings.setProperty(LayoutSettings.SLICE_END, SliceEnd.getText().trim());
+        settings.setProperty(LayoutSettings.SLICE_DURATION, SliceDuration.getText().trim());
+        settings.setProperty(LayoutSettings.SLICE_DELTA, SliceDelta.getText().trim());
+        if (this.userSetBackgroundFile != null) {
+            settings.setProperty(LayoutSettings.BACKGROUND_IMAGE, this.userSetBackgroundFile.getAbsolutePath());
+        }
+    }
 
-	// ACTION LISTENER //figures out what user did and calls appropriate method
-	public void actionPerformed(ActionEvent evt) {
-		if (evt.getActionCommand().equals("Create Layout")) {
-			storeSettings();
-			this.setVisible(false);
-			// will this destroy itself, or does it need to be explicit?
-			// this.finalize();
-		} else if (evt.getActionCommand().equals("Cancel")) {
-			this.setVisible(false);
-			//TODO: canceling the layout creation throws exception
-			if (timePlot != null) {
-				timePlot.hide();
-				timePlot = null;
-			}
-			settings = null;
-	//	} else if (evt.getSource().equals(Plot)) {
-			//TODO: fix phase plot from layout settings dialog
-		//	if (timePlot == null) {
-			//	engine.showPhasePlot();
-			//	timePlot = engine.getPhasePlot();
-		//	}
-		} else if (evt.getSource().equals(saveSettings)) {
-			//TODO:  create better option for choosing output dir for slice settings
-			String fileAndPath = control.getCurrentPath()+"SoniaSliceSettings.prp";
-			storeSettings();
-			try {
-				
-				FileOutputStream propsOut = new FileOutputStream(fileAndPath);
-				settings.store(propsOut,this.getTitle());
-				control.showStatus("Saved slice settings to "+fileAndPath);
-			} catch (FileNotFoundException e) {
-				control.showError("Unable to create or locate layout settings file: "+fileAndPath
-						+" "+e.getMessage());
-			} catch (IOException e) {
-				control.showError("IO error writing settings file: "+fileAndPath
-						+" "+e.getMessage());
-			}
-			
-		} else// something happend, so lets assume it was a text area and
-				// update the
-		// display
-		{
-			if (timePlot != null) {
-				storeSettings();
-				repaint();
-			}
-		}
+    private void readSettings() {
+        if (settings == null) {
+            settings = new LayoutSettings();
+        }
+        LayoutType.setSelectedItem(settings.getProperty(LayoutSettings.LAYOUT_TYPE));
+        AnimateType.setSelectedItem(settings.getProperty(LayoutSettings.ANIMATE_TYPE));
+        SliceAggregation.setSelectedItem(settings.getProperty(LayoutSettings.SLICE_AGGREGATION));
+        SliceStart.setText(settings.getProperty(LayoutSettings.SLICE_START));
+        SliceEnd.setText(settings.getProperty(LayoutSettings.SLICE_END));
+        SliceDuration.setText(settings.getProperty(LayoutSettings.SLICE_DURATION));
+        SliceDelta.setText(settings.getProperty(LayoutSettings.SLICE_DELTA));
+        if (this.userSetBackgroundFile == null && settings.containsKey(LayoutSettings.BACKGROUND_IMAGE)) {
+            this.userSetBackgroundFile = new File(settings.getProperty(LayoutSettings.BACKGROUND_IMAGE));
+        }
+    }
 
-	}
+    // ACTION LISTENER //figures out what user did and calls appropriate method
+    public void actionPerformed(ActionEvent evt) {
+        if (evt.getActionCommand().equals("Create Layout")) {
+            storeSettings();
+            this.setVisible(false);
+            // will this destroy itself, or does it need to be explicit?
+            // this.finalize();
+        } else if (evt.getActionCommand().equals("Cancel")) {
+            this.setVisible(false);
+            //TODO: canceling the layout creation throws exception
+            if (timePlot != null) {
+                timePlot.hide();
+                timePlot = null;
+            }
+            settings = null;
+            //	} else if (evt.getSource().equals(Plot)) {
+            //TODO: fix phase plot from layout settings dialog
+            //	if (timePlot == null) {
+            //	engine.showPhasePlot();
+            //	timePlot = engine.getPhasePlot();
+            //	}
+        } else if (evt.getSource().equals(saveSettings)) {
+            //TODO:  create better option for choosing output dir for slice settings
+            String fileAndPath = control.getCurrentPath() + "SoniaSliceSettings.prp";
+            storeSettings();
+            try {
 
-	/**
-	 * @deprecated use settings instead
-	 * @return
-	 */
-	public double getSliceStart() {
-		return Double.parseDouble(SliceStart.getText());
-	}
+                FileOutputStream propsOut = new FileOutputStream(fileAndPath);
+                settings.store(propsOut, this.getTitle());
+                control.showStatus("Saved slice settings to " + fileAndPath);
+            } catch (FileNotFoundException e) {
+                control.showError("Unable to create or locate layout settings file: " + fileAndPath
+                        + " " + e.getMessage());
+            } catch (IOException e) {
+                control.showError("IO error writing settings file: " + fileAndPath
+                        + " " + e.getMessage());
+            }
 
-	/**
-	 * @deprecated use settings instead
-	 * @return
-	 */
-	public double getSliceEnd() {
-		return Double.parseDouble(SliceEnd.getText());
-	}
+        } else// something happend, so lets assume it was a text area and
+        // update the
+        // display
+        {
+            if (timePlot != null) {
+                storeSettings();
+                repaint();
+            }
+        }
 
-	/**
-	 * @deprecated use settings instead
-	 * @return
-	 */
-	public double getSliceDuration() {
-		return Double.parseDouble(SliceDuration.getText());
-	}
+    }
 
-	/**
-	 * @deprecated use settings instead
-	 * @return
-	 */
-	public double getSliceDelta() {
-		return Double.parseDouble(SliceDelta.getText());
-	}
+    /**
+     * @return
+     * @deprecated use settings instead
+     */
+    public double getSliceStart() {
+        return Double.parseDouble(SliceStart.getText());
+    }
 
-	public void focusGained(FocusEvent arg0) {
-		//don't do anything special
-		((JTextField)arg0.getSource()).selectAll();
-	}
+    /**
+     * @return
+     * @deprecated use settings instead
+     */
+    public double getSliceEnd() {
+        return Double.parseDouble(SliceEnd.getText());
+    }
 
-	public void focusLost(FocusEvent arg0) {
-		if (timePlot != null) {
-			storeSettings();
-			repaint();
-		}
-		
-	}
+    /**
+     * @return
+     * @deprecated use settings instead
+     */
+    public double getSliceDuration() {
+        return Double.parseDouble(SliceDuration.getText());
+    }
 
+    /**
+     * @return
+     * @deprecated use settings instead
+     */
+    public double getSliceDelta() {
+        return Double.parseDouble(SliceDelta.getText());
+    }
+
+    public void focusGained(FocusEvent arg0) {
+        //don't do anything special
+        ((JTextField) arg0.getSource()).selectAll();
+    }
+
+    public void focusLost(FocusEvent arg0) {
+        if (timePlot != null) {
+            storeSettings();
+            repaint();
+        }
+
+    }
 
 
 }
