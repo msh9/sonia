@@ -181,11 +181,12 @@ public class SoniaCanvas extends JPanel {
         //graphics.translate(leftInset+pad,topInset+pad);
         //draw the network to the offscreen image
         if(this.background != null) {
-            g.drawImage(this.background, 0, 0, null);
+            graphics.drawImage(this.background, 0, 0, null);
         } else {
-            g.setColor(getBackground());
+            graphics.setColor(getBackground());
+            graphics.fillRect(0, 0, drawWidth, drawHeight);
         }
-        graphics.fillRect(0, 0, drawWidth, drawHeight);
+
         //if ghosting is on, draw the ghost slice
         if (ghostSlice & includeGhost) {
             if (ghostImage != null) {

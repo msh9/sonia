@@ -1,0 +1,3 @@
+NodeId	Label	StartTime	EndTime	NodeSize	ColorName
+1	1	0	1	5	gray
+FromId	ToId	StartTime	EndTime	ArcWeight	ColorName
