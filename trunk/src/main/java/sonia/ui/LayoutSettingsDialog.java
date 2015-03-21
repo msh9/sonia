@@ -1,36 +1,20 @@
 package sonia.ui;
 
+import sonia.NetDataStructure;
+import sonia.SoniaController;
+import sonia.settings.LayoutSettings;
+
+import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-
-import javax.swing.ButtonGroup;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.border.TitledBorder;
-import javax.swing.plaf.basic.BasicBorders;
-
-import sonia.NetDataStructure;
-import sonia.SoniaController;
-import sonia.layouts.CircleLayout;
-import sonia.layouts.FRLayout;
-import sonia.layouts.MetricMDSLayout;
-import sonia.layouts.MultiCompKKLayout;
-import sonia.layouts.OrigCoordLayout;
-import sonia.layouts.PILayout;
-import sonia.layouts.RandomFRLayout;
-import sonia.layouts.RubBandFRLayout;
-import sonia.settings.LayoutSettings;
 
 /**
  * <p>Title:SoNIA (Social Network Image Animator) </p>

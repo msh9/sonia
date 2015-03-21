@@ -731,7 +731,7 @@ public class SoniaController implements Runnable, TaskListener {
 	}
 
 	/**
-	 * Checks that a file has been loaded, then creates a layout engien for the
+	 * Checks that a file has been loaded, then creates a layout engine for the
 	 * most recently loaded file. Shows slice dialog only if there are no slice
 	 * settings.
 	 */

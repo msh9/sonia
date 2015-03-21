@@ -3,7 +3,7 @@ package sonia.settings;
 
 
 /**
- * Stores specifications for sliceing and applying layouts as properties
+ * Stores specifications for slicing and applying layouts as properties
  * object so can be saved, serialized and reloaded. 
  * @author skyebend
  *
